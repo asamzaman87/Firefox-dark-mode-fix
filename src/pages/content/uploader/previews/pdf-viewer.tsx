@@ -1,0 +1,87 @@
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { FC, useState } from 'react';
+import { Document, Page } from 'react-pdf';
+
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+// function highlightPattern(text: string, pattern: string) {
+//     return text.replace(pattern, (value: ReactNode) => `<mark>${value}</mark>`);
+// }
+
+interface PdfViewerProps {
+    file: File;
+}
+
+const PdfViewer: FC<PdfViewerProps> = ({ file }) => {
+
+    const samplePDF = file;
+    // const [searchText, setSearchText] = useState('');
+    const [numPages, setNumPages] = useState<number>(0);
+    const [pageNumber, setPageNumber] = useState(1);
+
+    // const textRenderer = useCallback(
+    //     (textItem: { str: string; }) => highlightPattern(textItem.str, searchText),
+    //     [searchText]
+    // );
+
+    // function onChange(event: { target: { value: React.SetStateAction<string>; }; }) {
+    //     setSearchText(event.target.value);
+    // }
+
+    function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+        setNumPages(numPages);
+        setPageNumber(1);
+    }
+
+    function changePage(offset: number) {
+        setPageNumber(prevPageNumber => prevPageNumber + offset);
+    }
+
+    function previousPage() {
+        changePage(-1);
+    }
+
+    function nextPage() {
+        changePage(1);
+    }
+
+
+    return (
+        <div className='flex flex-row justify-center items-center gap-2 size-full'>
+            <Button
+                className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                variant={"ghost"}
+                size={"icon"}
+                disabled={pageNumber <= 1}
+                onClick={previousPage}
+            >
+                <span className="sr-only">Previous</span>
+                <ChevronLeft />
+            </Button>
+
+            <div className="flex flex-col gap-2 relative">
+                <span className="z-10 absolute bottom-2 right-2 px-4 py-2 text-sm font-medium text-muted-foreground text-center mx-auto rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
+                    Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
+                </span>
+                <Document file={samplePDF} onLoadSuccess={onDocumentLoadSuccess}>
+                    <Page pageNumber={pageNumber}/>
+                </Document>
+            </div>
+
+            <Button
+                className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                variant={"ghost"}
+                size={"icon"}
+                disabled={pageNumber >= numPages}
+                onClick={nextPage}
+            >
+                <span className="sr-only">Next</span>
+                <ChevronRight />
+            </Button>
+        </div>
+    );
+}
+
+export default PdfViewer;

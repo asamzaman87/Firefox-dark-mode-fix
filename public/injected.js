@@ -1,0 +1,146 @@
+const loopThroughReaderToExtractMessageId = async (reader, args) => {
+    let messageId = "";
+    let conversationId = "";
+    let createTime = ""
+    let text = "";
+    try {
+        const jsonArgs = JSON.parse(args[1]?.body);
+        const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
+        text = jsonArgs?.messages?.[0]?.content?.parts[0];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const { done, value } = await reader.read();
+            const decoder = new TextDecoder("utf-8");
+            const text = decoder.decode(value);
+            const meesageIdMatch = text.match(/"id":\s*"([^"]+)"/); // Extract the id using regex  
+            const createTimeMatch = text.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
+            const conversationIdMatch = text.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
+            if (meesageIdMatch) messageId = meesageIdMatch[1];
+            if (conversationIdMatch) conversationId = conversationIdMatch[1];
+            if (createTimeMatch) createTime = createTimeMatch[1];
+
+            if(messageId && conversationId && createTime){  
+            //sending the prompt to the content script
+                const messageIdEvent = new CustomEvent("RECEIVED_MESSAGE_ID", { detail: { messageId, createTime, text: prompt } });
+                window.dispatchEvent(messageIdEvent);
+            }
+
+            if (done) return { messageId, conversationId, createTime, text };  // Exit loop when reading is complete
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.warn('Stream was aborted');
+        } else {
+            console.error('An error occurred while reading the stream:', error);
+        }
+    }
+    return { messageId, conversationId, createTime, text};
+};
+
+const CONVERSATION_ENDPOINT = "backend-api/conversation";
+const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
+const VOICES_ENDPOINT = "backend-api/settings/voices";
+const { fetch: origFetch } = window;
+
+window.fetch = async (...args) => {
+    const response = await origFetch(...args);
+    const { url } = response;
+    const hasConversationEndpoint = url.includes(CONVERSATION_ENDPOINT);
+    const isSynthesisEndpoint = url.includes(SYNTHESIS_ENDPOINT);
+    const isVoicesEndpoint = url.includes(VOICES_ENDPOINT);
+
+    //getting the access token
+    if (response && url.includes('backend-api/me')) {
+        let accessToken;
+        if (args.length > 1 && args[1]?.headers) {
+            accessToken = args[1].headers.Authorization;
+        }
+        
+        const responseData = await response.clone().json();
+        
+        if (accessToken && responseData?.id && !responseData?.id?.startsWith('ua-')) {
+            const authReceivedEvent = new CustomEvent('AUTH_RECEIVED', {
+                detail: { ...responseData, accessToken },
+            });
+            window.dispatchEvent(authReceivedEvent);
+        }
+    }
+    
+    //signing out
+    if (response && url.includes('api/auth/signout')) {
+        const responseData = await response.clone().json();
+        if (responseData?.success) {
+            const signoutReceivedEvent = new CustomEvent('SIGNOUT_RECEIVED', {
+                detail: responseData,
+            });
+            window.dispatchEvent(signoutReceivedEvent);
+        }
+    }
+    
+    //read the stream to get the message id and conversation id
+    if (hasConversationEndpoint && args[1].method === 'POST') {
+        const clonedResponse = response.clone(); // Clone the response
+        const stream = clonedResponse.body; // Use the body of the cloned response
+        if(clonedResponse.status === 429){
+            const rateLimitExceededEvent = new CustomEvent('ERROR', {
+                detail: "You have exceeded the hourly limit for this API. Please try again later.",
+            });
+            window.dispatchEvent(rateLimitExceededEvent);
+        }
+        if (stream) {
+            const reader = stream.getReader();
+            loopThroughReaderToExtractMessageId(reader, args)
+                .then((data) => {
+                    // Dispatch custom event after stream reading is complete
+                    const event = new CustomEvent("END_OF_STREAM", {
+                        detail: { ...data } // Custom data if needed
+                    });
+                    window.dispatchEvent(event);
+                })
+                .catch(error => console.error("Error in stream reading:", error));
+        }
+    }
+
+    //get all voices
+    if(isVoicesEndpoint && args[1].method === "GET"){
+        const clonedResponse = response.clone(); // Clone the response
+        const voices = await clonedResponse.json(); // Use the body of the cloned response
+        const voicesEvent = new CustomEvent('VOICES', {
+            detail: voices,
+        });
+        window.dispatchEvent(voicesEvent);
+    }
+
+    if (isSynthesisEndpoint) {
+        const clonedResponse = response.clone(); // Clone the response
+        if(clonedResponse.status === 404){
+            const rateLimitExceededEvent = new CustomEvent('ERROR', {
+                detail: "Message Not Found. Please refresh the page and try again.",
+            });
+            window.dispatchEvent(rateLimitExceededEvent);
+        }
+    }
+
+    return response;
+};
+
+window.addEventListener("GET_TOKEN", () => {
+    if (window && window?.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
+        const authEvent = new CustomEvent("AUTH_RECEIVED", {
+            detail: { accessToken: window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken },
+        });
+        window.dispatchEvent(authEvent);
+    }
+})
+
+//get all the listed voices
+window.addEventListener("GET_VOICES", async () => {
+    if (window && window?.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
+        const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken}` }});
+        const data = await response.json();
+        const voicesEvent = new CustomEvent("VOICES", {
+            detail: data,
+        });
+        window.dispatchEvent(voicesEvent);
+    }
+})
