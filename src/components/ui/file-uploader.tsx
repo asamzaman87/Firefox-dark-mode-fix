@@ -210,7 +210,7 @@ export function FileUploader(props: FileUploaderProps) {
                   />
                 </div>
                 <p className="font-medium">
-                  Drop the files here
+                  Drop the File Here
                 </p>
               </div>
             ) : (
@@ -223,16 +223,16 @@ export function FileUploader(props: FileUploaderProps) {
                 </div>
                 <div className="flex flex-col gap-px">
                   <p className="font-medium">
-                    Drag {`'n'`} drop files here, or click to select files
+                    Drag {`'n'`} Drop Files Here, or Click to Select File
                   </p>
                   <p className="text-sm text-gray-500">
-                    You can upload
+                    You Can Upload
                     {maxFileCount > 1
                       ? ` ${
                           maxFileCount === Infinity ? "multiple" : maxFileCount
                         }
                       files (up to ${formatBytes(maxSize)} each)`
-                      : ` a file with ${formatBytes(maxSize)}`}
+                      : ` a File up to ${formatBytes(maxSize)}`}
                   </p>
                 </div>
               </div>
