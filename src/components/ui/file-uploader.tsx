@@ -174,7 +174,6 @@ export function FileUploader(props: FileUploaderProps) {
         }
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFileCount;
@@ -193,9 +192,9 @@ export function FileUploader(props: FileUploaderProps) {
           <div
             {...getRootProps()}
             className={cn(
-              "group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-muted-foreground/25 px-5 py-2.5 text-center transition hover:bg-muted/25",
+              "group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-gray-500 hover:border-gray-700 dark:hover:border-gray-200 px-5 py-2.5 text-center transition hover:bg-gray-200 dark:hover:bg-gray-700 bg-opacity-15",
               "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isDragActive && "border-muted-foreground/50",
+              isDragActive && "border-green-300 bg-green-100",
               isDisabled && "pointer-events-none opacity-60",
               className
             )}
@@ -204,29 +203,29 @@ export function FileUploader(props: FileUploaderProps) {
             <input {...getInputProps()} />
             {isDragActive ? (
               <div className="flex flex-col items-center justify-center gap-4 sm:px-5">
-                <div className="rounded-full border border-dashed p-3">
+                <div className="rounded-full border border-gray-500 border-dashed p-3">
                   <UploadIcon
-                    className="size-7 text-muted-foreground"
+                    className="size-7"
                     aria-hidden="true"
                   />
                 </div>
-                <p className="font-medium text-muted-foreground">
+                <p className="font-medium">
                   Drop the files here
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-4 sm:px-5">
-                <div className="rounded-full border border-dashed p-3">
+                <div className="rounded-full border border-gray-500 border-dashed p-3">
                   <UploadIcon
-                    className="size-7 text-muted-foreground"
+                    className="size-7"
                     aria-hidden="true"
                   />
                 </div>
                 <div className="flex flex-col gap-px">
-                  <p className="font-medium text-muted-foreground">
+                  <p className="font-medium">
                     Drag {`'n'`} drop files here, or click to select files
                   </p>
-                  <p className="text-sm text-muted-foreground/70">
+                  <p className="text-sm text-gray-500">
                     You can upload
                     {maxFileCount > 1
                       ? ` ${

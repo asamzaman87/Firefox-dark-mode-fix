@@ -1,5 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PlayCircle, StopCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Info, PlayCircle, StopCircle } from "lucide-react";
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 export interface Voice {
@@ -57,14 +58,22 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
         </span>
     )
 
+    //if voices not present then fetch them on modal open (happens when user start a new conversation)
+    const onOpenChange = (open: boolean) => {
+        if (open && voice.voices.length === 0) {
+            const voicesEvent = new CustomEvent("GET_VOICES");
+            window.dispatchEvent(voicesEvent);
+        }
+    }
+
     return (
         <div className="flex items-center justify-center gap-2">
             <Trigger onClick={() => isPlaying ? stop() : preview()}>
-                {!isPlaying && <PlayCircle className="size-4" onClick={preview} />}
+                {!isPlaying && <PlayCircle className={"size-4"} onClick={preview} />}
                 {isPlaying && <StopCircle className="size-4" onClick={stop} />}
                 {!isPlaying ? "Preview" : "Stop"}
             </Trigger>
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger disabled={disabled || isPlaying}>
                     <Trigger disabled={disabled || isPlaying}>
                         {voice.selected.charAt(0).toUpperCase() + voice.selected.slice(1)}
@@ -78,6 +87,13 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
+            <Popover>
+                <PopoverTrigger><Info className="cursor-pointer size-5 text-gray-600 dark:text-gray-100" /></PopoverTrigger>
+                <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p>You can easily update the voice by selecting an option from the dropdown menu.</p>
+                    <p>Please note that the voice can only be changed before adding the text or file.</p>
+                </PopoverContent>
+            </Popover>
         </div>
     )
 

@@ -1,29 +1,32 @@
-import { TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
 
 const useAudioPlayer = () => {
-    const { audioUrls, ended, extractText, splitAndSendPrompt, text, isLoading, setIsLoading, reset: resetAudioUrl, voices, setVoices } = useAudioUrl();
+    const { audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
+    const [isAudioLoading, setAudioLoading] = useState<boolean>(false);
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [playRate, setPlayRate] = useState<number>(1);
     const audioPlayer = useMemo(() => new Audio(), []);
 
     const fetchAndDecodeAudio = useCallback(async (url: string) => {
-        setIsLoading(true);
+        // setIsLoading(true);
+        setAudioLoading(true);
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
             throw new Error(response.statusText);
         }
         const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
-        setIsLoading(false);
+        // setIsLoading(false);
+        setAudioLoading(false)
         return audioUrl;
-    }, [setIsLoading, token])
+    }, [token])
 
     const playNext = useCallback(async (index: number) => {
         try {
@@ -49,6 +52,7 @@ const useAudioPlayer = () => {
         setIsPlaying(false);
         setIsPaused(false);
         if (full) {
+            audioPlayer.src = "";
             resetAudioUrl();
             audioPlayer.removeEventListener("ended", () => { });
         }
@@ -100,7 +104,7 @@ const useAudioPlayer = () => {
             setPlayRate(0.5);
             return;
         }
-        setPlayRate(playRate => playRate + 0.5);
+        setPlayRate(playRate => playRate + PLAY_RATE_STEP);
     }, [playRate])
 
     //controls audio player rate
@@ -116,6 +120,7 @@ const useAudioPlayer = () => {
     }, [audioPlayer, handleAudioEnd]);
 
     useMemo(() => {
+        setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
         if (audioUrls.length === 1) {
             console.log("INIT PLAY")
             playNext(0)
@@ -136,7 +141,7 @@ const useAudioPlayer = () => {
         splitAndSendPrompt,
         ended,
         text,
-        isLoading,
+        isLoading: isAudioLoading,
         reset,
         playRate,
         handlePlayRateChange,

@@ -135,7 +135,8 @@ window.addEventListener("GET_TOKEN", () => {
 
 //get all the listed voices
 window.addEventListener("GET_VOICES", async () => {
-    if (window && window?.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
+    if (window && window?.__remixContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
+        console.log("GET_VOICES")
         const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken}` }});
         const data = await response.json();
         const voicesEvent = new CustomEvent("VOICES", {

@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import useAudioPlayerNew from "@/hooks/use-audio-player";
 import { ACCEPTED_FILE_TYPES, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { InputFormProps } from "./input-popup/input-form";
@@ -20,8 +21,6 @@ import InputPopup from "./input-popup/popup";
 import Player from "./player-button";
 import Previews from "./previews";
 import VoiceSelector from "./voice-selector";
-import useMouseMove from "@/hooks/use-mouse-move";
-
 export interface PromptProps {
   text: string | undefined
 }
@@ -31,8 +30,8 @@ function Uploader() {
   const [file, setFile] = useState<File | null>(null);
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
+  const [openTries, setOpenTries] = useState<number>(0);
 
-  const { hide, handleMouseMove } = useMouseMove();
   const { pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isAuthenticated, isPaused, playRate, handlePlayRateChange, voices, setVoices } = useAudioPlayerNew();
 
   chrome.runtime.onConnect.addListener((port) => {
@@ -77,7 +76,30 @@ function Uploader() {
     extractText(files[0])
   }
 
-  const onClose = (open: boolean) => {
+  //check if the send button is present on the dom
+  const isSendButtonPresentOnDom = () => {
+      const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
+      return sendButton !== null;
+  }
+
+  //todo: check reset bug audio not properly resetting
+  const onBackClick = () => {
+    reset(true);
+    setFile(null);
+    setPrompts([]);
+  }
+
+  const onOpenChange = (open: boolean) => {
+    //if the send button is not present on the dom show error message
+    if (!isSendButtonPresentOnDom()) {
+      setIsActive(false);
+      setOpenTries(tries => tries + 1);
+      if (openTries > 3) {
+        toast.error("There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", {duration: 10000, dismissible: true, style: TOAST_STYLE_CONFIG });
+        setOpenTries(0);
+      }
+      return;
+    }
     setIsActive(open);
     if (!open) {
       reset(true);
@@ -89,17 +111,17 @@ function Uploader() {
 
   return (
     <div>
-      <Dialog open={isActive} onOpenChange={onClose}>
+      <Dialog open={isActive} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
-          <Button
-            ref={activateButton}
-            disabled={!isAuthenticated}
-            variant="outline"
-            size="lg"
-            className="shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700"
-          >
-            <img src={logo} alt="GPT Reader Logo" className="size-6" /> Activate GPT Reader
-          </Button>
+            <Button
+              ref={activateButton}
+              disabled={!isAuthenticated}
+              variant="outline"
+              size="lg"
+              className="shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700"
+            >
+              <img src={logo} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
+            </Button>
         </DialogTrigger>
         <DialogContent
           onInteractOutside={(e: Event) => {
@@ -111,9 +133,11 @@ function Uploader() {
             <DialogTitle className="inline-flex flex-col justify-center items-center gap-2"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</DialogTitle>
             <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
           </DialogHeader>
-          <div className="group flex size-full flex-col justify-center gap-6 overflow-hidden"  onMouseMove={handleMouseMove}>
+          <div className="group flex size-full flex-col justify-center gap-6 overflow-hidden">
 
-            {prompts.length === 0 ? <VoiceSelector disabled={isLoading || isPlaying} voice={voices} setVoices={setVoices} /> : null}
+            {prompts.length === 0 ? <VoiceSelector disabled={isPlaying} voice={voices} setVoices={setVoices} /> : null}
+
+            {prompts.length > 0 && <Button onClick={onBackClick} variant="ghost" className="font-medium size-max absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"><ArrowLeft /> <span className="sr-only">Back</span>Back</Button>}
 
             {prompts.length > 0 ?
               <Previews file={file} content={text} />
@@ -125,11 +149,8 @@ function Uploader() {
                 onValueChange={onSave}
               />}
 
-
             {prompts.length > 0 ?
-              <div className={cn("transition-opacity", { "opacity-0": hide })}>
                 <Player isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
-              </div>
               : null}
 
             {!prompts?.length ?

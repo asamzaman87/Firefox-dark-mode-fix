@@ -371,6 +371,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Zips
+*.zip
+
 # End of https://www.toptal.com/developers/gitignore/api/webstorm+all,visualstudiocode,sublimetext,node,react,windows,macos,linux
 
 

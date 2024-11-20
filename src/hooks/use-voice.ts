@@ -11,7 +11,8 @@ const useVoice = () => {
     }, []);
 
     const getVoices = useCallback(() => {
-        window.postMessage({ type: 'GET_VOICES' });
+        const voicesEvent = new CustomEvent("GET_VOICES")
+        window.dispatchEvent(voicesEvent)
     }, []);
 
     const handleVoiceChange = useCallback((voice: string) => {
@@ -19,6 +20,7 @@ const useVoice = () => {
     }, []);
 
     useEffect(() => {
+        getVoices();
         window.addEventListener('VOICES', handleVoiceRecevied);
         return () => {
             window.removeEventListener('VOICES', handleVoiceRecevied);

@@ -26,7 +26,7 @@ const useAudioUrl = () => {
         console.log("SEND_PROMPT");
         setIsLoading(true);
         const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
-        if (!sendButton) return toast.error("You might have a slow network connection or the page has not yet completed loading. Please refresh the page and try again.", { style: TOAST_STYLE_CONFIG });
+        if (!sendButton) return 
         sendButton.click();
     };
 

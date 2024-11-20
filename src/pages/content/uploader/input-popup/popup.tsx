@@ -17,17 +17,17 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
     return (
         <Dialog {...props}>
             <DialogTrigger asChild disabled={disabled}>
-                <div className={cn("group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-muted-foreground/25 px-5 py-2.5 text-center transition hover:bg-muted/25",
+                <div className={cn("group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-gray-500 dark:hover:border-gray-200 hover:border-gray-700 px-5 py-2.5 text-center transition hover:bg-gray-200 dark:hover:bg-gray-700",
                     "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",)}>
                     <div className="flex flex-col items-center justify-center gap-4 sm:px-5 cursor-pointer">
-                        <div className="rounded-full border border-dashed p-3">
+                        <div className="rounded-full border border-gray-500 border-dashed p-3">
                             <Type
-                                className="size-7 text-muted-foreground"
+                                className="size-7"
                                 aria-hidden="true"
                             />
                         </div>
                         <div className="flex flex-col gap-px">
-                            <p className="font-medium text-muted-foreground">
+                            <p className="font-medium">
                                 Type or Paste Text
                             </p>
                         </div>

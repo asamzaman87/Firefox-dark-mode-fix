@@ -4,23 +4,18 @@ const useAuthToken = () => {
     const [token, setToken] = useState<string | null>(null);
     const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-    const isSendButtonPresentOnDom = useCallback(() => {
-        const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
-        return sendButton !== null;
-    }, []);
-
+    
     const getTokenEvent = useCallback(() => new CustomEvent("GET_TOKEN"), []);
 
     const handleAuthReceived = (e: Event) => {
         const { detail: { accessToken } } = e as Event & { detail: { accessToken: string } };
         if (accessToken.includes("Bearer")) {
             setToken(accessToken.split(" ")[1]);
-            setIsAuthenticated(isSendButtonPresentOnDom() && !!accessToken);
+            setIsAuthenticated(!!accessToken);
             return
         }
         setToken(accessToken);
-        setIsAuthenticated(isSendButtonPresentOnDom() && !!accessToken);
+        setIsAuthenticated(!!accessToken);
     }
 
     useEffect(() => {

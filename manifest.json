@@ -31,7 +31,6 @@
     {
       "matches": [
         "https://chatgpt.com/*",
-        "https://*.openai.com/*",
         "https://*.chatgpt.com/*"
       ],
       "js": [
@@ -56,7 +55,6 @@
       ],
       "matches": [
         "https://chatgpt.com/*",
-        "https://*.openai.com/*",
         "https://*.chatgpt.com/*"
       ]
     }
