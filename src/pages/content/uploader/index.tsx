@@ -21,6 +21,7 @@ import InputPopup from "./input-popup/popup";
 import Player from "./player-button";
 import Previews from "./previews";
 import VoiceSelector from "./voice-selector";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 export interface PromptProps {
   text: string | undefined
 }
@@ -32,7 +33,7 @@ function Uploader() {
   const activateButton = useRef<HTMLButtonElement>(null);
   const [openTries, setOpenTries] = useState<number>(0);
 
-  const { pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isAuthenticated, isPaused, playRate, handlePlayRateChange, voices, setVoices } = useAudioPlayerNew();
+  const { pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isAuthenticated, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying } = useAudioPlayerNew();
 
   chrome.runtime.onConnect.addListener((port) => {
     port.onMessage.addListener((msg) => {
@@ -90,6 +91,15 @@ function Uploader() {
   }
 
   const onOpenChange = (open: boolean) => {
+    //redirect to login if click on button if not authorised
+    if(!isAuthenticated){
+      const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
+      if (loginBtn) {
+        loginBtn?.click();
+      }
+      toast.error("Please login to use the extension!", {duration: 10000, dismissible: true, style: TOAST_STYLE_CONFIG });
+      return;
+    }
     //if the send button is not present on the dom show error message
     if (!isSendButtonPresentOnDom()) {
       setIsActive(false);
@@ -115,7 +125,6 @@ function Uploader() {
         <DialogTrigger asChild>
             <Button
               ref={activateButton}
-              disabled={!isAuthenticated}
               variant="outline"
               size="lg"
               className="shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700"
@@ -133,11 +142,14 @@ function Uploader() {
             <DialogTitle className="inline-flex flex-col justify-center items-center gap-2"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</DialogTitle>
             <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
           </DialogHeader>
-          <div className="group flex size-full flex-col justify-center gap-6 overflow-hidden">
+          <div className="flex size-full flex-col justify-center gap-6 overflow-hidden">
+            <div className={cn("absolute top-4 left-4 size-max", {"translate-y-16 transition-transform": prompts.length > 0})}>
+              <ThemeToggle />
+            </div>
 
             {prompts.length === 0 ? <VoiceSelector disabled={isPlaying} voice={voices} setVoices={setVoices} /> : null}
 
-            {prompts.length > 0 && <Button onClick={onBackClick} variant="ghost" className="font-medium size-max absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"><ArrowLeft /> <span className="sr-only">Back</span>Back</Button>}
+            {prompts.length > 0 && <Button title="Back" size={"icon"} onClick={onBackClick} className="font-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft  /><span className="sr-only">Back</span></Button>}
 
             {prompts.length > 0 ?
               <Previews file={file} content={text} />
@@ -149,9 +161,7 @@ function Uploader() {
                 onValueChange={onSave}
               />}
 
-            {prompts.length > 0 ?
-                <Player isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
-              : null}
+                <Player showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
 
             {!prompts?.length ?
               <InputPopup disabled={isPlaying} onSubmit={onFormSubmit} />

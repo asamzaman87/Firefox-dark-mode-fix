@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import Uploader from './uploader';
 import './style.css';
+import { ThemeProvider } from "@/components/theme-provider"
 
 const div = document.createElement('div');
 div.id = '__gpt-reader-shadow';
@@ -13,7 +14,9 @@ const root = createRoot(rootContainer);
 
 try {
   root.render(
-    <Uploader />
+    <ThemeProvider>
+      <Uploader />
+    </ThemeProvider>
   );
 } catch (e) {
   const error = e as Error;

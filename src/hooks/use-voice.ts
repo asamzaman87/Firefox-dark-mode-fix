@@ -20,6 +20,13 @@ const useVoice = () => {
     }, []);
 
     useEffect(() => {
+        //fetches voices 1 sec after the load
+        setTimeout(()=>{
+            if(voices.voices.length===0){
+                getVoices();
+            }
+        }, 1000);
+
         getVoices();
         window.addEventListener('VOICES', handleVoiceRecevied);
         return () => {

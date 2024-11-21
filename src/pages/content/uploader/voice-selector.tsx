@@ -1,6 +1,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Info, PlayCircle, StopCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 export interface Voice {
@@ -17,6 +18,8 @@ interface VoiceSelectorProps {
 const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) => {
     const { selected, voices } = voice;
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [open, setOpen] = useState<boolean>(false);
+
     const audio = useMemo(() => new Audio(), []);
 
     useEffect(() => {
@@ -53,13 +56,14 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
         disabled?: boolean
     }
     const Trigger: FC<TriggerProps> = ({ children, onClick, disabled }) => (
-        <span aria-disabled={disabled} className="aria-disabled:cursor-not-allowed w-24 shadow-sm hover:cursor-pointer inline-flex items-center justify-evenly gap-2 py-1 px-2 text-sm font-medium rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-500 dark:border-gray-700" onClick={onClick}>
+        <span aria-disabled={disabled} className="w-max aria-disabled:cursor-not-allowed shadow-sm hover:cursor-pointer inline-flex items-center justify-evenly gap-2 py-1 px-2 text-sm font-medium rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-500 dark:border-gray-700" onClick={onClick}>
             {children}
         </span>
     )
 
     //if voices not present then fetch them on modal open (happens when user start a new conversation)
     const onOpenChange = (open: boolean) => {
+        setOpen(open)
         if (open && voice.voices.length === 0) {
             const voicesEvent = new CustomEvent("GET_VOICES");
             window.dispatchEvent(voicesEvent);
@@ -71,12 +75,12 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             <Trigger onClick={() => isPlaying ? stop() : preview()}>
                 {!isPlaying && <PlayCircle className={"size-4"} onClick={preview} />}
                 {isPlaying && <StopCircle className="size-4" onClick={stop} />}
-                {!isPlaying ? "Preview" : "Stop"}
+                {!isPlaying ? "Play Voice" : "Stop"}
             </Trigger>
             <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger disabled={disabled || isPlaying}>
                     <Trigger disabled={disabled || isPlaying}>
-                        {voice.selected.charAt(0).toUpperCase() + voice.selected.slice(1)}
+                       <UserCircle2Icon className="size-4"/> {voice.selected.charAt(0).toUpperCase() + voice.selected.slice(1)} <ChevronDown className={cn("size-4", { "rotate-180": open })} />
                     </Trigger>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -90,8 +94,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             <Popover>
                 <PopoverTrigger><Info className="cursor-pointer size-5 text-gray-600 dark:text-gray-100" /></PopoverTrigger>
                 <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                    <p>You can easily update the voice by selecting an option from the dropdown menu.</p>
-                    <p>Please note that the voice can only be changed before adding the text or file.</p>
+                    <p className="text-wrap text-justify font-medium text-sm">Choose from a variety of ChatGPT's enhanced voice options. Please note that the voice selection must be made prior to uploading your text.</p>
                 </PopoverContent>
             </Popover>
         </div>

@@ -1,10 +1,9 @@
-import { AUDIO_FORMAT, CHUNK_SIZE, HELPER_PROMPT, PROMPT_INPUT_ID, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
+import { CHUNK_SIZE, HELPER_PROMPT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
-import useVoice from "./use-voice";
 
 const useAudioUrl = () => {
     const [audioUrls, setAudioUrls] = useState<string[]>([]);
@@ -12,15 +11,9 @@ const useAudioUrl = () => {
     const [text, setText] = useState<string>("");
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
-
-    const {voices, handleVoiceChange} = useVoice();
+    
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
-    const { completedStreams, currentCompletedStream, reset: resetStreamListener } = useStreamListener(setIsLoading);
-
-    const setVoices = (voice: string) => {
-        chrome.runtime.sendMessage({ type: "CHANGE_VOICE", voice });
-        handleVoiceChange(voice);
-    }
+    const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices } = useStreamListener(setIsLoading);
 
     const sendPrompt = async () => {
         console.log("SEND_PROMPT");
@@ -84,7 +77,7 @@ const useAudioUrl = () => {
                 break;
             }
             default:
-                toast.error("Unsupported file type");
+                toast.error("Unsupported file type", {style: TOAST_STYLE_CONFIG});
                 break;
         }
     }
@@ -101,9 +94,7 @@ const useAudioUrl = () => {
 
     useEffect(() => {
         if (completedStreams.length > 0) {
-            const audioUrls = completedStreams.map(stream => `${SYNTETHIZE_ENDPOINT}?conversation_id=${stream.conversationId}&message_id=${stream.messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
-            console.log("USE_AUDIO_URL", audioUrls.length);
-            setAudioUrls(audioUrls);
+            setAudioUrls(completedStreams);
             if (currentCompletedStream?.chunkNumber && +currentCompletedStream.chunkNumber !== chunks.length - 1) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
                 if (nextChunk) {
@@ -115,7 +106,7 @@ const useAudioUrl = () => {
         }
     }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected])
 
-    return { voices, setVoices, text, audioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset }
+    return { voices, setVoices, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset }
 
 }
 
