@@ -1,4 +1,5 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
+import { TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
 import * as React from "react";
@@ -110,7 +111,7 @@ export function FileUploader(props: FileUploaderProps) {
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 
       if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
-        toast.error("Cannot upload more than 1 file at a time");
+        toast.error("Cannot upload more than 1 file at a time", {style: TOAST_STYLE_CONFIG});
         return;
       }
 
@@ -131,7 +132,7 @@ export function FileUploader(props: FileUploaderProps) {
 
       if (rejectedFiles.length > 0) {
         rejectedFiles.forEach(({ file }) => {
-          toast.error(`File ${file.name} was rejected`);
+          toast.error(`File ${file.name} was rejected`, {style: TOAST_STYLE_CONFIG});
         });
       }
 

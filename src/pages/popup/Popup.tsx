@@ -26,7 +26,6 @@ export default function Popup(): JSX.Element {
 
     port.onMessage.addListener( (msg) => {
       if(msg.type==="STATUS") {
-          console.log(msg);
           setIsActive(msg.message);
         }
     });

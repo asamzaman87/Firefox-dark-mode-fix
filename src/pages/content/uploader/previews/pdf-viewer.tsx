@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2Icon } from 'lucide-react';
 import { FC, useState } from 'react';
 import { Document, Page } from 'react-pdf';
 
@@ -66,7 +66,7 @@ const PdfViewer: FC<PdfViewerProps> = ({ file }) => {
                     Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
                 </span>
                 <Document file={samplePDF} onLoadSuccess={onDocumentLoadSuccess}>
-                    <Page pageNumber={pageNumber}/>
+                    <Page pageNumber={pageNumber} loading={<div className="h-[628.5px] w-[393.4786px] flex items-center justify-center"><Loader2Icon className='size-6 animate-spin' /></div>} />
                 </Document>
             </div>
 

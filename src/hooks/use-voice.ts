@@ -1,4 +1,4 @@
-import { VOICE } from "@/lib/constants";
+import { LISTENERS, VOICE } from "@/lib/constants";
 import { Voice } from "@/pages/content/uploader/voice-selector";
 import { useCallback, useEffect, useState } from "react";
 
@@ -11,7 +11,7 @@ const useVoice = () => {
     }, []);
 
     const getVoices = useCallback(() => {
-        const voicesEvent = new CustomEvent("GET_VOICES")
+        const voicesEvent = new CustomEvent(LISTENERS.GET_VOICES)
         window.dispatchEvent(voicesEvent)
     }, []);
 
@@ -28,9 +28,9 @@ const useVoice = () => {
         }, 1000);
 
         getVoices();
-        window.addEventListener('VOICES', handleVoiceRecevied);
+        window.addEventListener(LISTENERS.VOICES, handleVoiceRecevied);
         return () => {
-            window.removeEventListener('VOICES', handleVoiceRecevied);
+            window.removeEventListener(LISTENERS.VOICES, handleVoiceRecevied);
         }
     }, []);
 

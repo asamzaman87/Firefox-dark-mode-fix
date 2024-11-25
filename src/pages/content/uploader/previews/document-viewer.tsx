@@ -8,7 +8,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({ content }) => {
 
     useEffect(() => {
         if (content.trim()?.length && divRef.current) {
-            divRef.current.innerHTML = content;
+            divRef.current.innerHTML = content.split("\n").join("<br/>");
         }
     }, [content])
 

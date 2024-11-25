@@ -1,4 +1,4 @@
-import { AUDIO_FORMAT, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
+import { AUDIO_FORMAT, LISTENERS, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
 import { extractChunkNumberFromPrompt } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -8,12 +8,11 @@ import useVoice from "./use-voice";
 const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNumber: string } | null>(null);
-    const[ error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const { token } = useAuthToken();
     const { voices, handleVoiceChange } = useVoice();
 
     const setVoices = (voice: string) => {
-        chrome.runtime.sendMessage({ type: "CHANGE_VOICE", voice });
         handleVoiceChange(voice);
     }
 
@@ -44,7 +43,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
 
     const handleRateLimitExceeded = useCallback((e: Event) => {
         const { detail } = e as Event & { detail: string };
-        toast.error(detail, { duration: 10000, position: "top-center", dismissible:true, style: TOAST_STYLE_CONFIG });
+        toast.error(detail, { duration: 1000000, dismissible:true, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
     },  [setIsLoading]);
 
@@ -55,11 +54,11 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
 
     useEffect(() => {
         setError(null);
-        window.addEventListener('END_OF_STREAM', handleConvStream);
-        window.addEventListener('RATE_LIMIT_EXCEEDED', handleRateLimitExceeded);
+        window.addEventListener(LISTENERS.END_OF_STREAM, handleConvStream);
+        window.addEventListener(LISTENERS.RATE_LIMIT_EXCEEDED, handleRateLimitExceeded);
         return () => {
-            window.removeEventListener('END_OF_STREAM', handleConvStream);
-            window.removeEventListener('RATE_LIMIT_EXCEEDED', handleRateLimitExceeded);
+            window.removeEventListener(LISTENERS.END_OF_STREAM, handleConvStream);
+            window.removeEventListener(LISTENERS.RATE_LIMIT_EXCEEDED, handleRateLimitExceeded);
         };
     }, [handleConvStream]);
 

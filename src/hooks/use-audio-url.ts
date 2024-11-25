@@ -26,7 +26,7 @@ const useAudioUrl = () => {
     const stopPrompt = async () => {
         console.log("STOP_PROMPT");
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
-        if (stopButton) {   
+        if (stopButton) {
             stopButton.click();
         }
     };
@@ -86,10 +86,10 @@ const useAudioUrl = () => {
         setAudioUrls([]);
         setCurrentChunkBeingPromptedIndex(0);
         setChunks([]);
+        stopPrompt()
         setText("");
         setIsLoading(false);
         resetStreamListener();
-        stopPrompt()
     }
 
     useEffect(() => {

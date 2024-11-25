@@ -10,7 +10,7 @@ interface PlayerProps {
     isLoading?: boolean;
     play: () => void;
     pause: () => void;
-    handlePlayRateChange: () => void;
+    handlePlayRateChange: (reset?: boolean) => void;
     playRate: number;
     hasPlayBackEnded?: boolean;
     setHasPlayBackEnded: (state: boolean) => void;
@@ -20,9 +20,9 @@ const Player: FC<PlayerProps> = ({ isPaused, isPlaying, isLoading, play, pause, 
 
     const restart=()=>{
         setHasPlayBackEnded(false);
+        handlePlayRateChange(true); //true is indicate reset play rate to 1
         play()
     }
-
 
     //ToDo: animate like the theme toggle
     return (
@@ -32,7 +32,7 @@ const Player: FC<PlayerProps> = ({ isPaused, isPlaying, isLoading, play, pause, 
                     {hasPlayBackEnded && (!isPlaying || !isPaused) && !isLoading ? <Button disabled={isLoading} onClick={restart} size={"icon"} className="[&_svg]:size-6"><RotateCwIcon /> <span className="sr-only">Restart</span></Button> : null}
                     {((!isPaused && !isPlaying) || isPaused) && !hasPlayBackEnded && !isLoading ? <Button disabled={isLoading} onClick={play} size={"icon"} className="[&_svg]:size-6"><PlayIcon /> <span className="sr-only">Play</span></Button> : null}
                     {isPlaying ? <Button onClick={pause} size={"icon"} className="[&_svg]:size-6"><PauseIcon /> <span className="sr-only">Pause</span></Button> : null}
-                    {isPlaying || isPaused? <Button onClick={handlePlayRateChange} disabled={isLoading} size={"icon"} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">{playRate}x<span className="sr-only">Playback Rate</span></Button> : null}
+                    {isPlaying || isPaused? <Button onClick={()=>handlePlayRateChange()} disabled={isLoading} size={"icon"} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">{playRate}x<span className="sr-only">Playback Rate</span></Button> : null}
             </div>
         </div>
     )

@@ -31,7 +31,9 @@
     {
       "matches": [
         "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*"
+        "https://*.chatgpt.com/*",
+        "https://*.chat.com/*",
+        "https://chat.com/*"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -55,7 +57,9 @@
       ],
       "matches": [
         "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*"
+        "https://*.chatgpt.com/*",
+        "https://*.chat.com/*",
+        "https://chat.com/*"
       ]
     }
   ]

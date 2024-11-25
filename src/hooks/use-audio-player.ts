@@ -1,4 +1,4 @@
-import { PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { LISTENERS, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import useAudioUrl from "./use-audio-url";
@@ -14,7 +14,8 @@ const useAudioPlayer = () => {
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [playRate, setPlayRate] = useState<number>(1);
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
-    const audioPlayer = useMemo(() => new Audio(), []);
+    const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
+    const audioPlayer = useMemo(() => new Audio(), [isBackPressed]);
 
     useMemo(()=>{
         if(audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)){
@@ -86,14 +87,19 @@ const useAudioPlayer = () => {
 
     const play = useCallback(() => {
         if (!isPlaying) {
+            audioPlayer.playbackRate = playRate;
             audioPlayer.play();
             setIsPlaying(true);
             setIsPaused(false);
         }
-    }, [audioPlayer, isPlaying, currentIndex])
+    }, [audioPlayer, isPlaying, currentIndex, playRate])
 
     //handler to toggle rate change from the play button
-    const handlePlayRateChange = useCallback(() => {
+    const handlePlayRateChange = useCallback((reset?: boolean) => {
+        if (reset) {
+            setPlayRate(1);
+            return;
+        }
         if (playRate === 2) {
             setPlayRate(0.5);
             return;
@@ -111,20 +117,26 @@ const useAudioPlayer = () => {
     }, [audioPlayer, playRate])
 
     useEffect(() => {
-        audioPlayer.addEventListener("ended", handleAudioEnd);
+        audioPlayer.addEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
         return () => {
-            audioPlayer.removeEventListener("ended", handleAudioEnd);
+            audioPlayer.removeEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
         }
     }, [audioPlayer, handleAudioEnd]);
 
     useMemo(() => {
+        //resetting audio url if back pressed as the synthesize api might return a delayed response after back press while a chunk had called it
+        if(audioUrls.length && isBackPressed) {
+            return resetAudioUrl();
+        }
+
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
+        
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
             console.log("INIT PLAY")
             playNext(0)
         }
-    }, [audioUrls.length]);
+    }, [audioUrls.length, isBackPressed]);
 
     return {
         isAuthenticated,
@@ -147,7 +159,9 @@ const useAudioPlayer = () => {
         voices,
         setVoices,
         hasCompletePlaying,
-        setHasCompletePlaying
+        setHasCompletePlaying,
+        isBackPressed,
+        setIsBackPressed
     }
 
 

@@ -1,3 +1,4 @@
+import { LISTENERS } from "@/lib/constants";
 import { useCallback, useEffect, useState } from "react";
 
 const useAuthToken = () => {
@@ -5,7 +6,7 @@ const useAuthToken = () => {
     const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     
-    const getTokenEvent = useCallback(() => new CustomEvent("GET_TOKEN"), []);
+    const getTokenEvent = useCallback(() => new CustomEvent(LISTENERS.GET_TOKEN), []);
 
     const handleAuthReceived = (e: Event) => {
         const { detail: { accessToken } } = e as Event & { detail: { accessToken: string } };
@@ -31,9 +32,9 @@ const useAuthToken = () => {
 
     useEffect(() => {
         window.dispatchEvent(getTokenEvent());
-        window.addEventListener('AUTH_RECEIVED', handleAuthReceived);
+        window.addEventListener(LISTENERS.AUTH_RECEIVED, handleAuthReceived);
         return () => {
-            window.removeEventListener('AUTH_RECEIVED', handleAuthReceived);
+            window.removeEventListener(LISTENERS.AUTH_RECEIVED, handleAuthReceived);
         };
     }, [getTokenEvent]);
 

@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CHUNK_SIZE } from "./constants";
+import { CHUNK_SIZE, LISTENERS } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -51,7 +51,7 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
 
   return sentences.reduce((chunks, sentence, i, arr) => {
     const isCurrentChunkSizeGreaterThanOrEqualChunkSize = (currentChunk + sentence).length >= chunkSize;
-    const isEnd = i === arr.length-1
+    const isEnd = i === arr.length - 1
     if (isCurrentChunkSizeGreaterThanOrEqualChunkSize) {
       chunks.push({ id: `${chunkId++}`, text: currentChunk.trim(), completed: false });
       currentChunk = sentence.trim();
@@ -74,4 +74,11 @@ export const extractChunkNumberFromPrompt = (inputString: string): string | null
   const match = inputString.match(regex);
   if (!match) return null;// Return null if no number is found
   return match[1];  // Return the number inside the brackets as a string
+}
+
+export const removeAllListeners = () => {
+  const listners = Object.values(LISTENERS);
+  listners.forEach(listener => {
+    window.removeEventListener(listener, () => { });
+  });
 }

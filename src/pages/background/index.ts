@@ -28,3 +28,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 // chrome.runtime.onInstalled.addListener(() => {
 //     chrome.tabs.create({ url: "https://chat.openai.com/chat?isActive=true" });
 // })
+
+chrome.runtime.onConnect.addListener((port) => {
+    console.log("CONNECTED");
+    port.onMessage.addListener(() => {
+        console.log("listening to port", port.name);
+        chrome.webRequest.onErrorOccurred.addListener(function (details) {
+            console.log(details);
+            if (details.statusCode === 429) {
+                port.postMessage({ message: details });
+            }
+            return { cancel: false };
+        }, { urls: ["<all_urls>"] });
+    });
+});
+
+chrome.webRequest.onErrorOccurred.addListener(function (details) {
+    console.log(details);
+    return { cancel: true };
+}, { urls: ["<all_urls>"] });
