@@ -81,7 +81,6 @@ window.fetch = async (...args) => {
     if (hasConversationEndpoint && args[1].method === 'POST') {
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
-        console.log("STREAM", clonedResponse.status);
         if (clonedResponse.status === 429) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
                 detail: "You have exceeded the hourly limit for this API. Please try again later.",
