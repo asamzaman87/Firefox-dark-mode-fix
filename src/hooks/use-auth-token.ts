@@ -8,15 +8,18 @@ const useAuthToken = () => {
     
     const getTokenEvent = useCallback(() => new CustomEvent(LISTENERS.GET_TOKEN), []);
 
+    const updateTheToken = (token: string) => {
+        setToken(token);
+        setIsAuthenticated(!!token);
+    }
+
     const handleAuthReceived = (e: Event) => {
         const { detail: { accessToken } } = e as Event & { detail: { accessToken: string } };
         if (accessToken.includes("Bearer")) {
-            setToken(accessToken.split(" ")[1]);
-            setIsAuthenticated(!!accessToken);
+            updateTheToken(accessToken.split(" ")[1])
             return
         }
-        setToken(accessToken);
-        setIsAuthenticated(!!accessToken);
+        updateTheToken(accessToken);
     }
 
     useEffect(() => {

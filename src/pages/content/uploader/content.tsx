@@ -71,13 +71,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
                 <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
             </DialogHeader>
             <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
-                <div className={cn("absolute top-4 left-4 size-max", { "translate-y-16 transition-transform": prompts.length > 0 })}>
+                <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": prompts.length > 0 })}>
                     <ThemeToggle />
                 </div>
 
-                {prompts.length === 0 ? <VoiceSelector disabled={isPlaying} voice={voices} setVoices={setVoices} /> : null}
+                {prompts.length === 0 ? <VoiceSelector voice={voices} setVoices={setVoices} /> : null}
 
-                {prompts.length > 0 && <Button title="Back" size={"icon"} onClick={onBackClick} className="font-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">Back</span></Button>}
+                {prompts.length > 0 && <Button title="Back" size={"icon"} onClick={onBackClick} className="hover:scale-110  transition-allfont-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">Back</span></Button>}
 
                 {
                     prompts.length > 0 ?

@@ -40,7 +40,14 @@ const useAudioUrl = () => {
                 sendPrompt();
             }, 200);
         } else {
-            toast.error("Could not find textarea element!", { style: TOAST_STYLE_CONFIG });
+            toast("Network Error", {
+                description: "Please refresh and try again with a new chat!",
+                action: {
+                    label: "Refresh",
+                    onClick: () => window.location.reload(),
+                },
+                style: TOAST_STYLE_CONFIG
+            })
         }
     }, []);
 

@@ -1,6 +1,6 @@
 import { Accept } from "react-dropzone";
 
-export const THEME_STORAGE_KEY = "gpt-reader-theme";
+export const THEME_STORAGE_KEY = "theme";
 export const MAX_FILES = 1;
 export const ACCEPTED_FILE_TYPES: Accept = {
   "application/pdf": [],

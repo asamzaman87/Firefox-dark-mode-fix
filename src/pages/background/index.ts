@@ -1,23 +1,18 @@
-console.log("BACKGROUND LOADED");
+import { LISTENERS } from "@/lib/constants";
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-    console.log("BACKGROUND MESSAGE", request);
+console.log("BACKGROUND LOADED");
+chrome.storage.local.clear();
+
+chrome.runtime.onMessage.addListener(async (request) => {
     switch (request.type) {
-        case "ERROR": {
-            console.log(request.message);
-            break
-        }
-        case "CREATE": {
-            chrome.tabs.create({ url: "https://chat.openai.com/chat?isActive=true" }).then(() => {
-                sendResponse({ message: "SUCCESS" });
-            }).catch(() => {
-                sendResponse({ message: "FAILED" });
-            });
+        case LISTENERS.AUTH_RECEIVED:{
+            console.log("BACKGROUND MESSAGE", request);
+            chrome.storage.local.set({isAuthenticated: request.isAuthenticated});
             break;
         }
-        case "CHANGE_VOICE": {
-            chrome.storage.local.set({ "gptr/voice": request.voice });
-            sendResponse({ message: "SUCCESS" });
+        case "CLEAR":{
+            console.log("CLEAR")
+            chrome.storage.local.clear();
             break;
         }
         default:
@@ -29,21 +24,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 //     chrome.tabs.create({ url: "https://chat.openai.com/chat?isActive=true" });
 // })
 
-chrome.runtime.onConnect.addListener((port) => {
-    console.log("CONNECTED");
-    port.onMessage.addListener(() => {
-        console.log("listening to port", port.name);
-        chrome.webRequest.onErrorOccurred.addListener(function (details) {
-            console.log(details);
-            if (details.statusCode === 429) {
-                port.postMessage({ message: details });
-            }
-            return { cancel: false };
-        }, { urls: ["<all_urls>"] });
-    });
-});
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    if (changeInfo.status === "complete" && (tab?.url?.includes("https://chatgpt.com/auth/logout"))) {
+        console.log("LOGOUT")
+        chrome.runtime.sendMessage({type:"CLEAR"})
+    }
+})
 
-chrome.webRequest.onErrorOccurred.addListener(function (details) {
-    console.log(details);
-    return { cancel: true };
-}, { urls: ["<all_urls>"] });
+chrome.tabs.onActivated.addListener(async()=>{
+    const queryOptions = { active: true, currentWindow: true };
+    const tabs = await chrome.tabs.query(queryOptions);
+    if(tabs.length===0) return chrome.action.disable();
+
+    if(tabs[0]?.url?.includes("chat.com") || tabs[0]?.url?.includes("chatgpt.com")) {
+        chrome.action.setIcon({path: "logo-128.png"});
+    } else {
+        chrome.action.setIcon({path: "logo-128-bw.png"});
+    }
+});

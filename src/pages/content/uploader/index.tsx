@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import useAuthToken from "@/hooks/use-auth-token";
-import { TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { LISTENERS, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import Content from "./content";
 export interface PromptProps {
@@ -23,6 +23,10 @@ function Uploader() {
   const [openTries, setOpenTries] = useState<number>(0);
 
   const { isAuthenticated } = useAuthToken();
+
+  useMemo(() => {
+    chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
+  }, [isAuthenticated]);
 
   chrome.runtime.onConnect.addListener((port) => {
     port.onMessage.addListener((msg) => {

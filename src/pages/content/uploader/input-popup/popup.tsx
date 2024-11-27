@@ -40,9 +40,9 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                 }}
                 className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
             >
-                <DialogHeader className="sr-only">
+                <DialogHeader>
                     <DialogTitle>Type Or Paste Text</DialogTitle>
-                    <DialogDescription>Paste or type your text</DialogDescription>
+                    <DialogDescription className="sr-only">Paste or type your text</DialogDescription>
                 </DialogHeader>
                 <InputForm onSubmit={onSubmit} />
             </DialogContent>

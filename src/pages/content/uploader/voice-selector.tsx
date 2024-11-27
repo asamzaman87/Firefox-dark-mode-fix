@@ -44,6 +44,13 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
         }
     }, [selected])
 
+    const onDropItemSelect=(voice: string)=>{
+        if(audio){
+            stop()
+        }
+        setVoices(voice)
+    }
+
     const stop = useCallback(() => {
         audio.src = "";
         audio.currentTime = 0;
@@ -79,14 +86,14 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
                 {!isPlaying ? "Play Voice" : "Stop"}
             </Trigger>
             <DropdownMenu onOpenChange={onOpenChange}>
-                <DropdownMenuTrigger disabled={disabled || isPlaying}>
-                    <Trigger disabled={disabled || isPlaying}>
+                <DropdownMenuTrigger disabled={disabled}>
+                    <Trigger disabled={disabled}>
                        <UserCircle2Icon className="size-4"/> {voice.selected.charAt(0).toUpperCase() + voice.selected.slice(1)} <ChevronDown className={cn("size-4", { "rotate-180": open })} />
                     </Trigger>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                     {voices.map((voice) => (
-                        <DropdownMenuItem className="items-center justify-between cursor-pointer disabled:cursor-not-allowed hover:bg-gray-200 hover:dark:bg-gray-800/80 rounded" disabled={selected === voice.voice} key={voice.voice} onClick={() => setVoices(voice.voice)}>
+                        <DropdownMenuItem className="items-center justify-between cursor-pointer disabled:cursor-not-allowed hover:bg-gray-200 hover:dark:bg-gray-800/80 rounded" disabled={selected === voice.voice} key={voice.voice} onClick={() => onDropItemSelect(voice.voice)}>
                             {voice.voice.charAt(0).toUpperCase() + voice.voice.slice(1)}
                         </DropdownMenuItem>
                     ))}
