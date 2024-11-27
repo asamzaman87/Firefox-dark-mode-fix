@@ -233,7 +233,7 @@ export function FileUploader(props: FileUploaderProps) {
                           maxFileCount === Infinity ? "multiple" : maxFileCount
                         }
                       files (up to ${formatBytes(maxSize)} each)`
-                      : ` a File up to ${formatBytes(maxSize)}`}
+                      : ` a File Up to ${formatBytes(maxSize)}`}
                   </p>
                 </div>
               </div>
