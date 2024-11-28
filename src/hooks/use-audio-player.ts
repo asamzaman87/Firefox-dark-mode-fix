@@ -53,6 +53,7 @@ const useAudioPlayer = () => {
         setCurrentIndex(0);
         setIsPlaying(false);
         setIsPaused(false);
+        setHasCompletePlaying(false);
         if (full) {
             audioPlayer.src = "";
             resetAudioUrl();
@@ -95,7 +96,12 @@ const useAudioPlayer = () => {
     }, [audioPlayer, isPlaying, currentIndex, playRate])
 
     //handler to toggle rate change from the play button
-    const handlePlayRateChange = useCallback((reset?: boolean) => {
+    const handlePlayRateChange = useCallback((reset?: boolean, rate?: number) => {
+        if (rate) {
+            setPlayRate(rate);
+            return;
+        }
+        
         if (reset) {
             setPlayRate(1);
             return;

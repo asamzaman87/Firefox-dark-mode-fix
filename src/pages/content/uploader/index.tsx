@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import Content from "./content";
+import AlertPopup from "./alert-popup";
 export interface PromptProps {
   text: string | undefined
 }
@@ -21,13 +22,18 @@ function Uploader() {
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
   const [openTries, setOpenTries] = useState<number>(0);
+  const [minimised, setMinimised] = useState<boolean>(false);
+  const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const { isAuthenticated } = useAuthToken();
+  const LOGO = chrome.runtime.getURL('logo-128.png');
 
+  //sending the auth status to the background script
   useMemo(() => {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
 
+  //listening for messages from the background script/popup
   chrome.runtime.onConnect.addListener((port) => {
     port.onMessage.addListener((msg) => {
       if (port.name === "activate") {
@@ -49,6 +55,11 @@ function Uploader() {
     const s = document.createElement('script');
     s.src = chrome.runtime.getURL('injected.js');
     (document.head || document.documentElement).appendChild(s);
+
+    if(window){
+      const minimised = window.localStorage.getItem("gptr/minimised");
+      setMinimised(minimised === "true");
+    }
   }, []);
 
   //check if the send button is present on the dom
@@ -78,20 +89,35 @@ function Uploader() {
       return;
     }
     setIsActive(open);
+    setConfirmed(false)
   }
-  const logo = chrome.runtime.getURL('logo-128.png');
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleMinimise = () => {
+    setMinimised(minimise => {
+      const state = !minimise;
+      window.localStorage.setItem("gptr/minimised", String(state));
+      return state
+    })
+  }
+
+  const handleConfirm = (state: boolean) => {
+    if(!state) return onOpenChange(false);
+    setConfirmed(state)
+  }
 
   return (
     <div>
       <Dialog open={isActive} onOpenChange={onOpenChange}>
+        {/* <ChevronRightCircleIcon id="minimise" className={cn("size-4 cursor-pointer absolute top-[15.9rem] right-44 z-[100] transition", {"rotate-180 ": minimised})} onClick={handleMinimise}/> */}
         <DialogTrigger asChild>
           <Button
             ref={activateButton}
             variant="outline"
             size="lg"
-            className="shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700"
-          >
-            <img src={logo} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
+            className={cn("shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-3s6": minimised })}
+            >
+            <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
           </Button>
         </DialogTrigger>
         <DialogContent
@@ -100,8 +126,8 @@ function Uploader() {
           }}
           className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-6", prompts?.length && "pb-0")}
         >
-
-          <Content setPrompts={setPrompts} prompts={prompts}/>
+          {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
+          {confirmed && <Content setPrompts={setPrompts} prompts={prompts}/>}
 
         </DialogContent>
       </Dialog>

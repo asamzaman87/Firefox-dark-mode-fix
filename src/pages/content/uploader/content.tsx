@@ -14,6 +14,7 @@ import { PromptProps } from ".";
 import { toast } from "sonner";
 import Player from "./player";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import FeedbackPopup from "./feedback-popup";
 
 interface ContentProps {
     setPrompts: (prompts: PromptProps[]) => void;
@@ -21,13 +22,15 @@ interface ContentProps {
 }
 
 const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [title, setTitle] = useState<string>();
     const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying } = useAudioPlayerNew();
 
     const resetter = () => {
         reset(true);
-        setFile(null);
+        setFiles([]);
         setPrompts([]);
+        setTitle(undefined);
     }
 
     const onBackClick = () => {
@@ -45,8 +48,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     const onSave = (files: File[]) => {
         if (!files?.length) return toast.error("No files selected!", { style: TOAST_STYLE_CONFIG });
         if (isBackPressed) setIsBackPressed(false) //reseting back pressed state if the file is added
-        setFile(files[0]);
-        extractText(files[0])
+        setFiles(files);
+        setTitle(files[0].name);
+        extractText(files[0]).catch(e => {
+            toast.error(e.message, { style: TOAST_STYLE_CONFIG })
+            resetter();
+        })
     }
 
     useMemo(() => {
@@ -59,6 +66,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
         if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
+        setTitle(values.title);
         splitAndSendPrompt(values.text)
     }
 
@@ -66,13 +74,19 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     return (
         <>
-            <DialogHeader className={cn("h-max", prompts?.length && "sr-only")}>
-                <DialogTitle className="inline-flex flex-col justify-center items-center gap-2"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</DialogTitle>
+            <DialogHeader className={"h-max"}>
+                <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
+                    {title ? title
+                    : <>{!prompts.length && <img src={logo} alt="GPT Reader Logo" className="size-10" />} GPT Reader</>}    
+                </DialogTitle>
                 <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
             </DialogHeader>
             <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
                 <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": prompts.length > 0 })}>
                     <ThemeToggle />
+                </div>
+                <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform": prompts.length > 0 })}>
+                    <FeedbackPopup />
                 </div>
 
                 {prompts.length === 0 ? <VoiceSelector voice={voices} setVoices={setVoices} /> : null}
@@ -81,8 +95,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
                 {
                     prompts.length > 0 ?
-                        <Previews file={file} content={text} />
+                        <Previews file={files[0]} content={text} />
                         : <FileUploader
+                            value={files}
                             disabled={isPlaying}
                             accept={ACCEPTED_FILE_TYPES}
                             maxFileCount={MAX_FILES}

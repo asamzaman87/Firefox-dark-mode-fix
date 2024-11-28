@@ -7,6 +7,10 @@ const useVoice = () => {
 
     const handleVoiceRecevied = useCallback((event: Event) => {
         const { detail } = event as Event & { detail: Voice };
+        const storedVoice = window.localStorage.getItem("gptr/voice");
+        if (storedVoice) {
+            detail.selected = storedVoice;
+        }
         setVoices(detail);
     }, []);
 
@@ -16,6 +20,7 @@ const useVoice = () => {
     }, []);
 
     const handleVoiceChange = useCallback((voice: string) => {
+        window && window.localStorage.setItem("gptr/voice", voice);
         setVoices(p => ({ ...p, selected: voice }));
     }, []);
 

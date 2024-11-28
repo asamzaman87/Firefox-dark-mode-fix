@@ -31,3 +31,5 @@ export const AUDIO_FORMAT = "aac";
 export const CHUNK_SIZE = 400;
 export const TOAST_STYLE_CONFIG = { backgroundColor: "darkred", color: "#fff", border: "1px solid #b30000" }
 export const PLAY_RATE_STEP = 0.25;
+export const DOMAINS = ["chat.com", "chatgpt.com"];
+export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"];

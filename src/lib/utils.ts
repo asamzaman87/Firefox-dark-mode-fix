@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CHUNK_SIZE, LISTENERS } from "./constants";
+import { CHUNK_SIZE, LISTENERS, MATCH_URLS } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -110,4 +110,21 @@ export const removeAllListeners = () => {
   listners.forEach(listener => {
     window.removeEventListener(listener, () => { });
   });
+}
+
+export const getGPTTabs = async () => {
+  const tabs = await chrome.tabs.query({ url: MATCH_URLS });
+  if (tabs.length === 0 || !tabs[0].id) return;
+
+  return tabs
+}
+
+export const switchToActiveTab = async () => {
+  const activeTab = await getGPTTabs();
+  if (!activeTab?.length || !activeTab[0].id) {
+    chrome.tabs.create({ url: "https://chatgpt.com" });
+    return
+  }
+  chrome.tabs.update(activeTab[0].id, { active: true });
+  return activeTab[0].id;
 }

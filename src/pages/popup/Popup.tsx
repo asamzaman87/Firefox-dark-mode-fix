@@ -1,19 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-
-const urls = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"]
+import FeedbackPopup from "../content/uploader/feedback-popup";
+import { switchToActiveTab } from "@/lib/utils";
 
 export default function Popup(): JSX.Element {
   const [isActive, setIsActive] = useState<boolean>(false);
-  const [isEnabled, setIsEnabled] = useState<boolean>(false);
-  // const [statusCheckInterval, setStatusCheckInterval] = useState<number>(0);
-
-  const getGPTTabs = async () => {
-    const tabs = await chrome.tabs.query({url: urls});
-    if (tabs.length === 0 || !tabs[0].id) return;
-
-    return tabs
-  }
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isValidUrl, setIsValidUrl] = useState<boolean>(false);
 
   const getActiveTab = async () => {
     const queryOptions = { active: true, currentWindow: true };
@@ -42,14 +35,13 @@ export default function Popup(): JSX.Element {
       message: "STATUS",
     });
 
-    port.onMessage.addListener( (msg) => {
-      if(msg.type==="STATUS") {
-          setIsActive(msg.message);
-          chrome.storage.local.get("isAuthenticated", (result) => {
-            console.log({result});
-            setIsEnabled(result.isAuthenticated);
-          });
-        }
+    port.onMessage.addListener((msg) => {
+      if (msg.type === "STATUS") {
+        setIsActive(msg.message);
+        chrome.storage.local.get("isAuthenticated", (result) => {
+          setIsAuthenticated(result.isAuthenticated);
+        });
+      }
     });
 
   }
@@ -71,26 +63,21 @@ export default function Popup(): JSX.Element {
   }
 
   useEffect(() => {
-      isCurrentTabGpt().then((isGpt)=>setIsEnabled(!!isGpt));
-      statusCheck();
+    isCurrentTabGpt().then((isGpt) => setIsValidUrl(!!isGpt));
+    statusCheck();
   }, []);
-
-  const switchToActiveTab = async () => {
-    const activeTab = await getGPTTabs();
-    if (!activeTab?.length || !activeTab[0].id) {
-      chrome.tabs.create({url: "https://chatgpt.com"});
-      return
-    }
-    chrome.tabs.update(activeTab[0].id, {active: true});
-  }
 
   const logo = chrome.runtime.getURL('logo-128.png');
 
   return (
     <div className="flex flex-col items-center justify-evenly gap-4 h-screen w-screen p">
+      <div className={"absolute top-4 left-4 size-max"}>
+        <FeedbackPopup />
+      </div>
       <div className="inline-flex flex-col justify-center items-center gap-2 font-medium text-lg"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</div>
-      {isEnabled && <Button disabled={isActive}  onClick={onClick} className="text-xl rounded-lg bg-black text-white">{isActive ? "Active" : "Activate"}</Button>}
-      {!isEnabled && <Button  onClick={switchToActiveTab} className="text-xl rounded-lg bg-black text-white">Go to ChatGpt</Button>}
+      {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="text-xl rounded-lg bg-black text-white">{isActive ? "Active" : "Activate"}</Button>}
+      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="text-xl rounded-lg bg-black text-white">Login to use GPT Reader</Button>}
+      {!isValidUrl && <Button onClick={switchToActiveTab} className="text-xl rounded-lg bg-black text-white">Click here to go to ChatGPT</Button>}
     </div>
   );
 }

@@ -1,6 +1,5 @@
-import { pdfjs } from "react-pdf";
-import { toast } from "sonner";
 import mammoth from "mammoth";
+import { pdfjs } from "react-pdf";
 
 // Path to the pdf.worker.js file
 pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.js");
@@ -28,9 +27,7 @@ const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
             extractedText += pageText;
         }
     } catch (e: unknown) {
-        const error = e as Error;
         hadParsingError = true;
-        chrome.runtime.sendMessage({ type: "ERROR", message: error.message });
     }
 
     // Clean up the blob URL
@@ -42,7 +39,7 @@ const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
     if (!hadParsingError) {
         return extractedText;
     }
-    return "";
+    throw new Error("There was an error parsing the PDF file! It might not have valid text content.");
 };
 
 // Get paragraphs as javascript array
