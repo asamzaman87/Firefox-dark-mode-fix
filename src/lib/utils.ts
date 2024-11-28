@@ -128,3 +128,15 @@ export const switchToActiveTab = async () => {
   chrome.tabs.update(activeTab[0].id, { active: true });
   return activeTab[0].id;
 }
+
+export const detectBrowser = () => {
+  const userAgent = navigator?.userAgent;
+
+  if (userAgent.includes('Firefox')) {
+    return 'firefox';
+  } else if (userAgent.includes('Chrome')) {
+    return 'chrome';
+  } else {
+    return 'unknown';
+  }
+};

@@ -10,29 +10,47 @@ import { DialogProps, } from "@radix-ui/react-dialog";
 import { MessageSquareHeartIcon } from "lucide-react";
 import { FC, useState } from "react";
 import FeedbackForm, { FeedbackFormProps } from "./feeback-form";
+import { detectBrowser } from "@/lib/utils";
+import { FEEDBACK_ENDPOINT, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { toast } from "sonner";
 
 type FeedbackPopupProps = DialogProps;
 
-const FeedbackPopup: FC<FeedbackPopupProps> = ({...props }) => {
+const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
 
-    const onSubmit: FeedbackFormProps["onSubmit"] = (values)=>{
+    const onSubmit: FeedbackFormProps["onSubmit"] = async (values) => {
         setLoading(true)
-        //ToDo: hit api endpoint
-        console.log("FEEDBACK", values);
-        setTimeout(() => {
+        const browser = detectBrowser();
+        //ToDo: to handle in popup
+        await fetch(FEEDBACK_ENDPOINT, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${window.localStorage.getItem("gptr/token")}`,
+            },
+            body: JSON.stringify({
+                feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
+                browser,
+                extension: "GPT-Reader",
+            }),
+        }).then(() => {
             setOpen(false);
-            setLoading(false)
-        }, 5000);
+        }).catch((e) => {
+            const error = e as Error
+            toast.error(error.message, { style: TOAST_STYLE_CONFIG });
+        }).finally(() => {
+            setLoading(false);
+        });
     }
-    
+
     return (
         <Dialog open={open} onOpenChange={setOpen} {...props}>
             <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
-                <MessageSquareHeartIcon />
-            </Button>
+                <Button variant="ghost" size="icon" className="hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                    <MessageSquareHeartIcon />
+                </Button>
             </DialogTrigger>
             <DialogContent
                 onInteractOutside={(e) => {
@@ -44,7 +62,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({...props }) => {
                     <DialogTitle>Feedback</DialogTitle>
                     <DialogDescription className="sr-only">Paste or type your text</DialogDescription>
                 </DialogHeader>
-                <FeedbackForm loading={loading} onSubmit={onSubmit}/>
+                <FeedbackForm loading={loading} onSubmit={onSubmit} />
             </DialogContent>
         </Dialog>
     )

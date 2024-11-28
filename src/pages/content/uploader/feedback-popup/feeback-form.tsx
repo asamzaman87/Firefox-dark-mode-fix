@@ -12,7 +12,7 @@ import { z } from "zod";
 
 const formSchema = z.object({
     rating: z.number().min(1, { message: "What would you rate this extension?" }),
-    text: z.string().min(5, { message: "Please leave a comment about what you found useful or not useful." })
+    comments: z.string().min(5, { message: "Please leave a comment about what you found useful or not useful." })
 })
 
 export interface FeedbackFormProps {
@@ -25,7 +25,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            text: "",
+            comments: "",
             rating: 0,
         },
     })
@@ -56,7 +56,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                 />
                 <FormField
                     control={form.control}
-                    name="text"
+                    name="comments"
                     render={({ field }) => (
                         <FormItem className="w-full">
                             <FormControl>
