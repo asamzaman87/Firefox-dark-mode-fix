@@ -5,14 +5,14 @@ import {
   DialogContent,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
+import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import Content from "./content";
 import AlertPopup from "./alert-popup";
+import Content from "./content";
 export interface PromptProps {
   text: string | undefined
 }
@@ -25,6 +25,7 @@ function Uploader() {
   const [minimised, setMinimised] = useState<boolean>(false);
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
+  const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
@@ -79,17 +80,22 @@ function Uploader() {
       return;
     }
     //if the send button is not present on the dom show error message
-    if (!isSendButtonPresentOnDom()) {
+    if (!isSendButtonPresentOnDom() && open) {
       setIsActive(false);
       setOpenTries(tries => tries + 1);
       if (openTries > 3) {
-        toast.error("There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", { duration: 10000, dismissible: true, style: TOAST_STYLE_CONFIG });
+        toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", style: TOAST_STYLE_CONFIG });
         setOpenTries(0);
       }
       return;
     }
+    
     setIsActive(open);
-    setConfirmed(false)
+
+    if(window) {
+      const cnf = window.localStorage.getItem("gptr/confirmation");
+      setConfirmed(cnf==="true");
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -103,19 +109,21 @@ function Uploader() {
 
   const handleConfirm = (state: boolean) => {
     if(!state) return onOpenChange(false);
+    window.localStorage.setItem("gptr/confirmation", String(state));
     setConfirmed(state)
   }
 
   return (
     <div>
       <Dialog open={isActive} onOpenChange={onOpenChange}>
-        {/* <ChevronRightCircleIcon id="minimise" className={cn("size-4 cursor-pointer absolute top-[15.9rem] right-44 z-[100] transition", {"rotate-180 ": minimised})} onClick={handleMinimise}/> */}
         <DialogTrigger asChild>
           <Button
             ref={activateButton}
             variant="outline"
             size="lg"
-            className={cn("shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-3s6": minimised })}
+            onMouseOver={() => setMinimised(false)}
+            onMouseOut={() => setMinimised(true)}
+            className={cn("shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised })}
             >
             <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
           </Button>

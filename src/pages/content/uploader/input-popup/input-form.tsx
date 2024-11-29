@@ -28,8 +28,6 @@ const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
         onSubmit(values);
     }
 
@@ -55,7 +53,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
                         <FormItem className="w-full">
                             <FormLabel>Text</FormLabel>
                             <FormControl>
-                                <Textarea className="resize-none rounded-lg min-h-[50dvh]" {...field} />
+                                <Textarea className="resize-none rounded-lg min-h-[50dvh] border focus:border-gray-900 dark:focus:border-gray-200" {...field} />
                             </FormControl>
                             <FormMessage className="text-red-600" />
                         </FormItem>

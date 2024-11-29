@@ -1,6 +1,6 @@
 import { Accept } from "react-dropzone";
 
-export const THEME_STORAGE_KEY = "theme";
+export const THEME_STORAGE_KEY = "gptr/theme";
 export const MAX_FILES = 1;
 export const ACCEPTED_FILE_TYPES: Accept = {
   "application/pdf": [],
@@ -34,3 +34,6 @@ export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chat.com", "chatgpt.com"];
 export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"];
 export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feedback";
+export const MAX_SLIDER_VALUE = 2;
+export const MIN_SLIDER_VALUE = 0.5;
+export const STEP_SLIDER_VALUE = 0.1;

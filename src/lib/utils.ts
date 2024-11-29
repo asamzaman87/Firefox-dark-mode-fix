@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CHUNK_SIZE, LISTENERS, MATCH_URLS } from "./constants";
+import { CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -140,3 +140,11 @@ export const detectBrowser = () => {
     return 'unknown';
   }
 };
+
+export const generateRange = (min: number = MIN_SLIDER_VALUE, max: number = MAX_SLIDER_VALUE, step: number = STEP_SLIDER_VALUE) => {
+  const range = [];
+  for (let i = min; i <= max + step; i += step) {
+    range.push(parseFloat(i.toFixed(1)));
+  }
+  return range;
+}

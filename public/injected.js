@@ -83,7 +83,7 @@ window.fetch = async (...args) => {
         const stream = clonedResponse.body; // Use the body of the cloned response
         if (clonedResponse.status === 429) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
-                detail: "You have exceeded the hourly limit for this API. Please try again after 1 hour.",
+                detail: "You have exceeded the hourly limit for ChatGPT. You will not be able to generate any more audio for around 1 hour.",
             });
             window.dispatchEvent(rateLimitExceededEvent);
         }

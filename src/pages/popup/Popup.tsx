@@ -70,10 +70,10 @@ export default function Popup(): JSX.Element {
   const logo = chrome.runtime.getURL('logo-128.png');
 
   return (
-    <div className="flex flex-col items-center justify-evenly gap-4 h-screen w-screen p">
-      <div className={"absolute top-4 left-4 size-max"}>
+    <div className="flex flex-col items-center justify-center gap-4 h-screen w-screen p">
+      {/* <div className={"absolute top-4 left-4 size-max"}>
         <FeedbackPopup />
-      </div>
+      </div> */}
       <div className="inline-flex flex-col justify-center items-center gap-2 font-medium text-lg"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</div>
       {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="text-xl rounded-lg bg-black text-white">{isActive ? "Active" : "Activate"}</Button>}
       {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="text-xl rounded-lg bg-black text-white">Login to use GPT Reader</Button>}

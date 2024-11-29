@@ -1,10 +1,11 @@
 import { LISTENERS, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
+import { useToast } from "./use-toast";
 
 const useAudioPlayer = () => {
+    const { toast } = useToast();
     const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -15,7 +16,7 @@ const useAudioPlayer = () => {
     const [playRate, setPlayRate] = useState<number>(1);
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
-    const audioPlayer = useMemo(() => new Audio(), [isBackPressed]);
+    const audioPlayer = useMemo(() => new Audio(), []);
 
     useMemo(()=>{
         if(audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)){
@@ -42,7 +43,7 @@ const useAudioPlayer = () => {
             }
         } catch (e) {
             const error = e as Error;
-            toast.error("Something went wrong!"+"\n"+JSON.stringify(error), { duration: 10000, dismissible: true, style: TOAST_STYLE_CONFIG });
+            toast({description: "Something went wrong!"+"\n"+JSON.stringify(error), style: TOAST_STYLE_CONFIG });
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
@@ -59,7 +60,7 @@ const useAudioPlayer = () => {
             resetAudioUrl();
             audioPlayer.removeEventListener("ended", () => { });
         }
-    }, [audioPlayer, resetAudioUrl])
+    }, [audioPlayer, resetAudioUrl, isBackPressed])
 
     const handleAudioEnd = useCallback(() => {
         console.log("HANDLE_AUDIO_END");

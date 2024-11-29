@@ -1,7 +1,7 @@
 import { THEME_STORAGE_KEY } from "@/lib/constants"
 import { createContext, useContext, useEffect, useState } from "react"
 
-type Theme = "dark" | "light" | "system"
+export type Theme = "dark" | "light" | "system"
 
 type ThemeProviderProps = {
   children: React.ReactNode

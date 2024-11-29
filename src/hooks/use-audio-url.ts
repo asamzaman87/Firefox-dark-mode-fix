@@ -1,11 +1,12 @@
 import { CHUNK_SIZE, HELPER_PROMPT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
+import { useToast } from "./use-toast";
 
 const useAudioUrl = () => {
+    const { toast } = useToast();
     const [audioUrls, setAudioUrls] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>("");
@@ -40,12 +41,9 @@ const useAudioUrl = () => {
                 sendPrompt();
             }, 200);
         } else {
-            toast("Network Error", {
+            toast({
+                title: "Network Error",
                 description: "Please refresh and try again with a new chat!",
-                action: {
-                    label: "Refresh",
-                    onClick: () => window.location.reload(),
-                },
                 style: TOAST_STYLE_CONFIG
             })
         }
@@ -84,7 +82,7 @@ const useAudioUrl = () => {
                 break;
             }
             default:
-                toast.error("Unsupported file type", {style: TOAST_STYLE_CONFIG});
+                toast({ description: "Unsupported file type", style: TOAST_STYLE_CONFIG });
                 break;
         }
     }
@@ -105,7 +103,7 @@ const useAudioUrl = () => {
             if (currentCompletedStream?.chunkNumber && +currentCompletedStream.chunkNumber !== chunks.length - 1) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
                 if (nextChunk) {
-                    console.log("NEXT_CHUNK", nextChunk);
+                    console.log("NEXT_CHUNK");
                     setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
                     injectPrompt(nextChunk.text, nextChunk.id);
                 }

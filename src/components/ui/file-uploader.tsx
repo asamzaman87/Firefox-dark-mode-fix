@@ -1,4 +1,5 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
+import { useToast } from "@/hooks/use-toast";
 import { TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
@@ -7,8 +8,7 @@ import Dropzone, {
   type DropzoneProps,
   type FileRejection,
 } from "react-dropzone";
-import { toast } from "sonner";
-
+import { toast as sonner } from "sonner";
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Value of the uploader.
@@ -102,6 +102,8 @@ export function FileUploader(props: FileUploaderProps) {
     ...dropzoneProps
   } = props;
 
+  const { toast } = useToast();
+
   const [files, setFiles] = useControllableState({
     prop: valueProp,
     onChange: onValueChange,
@@ -111,12 +113,12 @@ export function FileUploader(props: FileUploaderProps) {
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 
       if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
-        toast.error("Cannot upload more than 1 file at a time", {style: TOAST_STYLE_CONFIG});
+        toast({description:"Cannot upload more than 1 file at a time", style: TOAST_STYLE_CONFIG});
         return;
       }
 
       if ((files?.length ?? 0) + acceptedFiles.length > maxFileCount) {
-        toast.error(`Cannot upload more than ${maxFileCount} files`);
+        toast({ description: `Cannot upload more than ${maxFileCount} files`, style: TOAST_STYLE_CONFIG});
         return;
       }
 
@@ -132,7 +134,7 @@ export function FileUploader(props: FileUploaderProps) {
 
       if (rejectedFiles.length > 0) {
         rejectedFiles.forEach(({ file }) => {
-          toast.error(`File ${file.name} was rejected`, {style: TOAST_STYLE_CONFIG});
+          toast({description:`File ${file.name} was rejected`, style: TOAST_STYLE_CONFIG});
         });
       }
 
@@ -144,7 +146,7 @@ export function FileUploader(props: FileUploaderProps) {
         const target =
           updatedFiles.length > 0 ? `${updatedFiles.length} files` : `file`;
 
-        toast.promise(onUpload(updatedFiles), {
+          sonner.promise(onUpload(updatedFiles), {
           loading: `Uploading ${target}...`,
           success: () => {
             setFiles([]);

@@ -29,6 +29,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             stop()
         })
         return () => {
+            stop();
             audio.removeEventListener(LISTENERS.AUDIO_ENDED, () => {
                 stop()
             })

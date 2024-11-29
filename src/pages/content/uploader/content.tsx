@@ -1,20 +1,20 @@
 import { Button } from "@/components/ui/button";
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/ui/file-uploader";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayerNew from "@/hooks/use-audio-player";
+import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
-import InputPopup from "./input-popup/popup";
-import Previews from "./previews";
-import VoiceSelector from "./voice-selector";
-import { InputFormProps } from "./input-popup/input-form";
 import { FC, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
-import { toast } from "sonner";
-import Player from "./player";
-import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FeedbackPopup from "./feedback-popup";
+import { InputFormProps } from "./input-popup/input-form";
+import InputPopup from "./input-popup/popup";
+import Player from "./player";
+import Previews from "./previews";
+import VoiceSelector from "./voice-selector";
 
 interface ContentProps {
     setPrompts: (prompts: PromptProps[]) => void;
@@ -22,6 +22,7 @@ interface ContentProps {
 }
 
 const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
+    const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
     const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying } = useAudioPlayerNew();
@@ -46,12 +47,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     }, [])
 
     const onSave = (files: File[]) => {
-        if (!files?.length) return toast.error("No files selected!", { style: TOAST_STYLE_CONFIG });
+        if (!files?.length) return toast({ description:"No files selected", style: TOAST_STYLE_CONFIG });
         if (isBackPressed) setIsBackPressed(false) //reseting back pressed state if the file is added
         setFiles(files);
         setTitle(files[0].name);
         extractText(files[0]).catch(e => {
-            toast.error(e.message, { style: TOAST_STYLE_CONFIG })
+            toast({description:e.message, duration: 100000, style: TOAST_STYLE_CONFIG })
             resetter();
         })
     }
@@ -66,12 +67,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
         if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
-        setTitle(values.title);
-        splitAndSendPrompt(values.text)
+        setTitle(values.title?.trim().length  ? values.text+".txt" : "Untitled.txt");
+        splitAndSendPrompt(values.text);
     }
 
     const logo = chrome.runtime.getURL('logo-128.png');
-
+    
     return (
         <>
             <DialogHeader className={"h-max"}>

@@ -6,13 +6,13 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { FEEDBACK_ENDPOINT, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { detectBrowser } from "@/lib/utils";
 import { DialogProps, } from "@radix-ui/react-dialog";
 import { MessageSquareHeartIcon } from "lucide-react";
 import { FC, useState } from "react";
 import FeedbackForm, { FeedbackFormProps } from "./feeback-form";
-import { detectBrowser } from "@/lib/utils";
-import { FEEDBACK_ENDPOINT, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { toast } from "sonner";
 
 type FeedbackPopupProps = DialogProps;
 
@@ -20,10 +20,12 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
 
+    const { toast } = useToast();
+
     const onSubmit: FeedbackFormProps["onSubmit"] = async (values) => {
         setLoading(true)
         const browser = detectBrowser();
-        //ToDo: to handle in popup
+        //ToDo: to handle in popup https://developer.chrome.com/docs/extensions/reference/manifest/key after deployment
         await fetch(FEEDBACK_ENDPOINT, {
             method: "POST",
             headers: {
@@ -39,7 +41,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
             setOpen(false);
         }).catch((e) => {
             const error = e as Error
-            toast.error(error.message, { style: TOAST_STYLE_CONFIG });
+            toast({ description: error.message, style: TOAST_STYLE_CONFIG });
         }).finally(() => {
             setLoading(false);
         });

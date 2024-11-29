@@ -1,11 +1,12 @@
 import { AUDIO_FORMAT, LISTENERS, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
 import { extractChunkNumberFromPrompt } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import useAuthToken from "./use-auth-token";
+import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
 
 const useStreamListener = (setIsLoading: (state: boolean) => void) => {
+    const { toast } = useToast();
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNumber: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
 
     const handleRateLimitExceeded = useCallback((e: Event) => {
         const { detail } = e as Event & { detail: string };
-        toast.error(detail, { duration: 1000000, dismissible:true, style: TOAST_STYLE_CONFIG });
+        toast({ description: detail, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
     },  [setIsLoading]);
 
