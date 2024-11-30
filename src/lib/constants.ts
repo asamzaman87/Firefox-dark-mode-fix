@@ -24,7 +24,7 @@ export const LISTENERS = {
 }
 export const MAX_FILE_SIZE = 1024 * 1024 * 24; // 24MB
 export const PROMPT_INPUT_ID = "#prompt-textarea";
-export const HELPER_PROMPT = "Keep the below text as it is without changing the original text and don't add any interactional responses just the keep the plain text:"
+export const HELPER_PROMPT = "Reply back to this prompt with everything below this line word by word and nothing else:"
 export const SYNTETHIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "aac";
