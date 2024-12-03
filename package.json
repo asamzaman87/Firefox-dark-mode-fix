@@ -8,7 +8,7 @@
     "url": "https://github.com/JohnBra/web-extension.git"
   },
   "scripts": {
-    "build": "vite build --config vite.config.chrome.ts",
+    "build": "bun run build:chrome && bun run build:firefox",
     "build:chrome": "vite build --config vite.config.chrome.ts",
     "build:firefox": "vite build --config vite.config.firefox.ts",
     "dev": "nodemon --config nodemon.chrome.json",
