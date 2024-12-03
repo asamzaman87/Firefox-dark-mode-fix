@@ -8,6 +8,11 @@ export const ACCEPTED_FILE_TYPES: Accept = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [],
   "text/plain": [],
 };
+
+export const ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
+  "text/plain": [".txt"],
+};
+
 export const LISTENERS = {
   "RECEIVED_MESSAGE_ID": "RECEIVED_MESSAGE_ID",
   "RATE_LIMIT_EXCEEDED": "RATE_LIMIT_EXCEEDED",
@@ -37,3 +42,4 @@ export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feed
 export const MAX_SLIDER_VALUE = 2;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
+export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];

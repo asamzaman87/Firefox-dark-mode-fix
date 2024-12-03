@@ -20,7 +20,7 @@ const PlayRateSlider:FC<PlayRateSliderProps> = ({disabled, playRate, setPlayRate
       <PopoverTrigger asChild>
       <Button disabled={disabled} size={"icon"} className="hover:scale-110  transition-all rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">{playRate}x</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
+      <PopoverContent className="w-80 px-6 py-4 rounded-3xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
         <Slider onValueChange={(e)=>setPlayRate(e[0])} min={MIN_SLIDER_VALUE} max={MAX_SLIDER_VALUE} step={STEP_SLIDER_VALUE} disabled={disabled} value={[playRate]}/>
       </PopoverContent>
     </Popover>

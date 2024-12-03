@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import Ratings from "@/components/ui/ratings";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Heart, LoaderIcon } from "lucide-react";
+import { Heart, Loader2Icon } from "lucide-react";
 import { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({
     rating: z.number().min(1, { message: "What would you rate this extension?" }),
-    comments: z.string().min(5, { message: "Please leave a comment about what you found useful or not useful." })
+    comments: z.string().optional()
 })
 
 export interface FeedbackFormProps {
@@ -66,7 +66,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"} className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">{loading ? <LoaderIcon className="animate-spin size-4" /> : "Submit My Feedback"}</Button>
+                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"} className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">{loading ? <Loader2Icon className="animate-spin size-4" /> : "Submit My Feedback"}</Button>
                 </DialogFooter>
             </form>
         </Form>

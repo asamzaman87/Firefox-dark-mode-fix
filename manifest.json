@@ -6,7 +6,6 @@
     "page": "src/pages/options/index.html"
   },
   "action": {
-    "default_popup": "src/pages/popup/index.html",
     "default_icon": {
       "128": "logo-128.png"
     }
@@ -16,10 +15,7 @@
   },
   "permissions": [
     "activeTab",
-    "webRequest",
-    "declarativeContent",
     "tabs",
-    "management",
     "storage",
     "scripting"
   ],

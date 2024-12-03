@@ -1,6 +1,6 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
 import { useToast } from "@/hooks/use-toast";
-import { TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { ACCEPTED_FILE_TYPES, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
 import * as React from "react";
@@ -9,6 +9,7 @@ import Dropzone, {
   type FileRejection,
 } from "react-dropzone";
 import { toast as sonner } from "sonner";
+import FileTypeIconList from "./file-type-icon-list";
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Value of the uploader.
@@ -91,9 +92,7 @@ export function FileUploader(props: FileUploaderProps) {
     value: valueProp,
     onValueChange,
     onUpload,
-    accept = {
-      "image/*": [],
-    },
+    accept = ACCEPTED_FILE_TYPES,
     maxSize = 1024 * 1024 * 2,
     maxFileCount = 1,
     multiple = false,
@@ -113,12 +112,12 @@ export function FileUploader(props: FileUploaderProps) {
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 
       if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
-        toast({description:"Cannot upload more than 1 file at a time", style: TOAST_STYLE_CONFIG});
+        toast({ description: "Cannot upload more than 1 file at a time", style: TOAST_STYLE_CONFIG });
         return;
       }
 
       if ((files?.length ?? 0) + acceptedFiles.length > maxFileCount) {
-        toast({ description: `Cannot upload more than ${maxFileCount} files`, style: TOAST_STYLE_CONFIG});
+        toast({ description: `Cannot upload more than ${maxFileCount} files`, style: TOAST_STYLE_CONFIG });
         return;
       }
 
@@ -134,7 +133,7 @@ export function FileUploader(props: FileUploaderProps) {
 
       if (rejectedFiles.length > 0) {
         rejectedFiles.forEach(({ file }) => {
-          toast({description:`File ${file.name} was rejected`, style: TOAST_STYLE_CONFIG});
+          toast({ description: `File ${file.name} was rejected`, style: TOAST_STYLE_CONFIG });
         });
       }
 
@@ -146,7 +145,7 @@ export function FileUploader(props: FileUploaderProps) {
         const target =
           updatedFiles.length > 0 ? `${updatedFiles.length} files` : `file`;
 
-          sonner.promise(onUpload(updatedFiles), {
+        sonner.promise(onUpload(updatedFiles), {
           loading: `Uploading ${target}...`,
           success: () => {
             setFiles([]);
@@ -218,12 +217,13 @@ export function FileUploader(props: FileUploaderProps) {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-4 sm:px-5">
-                <div className="rounded-full border border-gray-500 border-dashed p-3">
+                {/* <div className="rounded-full border border-gray-500 border-dashed p-3">
                   <UploadIcon
                     className="size-7"
                     aria-hidden="true"
                   />
-                </div>
+                </div> */}
+                <FileTypeIconList fileTypes={Object.keys(accept).filter(type => type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document")} />
                 <div className="flex flex-col gap-px">
                   <p className="font-medium">
                     Drag {`'n'`} Drop Files Here, or Click to Select File
@@ -231,9 +231,8 @@ export function FileUploader(props: FileUploaderProps) {
                   <p className="text-sm text-gray-500">
                     You Can Upload
                     {maxFileCount > 1
-                      ? ` ${
-                          maxFileCount === Infinity ? "multiple" : maxFileCount
-                        }
+                      ? ` ${maxFileCount === Infinity ? "multiple" : maxFileCount
+                      }
                       files (up to ${formatBytes(maxSize)} each)`
                       : ` a File Up to ${formatBytes(maxSize)}`}
                   </p>

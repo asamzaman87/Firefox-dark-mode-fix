@@ -4,11 +4,20 @@ import { switchToActiveTab } from "@/lib/utils";
 console.log("BACKGROUND LOADED");
 chrome.storage.local.clear();
 
+//listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener(async (request) => {
     switch (request.type) {
-        case LISTENERS.AUTH_RECEIVED:{
+        case LISTENERS.AUTH_RECEIVED: {
             console.log("BACKGROUND MESSAGE", request);
-            chrome.storage.local.set({isAuthenticated: request.isAuthenticated});
+            chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
+            break;
+        }
+        case "UPDATE_BADGE_STATE":{
+            if(request.state){
+                chrome.action.setBadgeBackgroundColor({ color: "#b3f2a5" });
+            }else{
+                chrome.action.setBadgeBackgroundColor({ color: "#f2aaa5" });
+            }
             break;
         }
         default:
@@ -16,17 +25,19 @@ chrome.runtime.onMessage.addListener(async (request) => {
     }
 })
 
+//get domain from url
 const getDomain = (url: string) => new URL(url).hostname;
 
+//check if url domain matches any of the domains in the array
 const matchUrlToDomain = (domains: string[], url: string) => {
     const urlDomain = getDomain(url);
-    
+
     for (const domain of domains) {
         // If the URL's domain is exactly the same as the domain in the array
         if (urlDomain === domain) {
             return true;
         }
-        
+
         // If the URL's domain ends with the domain from the array (e.g., subdomain match)
         if (urlDomain.endsWith(domain)) {
             return true;
@@ -36,31 +47,70 @@ const matchUrlToDomain = (domains: string[], url: string) => {
     return false;
 }
 
+//set badge text and color based on state
+const setBadState = (state: boolean) => {
+    if (!state) {
+        chrome.action.setBadgeText({ text: "ON"});
+        chrome.action.setBadgeTextColor({ color: "#21a108" });
+        chrome.action.setIcon({ path: "logo-128.png" });
+    } else {
+        chrome.action.setBadgeText({ text: "OFF" });
+        chrome.action.setBadgeTextColor({ color: "#9e1109" });
+        chrome.action.setIcon({ path: "logo-128-bw.png" });
+    }
+    return state;
+}
+
+// Check if the active tab is GPT and update the badge
 const checkActiveTab = async () => {
     const queryOptions = { active: true, currentWindow: true };
     const tabs = await chrome.tabs.query(queryOptions);
     if (tabs.length === 0) return chrome.action.disable();
     const url = tabs[0]?.url;
 
-    if (!url) return chrome.action.setIcon({ path: "logo-128-bw.png" });
+    if (!url) return setBadState(true);
 
-    if (!matchUrlToDomain(DOMAINS, url)) return chrome.action.setIcon({ path: "logo-128-bw.png" });
-    
-    chrome.action.setIcon({ path: "logo-128.png" });
+    if (!matchUrlToDomain(DOMAINS, url)) return setBadState(true);
+
+    return setBadState(false);
 }
 
+//check if updated tab or current tab changes URL on redirect is/is redirected to gpt and update badge
 chrome.tabs.onUpdated.addListener(async () => {
     checkActiveTab();
 })
 
-chrome.tabs.onActivated.addListener(async()=>{
+//check if active tab is gpt and update badge
+chrome.tabs.onActivated.addListener(async () => {
     checkActiveTab();
 });
 
+//switch to gpt when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
     switchToActiveTab().then((tabId) => {
         if (tabId) {
-            chrome.tabs.reload(tabId);
+            const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created
+            chrome.tabs.reload(id).then(() => {
+                //open overlay after 5s as it takes time to load/refresh
+                setTimeout(() =>
+                    chrome.tabs.sendMessage(id, { type: "OPEN_POPUP" })
+                    , 5000);
+            });
+        }
+    });
+})
+
+//click on extension icon to switch to gpt
+chrome.action.onClicked.addListener(async () => {
+    switchToActiveTab().then((tabId) => {
+        if (tabId) {
+            //open overlay after
+            if(typeof tabId === "string"){
+                //wait for 5 seconds as a new tab was created if tabId is a string
+                setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 5000);
+            }else{
+                chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP" });
+            }
         }
     });
 })

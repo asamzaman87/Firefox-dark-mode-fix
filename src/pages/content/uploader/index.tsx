@@ -57,10 +57,12 @@ function Uploader() {
     s.src = chrome.runtime.getURL('injected.js');
     (document.head || document.documentElement).appendChild(s);
 
-    if(window){
-      const minimised = window.localStorage.getItem("gptr/minimised");
-      setMinimised(minimised === "true");
-    }
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === "OPEN_POPUP") {
+        activateButton.current?.click();
+      }
+    })
+    
   }, []);
 
   //check if the send button is present on the dom
@@ -98,20 +100,15 @@ function Uploader() {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleMinimise = () => {
-    setMinimised(minimise => {
-      const state = !minimise;
-      window.localStorage.setItem("gptr/minimised", String(state));
-      return state
-    })
-  }
-
   const handleConfirm = (state: boolean) => {
     if(!state) return onOpenChange(false);
     window.localStorage.setItem("gptr/confirmation", String(state));
     setConfirmed(state)
   }
+
+  useMemo(()=>{
+    chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
+  },[isActive])
 
   return (
     <div>
@@ -123,7 +120,7 @@ function Uploader() {
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("shadow-md absolute flex justify-center items-center z-50 top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised })}
+            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised && isAuthenticated, "!z-[50]" : isActive, "translate-x-44": !isAuthenticated && minimised })}
             >
             <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
           </Button>
@@ -136,7 +133,6 @@ function Uploader() {
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
           {confirmed && <Content setPrompts={setPrompts} prompts={prompts}/>}
-
         </DialogContent>
       </Dialog>
       <Toaster />

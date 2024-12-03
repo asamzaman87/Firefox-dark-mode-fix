@@ -1,7 +1,7 @@
 import * as SliderPrimitive from "@radix-ui/react-slider"
 import * as React from "react"
 
-import { MAX_SLIDER_VALUE, MIN_SLIDER_VALUE } from "@/lib/constants"
+import { MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, TICKS_TO_DISPLAY } from "@/lib/constants"
 import { cn, generateRange } from "@/lib/utils"
 
 interface SliderProps extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> { }
@@ -15,6 +15,7 @@ const Slider = React.forwardRef<
 
   return (
     <div>
+      <p className="text-xs font-medium text-center mx-auto w-max mb-2.5 text-gray-500 dark:text-gray-400">Playback Speed</p>
       <div className='mb-1.5 flex flex-row justify-between w-full'>
         {range.map((tick) => (
           <span
@@ -22,13 +23,11 @@ const Slider = React.forwardRef<
             className={cn('text-xs font-medium transition-opacity',
               { 'text-10 opacity-15': tick > MIN_SLIDER_VALUE && tick < MAX_SLIDER_VALUE },
               { "!opacity-100": tick === range[mid] || (props.value?.[0] ?? MIN_SLIDER_VALUE) >= tick },
-              { "!opacity-100 scale-y-[1.35] -translate-y-[2.5px] transition-transform": tick === range[mid] || tick === (props.value?.[0] ?? MIN_SLIDER_VALUE) && tick !== MIN_SLIDER_VALUE && tick !== MAX_SLIDER_VALUE }
+              { "!opacity-100 scale-y-[1.35] -translate-y-[2.5px] transition-transform": tick === range[mid] || tick === (props.value?.[0] ?? MIN_SLIDER_VALUE) && tick !== MIN_SLIDER_VALUE && tick !== MAX_SLIDER_VALUE && !TICKS_TO_DISPLAY.includes(tick) }
             )}
             role='presentation'
           >
-            {tick === MIN_SLIDER_VALUE && MIN_SLIDER_VALUE}
-            {tick !== MIN_SLIDER_VALUE && tick !== MAX_SLIDER_VALUE && "|"}
-            {tick === MAX_SLIDER_VALUE && MAX_SLIDER_VALUE}
+            {!TICKS_TO_DISPLAY.includes(tick) ? "|" : tick+"x"}
           </span>
         ))}
       </div>

@@ -5,11 +5,11 @@ import {
     DialogTitle,
     DialogTrigger
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { DialogProps, } from "@radix-ui/react-dialog";
 import { Type } from "lucide-react";
 import { FC } from "react";
 import InputForm, { InputFormProps } from "./input-form";
-import { cn } from "@/lib/utils";
 
 type InputPopupProps = DialogProps & { onSubmit: InputFormProps["onSubmit"]; disabled?: boolean };
 
@@ -20,7 +20,7 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                 <div className={cn("group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-gray-500 dark:hover:border-gray-200 hover:border-gray-700 px-5 py-2.5 text-center transition hover:bg-gray-200 dark:hover:bg-gray-700",
                     "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",)}>
                     <div className="flex flex-col items-center justify-center gap-4 sm:px-5 cursor-pointer">
-                        <div className="rounded-full border border-gray-500 border-dashed p-3">
+                        <div className="rounded-full border border-gray-500 border-dashed flex items-center justify-center size-20">
                             <Type
                                 className="size-7"
                                 aria-hidden="true"

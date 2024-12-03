@@ -8,6 +8,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+//format size from number to MB KB text.
 export function formatBytes(
   bytes: number,
   opts: {
@@ -25,25 +26,7 @@ export function formatBytes(
     }`
 }
 
-/**
- * @deprecated use splitIntoChunksV2
- */
-export function splitIntoChunks(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
-  // Split the text into words by using spaces as delimiters
-  return text.split(" ").reduce((chunks, word, index) => {
-    // Determine the current chunk index based on word position and chunk size
-    const i = Math.floor(index / chunkSize);
-
-    // If the chunk exists, append the word with a space; otherwise, start a new chunk
-    const text = (chunks[i] ? `${chunks[i].text} ` : "") + word;
-    chunks[i] = { id: `${i}`, text, completed: false };
-
-
-    // Return the updated chunks array after adding each word
-    return chunks;
-  }, [] as Chunk[]); // Initialize an empty array for the chunks
-}
-
+//split text to small chunks
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
   // Split the text into sentences based on common delimiters
   const sentences = text.match(/[^.!?]+[.!?]+[\])'"`’”]*|.+/g) || [];
@@ -105,6 +88,7 @@ export const extractChunkNumberFromPrompt = (inputString: string): string | null
   return match[1];  // Return the number inside the brackets as a string
 }
 
+//remove all listeners
 export const removeAllListeners = () => {
   const listners = Object.values(LISTENERS);
   listners.forEach(listener => {
@@ -112,6 +96,7 @@ export const removeAllListeners = () => {
   });
 }
 
+//get all tabs with urls matching the match urls
 export const getGPTTabs = async () => {
   const tabs = await chrome.tabs.query({ url: MATCH_URLS });
   if (tabs.length === 0 || !tabs[0].id) return;
@@ -119,16 +104,22 @@ export const getGPTTabs = async () => {
   return tabs
 }
 
+//switch to active gpt tab if exists otherwise create a new tab and make it active
 export const switchToActiveTab = async () => {
   const activeTab = await getGPTTabs();
   if (!activeTab?.length || !activeTab[0].id) {
-    chrome.tabs.create({ url: "https://chatgpt.com" });
-    return
+    const tab = await chrome.tabs.create({ url: "https://chatgpt.com" });
+    if(tab.id){
+        chrome.tabs.update(tab.id, { active: true });
+        return tab.id +"::new_tab";
+    }
+    return 
   }
   chrome.tabs.update(activeTab[0].id, { active: true });
   return activeTab[0].id;
 }
 
+//detect browser type
 export const detectBrowser = () => {
   const userAgent = navigator?.userAgent;
 
@@ -141,6 +132,7 @@ export const detectBrowser = () => {
   }
 };
 
+//generate array of number from a specified range (min and max)
 export const generateRange = (min: number = MIN_SLIDER_VALUE, max: number = MAX_SLIDER_VALUE, step: number = STEP_SLIDER_VALUE) => {
   const range = [];
   for (let i = min; i <= max + step; i += step) {

@@ -4,8 +4,8 @@ import { FileUploader } from "@/components/ui/file-uploader";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayerNew from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
-import { ACCEPTED_FILE_TYPES, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, removeAllListeners } from "@/lib/utils";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import { FC, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
@@ -21,6 +21,7 @@ interface ContentProps {
     prompts: PromptProps[];
 }
 
+const BROWSER = detectBrowser();
 const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
@@ -47,12 +48,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     }, [])
 
     const onSave = (files: File[]) => {
-        if (!files?.length) return toast({ description:"No files selected", style: TOAST_STYLE_CONFIG });
+        if (!files?.length) return toast({ description: "No files selected", style: TOAST_STYLE_CONFIG });
         if (isBackPressed) setIsBackPressed(false) //reseting back pressed state if the file is added
         setFiles(files);
         setTitle(files[0].name);
         extractText(files[0]).catch(e => {
-            toast({description:e.message, duration: 100000, style: TOAST_STYLE_CONFIG })
+            toast({ description: e.message, style: TOAST_STYLE_CONFIG })
             resetter();
         })
     }
@@ -67,18 +68,18 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
         if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
-        setTitle(values.title?.trim().length  ? values.text+".txt" : "Untitled.txt");
+        setTitle(values.title?.trim().length ? values.text + ".txt" : "Untitled.txt");
         splitAndSendPrompt(values.text);
     }
 
     const logo = chrome.runtime.getURL('logo-128.png');
-    
+
     return (
         <>
             <DialogHeader className={"h-max"}>
                 <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
                     {title ? title
-                    : <>{!prompts.length && <img src={logo} alt="GPT Reader Logo" className="size-10" />} GPT Reader</>}    
+                        : <>{!prompts.length && <img src={logo} alt="GPT Reader Logo" className="size-10" />} GPT Reader</>}
                 </DialogTitle>
                 <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
             </DialogHeader>
@@ -100,7 +101,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
                         : <FileUploader
                             value={files}
                             disabled={isPlaying}
-                            accept={ACCEPTED_FILE_TYPES}
+                            accept={BROWSER === "firefox" ? ACCEPTED_FILE_TYPES_FIREFOX : ACCEPTED_FILE_TYPES}
                             maxFileCount={MAX_FILES}
                             maxSize={MAX_FILE_SIZE}
                             onValueChange={onSave}

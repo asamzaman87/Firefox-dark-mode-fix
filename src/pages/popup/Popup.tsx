@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import FeedbackPopup from "../content/uploader/feedback-popup";
 import { switchToActiveTab } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 export default function Popup(): JSX.Element {
   const [isActive, setIsActive] = useState<boolean>(false);
