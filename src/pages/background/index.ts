@@ -12,14 +12,14 @@ chrome.runtime.onMessage.addListener(async (request) => {
             chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
             break;
         }
-        case "UPDATE_BADGE_STATE":{
-            if(request.state){
-                chrome.action.setBadgeBackgroundColor({ color: "#b3f2a5" });
-            }else{
-                chrome.action.setBadgeBackgroundColor({ color: "#f2aaa5" });
-            }
-            break;
-        }
+        // case "UPDATE_BADGE_STATE":{
+        //     if(request.state){
+        //         chrome.action.setBadgeBackgroundColor({ color: "#b3f2a5" });
+        //     }else{
+        //         chrome.action.setBadgeBackgroundColor({ color: "#f2aaa5" });
+        //     }
+        //     break;
+        // }
         default:
             break;
     }
@@ -50,12 +50,12 @@ const matchUrlToDomain = (domains: string[], url: string) => {
 //set badge text and color based on state
 const setBadState = (state: boolean) => {
     if (!state) {
-        chrome.action.setBadgeText({ text: "ON"});
-        chrome.action.setBadgeTextColor({ color: "#21a108" });
+        // chrome.action.setBadgeText({ text: "ON"});
+        // chrome.action.setBadgeTextColor({ color: "#21a108" });
         chrome.action.setIcon({ path: "logo-128.png" });
     } else {
-        chrome.action.setBadgeText({ text: "OFF" });
-        chrome.action.setBadgeTextColor({ color: "#9e1109" });
+        // chrome.action.setBadgeText({ text: "OFF" });
+        // chrome.action.setBadgeTextColor({ color: "#9e1109" });
         chrome.action.setIcon({ path: "logo-128-bw.png" });
     }
     return state;

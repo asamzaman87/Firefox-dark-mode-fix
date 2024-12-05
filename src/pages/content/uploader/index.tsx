@@ -8,7 +8,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
@@ -56,14 +56,24 @@ function Uploader() {
     const s = document.createElement('script');
     s.src = chrome.runtime.getURL('injected.js');
     (document.head || document.documentElement).appendChild(s);
+  }, []);
 
+  useEffect(() => {
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === "OPEN_POPUP") {
+        if(!isAuthenticated){
+          window.localStorage.setItem("gptr/redirect-to-login", "true"); // if logged out, redirect to login page and set local storage to true to know its redirected from extension action
+        }
         activateButton.current?.click();
       }
     })
-    
-  }, []);
+    //if redirection to login page is set and user is authenticated, open the overlay after 1s
+    const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
+    if(isRedirectToLogin && isAuthenticated){
+      window.localStorage.removeItem("gptr/redirect-to-login");
+      setTimeout(()=>activateButton.current?.click(), 1000); 
+    }
+  }, [isAuthenticated]);
 
   //check if the send button is present on the dom
   const isSendButtonPresentOnDom = () => {
@@ -71,6 +81,22 @@ function Uploader() {
     return sendButton !== null;
   }
 
+  //check if the speech button is present on the dom
+  const isComposerSpeechButtonPresentOnDom = () => {
+    const speechButton: HTMLDivElement | null = document.querySelector("[data-testid='composer-speech-button']");
+    return speechButton !== null;
+  }
+
+  //add speech found text to the input and open the popup
+  const addTextToInputAndOpen = (text: string) => {
+    const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
+    if (textarea) {
+      textarea.innerHTML = `<p>${text}</p>`;
+      textarea.focus();
+      return setTimeout(()=>setIsActive(true), 500);
+    }
+    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", style: TOAST_STYLE_CONFIG });
+  }
 
   const onOpenChange = (open: boolean) => {
     //redirect to login if click on button if not authorised
@@ -83,6 +109,13 @@ function Uploader() {
     }
     //if the send button is not present on the dom show error message
     if (!isSendButtonPresentOnDom() && open) {
+
+      //gpt has a new update, shows speech button by default instead of the send button until the user types in text
+      if (isComposerSpeechButtonPresentOnDom()) {
+        //if the speech button is present on the dom, add speech found text to the input and open the popup
+        addTextToInputAndOpen("Speech Found"); 
+      }
+
       setIsActive(false);
       setOpenTries(tries => tries + 1);
       if (openTries > 3) {
