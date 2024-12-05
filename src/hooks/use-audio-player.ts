@@ -16,6 +16,9 @@ const useAudioPlayer = () => {
     const [playRate, setPlayRate] = useState<number>(1);
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
+    const [loadingInterval, setLoadingInterval] = useState<NodeJS.Timeout>();
+    const [loaderRunningSeconds, setLoaderRunningSeconds] = useState<number>(0);
+    
     const audioPlayer = useMemo(() => new Audio(), []);
 
     useMemo(()=>{
@@ -123,10 +126,21 @@ const useAudioPlayer = () => {
         audioPlayer.playbackRate = playRate;
     }, [audioPlayer, playRate])
 
+    //check for network connection via navigator
+    const updateConnectionStatus = () => {
+        if(!navigator.onLine){
+            toast({ description:"ChatGPT seems to be having issues, please close this overlay for the exact error message.", style: TOAST_STYLE_CONFIG });
+        }
+    }
+
     useEffect(() => {
         audioPlayer.addEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
         return () => {
             audioPlayer.removeEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
+            window.removeEventListener('online', updateConnectionStatus);
+            window.removeEventListener('offline', updateConnectionStatus);
         }
     }, [audioPlayer, handleAudioEnd]);
 

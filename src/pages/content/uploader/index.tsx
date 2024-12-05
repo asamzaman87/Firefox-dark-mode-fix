@@ -8,9 +8,9 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { LISTENERS, MODELS_TO_REJECT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
 export interface PromptProps {
@@ -26,7 +26,7 @@ function Uploader() {
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const { toast } = useToast();
-  const { isAuthenticated } = useAuthToken();
+  const { isAuthenticated, userId } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
   //sending the auth status to the background script
@@ -61,16 +61,12 @@ function Uploader() {
   useEffect(() => {
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === "OPEN_POPUP") {
-        if(!isAuthenticated){
-          window.localStorage.setItem("gptr/redirect-to-login", "true"); // if logged out, redirect to login page and set local storage to true to know its redirected from extension action
-        }
         activateButton.current?.click();
       }
     })
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
-    if(isRedirectToLogin && isAuthenticated){
-      window.localStorage.removeItem("gptr/redirect-to-login");
+    if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
       setTimeout(()=>activateButton.current?.click(), 1000); 
     }
   }, [isAuthenticated]);
@@ -95,18 +91,37 @@ function Uploader() {
       textarea.focus();
       return setTimeout(()=>setIsActive(true), 500);
     }
-    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", style: TOAST_STYLE_CONFIG });
+    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:3000, style: TOAST_STYLE_CONFIG });
   }
 
+  const isO1PreviewOrO1MiniModelSelected = useCallback(()=>{ 
+    const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
+    if(modelSwitcher){
+      return MODELS_TO_REJECT.some((model)=>modelSwitcher.innerHTML.includes(model));
+    }
+    return false
+  },[userId]);
+
   const onOpenChange = (open: boolean) => {
+    
     //redirect to login if click on button if not authorised
     if (!isAuthenticated) {
       const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
       if (loginBtn) {
+        window.localStorage.setItem("gptr/redirect-to-login", "true");
         loginBtn?.click();
       }
       return;
     }
+    
+    window.localStorage.removeItem("gptr/redirect-to-login");
+
+    //check if the user has selected o1-preview or o1-mini and prompt them to select other models
+    if(isO1PreviewOrO1MiniModelSelected()){
+      toast({ description:"We have detected that you have selected a slower model please change the model and try again!", duration:3000, style: TOAST_STYLE_CONFIG });
+      return;
+    }
+
     //if the send button is not present on the dom show error message
     if (!isSendButtonPresentOnDom() && open) {
 
@@ -118,8 +133,8 @@ function Uploader() {
 
       setIsActive(false);
       setOpenTries(tries => tries + 1);
-      if (openTries > 3) {
-        toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", style: TOAST_STYLE_CONFIG });
+      if (openTries >= 2) {
+        toast({ description:"It seems that ChatGPT might be either displaying an error or generating a prompt. Another possibility is that you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
         setOpenTries(0);
       }
       return;

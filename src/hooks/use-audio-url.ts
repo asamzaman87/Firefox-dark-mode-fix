@@ -42,8 +42,7 @@ const useAudioUrl = () => {
             }, 200);
         } else {
             toast({
-                title: "Network Error",
-                description: "Please refresh and try again with a new chat!",
+                description: "ChatGPT seems to be having issues, please close this overlay for the exact error message.",
                 style: TOAST_STYLE_CONFIG
             })
         }

@@ -126,8 +126,10 @@ window.fetch = async (...args) => {
 
 window.addEventListener("GET_TOKEN", () => {
     if (window && window?.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
+        const accessToken =  window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken;
+        const userId =  window.__remixContext?.state.loaderData.root.clientBootstrap.session.user.id;
         const authEvent = new CustomEvent("AUTH_RECEIVED", {
-            detail: { accessToken: window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken },
+            detail: { accessToken, userId },
         });
         window.dispatchEvent(authEvent);
     }

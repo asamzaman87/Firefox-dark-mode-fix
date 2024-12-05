@@ -3,23 +3,25 @@ import { useCallback, useEffect, useState } from "react";
 
 const useAuthToken = () => {
     const [token, setToken] = useState<string | null>(null);
+    const [userId, setUserId] = useState<string | null>(null);
     const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     
     const getTokenEvent = useCallback(() => new CustomEvent(LISTENERS.GET_TOKEN), []);
 
-    const updateTheToken = (token: string) => {
+    const updateTheToken = (token: string, userId: string) => {
         setToken(token);
+        setUserId(userId);
         setIsAuthenticated(!!token);
     }
 
     const handleAuthReceived = (e: Event) => {
-        const { detail: { accessToken } } = e as Event & { detail: { accessToken: string } };
+        const { detail: { accessToken, userId } } = e as Event & { detail: { accessToken: string, userId: string } };
         if (accessToken.includes("Bearer")) {
-            updateTheToken(accessToken.split(" ")[1])
+            updateTheToken(accessToken.split(" ")[1], userId)
             return
         }
-        updateTheToken(accessToken);
+        updateTheToken(accessToken, userId);
     }
 
     useEffect(() => {
@@ -41,7 +43,7 @@ const useAuthToken = () => {
         };
     }, [getTokenEvent]);
 
-    return { token, isAuthenticated }
+    return { userId, token, isAuthenticated }
 
 }
 

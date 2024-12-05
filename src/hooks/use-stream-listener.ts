@@ -20,6 +20,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const fetchAndDecodeAudio = useCallback(async (url: string) => {
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
+            toast({ description:"ChatGPT seems to be having issues, please close this overlay for the exact error message.", style: TOAST_STYLE_CONFIG });
             throw new Error(response.statusText);
         }
         const blob = await response.blob();

@@ -21,7 +21,7 @@ const IconTextWrapper: FC<IconTextWrapperProps> = ({ tip, Icon }) => {
 
 const DocxIcon = () => (
     <IconTextWrapper
-        tip="Word"
+        tip="DOCX"
         Icon={() => <LetterTextIcon className="size-7" />}
     />
 );
@@ -35,7 +35,7 @@ const PdfIcon = () => (
 
 const PlainTextIcon = () => (
     <IconTextWrapper
-        tip="Text"
+        tip="TXT"
         Icon={() => <Type className="size-7" />} />
 )
 
