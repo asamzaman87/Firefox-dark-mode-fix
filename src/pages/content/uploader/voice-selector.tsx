@@ -25,7 +25,6 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
 
     useEffect(() => {
         audio.addEventListener(LISTENERS.AUDIO_ENDED, () => {
-            console.log("STOPPING")
             stop()
         })
         return () => {

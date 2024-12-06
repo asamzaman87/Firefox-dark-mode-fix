@@ -11,17 +11,24 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNumber: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuthToken();
-    const { voices, handleVoiceChange } = useVoice();
+    const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
 
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
     }
 
+    const handleError = (error: string) => {
+        toast({ description:error, style: TOAST_STYLE_CONFIG });
+        return
+    }
+
     const fetchAndDecodeAudio = useCallback(async (url: string) => {
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
-            toast({ description:"ChatGPT seems to be having issues, please close this overlay for the exact error message.", style: TOAST_STYLE_CONFIG });
-            throw new Error(response.statusText);
+            if(response.status === 403 || response.status === 404){
+                handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+            }
+            handleError("ChatGPT seems to be having issues, please close this overlay for the exact error message.");
         }
         const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
@@ -33,9 +40,13 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         const chunkNumber = extractChunkNumberFromPrompt(text);
         if (chunkNumber) {
             if(token){
-                // prefetching audio
-                const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
-                setCompletedStreams(streams => [...streams, audioUrl]);
+                try{
+                    // prefetching audio
+                    const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
+                    setCompletedStreams(streams => [...streams, audioUrl]);
+                }catch(e){
+                    handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                }
             }
             // setCompletedStreams(streams => [...streams, { messageId, conversationId, createTime, text, chunkNumber }]);
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNumber })
@@ -64,7 +75,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         };
     }, [handleConvStream]);
 
-    return { completedStreams, currentCompletedStream, reset, error, voices, setVoices }
+    return { completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading }
 
 }
 

@@ -36,7 +36,11 @@ const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
     // Free memory from loading task
     loadingTask.destroy();
 
+    
     if (!hadParsingError) {
+        if(extractedText.trim().length === 0){
+            throw new Error("There was an error parsing the file! It might not have valid text content.");
+        }
         return extractedText;
     }
     throw new Error("There was an error parsing the file! It might not have valid text content.");
@@ -67,7 +71,12 @@ const textPlainToText = async (file: File): Promise<string> =>
         const reader = new FileReader();
         reader.onload = async (e: ProgressEvent<FileReader>) => {
             if (file.type === "text/plain") {
-                resolve(e.target?.result as string);
+                const text= e.target?.result as string;
+
+                if(text.trim().length > 0) return resolve(text);
+                reject(new Error("There was an error parsing the file! It might not have valid text content."));
+                
+                resolve(text);
                 return;
             }
             reject(new Error("File is not text/plain"));

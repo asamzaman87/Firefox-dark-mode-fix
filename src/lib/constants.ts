@@ -29,7 +29,7 @@ export const LISTENERS = {
 }
 export const MAX_FILE_SIZE = 1024 * 1024 * 24; // 24MB
 export const PROMPT_INPUT_ID = "#prompt-textarea";
-export const HELPER_PROMPT = "Reply back to this prompt with everything below this line word by word and nothing else:"
+export const HELPER_PROMPT = "Please return the exact text below without any modifications, summaries, or changes. Do not store or remember this for future responses:"
 export const SYNTETHIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "aac";
@@ -43,4 +43,4 @@ export const MAX_SLIDER_VALUE = 2;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
 export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
-export const MODELS_TO_REJECT = ["o1-preview", "o1-mini"];
+export const MODELS_TO_REJECT = ["o1"];

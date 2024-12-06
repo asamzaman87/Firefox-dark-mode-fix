@@ -94,7 +94,7 @@ chrome.runtime.onInstalled.addListener(async () => {
                 //open overlay after 5s as it takes time to load/refresh
                 setTimeout(() =>
                     chrome.tabs.sendMessage(id, { type: "OPEN_POPUP" })
-                    , 5000);
+                    , 3000);
             });
         }
     });
@@ -107,7 +107,7 @@ chrome.action.onClicked.addListener(async () => {
             //open overlay after
             if(typeof tabId === "string"){
                 //wait for 5 seconds as a new tab was created if tabId is a string
-                setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 5000);
+                setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 3000);
             }else{
                 chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP" });
             }

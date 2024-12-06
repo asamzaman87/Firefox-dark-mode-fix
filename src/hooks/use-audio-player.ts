@@ -6,7 +6,7 @@ import { useToast } from "./use-toast";
 
 const useAudioPlayer = () => {
     const { toast } = useToast();
-    const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices } = useAudioUrl();
+    const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -16,8 +16,6 @@ const useAudioPlayer = () => {
     const [playRate, setPlayRate] = useState<number>(1);
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
-    const [loadingInterval, setLoadingInterval] = useState<NodeJS.Timeout>();
-    const [loaderRunningSeconds, setLoaderRunningSeconds] = useState<number>(0);
     
     const audioPlayer = useMemo(() => new Audio(), []);
 
@@ -129,7 +127,7 @@ const useAudioPlayer = () => {
     //check for network connection via navigator
     const updateConnectionStatus = () => {
         if(!navigator.onLine){
-            toast({ description:"ChatGPT seems to be having issues, please close this overlay for the exact error message.", style: TOAST_STYLE_CONFIG });
+            toast({ description:"You seem to be offline! Please check your network connection and try again!", style: TOAST_STYLE_CONFIG });
         }
     }
 
@@ -144,13 +142,22 @@ const useAudioPlayer = () => {
         }
     }, [audioPlayer, handleAudioEnd]);
 
+    const checkForLoadingAfter15Seconds = () => {
+        const isLoading = localStorage.getItem("gptr/audio-loading") === "true";
+        if (isLoading) {
+            toast({ description: "ChatGPT seems to be taking too long, please close this overlay for the exact error message or refresh the page and try again.", style: TOAST_STYLE_CONFIG });
+        }
+        localStorage.removeItem("gptr/audio-loading");
+    }
+
     useMemo(() => {
         //resetting audio url if back pressed as the synthesize api might return a delayed response after back press while a chunk had called it
         if(audioUrls.length && isBackPressed) {
             return resetAudioUrl();
         }
-
+        
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
+        localStorage.setItem("gptr/audio-loading", String(audioUrls.length === 0));
         
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
@@ -158,6 +165,16 @@ const useAudioPlayer = () => {
             playNext(0)
         }
     }, [audioUrls.length, isBackPressed]);
+
+    //checking loading state after 15 seconds of uploading text
+    useMemo(() => {
+        if(text.trim().length){ 
+            setTimeout(() => {
+                checkForLoadingAfter15Seconds();
+            }, 15000);
+        }
+    }, [text.trim().length]);
+
 
     return {
         isAuthenticated,
@@ -174,6 +191,7 @@ const useAudioPlayer = () => {
         ended,
         text,
         isLoading: isAudioLoading,
+        isVoiceLoading,
         reset,
         playRate,
         handlePlayRateChange,

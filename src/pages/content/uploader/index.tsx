@@ -10,7 +10,7 @@ import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_REJECT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
 export interface PromptProps {
@@ -26,7 +26,7 @@ function Uploader() {
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const { toast } = useToast();
-  const { isAuthenticated, userId } = useAuthToken();
+  const { isAuthenticated } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
   //sending the auth status to the background script
@@ -40,7 +40,7 @@ function Uploader() {
       if (port.name === "activate") {
         if (msg.message === "ACTIVATE") {
           port.postMessage({ message: true, type: "STATUS" });
-          activateButton.current?.click();
+          !isActive && activateButton.current?.click();
         }
 
         if (msg.message === "STATUS") {
@@ -56,20 +56,29 @@ function Uploader() {
     const s = document.createElement('script');
     s.src = chrome.runtime.getURL('injected.js');
     (document.head || document.documentElement).appendChild(s);
+    
+    //checking if user has already confirmed the extension
+    const cnf = window.localStorage.getItem("gptr/confirmation");
+    setConfirmed(cnf==="true");
   }, []);
 
-  useEffect(() => {
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === "OPEN_POPUP") {
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === "OPEN_POPUP") {
+      const active = window.localStorage.getItem("gptr/active");
+      //if overlay is set to closed, open the overlay
+      if (active && active !== "true") {
         activateButton.current?.click();
       }
-    })
+    }
+  })
+
+  useEffect(() => {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
     if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
-      setTimeout(()=>activateButton.current?.click(), 1000); 
+      setTimeout(()=> !isActive && activateButton.current?.click(), 1000); 
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isActive]);
 
   //check if the send button is present on the dom
   const isSendButtonPresentOnDom = () => {
@@ -89,18 +98,19 @@ function Uploader() {
     if (textarea) {
       textarea.innerHTML = `<p>${text}</p>`;
       textarea.focus();
-      return setTimeout(()=>setIsActive(true), 500);
+      // setTimeout(()=>setIsActive(true), 200);
+      return 
     }
     return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:3000, style: TOAST_STYLE_CONFIG });
   }
 
-  const isO1PreviewOrO1MiniModelSelected = useCallback(()=>{ 
+  const isO1PreviewOrO1MiniModelSelected = ()=>{ 
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if(modelSwitcher){
       return MODELS_TO_REJECT.some((model)=>modelSwitcher.innerHTML.includes(model));
     }
     return false
-  },[userId]);
+  };
 
   const onOpenChange = (open: boolean) => {
     
@@ -118,22 +128,22 @@ function Uploader() {
 
     //check if the user has selected o1-preview or o1-mini and prompt them to select other models
     if(isO1PreviewOrO1MiniModelSelected()){
-      toast({ description:"We have detected that you have selected a slower model please change the model and try again!", duration:3000, style: TOAST_STYLE_CONFIG });
+      toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:3000, style: TOAST_STYLE_CONFIG });
       return;
     }
 
-    //if the send button is not present on the dom show error message
+    // if the send button is not present on the dom show error message
     if (!isSendButtonPresentOnDom() && open) {
-
       //gpt has a new update, shows speech button by default instead of the send button until the user types in text
       if (isComposerSpeechButtonPresentOnDom()) {
         //if the speech button is present on the dom, add speech found text to the input and open the popup
         addTextToInputAndOpen("Speech Found"); 
+        return setIsActive(true);
       }
 
       setIsActive(false);
       setOpenTries(tries => tries + 1);
-      if (openTries >= 2) {
+      if (openTries >= 3) {
         toast({ description:"It seems that ChatGPT might be either displaying an error or generating a prompt. Another possibility is that you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
         setOpenTries(0);
       }
@@ -141,11 +151,6 @@ function Uploader() {
     }
     
     setIsActive(open);
-
-    if(window) {
-      const cnf = window.localStorage.getItem("gptr/confirmation");
-      setConfirmed(cnf==="true");
-    }
   }
 
   const handleConfirm = (state: boolean) => {
@@ -155,7 +160,8 @@ function Uploader() {
   }
 
   useMemo(()=>{
-    chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
+    // chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
+    window.localStorage.setItem("gptr/active", String(isActive)); //set overlay state to storage
   },[isActive])
 
   return (

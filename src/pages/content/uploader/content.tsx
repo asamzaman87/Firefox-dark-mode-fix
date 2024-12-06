@@ -26,7 +26,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying } = useAudioPlayerNew();
+    const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading } = useAudioPlayerNew();
 
     const resetter = () => {
         reset(true);
@@ -68,7 +68,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
         if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
-        setTitle(values.title?.trim().length ? values.text + ".txt" : "Untitled.txt");
+        setTitle(values.title?.trim().length ? values.title + ".txt" : "Untitled.txt");
         splitAndSendPrompt(values.text);
     }
 
@@ -91,7 +91,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
                     <FeedbackPopup />
                 </div>
 
-                {prompts.length === 0 ? <VoiceSelector voice={voices} setVoices={setVoices} /> : null}
+                {prompts.length === 0 ? <VoiceSelector voice={voices} setVoices={setVoices} disabled={isVoiceLoading} /> : null}
 
                 {prompts.length > 0 && <Button title="Back" size={"icon"} onClick={onBackClick} className="hover:scale-110  transition-allfont-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">Back</span></Button>}
 

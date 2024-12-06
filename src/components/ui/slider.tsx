@@ -17,20 +17,20 @@ const Slider = React.forwardRef<
 
   return (
     <div>
-      <p className="text-xs font-medium text-center mx-auto w-max mb-2.5 text-gray-500 dark:text-gray-400">Playback Speed</p>
-      <div className='mb-2.5 flex flex-row justify-between w-full'>
+      <p className="text-sm font-medium text-center mx-auto w-max mb-2.5 text-gray-800 dark:text-gray-100">Playback Speed</p>
+      <div className='mb-2.5 flex flex-row justify-between w-full gap-2.5'>
         {range.map((tick) => (
           <span
             key={tick}
             onClick={() => onMarkerClick?.(tick)}
             className={cn('text-sm font-medium transition-opacity cursor-pointer',
-              { 'text-10 opacity-15': tick > MIN_SLIDER_VALUE && tick < MAX_SLIDER_VALUE },
+              { 'text-10 opacity-15 px-2': tick > MIN_SLIDER_VALUE && tick < MAX_SLIDER_VALUE },
               { "!opacity-100": (props.value?.[0] ?? MIN_SLIDER_VALUE) >= tick },
               { "!opacity-100 scale-y-[1.35] -translate-y-[2.5px] transition-transform": tick === (props.value?.[0] ?? MIN_SLIDER_VALUE) && tick !== MIN_SLIDER_VALUE && tick !== MAX_SLIDER_VALUE && !TICKS_TO_DISPLAY.includes(tick) }
             )}
             role='presentation'
           >
-            {!TICKS_TO_DISPLAY.includes(tick) ? " | " : tick+"x"}
+            {!TICKS_TO_DISPLAY.includes(tick) ? "|" : tick+"x"}
           </span>
         ))}
       </div>

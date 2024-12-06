@@ -14,12 +14,13 @@ const useAudioUrl = () => {
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
     
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
-    const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices } = useStreamListener(setIsLoading);
+    const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
     const sendPrompt = async () => {
         console.log("SEND_PROMPT");
         setIsLoading(true);
         const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
+        // toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
         if (!sendButton) return 
         sendButton.click();
     };
@@ -110,7 +111,7 @@ const useAudioUrl = () => {
         }
     }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected])
 
-    return { voices, setVoices, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset }
+    return { voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset }
 
 }
 

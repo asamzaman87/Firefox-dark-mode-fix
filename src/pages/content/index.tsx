@@ -1,17 +1,15 @@
+import { ThemeProvider } from "@/components/theme-provider";
 import { createRoot } from 'react-dom/client';
-import Uploader from './uploader';
 import './style.css';
-import { ThemeProvider } from "@/components/theme-provider"
-import { detectBrowser } from '@/lib/utils';
+import Uploader from './uploader';
 
 const div = document.createElement('div');
 div.id = '__gpt-reader-shadow';
 document.body.appendChild(div);
 
 //resolve over flow issue on firefox
-const className = detectBrowser() === "firefox" ? 'overflow-hidden' : "";
 const bodyClassName = document.body.className;
-document.body.className = `${bodyClassName ? bodyClassName + " " : ""}${className}`;
+document.body.className = `overflow-hidden ${bodyClassName}`;
 document.body.appendChild(div);
 
 const rootContainer = document.querySelector('#__gpt-reader-shadow');
