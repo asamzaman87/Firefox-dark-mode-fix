@@ -37,9 +37,9 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
   let targetSize = initialChunkSize;   // Current target chunk size
   const maxChunkSize = 4000;           // Maximum chunk size in characters
 
-  return sentences.reduce((chunks, sentence, i, arr) => {
+  const chunks = sentences.reduce((chunks, sentence, i, arr) => {
     // Calculate the potential new chunk if the current sentence is added
-    const potentialChunk = currentChunk + ' ' + sentence.trim();
+    const potentialChunk = currentChunk ? currentChunk + ' ' + sentence.trim() : sentence.trim();
     const potentialSize = potentialChunk.length;
 
     const isCurrentChunkSizeGreaterThanOrEqualTargetSize = potentialSize >= targetSize;
@@ -67,16 +67,21 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
       }
     } else {
       // Accumulate the sentence into the current chunk
-      currentChunk = potentialChunk.trim();
+      currentChunk = potentialChunk;
     }
 
-    // Handle the last chunk if it doesn't meet the target size
-    if (currentChunk && !isCurrentChunkSizeGreaterThanOrEqualTargetSize && isEnd) {
-      chunks.push({ id: `${chunkId}`, text: currentChunk.trim(), completed: false });
+    // If it's the last sentence, we need to ensure the last chunk is pushed
+    if (isEnd) {
+      // Always push the last chunk if it has content
+      if (currentChunk.trim().length > 0) {
+        chunks.push({ id: `${chunkId}`, text: currentChunk.trim(), completed: false });
+      }
     }
 
     return chunks;
   }, [] as Chunk[]);
+
+  return chunks;
 }
 
 

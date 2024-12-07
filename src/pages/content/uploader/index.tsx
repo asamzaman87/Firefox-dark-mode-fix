@@ -144,7 +144,7 @@ function Uploader() {
       setIsActive(false);
       setOpenTries(tries => tries + 1);
       if (openTries >= 3) {
-        toast({ description:"It seems that ChatGPT might be either displaying an error or generating a prompt. Another possibility is that you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
+        toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check the ChatGPT website for the exact issue.", style: TOAST_STYLE_CONFIG });
         setOpenTries(0);
       }
       return;
