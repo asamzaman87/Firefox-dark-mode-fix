@@ -53,9 +53,12 @@ function Uploader() {
   });
 
   useEffect(() => {
-    const s = document.createElement('script');
-    s.src = chrome.runtime.getURL('injected.js');
-    (document.head || document.documentElement).appendChild(s);
+    if(!document.getElementById("gpt-reader-injected")){
+      const s = document.createElement('script');
+      s.id = "gpt-reader-injected";
+      s.src = chrome.runtime.getURL('injected.js');
+      (document.head || document.documentElement).appendChild(s);
+    }
     
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");

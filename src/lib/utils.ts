@@ -145,3 +145,29 @@ export const generateRange = (min: number = MIN_SLIDER_VALUE, max: number = MAX_
   }
   return range;
 }
+
+//check if shadow gpt root is present (needs to be observed as it get remove on conflic with other extensions like gramarly)
+export function observeForGptReaderShadow(toObserve: string,render:()=>void): void {
+  const targetNode: Document = document;
+
+  const callback: MutationCallback = (): boolean => {
+
+    // Check if the element exists in the DOM
+    const isPresent: boolean = !!document.querySelector(toObserve);
+
+    if(!isPresent) render();
+
+    return isPresent;
+  };
+
+  // Create the observer
+  const observer: MutationObserver = new MutationObserver(callback);
+
+  // Observe changes in the entire DOM
+  observer.observe(targetNode, {
+    childList: true, // Watch for added/removed nodes
+    subtree: true,   // Watch all descendants of the target node
+  });
+
+}
+
