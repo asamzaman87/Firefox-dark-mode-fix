@@ -22,7 +22,7 @@ function Uploader() {
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
   const [openTries, setOpenTries] = useState<number>(0);
-  const [minimised, setMinimised] = useState<boolean>(false);
+  const [minimised, setMinimised] = useState<boolean>(true);
   const [confirmed, setConfirmed] = useState<boolean>(false);
 
   const { toast } = useToast();
@@ -35,22 +35,22 @@ function Uploader() {
   }, [isAuthenticated]);
 
   //listening for messages from the background script/popup
-  chrome.runtime.onConnect.addListener((port) => {
-    port.onMessage.addListener((msg) => {
-      if (port.name === "activate") {
-        if (msg.message === "ACTIVATE") {
-          port.postMessage({ message: true, type: "STATUS" });
-          !isActive && activateButton.current?.click();
-        }
+  // chrome.runtime.onConnect.addListener((port) => {
+  //   port.onMessage.addListener((msg) => {
+  //     if (port.name === "activate") {
+  //       if (msg.message === "ACTIVATE") {
+  //         port.postMessage({ message: true, type: "STATUS" });
+  //         !isActive && activateButton.current?.click();
+  //       }
 
-        if (msg.message === "STATUS") {
-          const rootContainer = document.querySelector('#__gpt-reader-shadow');
-          if (!rootContainer) { chrome.runtime.sendMessage({ message: "REINJECT" }) }
-          port.postMessage({ message: isActive, type: "STATUS" });
-        }
-      }
-    });
-  });
+  //       if (msg.message === "STATUS") {
+  //         const rootContainer = document.querySelector('#__gpt-reader-shadow');
+  //         if (!rootContainer) { chrome.runtime.sendMessage({ message: "REINJECT" }) }
+  //         port.postMessage({ message: isActive, type: "STATUS" });
+  //       }
+  //     }
+  //   });
+  // });
 
   useEffect(() => {
     if(!document.getElementById("gpt-reader-injected")){
@@ -58,22 +58,21 @@ function Uploader() {
       s.id = "gpt-reader-injected";
       s.src = chrome.runtime.getURL('injected.js');
       (document.head || document.documentElement).appendChild(s);
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === "OPEN_POPUP") {
+          const active = window.localStorage.getItem("gptr/active");
+          //if overlay is set to closed, open the overlay
+          if (active && active !== "true") {
+            activateButton.current?.click();
+          }
+        }
+      })
     }
     
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");
     setConfirmed(cnf==="true");
   }, []);
-
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "OPEN_POPUP") {
-      const active = window.localStorage.getItem("gptr/active");
-      //if overlay is set to closed, open the overlay
-      if (active && active !== "true") {
-        activateButton.current?.click();
-      }
-    }
-  })
 
   useEffect(() => {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
