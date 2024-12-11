@@ -16,6 +16,7 @@ const useAudioPlayer = () => {
     const [playRate, setPlayRate] = useState<number>(1);
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
+    const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     
     const audioPlayer = useMemo(() => new Audio(), []);
 
@@ -153,9 +154,9 @@ const useAudioPlayer = () => {
     useMemo(() => {
         //resetting audio url if back pressed as the synthesize api might return a delayed response after back press while a chunk had called it
         if(audioUrls.length && isBackPressed) {
-            return resetAudioUrl();
+            return reset(true);
         }
-        
+
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
         localStorage.setItem("gptr/audio-loading", String(audioUrls.length === 0));
         
@@ -168,10 +169,13 @@ const useAudioPlayer = () => {
 
     //checking loading state after 15 seconds of uploading text
     useMemo(() => {
-        if(text.trim().length){ 
-            setTimeout(() => {
+        if (text.trim().length) {
+            const id = setTimeout(() => {
                 checkForLoadingAfter15Seconds();
             }, 15000);
+            setTimeoutId(id)
+        } else {
+            timeoutId && clearTimeout(timeoutId);
         }
     }, [text.trim().length]);
 

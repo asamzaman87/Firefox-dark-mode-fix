@@ -29,12 +29,13 @@ export const LISTENERS = {
 }
 export const MAX_FILE_SIZE = 1024 * 1024 * 24; // 24MB
 export const PROMPT_INPUT_ID = "#prompt-textarea";
-export const HELPER_PROMPT = "Return the exact text below without any changes or summarizing. Do not remember this for future responses:"
+export const HELPER_PROMPT = "Repeat the exact text below without any changes, introduction or additional words. Do not summarize, analyze, or prepend/append anything. Just out the exact text as provided:"
 export const SYNTETHIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "aac";
 export const CHUNK_SIZE = 400;
 export const TOAST_STYLE_CONFIG = { backgroundColor: "darkred", color: "#fff", border: "1px solid #b30000" }
+export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#fff", border: "1px solid #001aff" }
 export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chat.com", "chatgpt.com"];
 export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"];
