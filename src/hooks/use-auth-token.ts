@@ -13,6 +13,7 @@ const useAuthToken = () => {
         setToken(token);
         setUserId(userId);
         setIsAuthenticated(!!token);
+        localStorage.setItem("gptr/auth", String(!!token));
     }
 
     const handleAuthReceived = (e: Event) => {

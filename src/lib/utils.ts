@@ -115,12 +115,12 @@ export const switchToActiveTab = async () => {
   if (!activeTab?.length || !activeTab[0].id) {
     const tab = await chrome.tabs.create({ url: "https://chatgpt.com" });
     if(tab.id){
-        chrome.tabs.update(tab.id, { active: true });
+        await chrome.tabs.update(tab.id, { active: true });
         return tab.id +"::new_tab";
     }
     return 
   }
-  chrome.tabs.update(activeTab[0].id, { active: true });
+  await chrome.tabs.update(activeTab[0].id, { active: true });
   return activeTab[0].id;
 }
 
@@ -147,17 +147,16 @@ export const generateRange = (min: number = MIN_SLIDER_VALUE, max: number = MAX_
 }
 
 //check if shadow gpt root is present (needs to be observed as it get remove on conflic with other extensions like gramarly)
-export function observeForGptReaderShadow(toObserve: string,render:()=>void): void {
+export function observeElement(toObserve: string, cb?: (s: boolean) => void): void {
   const targetNode: Document = document;
 
-  const callback: MutationCallback = (): boolean => {
+  const callback: MutationCallback = () => {
 
     // Check if the element exists in the DOM
     const isPresent: boolean = !!document.querySelector(toObserve);
 
-    if(!isPresent) render();
-
-    return isPresent;
+    cb && cb(isPresent);
+  
   };
 
   // Create the observer

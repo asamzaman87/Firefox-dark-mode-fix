@@ -5,13 +5,46 @@ console.log("BACKGROUND LOADED");
 chrome.storage.local.clear();
 
 //listen for messages from popup and content scripts
-chrome.runtime.onMessage.addListener(async (request) => {
+chrome.runtime.onMessage.addListener(async (request, sender) => {
     switch (request.type) {
         case LISTENERS.AUTH_RECEIVED: {
             console.log("BACKGROUND MESSAGE", request);
             chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
             break;
         }
+        case "CONTENT_LOADED": {
+            console.log("CONTENT LOADED");
+            const tabId = sender?.tab?.id;
+            if (tabId) {
+                chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "VERIFY_ORIGIN" });
+            }
+            break;
+        }
+        case "NO_AUTH_TRY_AGAIN": {
+            console.log("NO_AUTH_TRY_AGAIN");
+            const tabId = sender?.tab?.id;
+            if (tabId) {
+                chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "VERIFY_ORIGIN" });
+            }
+            break;
+        }
+        //verify if triggered from valid origin (onClick on onInstalled event)
+        case "VERIFY_ORIGIN":{
+            console.log("VERIFY_ORIGIN");
+            const tabId = sender?.tab?.id;
+            if (tabId) {
+                const {origin} = await chrome.storage.local.get("origin") ?? {};
+                if(origin){
+                    chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+                }
+            }
+            break;
+        }
+        case "CLEAR_ORIGIN":{            
+            chrome.storage.local.remove("origin");
+            break;
+        }
+
         // case "UPDATE_BADGE_STATE":{
         //     if(request.state){
         //         chrome.action.setBadgeBackgroundColor({ color: "#b3f2a5" });
@@ -87,30 +120,25 @@ chrome.tabs.onActivated.addListener(async () => {
 
 //switch to gpt when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
-    switchToActiveTab().then((tabId) => {
-        if (tabId) {
-            const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created
-            chrome.tabs.reload(id).then(() => {
-                //open overlay after 5s as it takes time to load/refresh
-                setTimeout(() =>
-                    chrome.tabs.sendMessage(id, { type: "OPEN_POPUP" })
-                    , 3000);
-            });
-        }
-    });
+    const tabId = await switchToActiveTab();
+    if (tabId) {
+        const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created
+        chrome.storage.local.set({ origin: true });
+        await chrome.tabs.reload(id); //reload tab to update the content
+    }
 })
 
 //click on extension icon to switch to gpt
 chrome.action.onClicked.addListener(async () => {
-    switchToActiveTab().then((tabId) => {
-        if (tabId) {
-            //open overlay after
-            if(typeof tabId === "string"){
-                //wait for 5 seconds as a new tab was created if tabId is a string
-                setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 3000);
-            }else{
-                chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP" });
-            }
+    const tabId = await switchToActiveTab();
+    if (tabId) {
+        //open overlay after new tab creation
+        if (typeof tabId === "string") {
+            //wait for 5 seconds as a new tab was created if tabId is a string
+            // setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 5000);
+            chrome.storage.local.set({ origin: true });
+            return;
         }
-    });
+         chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+    }
 })

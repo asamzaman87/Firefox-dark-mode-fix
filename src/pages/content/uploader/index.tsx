@@ -34,40 +34,36 @@ function Uploader() {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
 
-  //listening for messages from the background script/popup
-  // chrome.runtime.onConnect.addListener((port) => {
-  //   port.onMessage.addListener((msg) => {
-  //     if (port.name === "activate") {
-  //       if (msg.message === "ACTIVATE") {
-  //         port.postMessage({ message: true, type: "STATUS" });
-  //         !isActive && activateButton.current?.click();
-  //       }
-
-  //       if (msg.message === "STATUS") {
-  //         const rootContainer = document.querySelector('#__gpt-reader-shadow');
-  //         if (!rootContainer) { chrome.runtime.sendMessage({ message: "REINJECT" }) }
-  //         port.postMessage({ message: isActive, type: "STATUS" });
-  //       }
-  //     }
-  //   });
-  // });
-
   useEffect(() => {
     if(!document.getElementById("gpt-reader-injected")){
       const s = document.createElement('script');
       s.id = "gpt-reader-injected";
       s.src = chrome.runtime.getURL('injected.js');
       (document.head || document.documentElement).appendChild(s);
+
       chrome.runtime.onMessage.addListener((message) => {
         if (message.type === "OPEN_POPUP") {
-          const active = window.localStorage.getItem("gptr/active");
-          //if overlay is set to closed, open the overlay
-          if (active && active !== "true") {
-            activateButton.current?.click();
+
+          //if origin is not verified, verify it
+          if (message.payload === "VERIFY_ORIGIN") {
+            chrome.runtime.sendMessage({ type: "VERIFY_ORIGIN" });
+            return
+          }
+
+          //if origin is verified, open the overlay
+          if (message.payload === "ORIGIN_VERIFIED") {
+            const active = window.localStorage.getItem("gptr/active");
+            //if overlay is set to closed, open the overlay
+            if (active && active !== "true") {
+              activateButton.current?.click();
+            }
           }
         }
       })
+
     }
+
+    chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");
@@ -78,7 +74,7 @@ function Uploader() {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
     if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
-      setTimeout(()=> !isActive && activateButton.current?.click(), 1000); 
+      chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
   }, [isAuthenticated, isActive]);
 
@@ -115,19 +111,23 @@ function Uploader() {
   };
 
   const onOpenChange = (open: boolean) => {
-    
+    const aoc = window.localStorage.getItem("gptr/aoc");
+    if(open && aoc && +aoc>0) return; //return if overlay is already active.
     //redirect to login if click on button if not authorised
     if (!isAuthenticated) {
       const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
       if (loginBtn) {
         window.localStorage.setItem("gptr/redirect-to-login", "true");
         loginBtn?.click();
+      }else{
+        //send message to background to try again if user is not authorised and login btn not present
+        chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
       }
       return;
     }
     
     window.localStorage.removeItem("gptr/redirect-to-login");
-
+    
     //check if the user has selected o1-preview or o1-mini and prompt them to select other models
     if(isO1PreviewOrO1MiniModelSelected()){
       toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:3000, style: TOAST_STYLE_CONFIG });
@@ -164,6 +164,18 @@ function Uploader() {
   useMemo(()=>{
     // chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
     window.localStorage.setItem("gptr/active", String(isActive)); //set overlay state to storage
+    if(isActive){
+      //set active overlay count
+      const aoc = window.localStorage.getItem("gptr/aoc");
+      const count = aoc ? +aoc : 0;
+      window.localStorage.setItem("gptr/aoc", String(count+1));
+
+      //clear the origins (onClick and onInstall once overlay is opened)
+      chrome.runtime.sendMessage({ type: "CLEAR_ORIGIN" });
+    }else{
+      //reset active overlay count
+      window.localStorage.setItem("gptr/aoc", "0");
+    }
   },[isActive])
 
   return (
