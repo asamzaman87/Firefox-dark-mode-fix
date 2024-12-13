@@ -29,7 +29,7 @@ const Player: FC<PlayerProps> = ({ isPaused, isPlaying, isLoading, play, pause, 
         play()
     }
 
-    const showToast = (duration: number = 70000, description: string = "GPT Reader may generate audio that is not a 100% accurate. If you start to notice differences then it is recommended to close the overlay and create a new ChatGpt cha and try using the GPT Reader again.") => {
+    const showToast = (duration: number = 70000, description: string = "GPT Reader may generate audio that is not a 100% accurate. If you start to notice differences then it is recommended to close the overlay and create a new ChatGPT chat and try using the GPT Reader extension again.") => {
         const { id } = toast({
             description,
             style: { ...TOAST_STYLE_CONFIG_INFO, fontWeight: "600" },

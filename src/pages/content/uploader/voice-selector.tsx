@@ -102,7 +102,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             <Popover>
                 <PopoverTrigger><Info className="cursor-pointer size-5 text-gray-600 dark:text-gray-100" /></PopoverTrigger>
                 <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                    <p className="text-wrap text-justify font-medium text-sm">Choose from a variety of ChatGPT&apos;s enhanced voice options. Please note that the voice selection must be made prior to uploading your text.</p>
+                <p className="text-wrap text-left font-medium text-sm"> Choose from a variety of ChatGPT's enhanced voice options. Please note that the voice selection must be made prior to uploading your text.</p>
                 </PopoverContent>
             </Popover>
         </div>
