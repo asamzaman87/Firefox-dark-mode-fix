@@ -43,7 +43,7 @@ const useAudioUrl = () => {
             }, 200);
         } else {
             toast({
-                description: "ChatGPT seems to be having issues, please close this overlay for the exact error message.",
+                description: "ChatGPT seems to be having issues, please check the ChatGPT website for the exact issue.",
                 style: TOAST_STYLE_CONFIG
             })
         }

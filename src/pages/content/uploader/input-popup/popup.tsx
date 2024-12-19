@@ -26,7 +26,7 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                                 aria-hidden="true"
                             />
                         </div>
-                        <div className="flex flex-col gap-px">
+                        <div className="flex flex-col items-end justify-center gap-px">
                             <p className="font-medium">
                                 Type or Paste Text
                             </p>

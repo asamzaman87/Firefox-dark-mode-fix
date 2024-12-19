@@ -24,6 +24,8 @@ function Uploader() {
   const [openTries, setOpenTries] = useState<number>(0);
   const [minimised, setMinimised] = useState<boolean>(true);
   const [confirmed, setConfirmed] = useState<boolean>(false);
+  const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
@@ -33,6 +35,7 @@ function Uploader() {
   useMemo(() => {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
+
 
   useEffect(() => {
     if(!document.getElementById("gpt-reader-injected")){
@@ -70,10 +73,25 @@ function Uploader() {
     setConfirmed(cnf==="true");
   }, []);
 
+  //toddo: refactor as this might exceed space
+  useEffect(()=>{
+    const interval = setInterval(() => {
+      const active = window.localStorage.getItem("gptr/active");
+      if (active && active === "true") {
+        setIsOverlayFallback(true);
+      }
+    }, 500);
+    setOverlayAciveInterval(interval);
+    return ()=>{
+      overActiveInterval && clearInterval(overActiveInterval);
+    }
+  },[])
+
   useEffect(() => {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
     if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
+      console.log("redirecting to login");
       chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
   }, [isAuthenticated, isActive]);
@@ -99,7 +117,7 @@ function Uploader() {
       // setTimeout(()=>setIsActive(true), 200);
       return 
     }
-    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:3000, style: TOAST_STYLE_CONFIG });
+    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
   const isO1PreviewOrO1MiniModelSelected = ()=>{ 
@@ -112,7 +130,11 @@ function Uploader() {
 
   const onOpenChange = (open: boolean) => {
     const aoc = window.localStorage.getItem("gptr/aoc");
-    if(open && aoc && +aoc>0) return; //return if overlay is already active.
+    //return if overlay is already active.
+    if(open && aoc && +aoc>0) {
+      setIsOverlayFallback(true);
+      return;
+    }
     //redirect to login if click on button if not authorised
     if (!isAuthenticated) {
       const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
@@ -130,22 +152,23 @@ function Uploader() {
     
     //check if the user has selected o1-preview or o1-mini and prompt them to select other models
     if(isO1PreviewOrO1MiniModelSelected()){
-      toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:3000, style: TOAST_STYLE_CONFIG });
+      toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
       return;
+    }
+
+    //gpt has a new update, shows speech button by default instead of the send button until the user types in text
+    if (isComposerSpeechButtonPresentOnDom()) {
+      //if the speech button is present on the dom, add speech found text to the input and open the popup
+      addTextToInputAndOpen("Speech Found"); 
+      return setIsActive(true);
     }
 
     // if the send button is not present on the dom show error message
     if (!isSendButtonPresentOnDom() && open) {
-      //gpt has a new update, shows speech button by default instead of the send button until the user types in text
-      if (isComposerSpeechButtonPresentOnDom()) {
-        //if the speech button is present on the dom, add speech found text to the input and open the popup
-        addTextToInputAndOpen("Speech Found"); 
-        return setIsActive(true);
-      }
 
       setIsActive(false);
       setOpenTries(tries => tries + 1);
-      if (openTries >= 3) {
+      if (openTries >= 1) {
         toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check the ChatGPT website for the exact issue.", style: TOAST_STYLE_CONFIG });
         setOpenTries(0);
       }
@@ -179,7 +202,7 @@ function Uploader() {
   },[isActive])
 
   return (
-    <div>
+    <>
       <Dialog open={isActive} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
           <Button
@@ -188,7 +211,7 @@ function Uploader() {
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised && isAuthenticated, "!z-[50]" : isActive, "translate-x-44": !isAuthenticated && minimised })}
+            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised && isAuthenticated, "!z-[50]" : isActive || isOverlayFallback, "translate-x-44": !isAuthenticated && minimised })}
             >
             <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
           </Button>
@@ -204,7 +227,7 @@ function Uploader() {
         </DialogContent>
       </Dialog>
       <Toaster />
-    </div>
+    </>
   );
 }
 

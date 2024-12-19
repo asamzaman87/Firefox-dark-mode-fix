@@ -28,7 +28,7 @@ const useAuthToken = () => {
     useEffect(() => {
         const id = setInterval(() => {
             window.dispatchEvent(getTokenEvent());
-        }, 1000);
+        }, 500);
 
         setIntervalId(id);
         return () => {

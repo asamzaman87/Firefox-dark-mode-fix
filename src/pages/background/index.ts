@@ -132,11 +132,11 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.action.onClicked.addListener(async () => {
     const tabId = await switchToActiveTab();
     if (tabId) {
+        chrome.storage.local.set({ origin: true });
         //open overlay after new tab creation
         if (typeof tabId === "string") {
             //wait for 5 seconds as a new tab was created if tabId is a string
             // setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 5000);
-            chrome.storage.local.set({ origin: true });
             return;
         }
          chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });

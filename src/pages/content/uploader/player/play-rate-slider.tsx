@@ -25,7 +25,7 @@ const PlayRateSlider:FC<PlayRateSliderProps> = ({disabled, playRate, setPlayRate
       <PopoverContent className="w-max px-4 rounded-xl border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
         <Slider onMarkerClick={(marker)=>setPlayRate(marker)} onValueChange={(e)=>setPlayRate(e[0])} min={MIN_SLIDER_VALUE} max={MAX_SLIDER_VALUE} step={STEP_SLIDER_VALUE} disabled={disabled} value={[playRate]}/>
         <PopoverPrimitive.Close className="absolute top-2 right-2" aria-label="Close">
-					<X className="size-5" />
+					<X className="size-6 p-1 border border-gray-200 dark:border-gray-700 rounded-full" />
 				</PopoverPrimitive.Close>
       </PopoverContent>
     </Popover>
