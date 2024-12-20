@@ -20,6 +20,18 @@ const useAudioPlayer = () => {
 
     const audioPlayer = useMemo(() => new Audio(), []);
 
+    //handles onpause event to set isPlaying and isPaused states
+    audioPlayer.onpause = () => {
+        setIsPlaying(false);
+        setIsPaused(true);
+    }
+
+    //handles onplay event to set isPlaying and isPaused states
+    audioPlayer.onplay = () => {
+        setIsPlaying(true);
+        setIsPaused(false);
+    }
+
     useMemo(() => {
         if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)) {
             console.log("PLAYER COMPLETED ALL CHUNKS")
@@ -83,8 +95,6 @@ const useAudioPlayer = () => {
     const pause = () => {
         if (isPlaying && audioPlayer.src) {
             audioPlayer.pause();
-            setIsPlaying(false);
-            setIsPaused(true);
         }
     }
 
@@ -98,8 +108,6 @@ const useAudioPlayer = () => {
         if (!isPlaying) {
             audioPlayer.playbackRate = playRate;
             audioPlayer.play();
-            setIsPlaying(true);
-            setIsPaused(false);
         }
     }, [audioPlayer, isPlaying, currentIndex, playRate])
 
