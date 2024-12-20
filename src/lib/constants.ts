@@ -45,3 +45,4 @@ export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
 export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
 export const MODELS_TO_REJECT = ["o1"];
+export const CHUNK_TO_PAUSE_ON = 9;

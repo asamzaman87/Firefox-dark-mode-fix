@@ -1,4 +1,4 @@
-import { LISTENERS, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, LISTENERS, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
@@ -6,7 +6,7 @@ import { useToast } from "./use-toast";
 
 const useAudioPlayer = () => {
     const { toast } = useToast();
-    const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading } = useAudioUrl();
+    const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -17,16 +17,16 @@ const useAudioPlayer = () => {
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-    
+
     const audioPlayer = useMemo(() => new Audio(), []);
 
-    useMemo(()=>{
-        if(audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)){
+    useMemo(() => {
+        if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)) {
             console.log("PLAYER COMPLETED ALL CHUNKS")
             setAudioUrls(completedPlaying);
             setHasCompletePlaying(true);
             audioPlayer.src = completedPlaying[0];
-            
+
             //delayed to allow src to be set
             setTimeout(() => {
                 setCompletedPlaying([]);
@@ -45,7 +45,7 @@ const useAudioPlayer = () => {
             }
         } catch (e) {
             const error = e as Error;
-            toast({description: "Something went wrong!"+"\n"+JSON.stringify(error), style: TOAST_STYLE_CONFIG });
+            toast({ description: "Something went wrong!" + "\n" + JSON.stringify(error), style: TOAST_STYLE_CONFIG });
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
@@ -66,7 +66,12 @@ const useAudioPlayer = () => {
 
     const handleAudioEnd = useCallback(() => {
         console.log("HANDLE_AUDIO_END");
-        setCompletedPlaying(p=>[...p, audioPlayer.src])
+        if (is9ThChunk) {
+            pause()
+            return
+        }
+
+        setCompletedPlaying(p => [...p, audioPlayer.src])
         const current = currentIndex + 1;
         if (currentIndex === audioUrls.length - 1) {
             return reset();
@@ -104,7 +109,7 @@ const useAudioPlayer = () => {
             setPlayRate(rate);
             return;
         }
-        
+
         if (reset) {
             setPlayRate(1);
             return;
@@ -127,8 +132,8 @@ const useAudioPlayer = () => {
 
     //check for network connection via navigator
     const updateConnectionStatus = () => {
-        if(!navigator.onLine){
-            toast({ description:"You seem to be offline! Please check your network connection and try again!", style: TOAST_STYLE_CONFIG });
+        if (!navigator.onLine) {
+            toast({ description: "You seem to be offline! Please check your network connection and try again!", style: TOAST_STYLE_CONFIG });
         }
     }
 
@@ -153,18 +158,26 @@ const useAudioPlayer = () => {
 
     useMemo(() => {
         //resetting audio url if back pressed as the synthesize api might return a delayed response after back press while a chunk had called it
-        if(audioUrls.length && isBackPressed) {
+        if (audioUrls.length && isBackPressed) {
             return reset(true);
         }
 
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
         localStorage.setItem("gptr/audio-loading", String(audioUrls.length === 0));
-        
+
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
             console.log("INIT PLAY")
             playNext(0)
         }
+
+        //if audioUrls.length is divisible by CHUNK_TO_PAUSE_ON, then it means that the CHUNK_TO_PAUSE_ON has been played and the player should be paused from prompting further
+        if (audioUrls?.length && audioUrls.length % CHUNK_TO_PAUSE_ON === 0) {
+            setCompletedPlaying(p => [...p, audioPlayer.src])
+            playNext((audioUrls.length - 1))
+            setIs9thChunk(false)
+        }
+
     }, [audioUrls.length, isBackPressed]);
 
     //checking loading state after 15 seconds of uploading text
@@ -179,6 +192,10 @@ const useAudioPlayer = () => {
         }
     }, [text.trim().length]);
 
+    //setting audio loading state to true if the current chunk is the 9th chunk and user presses Yes to continue
+    useEffect(() => {
+        is9ThChunk && setAudioLoading(is9ThChunk && isLoading);
+    }, [isLoading]);
 
     return {
         isAuthenticated,
@@ -204,7 +221,11 @@ const useAudioPlayer = () => {
         hasCompletePlaying,
         setHasCompletePlaying,
         isBackPressed,
-        setIsBackPressed
+        setIsBackPressed,
+        is9ThChunk,
+        reStartChunkProcess,
+        setIs9thChunk,
+        setAudioLoading
     }
 
 

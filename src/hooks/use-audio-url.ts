@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, HELPER_PROMPT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import useFileReader from "./use-file-reader";
@@ -12,7 +12,7 @@ const useAudioUrl = () => {
     const [text, setText] = useState<string>("");
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
-    
+    const [is9ThChunk, setIs9thChunk] = useState<boolean>(false);
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
@@ -21,7 +21,7 @@ const useAudioUrl = () => {
         setIsLoading(true);
         const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
         // toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
-        if (!sendButton) return 
+        if (!sendButton) return
         sendButton.click();
     };
 
@@ -70,7 +70,7 @@ const useAudioUrl = () => {
                 break;
             }
             case "application/msword":
-            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":{
+            case "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
                 const text = await docxToText(file);
                 splitAndSendPrompt(text);
                 break;
@@ -97,21 +97,48 @@ const useAudioUrl = () => {
         resetStreamListener();
     }
 
+    const reStartChunkProcess = () => {
+        const nextChunk = chunks[currentChunkBeingPromptedIndex + 1];
+        if (nextChunk && currentCompletedStream) {
+            console.log("RESTART WITH NEXT_CHUNK");
+            setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
+            injectPrompt(nextChunk.text, nextChunk.id);
+        }
+    };
+
     useEffect(() => {
+        //stop the prompting process if the current chunk is the 9th chunk
+        if (
+            completedStreams?.length &&
+            (completedStreams?.length + 1) % CHUNK_TO_PAUSE_ON === 0 &&
+            !is9ThChunk
+        ) {
+            console.log(`Stopping processing`);
+            setIs9thChunk(true);
+            return
+        }
+
         if (completedStreams.length > 0) {
             setAudioUrls(completedStreams);
-            if (currentCompletedStream?.chunkNumber && +currentCompletedStream.chunkNumber !== chunks.length - 1) {
+            if (
+                currentCompletedStream?.chunkNumber &&
+                +currentCompletedStream.chunkNumber !== chunks.length - 1
+            ) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
                 if (nextChunk) {
                     console.log("NEXT_CHUNK");
-                    setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
+                    setCurrentChunkBeingPromptedIndex(
+                        +currentCompletedStream.chunkNumber + 1
+                    );
                     injectPrompt(nextChunk.text, nextChunk.id);
                 }
             }
         }
+
+
     }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected])
 
-    return { voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset }
+    return { voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk }
 
 }
 
