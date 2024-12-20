@@ -189,13 +189,16 @@ const useAudioPlayer = () => {
     }, [audioUrls.length, isBackPressed]);
 
     //checking loading state after 15 seconds of uploading text
-    useMemo(() => {
+    useEffect(() => {
         if (text.trim().length) {
             const id = setTimeout(() => {
                 checkForLoadingAfter15Seconds();
             }, 15000);
             setTimeoutId(id)
         } else {
+            timeoutId && clearTimeout(timeoutId);
+        }
+        return () => {
             timeoutId && clearTimeout(timeoutId);
         }
     }, [text.trim().length]);
