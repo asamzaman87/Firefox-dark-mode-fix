@@ -129,6 +129,7 @@ function Uploader() {
   };
 
   const onOpenChange = (open: boolean) => {
+    if(!open) return setIsActive(false);
     const aoc = window.localStorage.getItem("gptr/aoc");
     //return if overlay is already active.
     if(open && aoc && +aoc>0) {
