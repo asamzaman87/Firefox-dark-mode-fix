@@ -17,6 +17,7 @@ const useAudioPlayer = () => {
     const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+    const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
 
     const audioPlayer = useMemo(() => new Audio(), []);
 
@@ -85,9 +86,19 @@ const useAudioPlayer = () => {
 
         setCompletedPlaying(p => [...p, audioPlayer.src])
         const current = currentIndex + 1;
-        if (currentIndex === audioUrls.length - 1) {
+
+        //set loading true if no audio urls present but a chunk is still being processed
+        if (currentIndex === audioUrls.length - 1 && isLoading) { 
+            setIsStreamLoading(true);
+            return ;
+        }
+
+        setIsStreamLoading(false);
+
+        if (currentIndex === audioUrls.length - 1 && !isLoading) { //!isLoading to prevent resetting if there is a chunk still loading.
             return reset();
         }
+        
         setCurrentIndex(current);
         playNext(current);
     }, [currentIndex, playNext, audioUrls.length, reset])
@@ -222,6 +233,7 @@ const useAudioPlayer = () => {
         splitAndSendPrompt,
         ended,
         text,
+        isStreamLoading,
         isLoading: isAudioLoading,
         isVoiceLoading,
         reset,

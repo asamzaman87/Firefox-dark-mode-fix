@@ -30,7 +30,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
     const toastRef = useRef<string | null>(null)
-    const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk } = useAudioPlayerNew();
+    const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, is9ThChunk, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
 
     const resetter = () => {
         reset(true);
@@ -132,7 +132,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
                         />
                 }
 
-                <Player showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
+                <Player isFirstChunk={isLoading} showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading || isStreamLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
 
                 {
                     !prompts?.length ?

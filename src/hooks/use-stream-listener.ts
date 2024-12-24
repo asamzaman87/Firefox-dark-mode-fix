@@ -12,6 +12,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuthToken();
     const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
+    const [retryCount, setRetryCount] = useState<number>(0);
 
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -25,15 +26,31 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const fetchAndDecodeAudio = useCallback(async (url: string) => {
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
+            if(response.status === 429){
+                console.log(response.status);
+                handleError("ChatGPT seems to be having issues, voice generation seems to have exceeded the rate limit! Please try again later.");
+                return
+            }
             if(response.status === 403 || response.status === 404){
-                handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                if(retryCount===1){
+                    handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                    return
+                }
+                //retry fetching audio if 403 or 404 is returned
+                return retry(url);
             }
             handleError("ChatGPT seems to be having issues, please close this overlay for the exact error message.");
         }
         const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
         return audioUrl;
-    }, [token])
+    }, [token, retryCount])
+
+    //retry fetching audio
+    const retry = useCallback(async (url: string): Promise<string | undefined> => {
+        setRetryCount(p => p + 1);
+        return await fetchAndDecodeAudio(url);
+    },[retryCount, token])
 
     const handleConvStream = useCallback(async(e: Event) => {
         const { detail: { messageId, conversationId, text, createTime } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string } };
@@ -42,8 +59,10 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
             if(token){
                 try{
                     // prefetching audio
-                    const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
-                    setCompletedStreams(streams => [...streams, audioUrl]);
+                    setTimeout(async()=>{
+                        const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
+                        audioUrl && setCompletedStreams(streams => [...streams, audioUrl]);
+                    }, 200)
                 }catch(e){
                     handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                 }
@@ -60,7 +79,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         setIsLoading(false);
     },  [setIsLoading]);
 
-    const reset = () =>{
+    const reset = () => {
         setCompletedStreams([]);
         setCurrentCompletedStream(null);
     }
