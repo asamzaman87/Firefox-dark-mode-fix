@@ -59,10 +59,8 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
             if(token){
                 try{
                     // prefetching audio
-                    setTimeout(async()=>{
                         const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
-                        audioUrl && setCompletedStreams(streams => [...streams, audioUrl]);
-                    }, 200)
+                        audioUrl && await setCompletedStreams(streams => [...streams, audioUrl]);
                 }catch(e){
                     handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                 }

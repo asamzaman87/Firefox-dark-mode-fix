@@ -6,7 +6,7 @@ import { useToast } from "./use-toast";
 
 const useAudioPlayer = () => {
     const { toast } = useToast();
-    const { audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
+    const { chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -18,6 +18,7 @@ const useAudioPlayer = () => {
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
+    const [isPresenceModalOpen, setIsPresenceModalOpen] = useState<boolean>(false);
 
     const audioPlayer = useMemo(() => new Audio(), []);
 
@@ -38,7 +39,7 @@ const useAudioPlayer = () => {
             console.log("PLAYER COMPLETED ALL CHUNKS")
             setAudioUrls(completedPlaying);
             setHasCompletePlaying(true);
-            audioPlayer.src = completedPlaying[0];
+            audioPlayer.src = audioUrls[0];
 
             //delayed to allow src to be set
             setTimeout(() => {
@@ -79,13 +80,17 @@ const useAudioPlayer = () => {
 
     const handleAudioEnd = useCallback(() => {
         console.log("HANDLE_AUDIO_END");
-        if (is9ThChunk) {
-            pause()
-            return
-        }
-
-        setCompletedPlaying(p => [...p, audioPlayer.src])
         const current = currentIndex + 1;
+        
+        if (isPromptingPaused) {
+            if (current % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
+                setIsPresenceModalOpen(true);
+                pause();
+                return
+            }
+        }
+        
+        setCompletedPlaying(p => [...p, audioPlayer.src])
 
         //set loading true if no audio urls present but a chunk is still being processed
         if (currentIndex === audioUrls.length - 1 && isLoading) { 
@@ -101,7 +106,7 @@ const useAudioPlayer = () => {
         
         setCurrentIndex(current);
         playNext(current);
-    }, [currentIndex, playNext, audioUrls.length, reset])
+    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused])
 
     const pause = () => {
         if (isPlaying && audioPlayer.src) {
@@ -190,14 +195,22 @@ const useAudioPlayer = () => {
             playNext(0)
         }
 
-        //if audioUrls.length is divisible by CHUNK_TO_PAUSE_ON, then it means that the CHUNK_TO_PAUSE_ON has been played and the player should be paused from prompting further
-        if (audioUrls?.length && audioUrls.length % CHUNK_TO_PAUSE_ON === 0) {
-            setCompletedPlaying(p => [...p, audioPlayer.src])
-            playNext((audioUrls.length - 1))
-            setIs9thChunk(false)
+        //play new audio if presence modal is open and stream is processing after click on yes
+        if(audioUrls.length > 1 && isPresenceModalOpen){
+            setCompletedPlaying(p=>[...p, audioPlayer.src]);
+            setCurrentIndex(currentIndex + 1);
+            playNext(currentIndex + 1);
+            setIsPresenceModalOpen(false);
         }
 
     }, [audioUrls.length, isBackPressed]);
+
+    //cadjust loading state when presence modal is open and stream is processing after click on yes
+    useMemo(()=>{
+        if(isPresenceModalOpen){
+            setAudioLoading(isLoading)
+        }
+    },[isPresenceModalOpen, isLoading])
 
     //checking loading state after 15 seconds of uploading text
     useEffect(() => {
@@ -213,11 +226,6 @@ const useAudioPlayer = () => {
             timeoutId && clearTimeout(timeoutId);
         }
     }, [text.trim().length]);
-
-    //setting audio loading state to true if the current chunk is the 9th chunk and user presses Yes to continue
-    useEffect(() => {
-        is9ThChunk && setAudioLoading(is9ThChunk && isLoading);
-    }, [isLoading]);
 
     return {
         isAuthenticated,
@@ -248,7 +256,10 @@ const useAudioPlayer = () => {
         is9ThChunk,
         reStartChunkProcess,
         setIs9thChunk,
-        setAudioLoading
+        setAudioLoading,
+        setIsPromptingPaused, isPromptingPaused,
+        isPresenceModalOpen,
+        setIsPresenceModalOpen
     }
 
 

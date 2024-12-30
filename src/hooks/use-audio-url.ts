@@ -1,6 +1,6 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
 import { useToast } from "./use-toast";
@@ -13,6 +13,7 @@ const useAudioUrl = () => {
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
     const [is9ThChunk, setIs9thChunk] = useState<boolean>(false);
+    const [isPromptingPaused, setIsPromptingPaused] = useState<boolean>(false);
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
@@ -97,32 +98,29 @@ const useAudioUrl = () => {
         resetStreamListener();
     }
 
+    useMemo(() => {
+        const chunkNumber = currentCompletedStream?.chunkNumber;
+        if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
+            setIsPromptingPaused(true);
+        }
+    }, [currentCompletedStream]);
+
     const reStartChunkProcess = () => {
         const nextChunk = chunks[currentChunkBeingPromptedIndex + 1];
         if (nextChunk && currentCompletedStream) {
             console.log("RESTART WITH NEXT_CHUNK");
+            setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
             injectPrompt(nextChunk.text, nextChunk.id);
         }
     };
 
     useEffect(() => {
-        //stop the prompting process if the current chunk is the 9th chunk
-        if (
-            completedStreams?.length &&
-            (completedStreams?.length + 1) % CHUNK_TO_PAUSE_ON === 0 &&
-            !is9ThChunk
-        ) {
-            console.log(`Stopping processing`);
-            setIs9thChunk(true);
-            return
-        }
-
-        if (completedStreams.length > 0) {
+        if (completedStreams.length > 0 ) {
             setAudioUrls(completedStreams);
             if (
                 currentCompletedStream?.chunkNumber &&
-                +currentCompletedStream.chunkNumber !== chunks.length - 1
+                +currentCompletedStream.chunkNumber !== chunks.length - 1 && !isPromptingPaused
             ) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
                 if (nextChunk) {
@@ -134,11 +132,9 @@ const useAudioUrl = () => {
                 }
             }
         }
+    }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected, isPromptingPaused])
 
-
-    }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected])
-
-    return { voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk }
+    return { chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
 
 }
 

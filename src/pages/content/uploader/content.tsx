@@ -2,18 +2,18 @@ import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/ui/file-uploader";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { ToastAction } from "@/components/ui/toast";
 import useAudioPlayerNew from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
-import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
 import FeedbackPopup from "./feedback-popup";
 import { InputFormProps } from "./input-popup/input-form";
 import InputPopup from "./input-popup/popup";
 import Player from "./player";
+import PresenceConfirmationPopup from "./presence-confirmation-popup";
 import Previews from "./previews";
 import VoiceSelector from "./voice-selector";
 
@@ -26,11 +26,10 @@ const BROWSER = detectBrowser();
 const logo = chrome.runtime.getURL('logo-128.png');
 
 const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
-    const { toast, dismiss } = useToast();
+    const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const toastRef = useRef<string | null>(null)
-    const { isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, is9ThChunk, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
+    const {  isPresenceModalOpen,setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
 
     const resetter = () => {
         reset(true);
@@ -79,24 +78,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
     //handles the yes button click to resume the player
     const handleYes = () => {
         reStartChunkProcess()
-        dismiss(toastRef?.current as string)
     }
 
-    //shows a toast to remind the user to press the button again to resume player
-    useEffect(() => {
-        if (is9ThChunk) {
-            const { id } = toast({
-                description: 'Are you still there?',
-                action: <ToastAction altText="Yes" onClick={handleYes}>Yes</ToastAction>,
-                style: TOAST_STYLE_CONFIG_INFO,
-                duration: Infinity //keep showing the toast for ever
-            });
-            toastRef.current = id
-        }
-        return () => {
-            toastRef.current = null
-        }
-    }, [is9ThChunk])
+    //resets the player on click of presence confirmation popup no button
+    const handleNo = () => {
+        resetter()
+    }
 
     return (
         <>
@@ -114,6 +101,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
                 <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform": prompts.length > 0 })}>
                     <FeedbackPopup />
                 </div>
+
+                 <PresenceConfirmationPopup loading={isLoading} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />       
 
                 {prompts.length === 0 ? <VoiceSelector voice={voices} setVoices={setVoices} disabled={isVoiceLoading} /> : null}
 
