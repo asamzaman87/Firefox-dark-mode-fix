@@ -44,6 +44,10 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
             chrome.storage.local.remove("origin");
             break;
         }
+        case "OPEN_FEEDBACK":{
+            chrome.tabs.create({ url: "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing" });            break;
+            break;
+        }
 
         // case "UPDATE_BADGE_STATE":{
         //     if(request.state){

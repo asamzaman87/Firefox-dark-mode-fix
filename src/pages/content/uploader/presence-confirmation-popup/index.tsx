@@ -30,7 +30,7 @@ const PresenceConfirmationPopup: FC<PresenceConfirmationPopupProps> = ({ open, s
       }}
       className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
     >
-      <DialogHeader>
+      <DialogHeader className="sr-only">
         <DialogTitle className="text-center">Are you still here?</DialogTitle>
         <DialogDescription className="sr-only">Are you still here?</DialogDescription>
       </DialogHeader>

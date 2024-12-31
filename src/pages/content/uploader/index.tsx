@@ -224,7 +224,7 @@ function Uploader() {
           className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-6", prompts?.length && "pb-0")}
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-          {confirmed && <Content setPrompts={setPrompts} prompts={prompts}/>}
+          {confirmed && <Content onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts}/>}
         </DialogContent>
       </Dialog>
       <Toaster />

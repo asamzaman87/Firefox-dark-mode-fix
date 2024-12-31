@@ -20,16 +20,17 @@ import VoiceSelector from "./voice-selector";
 interface ContentProps {
     setPrompts: (prompts: PromptProps[]) => void;
     prompts: PromptProps[];
+    onOverlayOpenChange: (open: boolean) => void;
 }
 
 const BROWSER = detectBrowser();
 const logo = chrome.runtime.getURL('logo-128.png');
 
-const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
+const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange }) => {
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const {  isPresenceModalOpen,setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
+    const {  isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
 
     const resetter = () => {
         reset(true);
@@ -82,7 +83,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts }) => {
 
     //resets the player on click of presence confirmation popup no button
     const handleNo = () => {
-        resetter()
+        resetter();
+        onOverlayOpenChange(false);
     }
 
     return (

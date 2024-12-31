@@ -42,13 +42,21 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
         }).catch((e) => {
             const error = e as Error
             toast({ description: error.message, style: TOAST_STYLE_CONFIG });
+            chrome.runtime.sendMessage({ type: "OPEN_FEEDBACK" });
         }).finally(() => {
             setLoading(false);
         });
     }
 
+    const onOpenChange = (open: boolean) => {
+        if(detectBrowser()==="firefox" && open){            
+          return chrome.runtime.sendMessage({ type: "OPEN_FEEDBACK" });
+        }
+        setOpen(open);
+    }
+
     return (
-        <Dialog open={open} onOpenChange={setOpen} {...props}>
+        <Dialog open={open} onOpenChange={onOpenChange} {...props}>
             <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
                     <MessageSquareHeartIcon />
