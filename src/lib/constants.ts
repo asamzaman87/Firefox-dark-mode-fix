@@ -40,6 +40,7 @@ export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chat.com", "chatgpt.com"];
 export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"];
 export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feedback";
+export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
 export const MAX_SLIDER_VALUE = 2;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
