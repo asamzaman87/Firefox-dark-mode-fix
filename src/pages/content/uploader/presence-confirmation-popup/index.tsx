@@ -28,16 +28,16 @@ const PresenceConfirmationPopup: FC<PresenceConfirmationPopupProps> = ({ open, s
       onInteractOutside={(e) => {
         e.preventDefault(); //prevents mask click close
       }}
-      className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
+      className="bg-gray-100 dark:bg-gray-800 border-none"
     >
-      <DialogHeader className="sr-only">
+      <DialogHeader>
         <DialogTitle className="text-center">Are you still here?</DialogTitle>
         <DialogDescription className="sr-only">Are you still here?</DialogDescription>
       </DialogHeader>
       <div className="flex flex-col items-center justify-center gap-4 p-4">
-        <p className="text-center text-gray-500 dark:text-gray-400">
+        {/* <p className="text-center text-gray-500 dark:text-gray-400">
           You have been inactive for a while. Do you want to continue using GPT Reader?
-        </p>
+        </p> */}
         <div className="flex gap-4 justify-center">
           <Button disabled={loading} variant="outline" size="sm" className="w-full" onClick={onYes}>
             {loading && <LoaderCircleIcon className="size-6 animate-spin" />} Yes, I want to continue listening

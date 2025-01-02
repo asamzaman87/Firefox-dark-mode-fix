@@ -34,19 +34,23 @@ const useAudioPlayer = () => {
         setIsPaused(false);
     }
 
+
     useMemo(() => {
         if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)) {
-            console.log("PLAYER COMPLETED ALL CHUNKS")
-            setAudioUrls(completedPlaying);
-            setHasCompletePlaying(true);
-            audioPlayer.src = audioUrls[0];
-
-            //delayed to allow src to be set
-            setTimeout(() => {
-                setCompletedPlaying([]);
-            }, 200);
+            if(chunks.length === audioUrls.length){
+                console.log("PLAYER COMPLETED ALL CHUNKS");
+                setHasCompletePlaying(true);
+                setAudioUrls(completedPlaying);
+                audioPlayer.src = audioUrls[0];
+                
+                //delayed to allow src to be set
+                setTimeout(() => {
+                    setCompletedPlaying([]);
+                }, 200);
+                return
+            }
         }
-    }, [completedPlaying]);
+    }, [completedPlaying, isLoading, audioUrls, currentIndex, chunks]);
 
     const playNext = useCallback(async (index: number) => {
         try {
@@ -78,35 +82,35 @@ const useAudioPlayer = () => {
         }
     }, [audioPlayer, resetAudioUrl, isBackPressed])
 
-    const handleAudioEnd = useCallback(() => {
+    const handleAudioEnd = useCallback(async () => {
         console.log("HANDLE_AUDIO_END");
         const current = currentIndex + 1;
         
         if (isPromptingPaused) {
-            if (current % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
+            //show presence modal on previous chunk if prompting is paused
+            //ex: if prompt pausing is to be done on every 9th chunk the presence modal will be shown on the 8th chunk
+            if(current  % (CHUNK_TO_PAUSE_ON - 1) === 0){
                 setIsPresenceModalOpen(true);
+            }
+
+            //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
+            //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
+            //yes from the presence modal to continue from the 10th chunk
+            if (current % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
                 pause();
                 return
             }
         }
-        
+
         setCompletedPlaying(p => [...p, audioPlayer.src])
-
-        //set loading true if no audio urls present but a chunk is still being processed
-        if (currentIndex === audioUrls.length - 1 && isLoading) { 
-            setIsStreamLoading(true);
-            return ;
-        }
-
-        setIsStreamLoading(false);
-
-        if (currentIndex === audioUrls.length - 1 && !isLoading) { //!isLoading to prevent resetting if there is a chunk still loading.
+        
+        if (chunks.length === audioUrls.length && !isLoading) { //!isLoading to prevent resetting if there is a chunk still loading.
             return reset();
         }
         
         setCurrentIndex(current);
         playNext(current);
-    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused])
+    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks])
 
     const pause = () => {
         if (isPlaying && audioPlayer.src) {
@@ -197,15 +201,18 @@ const useAudioPlayer = () => {
 
         //play new audio if presence modal is open and stream is processing after click on yes
         if(audioUrls.length > 1 && isPresenceModalOpen){
-            setCompletedPlaying(p=>[...p, audioPlayer.src]);
-            setCurrentIndex(currentIndex + 1);
-            playNext(currentIndex + 1);
-            setIsPresenceModalOpen(false);
+            //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
+            if(isPaused){
+                setCompletedPlaying(p=>[...p, audioPlayer.src]);
+                setCurrentIndex(currentIndex + 1);
+                playNext(currentIndex + 1);
+            }
+            setIsPresenceModalOpen(false); // close presence modal
         }
 
     }, [audioUrls.length, isBackPressed]);
 
-    //cadjust loading state when presence modal is open and stream is processing after click on yes
+    //adjust loading state when presence modal is open and stream is processing after clicking on yes
     useMemo(()=>{
         if(isPresenceModalOpen){
             setAudioLoading(isLoading)
@@ -220,10 +227,10 @@ const useAudioPlayer = () => {
             }, 15000);
             setTimeoutId(id)
         } else {
-            timeoutId && clearTimeout(timeoutId);
+            if(timeoutId) clearTimeout(timeoutId);
         }
         return () => {
-            timeoutId && clearTimeout(timeoutId);
+            if(timeoutId) clearTimeout(timeoutId);
         }
     }, [text.trim().length]);
 
