@@ -83,7 +83,7 @@ function Uploader() {
     }, 500);
     setOverlayAciveInterval(interval);
     return ()=>{
-      overActiveInterval && clearInterval(overActiveInterval);
+      if(overActiveInterval) clearInterval(overActiveInterval);
     }
   },[])
 
@@ -171,7 +171,7 @@ function Uploader() {
       setOpenTries(tries => tries + 1);
       if (openTries >= 1) {
         toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check the ChatGPT website for the exact issue.", style: TOAST_STYLE_CONFIG });
-        setOpenTries(0);
+        setTimeout(() => setOpenTries(0), 5000);
       }
       return;
     }
@@ -212,7 +212,14 @@ function Uploader() {
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", {"translate-x-36": minimised && isAuthenticated, "!z-[50]" : isActive || isOverlayFallback, "translate-x-44": !isAuthenticated && minimised })}
+            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", 
+              {
+                "translate-x-36": minimised && isAuthenticated, 
+                "!z-[50]" : isActive || isOverlayFallback,
+                "!z-[101]": openTries > 0, //if openTries is greater than 0 the z-index of trigger is set to be greater than error UL
+                "translate-x-44": !isAuthenticated && minimised 
+              })
+            }
             >
             <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
           </Button>

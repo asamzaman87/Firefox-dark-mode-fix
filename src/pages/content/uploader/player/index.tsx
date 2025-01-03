@@ -50,6 +50,9 @@ const Player: FC<PlayerProps> = ({ isFirstChunk, isPaused, isPlaying, isLoading,
         if (showControls) {
             showToast()
         }
+        return () => {
+            if (toastIdRef.current) dismiss(toastIdRef.current);
+        }
     }, [showControls])
 
     //ToDo: animate like the theme toggle

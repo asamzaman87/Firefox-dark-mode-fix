@@ -12,10 +12,16 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const { done, value } = await reader.read();
             const decoder = new TextDecoder("utf-8");
             const text = decoder.decode(value);
-            const meesageIdMatch = text.match(/"id":\s*"([^"]+)"/); // Extract the id using regex  
+            const meesageIdMatch = text.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
             const createTimeMatch = text.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
             const conversationIdMatch = text.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
-            if (meesageIdMatch) messageId = meesageIdMatch[1];
+            //extracting the message id from the response 
+            if (meesageIdMatch?.length) {
+                //if there are multiple message ids, take the last one 
+                //if there are 3 messaged id's  i.e. 1. id with role system 2. id with role user 3. id with role assistant we pick the last one(role assitant)
+                const rawMesssageId = meesageIdMatch.length > 1 ? meesageIdMatch[meesageIdMatch.length - 1] : meesageIdMatch[0]; 
+                messageId = rawMesssageId.replace(/"/g, "").replace(/id: /g, "");
+            }
             if (conversationIdMatch) conversationId = conversationIdMatch[1];
             if (createTimeMatch) createTime = createTimeMatch[1];
 

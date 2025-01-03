@@ -19,6 +19,7 @@ const useAudioPlayer = () => {
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [isPresenceModalOpen, setIsPresenceModalOpen] = useState<boolean>(false);
+    const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
 
     const audioPlayer = useMemo(() => new Audio(), []);
 
@@ -34,10 +35,9 @@ const useAudioPlayer = () => {
         setIsPaused(false);
     }
 
-
     useMemo(() => {
         if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length)) {
-            if(chunks.length === audioUrls.length){
+            if (chunks.length === audioUrls.length) {
                 console.log("PLAYER COMPLETED ALL CHUNKS");
                 setHasCompletePlaying(true);
                 setAudioUrls(completedPlaying);
@@ -47,10 +47,9 @@ const useAudioPlayer = () => {
                 setTimeout(() => {
                     setCompletedPlaying([]);
                 }, 200);
-                return
             }
         }
-    }, [completedPlaying, isLoading, audioUrls, currentIndex, chunks]);
+    }, [completedPlaying]);
 
     const playNext = useCallback(async (index: number) => {
         try {
@@ -104,13 +103,27 @@ const useAudioPlayer = () => {
 
         setCompletedPlaying(p => [...p, audioPlayer.src])
         
-        if (chunks.length === audioUrls.length && !isLoading) { //!isLoading to prevent resetting if there is a chunk still loading.
+        if (currentIndex === audioUrls.length - 1 && !isLoading) {
             return reset();
         }
-        
-        setCurrentIndex(current);
-        playNext(current);
+        if(!isLoading){
+            setCurrentIndex(current);
+            playNext(current);
+        }else{
+            setIsStreamLoading(true);
+        }
     }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks])
+
+    useMemo(()=>{
+        if(isLoading && isStreamLoading){
+            setAudioUrlsBeforeStop(audioUrls.length);
+        }
+        if(!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length){
+            setCurrentIndex(currentIndex+1);
+            playNext(currentIndex+1);
+            setIsStreamLoading(false);
+        }
+    },[isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
     const pause = () => {
         if (isPlaying && audioPlayer.src) {
@@ -178,7 +191,8 @@ const useAudioPlayer = () => {
 
     const checkForLoadingAfter15Seconds = () => {
         const isLoading = localStorage.getItem("gptr/audio-loading") === "true";
-        if (isLoading) {
+        const isActive = localStorage.getItem("gptr/active") === "true";
+        if (isLoading && isActive) {
             toast({ description: "ChatGPT seems to be taking too long, please close this overlay for the exact error message or refresh the page and try again.", style: TOAST_STYLE_CONFIG });
         }
         localStorage.removeItem("gptr/audio-loading");
@@ -200,24 +214,26 @@ const useAudioPlayer = () => {
         }
 
         //play new audio if presence modal is open and stream is processing after click on yes
-        if(audioUrls.length > 1 && isPresenceModalOpen){
+        if(audioUrls.length > 1 && !isPromptingPaused){
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
             if(isPaused){
                 setCompletedPlaying(p=>[...p, audioPlayer.src]);
                 setCurrentIndex(currentIndex + 1);
                 playNext(currentIndex + 1);
             }
-            setIsPresenceModalOpen(false); // close presence modal
         }
 
     }, [audioUrls.length, isBackPressed]);
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
     useMemo(()=>{
-        if(isPresenceModalOpen){
-            setAudioLoading(isLoading)
+        //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
+        //set isStreamLoading to true to indicate buffering
+        if(audioUrls.length > 1 && !isPromptingPaused){
+            setAudioLoading(isLoading && isPaused);
         }
-    },[isPresenceModalOpen, isLoading])
+        if(!isPromptingPaused) setIsPresenceModalOpen(false);
+    },[isPromptingPaused,isLoading, isPaused])
 
     //checking loading state after 15 seconds of uploading text
     useEffect(() => {
