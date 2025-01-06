@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Added to fix the issue with the extension style overriding page style on firefox */
+/* Targeting Firefox with a media query for screen widths 768px and above */
+@-moz-document url-prefix() {
+    @media (min-width: 768px) {
+        .md\:hidden {
+            display: none;
+        }
+    }
+
+    /* Targeting Firefox for screen widths less than 768px */
+    @media (max-width: 767px) {
+        .max-md\:hidden {
+            display: none;
+        }
+    }
+}

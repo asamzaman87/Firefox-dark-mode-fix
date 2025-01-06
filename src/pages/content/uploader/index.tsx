@@ -216,7 +216,6 @@ function Uploader() {
               {
                 "translate-x-36": minimised && isAuthenticated, 
                 "!z-[50]" : isActive || isOverlayFallback,
-                "!z-[101]": openTries > 0, //if openTries is greater than 0 the z-index of trigger is set to be greater than error UL
                 "translate-x-44": !isAuthenticated && minimised 
               })
             }
