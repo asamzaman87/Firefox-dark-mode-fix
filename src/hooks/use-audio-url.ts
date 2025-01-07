@@ -103,7 +103,7 @@ const useAudioUrl = () => {
         if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
             setIsPromptingPaused(true);
         }
-    }, [currentCompletedStream]);
+    }, [currentCompletedStream, chunks]);
 
     const reStartChunkProcess = () => {
         const nextChunk = chunks[currentChunkBeingPromptedIndex + 1];

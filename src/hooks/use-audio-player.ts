@@ -42,6 +42,7 @@ const useAudioPlayer = () => {
                 setHasCompletePlaying(true);
                 setAudioUrls(completedPlaying);
                 audioPlayer.src = audioUrls[0];
+                audioPlayer.pause();
                 
                 //delayed to allow src to be set
                 setTimeout(() => {
@@ -81,17 +82,22 @@ const useAudioPlayer = () => {
         }
     }, [audioPlayer, resetAudioUrl, isBackPressed])
 
+    //show presence modal on previous chunk if prompting is paused
+    //ex: if prompt pausing is to be done on every 9th chunk the presence modal will be shown on the 8th chunk
+    useMemo(() => {
+        if(isPromptingPaused){
+            console.log("current", (currentIndex+1) % CHUNK_TO_PAUSE_ON === CHUNK_TO_PAUSE_ON - 1);
+            if((currentIndex+1) % CHUNK_TO_PAUSE_ON === CHUNK_TO_PAUSE_ON - 1){
+                setIsPresenceModalOpen(true);
+            }
+        }
+    }, [isPromptingPaused, currentIndex])
+
     const handleAudioEnd = useCallback(async () => {
         console.log("HANDLE_AUDIO_END");
         const current = currentIndex + 1;
         
         if (isPromptingPaused) {
-            //show presence modal on previous chunk if prompting is paused
-            //ex: if prompt pausing is to be done on every 9th chunk the presence modal will be shown on the 8th chunk
-            if(current  % (CHUNK_TO_PAUSE_ON - 1) === 0){
-                setIsPresenceModalOpen(true);
-            }
-
             //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
             //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
             //yes from the presence modal to continue from the 10th chunk
