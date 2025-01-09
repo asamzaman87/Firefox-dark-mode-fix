@@ -62,9 +62,9 @@ const Player: FC<PlayerProps> = ({ isFirstChunk, isPaused, isPlaying, isLoading,
                 {isLoading ? <LoaderCircleIcon className="size-6 animate-spin ease-in-out" /> : null}
                 {hasPlayBackEnded && (!isPlaying || !isPaused)  ? <Button disabled={isLoading} onClick={restart} size={"icon"} className="hover:scale-110  transition-all [&_svg]:size-6"><RotateCwIcon /> <span className="sr-only">Restart</span></Button> : null}
                 {((!isPaused && !isPlaying) || isPaused) && !hasPlayBackEnded && !isFirstChunk && !isLoading ? <Button onClick={play} size={"icon"} className="hover:scale-110  transition-all [&_svg]:size-6"><PlayIcon /> <span className="sr-only">Play</span></Button> : null}
-                {isPlaying && !isLoading ? <Button onClick={pause} size={"icon"} className="hover:scale-110  transition-all [&_svg]:size-6"><PauseIcon /> <span className="sr-only">Pause</span></Button> : null}
+                {isPlaying && !isLoading && !hasPlayBackEnded ? <Button onClick={pause} size={"icon"} className="hover:scale-110  transition-all [&_svg]:size-6"><PauseIcon /> <span className="sr-only">Pause</span></Button> : null}
                 {/* {isPlaying || isPaused ? <Button onClick={() => handlePlayRateChange()} disabled={isLoading} size={"icon"} className="hover:scale-110  transition-all rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">{playRate}x<span className="sr-only">Playback Rate</span></Button> : null} */}
-                {(isPlaying || isPaused) && !isLoading ? <PlayRateSlider playRate={playRate} setPlayRate={(rate) => handlePlayRateChange(false, rate)} disabled={isFirstChunk} /> : null}
+                {(isPlaying || isPaused) && !isLoading && !hasPlayBackEnded  ? <PlayRateSlider playRate={playRate} setPlayRate={(rate) => handlePlayRateChange(false, rate)} disabled={isFirstChunk} /> : null}
             </div>
             <InfoIcon onClick={()=>showToast(5000)} className="hover:cursor-pointer absolute bottom-0 right-4 rounded-full hover:scale-110  transition-all size-6" />
         </div>
