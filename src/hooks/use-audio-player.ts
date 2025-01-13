@@ -76,6 +76,7 @@ const useAudioPlayer = () => {
         setIsPlaying(false);
         setIsPaused(false);
         setHasCompletePlaying(!!completeAudio);
+        resetTimeout();
         if (full) {
             audioPlayer.src = "";
             resetAudioUrl();
@@ -205,15 +206,13 @@ const useAudioPlayer = () => {
     }, [audioPlayer, handleAudioEnd]);
 
     const checkForLoadingAfter15Seconds = () => {
-        const isLoading = localStorage.getItem("gptr/audio-loading") === "true";
         const isActive = localStorage.getItem("gptr/active") === "true";
-        if (isLoading && isActive) {
+        if (isActive) {
            const { id } = toast({ description: "ChatGPT seems to be taking too long, please close this overlay for the exact error message or refresh the page and try again.", style: TOAST_STYLE_CONFIG }); 
            toast15SecRef.current = id;
         }else{
             if(toast15SecRef.current) dismiss(toast15SecRef.current);
         }
-        localStorage.removeItem("gptr/audio-loading");
     }
 
     useMemo(() => {
@@ -223,8 +222,7 @@ const useAudioPlayer = () => {
         }
 
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
-        localStorage.setItem("gptr/audio-loading", String(audioUrls.length === 0));
-
+        
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
             console.log("INIT PLAY")
@@ -259,12 +257,22 @@ const useAudioPlayer = () => {
         if(!isPromptingPaused) setIsPresenceModalOpen(false);
     },[isPromptingPaused,isLoading, isPaused, wasPromptStopped])
 
+    const resetTimeout=()=>{
+        const timeoutId = localStorage.getItem("gptr/audio-timeout");
+        if(timeoutId){
+            clearTimeout(parseInt(timeoutId));
+            localStorage.removeItem("gptr/audio-timeout");
+        }
+    }
+
     //checking loading state after 15 seconds of uploading text
     useEffect(() => {
+        resetTimeout();
         if (text.trim().length) {
             const id = setTimeout(() => {
                 checkForLoadingAfter15Seconds();
             }, 15000);
+            localStorage.setItem("gptr/audio-timeout", `${id}`);
             setTimeoutId(id)
         } else {
             if(timeoutId) clearTimeout(timeoutId);
