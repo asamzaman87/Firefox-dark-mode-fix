@@ -68,14 +68,14 @@ const useAudioPlayer = () => {
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
-    const reset = useCallback((full: boolean = false) => {
+    const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
         console.log("RESETTING");
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
         setCurrentIndex(0);
         setIsPlaying(false);
         setIsPaused(false);
-        setHasCompletePlaying(false);
+        setHasCompletePlaying(!!completeAudio);
         if (full) {
             audioPlayer.src = "";
             resetAudioUrl();
@@ -119,14 +119,14 @@ const useAudioPlayer = () => {
         markCompleted(audioPlayer.src)
         
         if (currentIndex === audioUrls.length - 1 && !isLoading) {
-            return reset();
+            return reset(false, true);
         }
-        if(!isLoading){
+        
+        if(audioUrls.length > current){
             setCurrentIndex(current);
             playNext(current);
-        }else{
-            setIsStreamLoading(true);
         }
+        if(isLoading && !isPlaying && audioUrls.length === current) setIsStreamLoading(true);
     }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks])
 
     useMemo(()=>{
