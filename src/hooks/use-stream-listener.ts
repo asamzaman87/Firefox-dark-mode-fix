@@ -31,7 +31,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
                 handleError("ChatGPT seems to be having issues, voice generation seems to have exceeded the rate limit! Please try again later.");
                 return
             }
-            if(response.status === 403 || response.status === 404){
+            if(response.status === 403 || response.status === 404 || response.status === 503){
                 if(retryCount.current !== 0){
                     handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                     return

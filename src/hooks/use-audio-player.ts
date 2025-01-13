@@ -234,15 +234,14 @@ const useAudioPlayer = () => {
         //play new audio if presence modal is open and stream is processing after click on yes
         if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped){
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
-            console.log("P:A")
             if(isPaused){
                 markCompleted(audioPlayer.src)
                 setCurrentIndex(currentIndex + 1);
                 playNext(currentIndex + 1);
+                setTimeout(()=>{
+                    setWasPromptStopped(false);
+                },  500);
             }
-            setTimeout(()=>{
-                setWasPromptStopped(false);
-            },  500);
         }
 
     }, [audioUrls.length, isBackPressed]);
@@ -253,7 +252,9 @@ const useAudioPlayer = () => {
         //set isStreamLoading to true to indicate buffering
         if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped){
             setAudioLoading(isLoading && isPaused);
-     
+            setTimeout(()=>{
+                setWasPromptStopped(false);
+            },  500);
         }
         if(!isPromptingPaused) setIsPresenceModalOpen(false);
     },[isPromptingPaused,isLoading, isPaused, wasPromptStopped])

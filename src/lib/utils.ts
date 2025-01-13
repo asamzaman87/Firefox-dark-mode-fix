@@ -29,7 +29,8 @@ export function formatBytes(
 //split text to small chunks
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
   // Split the text into sentences based on common delimiters
-  const sentences = text.match(/[^.!?]+[.!?]+[\])'"`’”]*|.+/g) || [];
+  const sentences = text.match(/(?:[^.!?•]+[.!?•]+[\])'"`’”]*|[^.!?•]+(?:$))/g) || [];
+  // const sentences = text.match(/[^.!?]+[.!?]+[\])'"`’”]*|.+/g) || [];
   let currentChunk = "";
   let chunkId = 0;
 
