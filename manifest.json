@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "id": "877836c2-d853-4e87-9da0-dcabdce5680b",
   "name": "GPT Reader",
   "description": "Simplifies reading long documents with GPT",
   "options_ui": {

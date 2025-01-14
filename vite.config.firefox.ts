@@ -12,10 +12,15 @@ export default mergeConfig(
       crx({
         manifest: {
           ...baseManifest,
-          background: {
-            scripts: [ 'src/pages/background/index.ts' ]
+          "browser_specific_settings": {
+            "gecko": {
+              "id": "democraticdeveloper@gmail.com"
+            }
           },
-        } as ManifestV3Export,
+          background: {
+            scripts: ['src/pages/background/index.ts']
+          },
+        } as unknown as ManifestV3Export,
         browser: 'firefox',
         contentScripts: {
           injectCss: true,

@@ -1,14 +1,9 @@
 <div align="center">
-<img src="public/icon-128.png" alt="logo"/>
-<h1> Minimalist Chrome/Firefox Extension Boilerplate with<br/>React + Vite + TypeScript + TailwindCSS</h1>
+<img src="public/logo-128.png" alt="logo"/>
 
 <h5>
-This template repository is a side product of my Chrome Extension <a target="_blank" rel="noopener noreferrer" href="https://chrome.google.com/webstore/detail/supatabs/icbcnjlaegndjabnjbaeihnnmidbfigk">Supatabs</a>.
+GPT READER is a Chrome Extension that simplifies reading long documents with GPT.
 <br />
-If you tend to have tons of tabs open, or are a OneTab user, make sure to check it out <a target="_blank" rel="noopener noreferrer" href="https://chrome.google.com/webstore/detail/supatabs/icbcnjlaegndjabnjbaeihnnmidbfigk">here</a>!
-</h5>
-
-<h5>Supatabs is an example and showcase of what you can develop with this template. (anything you want, really 🚀)</h5>
 
 </div>
 
@@ -26,15 +21,12 @@ If you tend to have tons of tabs open, or are a OneTab user, make sure to check 
 
 
 ## Intro <a name="intro"></a>
-This boilerplate is meant to be a minimal quick start for creating chrome/firefox extensions using React, Typescript and Tailwind CSS.
+This is a minimal quick start for using GPT Reader with Chrome and Firefox in dev mode.
 
 It includes all possible pages such as **new tab**, **dev panel**, **pop up**, etc., as well as corresponding manifest settings by default.
 You will likely have to customize/delete some of the pages (see docs below).
 
 You can build dist files for both Chrome and Firefox with manifest v3.
-
-If you are looking for a React focused way to access the local storage, I also implemented a chrome local/sync storage hook. The hook works
-well with this template. [Check it out here](https://gist.github.com/JohnBra/c81451ea7bc9e77f8021beb4f198ab96).
 
 ## Features <a name="features"></a>
 - [React 18](https://reactjs.org/)
@@ -51,21 +43,17 @@ well with this template. [Check it out here](https://gist.github.com/JohnBra/c81
 ### Getting Started <a name="gettingStarted"></a>
 
 #### Developing and building
-This template comes with build configs for both Chrome and Firefox. Running
-`dev` or `build` commands without specifying the browser target will build
+Running `dev` or `build` commands without specifying the browser target will build
 for Chrome by default.
-
-1. Clone this repository or click "Use this template"
-2. Change `name` and `description` in `manifest.json`
-3. Run `yarn` or `npm i` (check your node version >= 16)
-4. Run `yarn dev[:chrome|:firefox]`, or `npm run dev[:chrome|:firefox]`
+1. Run `bun i` (check your node version >= 16)
+2. Run `bun run dev[:chrome|:firefox]`
 
 Running a `dev` command will build your extension and watch for changes in the 
 source files. Changing the source files will refresh the corresponding 
 `dist_<chrome|firefox>` folder.
 
-To create an optimized production build, run `yarn build[:chrome|:firefox]`, or
-`npm run build[:chrome|:firefox]`.
+To create an optimized production build, run `bun run build[:chrome|:firefox]`, or
+`bun run build` to build for both.
 
 #### Load your extension
 For Chrome
@@ -180,6 +168,3 @@ To run the workflow do the following:
 # Credit <a name="credit"></a>
 Heavily inspired by [Jonghakseo's vite chrome extension boilerplate](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite). 
 It uses SASS instead of TailwindCSS and is ~~slightly~~ _a lot_ less minimalist in case you want to check it out.
-
-# Contributing <a name="contributing"></a>
-Feel free to open PRs or raise issues!
