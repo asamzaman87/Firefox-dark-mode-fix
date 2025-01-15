@@ -68,6 +68,14 @@ const useAudioPlayer = () => {
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
+    const resetTimeout=()=>{
+        const timeoutId = localStorage.getItem("gptr/audio-timeout");
+        if(timeoutId){
+            clearTimeout(parseInt(timeoutId));
+            localStorage.removeItem("gptr/audio-timeout");
+        }
+    }
+
     const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
         console.log("RESETTING");
         audioPlayer.pause();
@@ -230,14 +238,14 @@ const useAudioPlayer = () => {
         }
 
         //play new audio if presence modal is open and stream is processing after click on yes
-        if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped){
+        if(audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")){
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
             if(isPaused){
                 markCompleted(audioPlayer.src)
                 setCurrentIndex(currentIndex + 1);
                 playNext(currentIndex + 1);
                 setTimeout(()=>{
-                    setWasPromptStopped(false);
+                    setWasPromptStopped("INIT");
                 },  500);
             }
         }
@@ -248,22 +256,14 @@ const useAudioPlayer = () => {
     useMemo(()=>{
         //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
         //set isStreamLoading to true to indicate buffering
-        if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped){
+        if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped === "PAUSED"){
             setAudioLoading(isLoading && isPaused);
             setTimeout(()=>{
-                setWasPromptStopped(false);
+                setWasPromptStopped("LOADING");
             },  500);
         }
         if(!isPromptingPaused) setIsPresenceModalOpen(false);
     },[isPromptingPaused,isLoading, isPaused, wasPromptStopped])
-
-    const resetTimeout=()=>{
-        const timeoutId = localStorage.getItem("gptr/audio-timeout");
-        if(timeoutId){
-            clearTimeout(parseInt(timeoutId));
-            localStorage.removeItem("gptr/audio-timeout");
-        }
-    }
 
     //checking loading state after 15 seconds of uploading text
     useEffect(() => {

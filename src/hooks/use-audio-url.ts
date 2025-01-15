@@ -14,7 +14,7 @@ const useAudioUrl = () => {
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
     const [is9ThChunk, setIs9thChunk] = useState<boolean>(false);
     const [isPromptingPaused, setIsPromptingPaused] = useState<boolean>(false);
-    const [wasPromptStopped, setWasPromptStopped] = useState<boolean>(false);
+    const [wasPromptStopped, setWasPromptStopped] = useState<"LOADING" | "PAUSED" | "INIT">("INIT");
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const { completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
@@ -103,7 +103,7 @@ const useAudioUrl = () => {
         const chunkNumber = currentCompletedStream?.chunkNumber;
         if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
             setIsPromptingPaused(true);
-            setWasPromptStopped(true);
+            setWasPromptStopped("PAUSED");
         }
     }, [currentCompletedStream, chunks]);
 
