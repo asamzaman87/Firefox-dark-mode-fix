@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "description": "A chrome extension that reads your GPT responses",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/JohnBra/web-extension.git"
-  },
+  "url": "https://www.gpt-reader.com/",
   "scripts": {
     "build": "bun run build:chrome && bun run build:firefox",
     "build:chrome": "vite build --config vite.config.chrome.ts",
