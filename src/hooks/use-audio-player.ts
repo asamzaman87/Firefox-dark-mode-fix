@@ -215,12 +215,14 @@ const useAudioPlayer = () => {
 
     const checkForLoadingAfter15Seconds = () => {
         const isActive = localStorage.getItem("gptr/active") === "true";
-        if (isActive) {
+        const isAudioLoading = localStorage.getItem("gptr/is-first-audio-loading") === "true";
+        if (isActive && isAudioLoading) {
            const { id } = toast({ description: "ChatGPT seems to be taking too long, please close this overlay for the exact error message or refresh the page and try again.", style: TOAST_STYLE_CONFIG }); 
            toast15SecRef.current = id;
         }else{
             if(toast15SecRef.current) dismiss(toast15SecRef.current);
         }
+        localStorage.removeItem("gptr/is-first-audio-loading");
     }
 
     useMemo(() => {
@@ -230,6 +232,7 @@ const useAudioPlayer = () => {
         }
 
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
+        localStorage.setItem("gptr/is-first-audio-loading", String(audioUrls.length === 0));
         
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);

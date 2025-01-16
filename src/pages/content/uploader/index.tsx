@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_REJECT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, findMatchLocalStorageKey } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -27,9 +27,11 @@ function Uploader() {
   const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
 
-  const { toast } = useToast();
-  const { isAuthenticated } = useAuthToken();
+  const { toast, dismiss } = useToast();
+  const { isAuthenticated, userId } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
+
+  const supportModelToast = useRef<string | null>(null);
 
   //sending the auth status to the background script
   useMemo(() => {
@@ -120,10 +122,22 @@ function Uploader() {
     return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
-  const isO1PreviewOrO1MiniModelSelected = ()=>{ 
+  const isO1PreviewOrO1MiniModelSelected = () => {
+    const isSupportedModel = (models: string | string[]) => MODELS_TO_REJECT.some((model) => models.includes(model));
+    //checking if the user has a last used model stored in local storage
+    if (userId) {
+      const lastUsedModelKey = findMatchLocalStorageKey(userId);
+      if (lastUsedModelKey) {
+        const lastUsedModel = localStorage.getItem(lastUsedModelKey);
+        if (lastUsedModel) {
+          return isSupportedModel(lastUsedModel);
+        }
+      }
+    }
+    // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
-    if(modelSwitcher){
-      return MODELS_TO_REJECT.some((model)=>modelSwitcher.innerHTML.includes(model));
+    if (modelSwitcher) {
+      return isSupportedModel(modelSwitcher.innerHTML);
     }
     return false
   };
@@ -153,14 +167,17 @@ function Uploader() {
     
     //check if the user has selected o1-preview or o1-mini and prompt them to select other models
     if(isO1PreviewOrO1MiniModelSelected()){
-      toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
+      const {id} = toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
+      supportModelToast.current = id;
       return;
     }
+    //clear the toast if model is supported
+    if(supportModelToast.current) dismiss(supportModelToast.current);
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     if (isComposerSpeechButtonPresentOnDom()) {
       //if the speech button is present on the dom, add speech found text to the input and open the popup
-      addTextToInputAndOpen("Speech Found"); 
+      addTextToInputAndOpen("GPT Reader"); 
       return setIsActive(true);
     }
 

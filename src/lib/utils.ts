@@ -171,3 +171,13 @@ export function observeElement(toObserve: string, cb?: (s: boolean) => void): vo
 
 }
 
+//find the key in local storage that matches the given key
+export const findMatchLocalStorageKey = (key: string) => {
+  const keys = Object.keys(localStorage);
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].includes(key)) {
+      return keys[i];
+    }
+  }
+  return null;
+}
