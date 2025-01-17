@@ -93,7 +93,7 @@ function Uploader() {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
     if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
-      console.log("redirecting to login");
+      //console.log("redirecting to login");
       chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
   }, [isAuthenticated, isActive]);

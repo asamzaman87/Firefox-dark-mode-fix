@@ -38,7 +38,7 @@ const useAudioPlayer = () => {
 
     useMemo(() => {
         if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length) && !isLoading && chunks.length === audioUrls.length) {
-                console.log("PLAYER COMPLETED ALL CHUNKS");
+                //console.log("PLAYER COMPLETED ALL CHUNKS");
                 setHasCompletePlaying(true);
                 setAudioUrls(completedPlaying);
                 audioPlayer.src = completedPlaying[0];
@@ -77,7 +77,7 @@ const useAudioPlayer = () => {
     }
 
     const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
-        console.log("RESETTING");
+        //console.log("RESETTING");
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
         setCurrentIndex(0);
@@ -112,7 +112,7 @@ const useAudioPlayer = () => {
     }
 
     const handleAudioEnd = useCallback(async () => {
-        console.log("HANDLE_AUDIO_END");
+        //console.log("HANDLE_AUDIO_END");
         const current = currentIndex + 1;
         
         if (isPromptingPaused) {
@@ -236,7 +236,7 @@ const useAudioPlayer = () => {
         
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
-            console.log("INIT PLAY")
+            //console.log("INIT PLAY")
             playNext(0)
         }
 
