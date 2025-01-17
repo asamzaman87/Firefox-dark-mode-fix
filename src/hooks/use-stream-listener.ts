@@ -28,7 +28,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         if (response.status !== 200) {
             if(response.status === 429){
                 console.log(response.status);
-                handleError("ChatGPT seems to be having issues, voice generation seems to have exceeded the rate limit! Please try again later.");
+                handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait an hour.");
                 return
             }
             if(response.status === 403 || response.status === 404 || response.status === 503){

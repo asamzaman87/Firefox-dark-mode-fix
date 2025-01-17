@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/ui/file-uploader";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import useAudioPlayerNew from "@/hooks/use-audio-player";
+import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
@@ -30,7 +30,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const {  isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayerNew();
+    const {  isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer();
 
     const resetter = () => {
         reset(true);
@@ -40,7 +40,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
     }
 
     const onBackClick = () => {
-        resetter();
+        //if is playing, wait for 500ms before resetting to avoid further chunk from being sent (May not work with 2g-3g networks)
+        if(isPlaying){
+            setTimeout(()=>{
+                resetter();
+            }, 500)
+        }else{
+            resetter();
+        }
         setIsBackPressed(true);
     }
 
