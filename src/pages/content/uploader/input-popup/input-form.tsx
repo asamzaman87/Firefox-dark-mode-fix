@@ -3,6 +3,8 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC } from "react";
 import { useForm } from "react-hook-form";
@@ -15,9 +17,11 @@ const formSchema = z.object({
 
 export interface InputFormProps {
     onSubmit: (values: z.infer<typeof formSchema>) => void;
+    disabled?: boolean
 }
 
-const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
+const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -28,6 +32,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
+        if(disabled) return toast({description: "Please wait until the previous request is completed", style: TOAST_STYLE_CONFIG});
         onSubmit(values);
     }
 
@@ -59,7 +64,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button type="submit" size={"lg"} variant={"outline"} className="rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">Submit</Button>
+                    <Button disabled={disabled} type="submit" size={"lg"} variant={"outline"} className="rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">Submit</Button>
                 </DialogFooter>
             </form>
         </Form>

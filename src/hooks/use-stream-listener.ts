@@ -10,6 +10,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNumber: string } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isFetching, setIsFetching] = useState<boolean>(false);
     const { token } = useAuthToken();
     const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
     const retryCount = useRef<number>(0);
@@ -24,6 +25,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     }
 
     const fetchAndDecodeAudio = useCallback(async (url: string) => {
+        setIsFetching(true);
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
             if(response.status === 429){
@@ -43,6 +45,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         }
         const blob = await response.blob();
         const audioUrl = URL.createObjectURL(blob);
+        setIsFetching(false);
         return audioUrl;
     }, [token])
 
@@ -96,7 +99,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         };
     }, [handleConvStream]);
 
-    return { completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading }
+    return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading }
 
 }
 

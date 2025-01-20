@@ -44,7 +44,7 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                     <DialogTitle className="text-center">Type Or Paste Text</DialogTitle>
                     <DialogDescription className="sr-only">Paste or type your text</DialogDescription>
                 </DialogHeader>
-                <InputForm onSubmit={onSubmit} />
+                <InputForm disabled={disabled} onSubmit={onSubmit} />
             </DialogContent>
         </Dialog>
     )

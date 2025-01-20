@@ -6,7 +6,7 @@ import { useToast } from "./use-toast";
 
 const useAudioPlayer = () => {
     const { toast, dismiss } = useToast();
-    const { wasPromptStopped, setWasPromptStopped, chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
+    const { isFetching, wasPromptStopped, setWasPromptStopped, chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -318,7 +318,8 @@ const useAudioPlayer = () => {
         setAudioLoading,
         setIsPromptingPaused, isPromptingPaused,
         isPresenceModalOpen,
-        setIsPresenceModalOpen
+        setIsPresenceModalOpen,
+        isFetching
     }
 
 

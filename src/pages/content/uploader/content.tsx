@@ -30,7 +30,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const {  isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer();
+    const {  isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer();
 
     const resetter = () => {
         reset(true);
@@ -134,7 +134,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
 
                 {
                     !prompts?.length ?
-                        <InputPopup disabled={isPlaying} onSubmit={onFormSubmit} />
+                        <InputPopup disabled={isPlaying || isFetching} onSubmit={onFormSubmit} />
                         : null
                 }
             </div>
