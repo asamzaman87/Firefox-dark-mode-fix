@@ -19,7 +19,7 @@ const useAudioUrl = () => {
     const { isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
     const sendPrompt = async () => {
-        //console.logog("SEND_PROMPT");
+        //console.log("SEND_PROMPT");
         setIsLoading(true);
         const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
         // toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
@@ -28,7 +28,7 @@ const useAudioUrl = () => {
     };
 
     const stopPrompt = async () => {
-        //console.logog("STOP_PROMPT");
+        //console.log("STOP_PROMPT");
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
         if (stopButton) {
             stopButton.click();
@@ -36,7 +36,7 @@ const useAudioUrl = () => {
     };
 
     const injectPrompt = useCallback((text: string, id: string) => {
-        //console.logog("INJECT_PROMPT", id);
+        //console.log("INJECT_PROMPT", id);
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
             textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
@@ -52,7 +52,7 @@ const useAudioUrl = () => {
     }, []);
 
     const splitAndSendPrompt = async (text: string) => {
-        //console.logog("SPLIT_AND_SEND_PROMPT");
+        //console.log("SPLIT_AND_SEND_PROMPT");
         setText(text);
         const chunks = await splitIntoChunksV2(text, CHUNK_SIZE);
         if (chunks.length > 0) {
@@ -64,7 +64,7 @@ const useAudioUrl = () => {
     };
 
     const extractText = async (file: File) => {
-        //console.logog("EXTRACT_TEXT");
+        //console.log("EXTRACT_TEXT");
         switch (file.type) {
             case "application/pdf": {
                 const text = await pdfToText(file);
@@ -110,7 +110,7 @@ const useAudioUrl = () => {
     const reStartChunkProcess = () => {
         const nextChunk = chunks[currentChunkBeingPromptedIndex + 1];
         if (nextChunk && currentCompletedStream) {
-            //console.logog("RESTART WITH NEXT_CHUNK");
+            //console.log("RESTART WITH NEXT_CHUNK");
             setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
             injectPrompt(nextChunk.text, nextChunk.id);
@@ -126,7 +126,7 @@ const useAudioUrl = () => {
             ) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
                 if (nextChunk) {
-                    //console.logog("NEXT_CHUNK");
+                    //console.log("NEXT_CHUNK");
                     setCurrentChunkBeingPromptedIndex(
                         +currentCompletedStream.chunkNumber + 1
                     );

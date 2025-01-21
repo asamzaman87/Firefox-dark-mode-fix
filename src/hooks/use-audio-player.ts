@@ -136,6 +136,7 @@ const useAudioPlayer = () => {
             playNext(current);
         }
         if(isLoading && !isPlaying && audioUrls.length === current) setIsStreamLoading(true);
+        if(isLoading && !isPlaying && audioUrls.length !== current) setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
     }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks])
 
     useMemo(()=>{

@@ -1,11 +1,12 @@
 {
   "name": "gpt-reader",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Listen to premium AI voices reading your text for free!",
   "license": "MIT",
   "url": "https://www.gpt-reader.com/",
   "scripts": {
     "build": "bun run build:chrome && bun run build:firefox",
+    "zip:build": "zip -r dist_chrome.zip dist_chrome/ && zip -r dist_firefox.zip dist_firefox/",
     "build:chrome": "vite build --config vite.config.chrome.ts",
     "build:firefox": "vite build --config vite.config.firefox.ts",
     "dev": "nodemon --config nodemon.chrome.json",

@@ -1,19 +1,19 @@
 import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM } from "@/lib/constants";
 import { switchToActiveTab } from "@/lib/utils";
 
-//console.log("BACKGROUND LOADED");
+////console.log("BACKGROUND LOADED");
 chrome.storage.local.clear();
 
 //listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener(async (request, sender) => {
     switch (request.type) {
         case LISTENERS.AUTH_RECEIVED: {
-            //console.log("BACKGROUND MESSAGE", request);
+            ////console.log("BACKGROUND MESSAGE", request);
             chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
             break;
         }
         case "CONTENT_LOADED": {
-            //console.log("CONTENT LOADED");
+            ////console.log("CONTENT LOADED");
             const tabId = sender?.tab?.id;
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "VERIFY_ORIGIN" });
@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
             break;
         }
         case "NO_AUTH_TRY_AGAIN": {
-            //console.log("NO_AUTH_TRY_AGAIN");
+            ////console.log("NO_AUTH_TRY_AGAIN");
             const tabId = sender?.tab?.id;
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "VERIFY_ORIGIN" });
@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
         }
         //verify if triggered from valid origin (onClick on onInstalled event)
         case "VERIFY_ORIGIN":{
-            //console.log("VERIFY_ORIGIN");
+            ////console.log("VERIFY_ORIGIN");
             const tabId = sender?.tab?.id;
             if (tabId) {
                 const {origin} = await chrome.storage.local.get("origin") ?? {};
