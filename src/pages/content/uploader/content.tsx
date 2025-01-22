@@ -30,7 +30,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
     const { toast } = useToast();
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
-    const {  isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer();
+    const { isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer();
 
     const resetter = () => {
         reset(true);
@@ -122,7 +122,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange })
                         <Previews file={files[0]} content={text} />
                         : <FileUploader
                             value={files}
-                            disabled={isPlaying}
+                            disabled={isPlaying || isFetching}
                             accept={BROWSER === "firefox" ? ACCEPTED_FILE_TYPES_FIREFOX : ACCEPTED_FILE_TYPES}
                             maxFileCount={MAX_FILES}
                             maxSize={MAX_FILE_SIZE}

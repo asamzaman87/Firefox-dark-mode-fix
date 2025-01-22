@@ -112,7 +112,7 @@ const useAudioPlayer = () => {
     }
 
     const handleAudioEnd = useCallback(async () => {
-        //console.log("HANDLE_AUDIO_END");
+        // console.log("HANDLE_AUDIO_END");
         const current = currentIndex + 1;
         
         if (isPromptingPaused) {
@@ -135,15 +135,15 @@ const useAudioPlayer = () => {
             setCurrentIndex(current);
             playNext(current);
         }
-        if(isLoading && !isPlaying && audioUrls.length === current) setIsStreamLoading(true);
-        if(isLoading && !isPlaying && audioUrls.length !== current) setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
-    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks])
+        if(isLoading && !isPlaying && audioUrls.length === current) return setIsStreamLoading(true);
+        if(isLoading && !isPlaying && audioUrls.length < current) return setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
+    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks,isPlaying])
 
     useMemo(()=>{
         if(isLoading && isStreamLoading){
             setAudioUrlsBeforeStop(audioUrls.length);
         }
-        if(!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length){
+        if(!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex+1)){
             setCurrentIndex(currentIndex+1);
             playNext(currentIndex+1);
             setIsStreamLoading(false);
