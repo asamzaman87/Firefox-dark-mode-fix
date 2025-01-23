@@ -131,9 +131,9 @@ window.fetch = async (...args) => {
 };
 
 window.addEventListener("GET_TOKEN", () => {
-    if (window && window?.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
-        const accessToken =  window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken;
-        const userId =  window.__remixContext?.state.loaderData.root.clientBootstrap.session.user.id;
+    if (window && window?.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
+        const accessToken =  window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken;
+        const userId =  window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.user.id;
         const authEvent = new CustomEvent("AUTH_RECEIVED", {
             detail: { accessToken, userId },
         });
@@ -143,9 +143,9 @@ window.addEventListener("GET_TOKEN", () => {
 
 //get all the listed voices
 window.addEventListener("GET_VOICES", async () => {
-    if (window && window?.__remixContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
+    if (window && window?.__reactRouterContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
         ////console.log("GET_VOICES")
-        const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
+        const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
         const data = await response.json();
         const voicesEvent = new CustomEvent("VOICES", {
             detail: data,
@@ -156,9 +156,9 @@ window.addEventListener("GET_VOICES", async () => {
 
 //stop conversation
 window.addEventListener("STOP_CONVERSATION", async (e) => {
-    if (window && window?.__remixContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
+    if (window && window?.__reactRouterContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
         const { conversation_id } = e.detail;
-        const response = await fetch("https://chatgpt.com/backend-api/stop_conversation", { method: "POST", body: JSON.stringify({ conversation_id }), headers: { "authorization": `Bearer ${window.__remixContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
+        const response = await fetch("https://chatgpt.com/backend-api/stop_conversation", { method: "POST", body: JSON.stringify({ conversation_id }), headers: { "authorization": `Bearer ${window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
         const data = await response.json();
         const conversationStoppedEvent = new CustomEvent("CONVERSATION_STOPPED", {
             detail: data,

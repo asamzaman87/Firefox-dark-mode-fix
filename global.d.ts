@@ -1,6 +1,6 @@
 // global.d.ts
 declare interface Window {
-  __remixContext?: {
+  __reactRouterContext?: {
     state: {
       loaderData: {
         root: {

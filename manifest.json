@@ -1,6 +1,5 @@
 {
   "manifest_version": 3,
-  "id": "877836c2-d853-4e87-9da0-dcabdce5680b",
   "name": "GPT Reader: A Free ChatGPT Powered TTS",
   "description": "Listen to premium AI voices reading your text for free!",
   "options_ui": {
