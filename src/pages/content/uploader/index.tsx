@@ -122,25 +122,25 @@ function Uploader() {
     return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
-  const isO1PreviewOrO1MiniModelSelected = () => {
-    const isSupportedModel = (models: string | string[]) => MODELS_TO_REJECT.some((model) => models.includes(model));
-    //checking if the user has a last used model stored in local storage
-    if (userId) {
-      const lastUsedModelKey = findMatchLocalStorageKey(userId);
-      if (lastUsedModelKey) {
-        const lastUsedModel = localStorage.getItem(lastUsedModelKey);
-        if (lastUsedModel) {
-          return isSupportedModel(lastUsedModel);
-        }
-      }
-    }
-    // if the user has not used a model before, check if the model switcher is present on the dom
-    const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
-    if (modelSwitcher) {
-      return isSupportedModel(modelSwitcher.innerHTML);
-    }
-    return false
-  };
+  // const isO1PreviewOrO1MiniModelSelected = () => {
+  //   const isSupportedModel = (models: string | string[]) => MODELS_TO_REJECT.some((model) => models.includes(model));
+  //   //checking if the user has a last used model stored in local storage
+  //   if (userId) {
+  //     const lastUsedModelKey = findMatchLocalStorageKey(userId);
+  //     if (lastUsedModelKey) {
+  //       const lastUsedModel = localStorage.getItem(lastUsedModelKey);
+  //       if (lastUsedModel) {
+  //         return isSupportedModel(lastUsedModel);
+  //       }
+  //     }
+  //   }
+  //   // if the user has not used a model before, check if the model switcher is present on the dom
+  //   const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
+  //   if (modelSwitcher) {
+  //     return isSupportedModel(modelSwitcher.innerHTML);
+  //   }
+  //   return false
+  // };
 
   const onOpenChange = (open: boolean) => {
     if(!open) return setIsActive(false);
@@ -166,13 +166,13 @@ function Uploader() {
     window.localStorage.removeItem("gptr/redirect-to-login");
     
     //check if the user has selected o1-preview or o1-mini and prompt them to select other models
-    if(isO1PreviewOrO1MiniModelSelected()){
-      const {id} = toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
-      supportModelToast.current = id;
-      return;
-    }
+    // if(isO1PreviewOrO1MiniModelSelected()){
+    //   const {id} = toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
+    //   supportModelToast.current = id;
+    //   return;
+    // }
     //clear the toast if model is supported
-    if(supportModelToast.current) dismiss(supportModelToast.current);
+    // if(supportModelToast.current) dismiss(supportModelToast.current);
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     if (isComposerSpeechButtonPresentOnDom()) {

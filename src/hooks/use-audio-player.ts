@@ -1,4 +1,4 @@
-import { CHUNK_TO_PAUSE_ON, LISTENERS, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, LISTENERS, LOADING_TIMEOUT, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
@@ -214,11 +214,11 @@ const useAudioPlayer = () => {
         }
     }, [audioPlayer, handleAudioEnd]);
 
-    const checkForLoadingAfter15Seconds = () => {
+    const checkForLoadingAfter25Seconds = () => {
         const isActive = localStorage.getItem("gptr/active") === "true";
         const isAudioLoading = localStorage.getItem("gptr/is-first-audio-loading") === "true";
         if (isActive && isAudioLoading) {
-           const { id } = toast({ description: "ChatGPT seems to be taking too long, please close this overlay for the exact error message or refresh the page and try again.", style: TOAST_STYLE_CONFIG }); 
+           const { id } = toast({ description: "GPT Reader seems to be taking longer than usual. Please check for an error by closing the overlay. It is recommended to use the GPT-4 models for the best results. You can change models by closing the overlay and clicking on the top left drop down model button.", style: TOAST_STYLE_CONFIG }); 
            toast15SecRef.current = id;
         }else{
             if(toast15SecRef.current) dismiss(toast15SecRef.current);
@@ -274,8 +274,8 @@ const useAudioPlayer = () => {
         resetTimeout();
         if (text.trim().length) {
             const id = setTimeout(() => {
-                checkForLoadingAfter15Seconds();
-            }, 15000);
+                checkForLoadingAfter25Seconds();
+            }, LOADING_TIMEOUT);
             localStorage.setItem("gptr/audio-timeout", `${id}`);
             setTimeoutId(id)
         } else {
