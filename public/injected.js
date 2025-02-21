@@ -11,15 +11,16 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         while (true) {
             const { done, value } = await reader.read();
             const decoder = new TextDecoder("utf-8");
-            const text = decoder.decode(value);
-            const meesageIdMatch = text.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
-            const createTimeMatch = text.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
-            const conversationIdMatch = text.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
+            const textDecoded = decoder.decode(value);
+
+            const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
+            const createTimeMatch = textDecoded.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
+            const conversationIdMatch = textDecoded.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
             //extracting the message id from the response 
-            if (meesageIdMatch?.length) {
+            if (messageIdMatch?.length) {
                 //if there are multiple message ids, take the last one 
                 //if there are 3 messaged id's  i.e. 1. id with role system 2. id with role user 3. id with role assistant we pick the last one(role assitant)
-                const rawMesssageId = meesageIdMatch.length > 1 ? meesageIdMatch[meesageIdMatch.length - 1] : meesageIdMatch[0]; 
+                const rawMesssageId = messageIdMatch.length > 1 ? messageIdMatch[messageIdMatch.length - 1] : messageIdMatch[0];
                 messageId = rawMesssageId.replace(/"/g, "").replace(/id: /g, "");
             }
             if (conversationIdMatch) conversationId = conversationIdMatch[1];
@@ -31,7 +32,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 window.dispatchEvent(messageIdEvent);
             }
 
-            if (done) return { messageId, conversationId, createTime, text };  // Exit loop when reading is complete
+            if (done) return { messageId, conversationId, createTime, text };// Exit loop when reading is complete
         }
     } catch (error) {
         if (error.name === 'AbortError') {
@@ -95,6 +96,7 @@ window.fetch = async (...args) => {
         }
         if (stream) {
             const reader = stream.getReader();
+
             loopThroughReaderToExtractMessageId(reader, args)
                 .then((data) => {
                     // Dispatch custom event after stream reading is complete
@@ -132,8 +134,8 @@ window.fetch = async (...args) => {
 
 window.addEventListener("GET_TOKEN", () => {
     if (window && window?.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
-        const accessToken =  window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken;
-        const userId =  window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.user.id;
+        const accessToken = window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken;
+        const userId = window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.user.id;
         const authEvent = new CustomEvent("AUTH_RECEIVED", {
             detail: { accessToken, userId },
         });
