@@ -6,7 +6,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HelpCircleIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
 import DownloadOrListen from "./download-or-listen-popup";
@@ -176,6 +176,11 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 </div>
                 <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform":( prompts.length > 0 || isDownload)})}>
                     <FeedbackPopup />
+                </div>
+                <div className={cn("absolute top-4 right-16 size-max")}>
+                    <Button variant="ghost" onClick={()=> chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                        <HelpCircleIcon/> Having Issues? Click Here
+                    </Button>
                 </div>
 
                  <PresenceConfirmationPopup loading={isLoading} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />       

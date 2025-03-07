@@ -1,4 +1,4 @@
-import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM, UNINSTALL_GOOGLE_FORM } from "@/lib/constants";
+import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM, UNINSTALL_GOOGLE_FORM, YOUTUBE_FAQ_VIDEO } from "@/lib/constants";
 import { switchToActiveTab } from "@/lib/utils";
 
 ////console.log("BACKGROUND LOADED");
@@ -46,6 +46,10 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
         }
         case "OPEN_FEEDBACK":{
             chrome.tabs.create({ url: FEEDBACK_GOOGLE_FORM });
+            break;
+        }
+        case "OPEN_FAQ_VIDEO":{
+            chrome.tabs.create({ url: YOUTUBE_FAQ_VIDEO });
             break;
         }
 
