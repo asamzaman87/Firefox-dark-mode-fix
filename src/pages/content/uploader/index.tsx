@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, MODELS_TO_REJECT, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, findMatchLocalStorageKey } from "@/lib/utils";
+import { LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -26,12 +26,13 @@ function Uploader() {
   const [confirmed, setConfirmed] = useState<boolean>(false);
   const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
+  const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
 
-  const { toast, dismiss } = useToast();
-  const { isAuthenticated, userId } = useAuthToken();
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
-  const supportModelToast = useRef<string | null>(null);
+  // const supportModelToast = useRef<string | null>(null);
 
   //sending the auth status to the background script
   useMemo(() => {
@@ -143,7 +144,16 @@ function Uploader() {
   // };
 
   const onOpenChange = (open: boolean) => {
-    if(!open) return setIsActive(false);
+    if(!open) {
+      //show confirmation for cancel download if download is in progress
+      const download = window.localStorage.getItem("gptr/download");
+      if(download && download === "true"){
+        setIsCancelDownloadConfirmation(true);
+        return
+      }
+      setIsActive(false);
+      return 
+    }
     const aoc = window.localStorage.getItem("gptr/aoc");
     //return if overlay is already active.
     if(open && aoc && +aoc>0) {
@@ -247,7 +257,7 @@ function Uploader() {
           className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-6", prompts?.length && "pb-0")}
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-          {confirmed && <Content onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts}/>}
+          {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts}/>}
         </DialogContent>
       </Dialog>
       <Toaster />

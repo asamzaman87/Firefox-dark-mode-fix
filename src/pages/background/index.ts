@@ -1,4 +1,4 @@
-import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM } from "@/lib/constants";
+import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM, UNINSTALL_GOOGLE_FORM } from "@/lib/constants";
 import { switchToActiveTab } from "@/lib/utils";
 
 ////console.log("BACKGROUND LOADED");
@@ -146,3 +146,5 @@ chrome.action.onClicked.addListener(async () => {
          chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
     }
 })
+
+chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM)

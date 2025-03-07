@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE } from "./constants";
+import { CHUNK_SIZE, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -85,6 +85,29 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
   return chunks;
 }
 
+export function splitIntoChunksV1(text: string, chunkSize: number = DOWLOAD_CHUNK_SIZE): Chunk[] {
+  const sentences = text.match(/(?:[^.!?•]+[.!?•]+[\])'"`’”]*|[^.!?•]+(?:$))/g) || []; //matches sentences based on the delimiters
+  let currentChunk = "";
+  let chunkId = 0;
+
+  return sentences.reduce((chunks, sentence, i, arr) => {
+    const isCurrentChunkSizeGreaterThanOrEqualChunkSize = (currentChunk + sentence).length >= chunkSize;
+    const isEnd = i === arr.length-1
+    if (isCurrentChunkSizeGreaterThanOrEqualChunkSize) {
+      chunks.push({ id: `${chunkId++}`, text: currentChunk.trim(), completed: false });
+      currentChunk = sentence.trim();
+    } else {
+      currentChunk += sentence.trim();
+    }
+
+    //handles last chunk if it does not meet the chunk size cnodition
+    if (currentChunk && !isCurrentChunkSizeGreaterThanOrEqualChunkSize && isEnd) {
+      chunks.push({ id: `${chunkId}`, text: currentChunk.trim(), completed: false });
+    }
+
+    return chunks;
+  }, [] as Chunk[]);
+}
 
 export const extractChunkNumberFromPrompt = (inputString: string): string | null => {
   // Regular expression to match number inside square brackets

@@ -1,5 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LISTENERS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
@@ -14,9 +15,10 @@ interface VoiceSelectorProps {
     voice: Voice;
     setVoices: (voice: string) => void;
     disabled?: boolean;
+    loading?: boolean;
 }
 
-const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) => {
+const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loading }) => {
     const { selected, voices } = voice;
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
@@ -42,7 +44,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             audio.src = currentPreview;
             audio.play();
         }
-    }, [selected])
+    }, [selected, voices])
 
     const onDropItemSelect=(voice: string)=>{
         if(audio){
@@ -78,6 +80,14 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
         }
     }
 
+    if (loading)
+      return (
+        <div className="flex items-center justify-center gap-2">
+          <Skeleton className="rounded-full w-32 h-8" />
+          <Skeleton className="rounded-full w-32 h-8" />
+        </div>
+      );
+
     return (
         <div className="flex items-center justify-center gap-2">
             <Trigger onClick={() => isPlaying ? stop() : preview()}>
@@ -102,7 +112,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled }) =
             <Popover>
                 <PopoverTrigger><Info className="cursor-pointer size-5 text-gray-600 dark:text-gray-100" /></PopoverTrigger>
                 <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <p className="text-wrap text-left font-medium text-sm"> Choose from a variety of ChatGPT's enhanced voice options. Please note that the voice selection must be made prior to uploading your text.</p>
+                <p className="text-wrap text-left font-medium text-sm"> Choose from a variety of ChatGPT&apos;s enhanced voice options. Please note that the voice selection must be made prior to uploading your text.</p>
                 </PopoverContent>
             </Popover>
         </div>

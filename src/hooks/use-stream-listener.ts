@@ -13,6 +13,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const { token } = useAuthToken();
     const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
+    const [blobs, setBlobs] = useState<Blob[]>([]);
     const retryCount = useRef<number>(0);
 
     const setVoices = (voice: string) => {
@@ -20,7 +21,10 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     }
 
     const handleError = (error: string) => {
-        toast({ description:error, style: TOAST_STYLE_CONFIG });
+        const errorEvent = new CustomEvent(LISTENERS.ERROR, { detail: { message: error} });
+        window.dispatchEvent(errorEvent);
+        toast({ description: error, style: TOAST_STYLE_CONFIG });
+        setIsFetching(false);
         return
     }
 
@@ -28,13 +32,13 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         setIsFetching(true);
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
-            if(response.status === 429){
+            if (response.status === 429) {
                 ////console.log(response.status);
                 handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait an hour.");
                 return
             }
-            if(response.status === 403 || response.status === 404 || response.status === 503){
-                if(retryCount.current !== 0){
+            if (response.status === 403 || response.status === 404 || response.status === 503) {
+                if (retryCount.current !== 0) {
                     handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                     return
                 }
@@ -44,6 +48,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
             handleError("ChatGPT seems to be having issues, please close this overlay for the exact error message.");
         }
         const blob = await response.blob();
+        setBlobs(blobs => [...blobs, blob]);
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;
@@ -53,19 +58,19 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const retry = useCallback(async (url: string): Promise<string | undefined> => {
         retryCount.current++
         return await fetchAndDecodeAudio(url);
-    },[retryCount, token])
+    }, [retryCount, token])
 
-    const handleConvStream = useCallback(async(e: Event) => {
+    const handleConvStream = useCallback(async (e: Event) => {
         const { detail: { messageId, conversationId, text, createTime } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string } };
         const chunkNumber = extractChunkNumberFromPrompt(text);
         if (chunkNumber) {
-            if(token){
-                try{
+            if (token) {
+                try {
                     // prefetching audio
                     const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`);
                     if (audioUrl) await setCompletedStreams(streams => [...streams, audioUrl]);
-                } catch (e) {
-                    if(retryCount.current !== 0){
+                } catch {
+                    if (retryCount.current !== 0) {
                         handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                         return;
                     }
@@ -82,11 +87,12 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         const { detail } = e as Event & { detail: string };
         toast({ description: detail, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
-    },  [setIsLoading]);
+    }, [setIsLoading]);
 
     const reset = () => {
         setCompletedStreams([]);
         setCurrentCompletedStream(null);
+        setBlobs([])
     }
 
     useEffect(() => {
@@ -99,7 +105,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         };
     }, [handleConvStream]);
 
-    return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading }
+    return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading, blobs }
 
 }
 

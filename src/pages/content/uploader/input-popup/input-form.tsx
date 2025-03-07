@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Send } from "lucide-react";
 import { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -32,13 +33,13 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-        if(disabled) return toast({description: "Please wait until the previous request is completed", style: TOAST_STYLE_CONFIG});
+        if (disabled) return toast({ description: "Please wait until the previous request is completed", style: TOAST_STYLE_CONFIG });
         onSubmit(values);
     }
 
     return (
         <Form {...form}>
-            <form className="w-full space-y-4 [&_label]:text-lg [&_button]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
+            <form className="w-full space-y-4 [&_label]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
                 <FormField
                     control={form.control}
                     name="title"
@@ -46,7 +47,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                         <FormItem className="w-full">
                             <FormLabel>Title</FormLabel>
                             <FormControl>
-                                <Input  className="rounded-lg" {...field} />
+                                <Input className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" {...field} />
                             </FormControl>
                             <FormMessage className="text-red-600" />
                         </FormItem>
@@ -58,13 +59,15 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                         <FormItem className="w-full">
                             <FormLabel>Text</FormLabel>
                             <FormControl>
-                                <Textarea className="resize-none rounded-lg min-h-[50dvh] border focus:border-gray-900 dark:focus:border-gray-200" {...field} />
+                                <Textarea className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 resize-none rounded min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 outline-none" {...field} />
                             </FormControl>
                             <FormMessage className="text-red-600" />
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={disabled} type="submit" size={"lg"} variant={"outline"} className="rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">Submit</Button>
+                    <Button disabled={disabled} type="submit" variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                        <Send /> Submit
+                    </Button>
                 </DialogFooter>
             </form>
         </Form>

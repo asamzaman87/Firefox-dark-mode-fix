@@ -1,7 +1,7 @@
 {
   "name": "gpt-reader",
-  "version": "1.0.8",
-  "description": "Listen to premium AI voices reading your text for free!",
+  "version": "1.0.9",
+  "description": "Natural ChatGPT AI text to speech (TTS) for PDFs, articles, & docs. Download or read aloud using high-quality voices with GPT Reader",
   "license": "MIT",
   "url": "https://www.gpt-reader.com/",
   "scripts": {
@@ -20,7 +20,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-popover": "^1.1.4",
-    "@radix-ui/react-progress": "^1.1.1",
+    "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-scroll-area": "^1.2.2",
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slider": "^1.2.2",

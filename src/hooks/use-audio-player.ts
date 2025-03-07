@@ -1,12 +1,12 @@
-import { CHUNK_TO_PAUSE_ON, LISTENERS, LOADING_TIMEOUT, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, LISTENERS, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 
-const useAudioPlayer = () => {
+const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
-    const { isFetching, wasPromptStopped, setWasPromptStopped, chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl();
+    const {downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl(isDownload);
     const { isAuthenticated, token } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -38,17 +38,17 @@ const useAudioPlayer = () => {
 
     useMemo(() => {
         if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length) && !isLoading && chunks.length === audioUrls.length) {
-                //console.log("PLAYER COMPLETED ALL CHUNKS");
-                setHasCompletePlaying(true);
-                setAudioUrls(completedPlaying);
-                audioPlayer.src = completedPlaying[0];
-                audioPlayer.id = "1";
-                // audioPlayer.pause();
-                
-                //delayed to allow src to be set
-                setTimeout(() => {
-                    setCompletedPlaying([]);
-                }, 200);
+            //console.log("PLAYER COMPLETED ALL CHUNKS");
+            setHasCompletePlaying(true);
+            setAudioUrls(completedPlaying);
+            audioPlayer.src = completedPlaying[0];
+            audioPlayer.id = "1";
+            // audioPlayer.pause();
+
+            //delayed to allow src to be set
+            setTimeout(() => {
+                setCompletedPlaying([]);
+            }, 200);
         }
     }, [completedPlaying]);
 
@@ -68,9 +68,9 @@ const useAudioPlayer = () => {
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
-    const resetTimeout=()=>{
+    const resetTimeout = () => {
         const timeoutId = localStorage.getItem("gptr/audio-timeout");
-        if(timeoutId){
+        if (timeoutId) {
             clearTimeout(parseInt(timeoutId));
             localStorage.removeItem("gptr/audio-timeout");
         }
@@ -94,18 +94,18 @@ const useAudioPlayer = () => {
 
     //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
     useMemo(() => {
-        if(isPromptingPaused){
+        if (isPromptingPaused) {
             // if(currentIndex > 0 && currentIndex % CHUNK_TO_PAUSE_ON === CHUNK_TO_PAUSE_ON - 1){
             //     setIsPresenceModalOpen(true);
             // }
             const chunkPlaying = +audioPlayer.id;
-            if(chunkPlaying % CHUNK_TO_PAUSE_ON===0){
-                setTimeout(()=>setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
+            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0) {
+                setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
             }
         }
     }, [isPromptingPaused, currentIndex])
 
-    const markCompleted=(url: string)=>{
+    const markCompleted = (url: string) => {
         const tempComp = [...completedPlaying];
         tempComp.push(url)
         setCompletedPlaying(tempComp);
@@ -114,7 +114,7 @@ const useAudioPlayer = () => {
     const handleAudioEnd = useCallback(async () => {
         // console.log("HANDLE_AUDIO_END");
         const current = currentIndex + 1;
-        
+
         if (isPromptingPaused) {
             //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
             //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
@@ -126,29 +126,29 @@ const useAudioPlayer = () => {
         }
 
         markCompleted(audioPlayer.src)
-        
+
         if (currentIndex === audioUrls.length - 1 && !isLoading) {
             return reset(false, true);
         }
-        
-        if(audioUrls.length > current){
+
+        if (audioUrls.length > current) {
             setCurrentIndex(current);
             playNext(current);
         }
-        if(isLoading && !isPlaying && audioUrls.length === current) return setIsStreamLoading(true);
-        if(isLoading && !isPlaying && audioUrls.length < current) return setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
-    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks,isPlaying])
+        if (isLoading && !isPlaying && audioUrls.length === current) return setIsStreamLoading(true);
+        if (isLoading && !isPlaying && audioUrls.length < current) return setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
+    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks, isPlaying])
 
-    useMemo(()=>{
-        if(isLoading && isStreamLoading){
+    useMemo(() => {
+        if (isLoading && isStreamLoading) {
             setAudioUrlsBeforeStop(audioUrls.length);
         }
-        if(!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex+1)){
-            setCurrentIndex(currentIndex+1);
-            playNext(currentIndex+1);
+        if (!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex + 1)) {
+            setCurrentIndex(currentIndex + 1);
+            playNext(currentIndex + 1);
             setIsStreamLoading(false);
         }
-    },[isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
+    }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
     const pause = () => {
         if (isPlaying && audioPlayer.src) {
@@ -214,14 +214,14 @@ const useAudioPlayer = () => {
         }
     }, [audioPlayer, handleAudioEnd]);
 
-    const checkForLoadingAfter25Seconds = () => {
+    const checkForLoadingAfterNSeconds = () => {
         const isActive = localStorage.getItem("gptr/active") === "true";
         const isAudioLoading = localStorage.getItem("gptr/is-first-audio-loading") === "true";
         if (isActive && isAudioLoading) {
-           const { id } = toast({ description: "GPT Reader seems to be taking longer than usual. Please check for an error by closing the overlay. It is recommended to use the GPT-4 models for the best results. You can change models by closing the overlay and clicking on the top left drop down model button.", style: TOAST_STYLE_CONFIG }); 
-           toast15SecRef.current = id;
-        }else{
-            if(toast15SecRef.current) dismiss(toast15SecRef.current);
+            const { id } = toast({ description: "GPT Reader seems to be taking longer than usual. Please check for an error by closing the overlay. It is recommended to use the GPT-4 models for the best results. You can change models by closing the overlay and clicking on the top left drop down model button.", style: TOAST_STYLE_CONFIG });
+            toast15SecRef.current = id;
+        } else {
+            if (toast15SecRef.current) dismiss(toast15SecRef.current);
         }
         localStorage.removeItem("gptr/is-first-audio-loading");
     }
@@ -234,7 +234,7 @@ const useAudioPlayer = () => {
 
         setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
         localStorage.setItem("gptr/is-first-audio-loading", String(audioUrls.length === 0));
-        
+
         if (audioUrls.length === 1) {
             setCompletedPlaying([]);
             //console.log("INIT PLAY")
@@ -242,50 +242,57 @@ const useAudioPlayer = () => {
         }
 
         //play new audio if presence modal is open and stream is processing after click on yes
-        if(audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")){
+        if (audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")) {
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
-            if(isPaused){
+            if (isPaused) {
                 markCompleted(audioPlayer.src)
                 setCurrentIndex(currentIndex + 1);
                 playNext(currentIndex + 1);
-                setTimeout(()=>{
+                setTimeout(() => {
                     setWasPromptStopped("INIT");
-                },  500);
+                }, 500);
             }
         }
 
     }, [audioUrls.length, isBackPressed]);
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
-    useMemo(()=>{
+    useMemo(() => {
         //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
         //set isStreamLoading to true to indicate buffering
-        if(audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped === "PAUSED"){
+        if (audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped === "PAUSED") {
             setAudioLoading(isLoading && isPaused);
-            setTimeout(()=>{
+            setTimeout(() => {
                 setWasPromptStopped("LOADING");
-            },  500);
+            }, 500);
         }
-        if(!isPromptingPaused) setIsPresenceModalOpen(false);
-    },[isPromptingPaused,isLoading, isPaused, wasPromptStopped])
+        if (!isPromptingPaused) setIsPresenceModalOpen(false);
+    }, [isPromptingPaused, isLoading, isPaused, wasPromptStopped])
+
+    //clear timeout when downloading has progress
+    useMemo(() => {
+        if(isDownload && progress > 0 && timeoutId) {
+            clearTimeout(timeoutId);
+        }
+    }, [isDownload, progress, timeoutId]);
 
     //checking loading state after 15 seconds of uploading text
     useEffect(() => {
         resetTimeout();
         if (text.trim().length) {
             const id = setTimeout(() => {
-                checkForLoadingAfter25Seconds();
-            }, LOADING_TIMEOUT);
+                checkForLoadingAfterNSeconds();
+            }, isDownload ? LOADING_TIMEOUT_FOR_DOWNLOAD :LOADING_TIMEOUT);
             localStorage.setItem("gptr/audio-timeout", `${id}`);
             setTimeoutId(id)
         } else {
-            if(timeoutId) clearTimeout(timeoutId);
+            if (timeoutId) clearTimeout(timeoutId);
         }
         return () => {
-            if(timeoutId) clearTimeout(timeoutId);
-            if(toast15SecRef.current) dismiss(toast15SecRef.current);
+            if (timeoutId) clearTimeout(timeoutId);
+            if (toast15SecRef.current) dismiss(toast15SecRef.current);
         }
-    }, [text.trim().length]);
+    }, [text.trim().length, isDownload]);
 
     return {
         isAuthenticated,
@@ -320,7 +327,11 @@ const useAudioPlayer = () => {
         setIsPromptingPaused, isPromptingPaused,
         isPresenceModalOpen,
         setIsPresenceModalOpen,
-        isFetching
+        isFetching,
+        downloadCombinedFile,
+        progress, 
+        setProgress,
+        downloadPreviewText
     }
 
 

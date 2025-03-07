@@ -22,6 +22,7 @@ export const LISTENERS = {
   "SIGNOUT_RECEIVED": "SIGNOUT_RECEIVED",
   "CONVERSATION_STOPPED": "CONVERSATION_STOPPED",
   "VOICES": "VOICES",
+  "LOADING_ON_VOICE": "LOADING_ON_VOICE",
   "GET_VOICES": "GET_VOICES",
   "STOP_CONVERSATION": "STOP_CONVERSATION",
   "AUDIO_ENDED": "ended",
@@ -41,6 +42,7 @@ export const DOMAINS = ["chat.com", "chatgpt.com"];
 export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*"];
 export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feedback";
 export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
+export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
 export const MAX_SLIDER_VALUE = 2;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
@@ -48,3 +50,5 @@ export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
 export const MODELS_TO_REJECT = ["o1"];
 export const CHUNK_TO_PAUSE_ON = 9; //end of chunk
 export const LOADING_TIMEOUT = 25000;
+export const LOADING_TIMEOUT_FOR_DOWNLOAD = 40000;
+export const DOWLOAD_CHUNK_SIZE = 4000;
