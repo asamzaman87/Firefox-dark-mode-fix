@@ -1,4 +1,4 @@
-import { LISTENERS, DOMAINS, FEEDBACK_GOOGLE_FORM, UNINSTALL_GOOGLE_FORM, YOUTUBE_FAQ_VIDEO } from "@/lib/constants";
+import { DOMAINS, FEEDBACK_GOOGLE_FORM, LISTENERS, UNINSTALL_GOOGLE_FORM, YOUTUBE_FAQ_VIDEO } from "@/lib/constants";
 import { switchToActiveTab } from "@/lib/utils";
 
 ////console.log("BACKGROUND LOADED");
@@ -13,7 +13,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
             break;
         }
         case "CONTENT_LOADED": {
-            ////console.log("CONTENT LOADED");
             const tabId = sender?.tab?.id;
             if (tabId) {
                 chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "VERIFY_ORIGIN" });
@@ -30,7 +29,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
         }
         //verify if triggered from valid origin (onClick on onInstalled event)
         case "VERIFY_ORIGIN":{
-            ////console.log("VERIFY_ORIGIN");
             const tabId = sender?.tab?.id;
             if (tabId) {
                 const {origin} = await chrome.storage.local.get("origin") ?? {};
@@ -38,6 +36,10 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
                     chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
                 }
             }
+            break;
+        }
+        case "SET_ORIGIN":{
+            chrome.storage.local.set({ origin: true });
             break;
         }
         case "CLEAR_ORIGIN":{            
@@ -109,11 +111,11 @@ const checkActiveTab = async () => {
     if (tabs.length === 0) return chrome.action.disable();
     const url = tabs[0]?.url;
 
-    if (!url) return setBadState(true);
+    if (!url) return true; //was setBadState(true);
 
-    if (!matchUrlToDomain(DOMAINS, url)) return setBadState(true);
+    if (!matchUrlToDomain(DOMAINS, url)) return true; //was setBadState(true);
 
-    return setBadState(false);
+    return false;  //was setBadState(false);
 }
 
 //check if updated tab or current tab changes URL on redirect is/is redirected to gpt and update badge
@@ -128,6 +130,19 @@ chrome.tabs.onActivated.addListener(async () => {
 
 //switch to gpt when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
+    const manifest = chrome.runtime.getManifest();
+    const currentVersion = manifest.version;
+    const {version: previousVersion} = await chrome.storage.sync.get("version");
+    
+    //update to latest version and return to prevent opening popup (indicates on update)
+    if(previousVersion) {
+        chrome.storage.sync.set({ version: currentVersion });    
+        return;
+    }
+    
+    //if version not set yet, set it to current version and continue to opening popup
+    if(!previousVersion) chrome.storage.sync.set({ version: currentVersion }); //to persist on update to sent message to avoid opening popup on update
+
     const tabId = await switchToActiveTab();
     if (tabId) {
         const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created

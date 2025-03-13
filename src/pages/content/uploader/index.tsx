@@ -165,6 +165,7 @@ function Uploader() {
       const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
       if (loginBtn) {
         window.localStorage.setItem("gptr/redirect-to-login", "true");
+        chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
         loginBtn?.click();
       }else{
         //send message to background to try again if user is not authorised and login btn not present
