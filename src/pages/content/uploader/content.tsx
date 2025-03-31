@@ -82,7 +82,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [])
 
     const onSave = (files: File[]) => {
-        if (!files?.length) return toast({ description: "No files selected", style: TOAST_STYLE_CONFIG });
+        if (!files?.length) return toast({ description: chrome.i18n.getMessage("no_files_selected"), style: TOAST_STYLE_CONFIG });
         if (isBackPressed) setIsBackPressed(false) //reseting back pressed state if the file is added
         setFiles(files);
         extractText(files[0]).then((text) => {
@@ -105,7 +105,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
         if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
-        setTitle(values.title?.trim().length ? values.title + ".txt" : "Untitled.txt");
+        setTitle(values.title?.trim().length ? values.title + ".txt" : chrome.i18n.getMessage("untitled_file"));
         setPastedText(values.text)
         setShowDownloadOrListen(true)
     }
@@ -166,9 +166,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             <DialogHeader className={cn("h-max", { "sr-only": isDownload })}>
                 <DialogTitle className={"inline-flex flex-col justify-center items-center gap-2"}>
                     {title ? title
-                        : <>{!prompts.length && <img src={logo} alt="GPT Reader Logo" className="size-10" />} GPT Reader</>}
+                        : <>{!prompts.length && <img src={logo} alt={chrome.i18n.getMessage("gpt_reader_logo")} className="size-10" />} {chrome.i18n.getMessage("gpt_reader")}</>}
                 </DialogTitle>
-                <DialogDescription className="sr-only">Simplify reading long documents with GPT</DialogDescription>
+                <DialogDescription className="sr-only">{chrome.i18n.getMessage("simplify_reading")}</DialogDescription>
             </DialogHeader>
             <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
                 <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": (prompts.length > 0 || isDownload )})}>
@@ -179,7 +179,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 </div>
                 <div className={cn("absolute top-4 right-16 size-max")}>
                     <Button variant="ghost" onClick={()=> chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
-                        <HelpCircleIcon/> Having Issues? Click Here
+                        <HelpCircleIcon/> {chrome.i18n.getMessage("having_issues")}
                     </Button>
                 </div>
 
@@ -191,7 +191,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
                 {(prompts.length === 0 && !isDownload) ? <VoiceSelector voice={voices} setVoices={setVoices} disabled={isVoiceLoading} loading={isVoiceLoading} /> : null}
 
-                {(prompts.length > 0 || isDownload) && <Button title="Back" size={"icon"} onClick={onBackClick} className="hover:scale-110  transition-allfont-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">Back</span></Button>}
+                {(prompts.length > 0 || isDownload) && <Button title={chrome.i18n.getMessage("back")} size={"icon"} onClick={onBackClick} className="hover:scale-110  transition-allfont-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">{chrome.i18n.getMessage("back")}</span></Button>}
                     
                 {
                     (prompts.length > 0 || isDownload) ?

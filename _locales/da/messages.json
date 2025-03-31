@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: Gratis AI tekst-til-tale med ChatGPT-stemmer, TTS"
+    },
+    "extensionDescription": {
+      "message": "Naturlig ChatGPT AI tekst-til-tale (TTS) til PDF, artikler og dokumenter. Download eller få oplæst med høj kvalitet i GPT Reader"
+    },
+    "play_voice": {
+      "message": "Afspil stemme"
+    },
+    "stop": {
+      "message": "Stop"
+    },
+    "drag_and_drop_files": {
+      "message": "Træk og slip filer her, eller klik for at vælge"
+    },
+    "upload_limit": {
+      "message": "Du kan uploade en fil på op til 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Skriv eller indsæt tekst"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Indsæt eller skriv din tekst"
+    },
+    "title": {
+      "message": "Titel"
+    },
+    "text": {
+      "message": "Tekst"
+    },
+    "submit": {
+      "message": "Send"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Vil du downloade eller lytte til lyden?"
+    },
+    "download": {
+      "message": "Download"
+    },
+    "download_note": {
+      "message": "Kan blive betalingskrævende senere"
+    },
+    "listen": {
+      "message": "Lyt"
+    },
+    "downloading_status": {
+      "message": "Downloader"
+    },
+    "download_complete": {
+      "message": "Download fuldført"
+    },
+    "please_wait_file_downloading": {
+      "message": "Vent, mens filen downloades..."
+    },
+    "full_download_note": {
+      "message": "Hvis den ikke downloades automatisk, klik på 'Download' herunder."
+    },
+    "loading_preview": {
+      "message": "Indlæser forhåndsvisning"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT premium-brugere, vælg GPT-4o mini for hurtigere download. Luk vinduet for at skifte model."
+    },
+    "cancel": {
+      "message": "Annullér"
+    },
+    "cancel_download_confirmation": {
+      "message": "Er du sikker på, at du vil annullere download?"
+    },
+    "continue_download": {
+      "message": "Fortsæt download"
+    },
+    "cancel_download": {
+      "message": "Annullér download"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader kan skabe lyd, der ikke er 100% korrekt. Hvis du ser forskelle, luk vinduet og start en ny ChatGPT-chat."
+    },
+    "playback_speed": {
+      "message": "Afspilningshastighed"
+    },
+    "we_appreciate_feedback": {
+      "message": "Vi værdsætter din feedback."
+    },
+    "feedback_prompt": {
+      "message": "Vi søger altid at forbedre os. Fortæl os gerne, hvad vi kan gøre bedre."
+    },
+    "feedback_question": {
+      "message": "Hvad synes du om denne udvidelse?"
+    },
+    "submit_feedback": {
+      "message": "Indsend feedback"
+    },
+    "having_issues": {
+      "message": "Problemer? Klik her"
+    },
+    "download_aborted": {
+      "message": "Download afbrudt"
+    },
+    "error_no_start": {
+      "message": "En fejl forhindrede download i at starte, luk vinduet og prøv igen"
+    },
+    "error_stopped_midway": {
+      "message": "Download stoppede pga. en fejl, download den behandlede lyd indtil nu ved at klikke herunder."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Er du sikker på, at du vil annullere download?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Vil du annullere download?"
+    },
+    "note_partial_audio": {
+      "message": "Bemærk: Klik på downloadknappen ovenfor for at få den hidtil behandlede lyd."
+    },
+    "are_you_sure": {
+      "message": "Er du sikker"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader-meddelelse"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader deler lange tekster op i mindre bidder og sender dem til ChatGPT. Du kan midlertidigt ramme en grænse. Vent en time, hvis det sker."
+    },
+    "acknowledge_and_accept": {
+      "message": "Ved at fortsætte anerkender og accepterer du dette."
+    },
+    "continue": {
+      "message": "Fortsæt"
+    },
+    "close": {
+      "message": "Luk"
+    },
+    "something_went_wrong": {
+      "message": "Noget gik galt!"
+    },
+    "offline_warning": {
+      "message": "Du ser ud til at være offline! Tjek netværket og prøv igen!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader er langsommere end normalt. Luk vinduet for at tjekke fejl. GPT-4 anbefales."
+    },
+    "voice_selector_description": {
+      "message": "Vælg mellem flere forbedrede ChatGPT-stemmer. Vælg stemme før du uploader tekst."
+    },
+    "cannot_upload_one_file": {
+      "message": "Kan ikke uploade mere end 1 fil ad gangen"
+    },
+    "cannot_upload_more_files": {
+      "message": "Kan ikke uploade mere end $1 filer"
+    },
+    "file_rejected": {
+      "message": "Filen $1 blev afvist"
+    },
+    "uploading_files": {
+      "message": "Uploader $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 uploadet"
+    },
+    "failed_upload": {
+      "message": "Upload af $1 mislykkedes"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT ser ud til at have problemer, se deres website for mere info."
+    },
+    "unsupported_file_type": {
+      "message": "Ikke-understøttet filtype"
+    },
+    "no_files_selected": {
+      "message": "Ingen filer valgt"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Forenkle læsning af lange dokumenter med GPT"
+    },
+    "back": {
+      "message": "Tilbage"
+    },
+    "ongoing_conversation_error": {
+      "message": "En samtale er i gang eller timegrænsen er nået. Vent og prøv senere!"
+    },
+    "chat_error": {
+      "message": "ChatGPT viser måske en fejl, eller du har nået din grænse. Tjek deres site."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader-logo"
+    },
+    "login_to_use": {
+      "message": "Log ind for at bruge"
+    },
+    "activate": {
+      "message": "Aktivér"
+    },
+    "feedback": {
+      "message": "Feedback"
+    },
+    "input_required_error": {
+      "message": "Dette felt er påkrævet (min. 5 tegn)"
+    },
+    "please_wait_previous": {
+      "message": "Vent, indtil den forrige anmodning er fuldført"
+    },
+    "presence_confirmation_title": {
+      "message": "Er du her stadig?"
+    },
+    "presence_confirmation_description": {
+      "message": "Er du her stadig?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Ja, jeg vil fortsætte med at lytte"
+    },
+    "presence_confirmation_no": {
+      "message": "Nej, jeg er færdig"
+    }
+  }
+  

@@ -11,28 +11,34 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
   return (
     <div className="flex flex-col justify-center items-center h-full">
       <DialogHeader className={"sr-only"}>
-        <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">Are you sure</DialogTitle>
+        <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
+          {chrome.i18n.getMessage("are_you_sure")}
+        </DialogTitle>
         <DialogDescription></DialogDescription>
       </DialogHeader>
 
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 shadow w-full md:w-1/2 flex flex-col gap-6 justify-center items-center">
 
         <section className="flex flex-col justify-center items-center gap-4 text-justify">
-          <img src={LOGO} alt="GPT Reader Logo" className="size-12"  />
-          <h1 className="text-xl font-medium">GPT Reader Notice</h1>
+          <img src={LOGO} alt="GPT Reader Logo" className="size-12" />
+          <h1 className="text-xl font-medium">
+            {chrome.i18n.getMessage("gpt_reader_notice")}
+          </h1>
           <p className="dark:text-gray-200 text-gray-600 leading-loose">
-          GPT Reader works by breaking down large text into smaller chunks and sending them to ChatGPT for analysis. This is a normal and expected process. However, depending on your usage, you might temporarily reach ChatGPT&apos;s rate limits. If this happens, you may need to wait about an hour before using ChatGPT or this extension again.
+            {chrome.i18n.getMessage("gpt_reader_chunk_explanation")}
           </p>
-          <p className="font-medium">By continuing, you acknowledge and accept this as part of using the extension.</p>
-          {/* <p className="font-bold">Please note that you will not be able to use this extension if you click No.</p> */}
+          <p className="font-medium">
+            {chrome.i18n.getMessage("acknowledge_and_accept")}
+          </p>
         </section>
 
         <footer className="flex items-end justify-center gap-4">
-          <Button className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 hover:bg-gray-900 bg-gray-900 text-gray-100" size={"lg"} onClick={() => setConfirmed(true)}>Continue</Button>
+          <Button className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 hover:bg-gray-900 bg-gray-900 text-gray-100" size={"lg"} onClick={() => setConfirmed(true)}>
+            {chrome.i18n.getMessage("continue")}
+          </Button>
           {/* <Button className="rounded-lg text-lg" size={"lg"} variant={"outline"} onClick={() => setConfirmed(false)}>No</Button> */}
         </footer>
       </div>
-
     </div>
   )
 }

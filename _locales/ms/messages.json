@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: AI Teks ke Ucapan Percuma dengan Suara ChatGPT, TTS"
+    },
+    "extensionDescription": {
+      "message": "ChatGPT AI teks ke ucapan (TTS) semula jadi untuk PDF, artikel, & dokumen. Muat turun atau baca kuat dengan suara berkualiti tinggi di GPT Reader"
+    },
+    "play_voice": {
+      "message": "Main Suara"
+    },
+    "stop": {
+      "message": "Henti"
+    },
+    "drag_and_drop_files": {
+      "message": "Seret & lepas fail di sini, atau klik untuk pilih"
+    },
+    "upload_limit": {
+      "message": "Anda boleh muat naik fail sehingga 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Taip atau tampal teks"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Tampal atau taip teks anda"
+    },
+    "title": {
+      "message": "Tajuk"
+    },
+    "text": {
+      "message": "Teks"
+    },
+    "submit": {
+      "message": "Hantar"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Mahukah anda muat turun atau mendengar audio?"
+    },
+    "download": {
+      "message": "Muat Turun"
+    },
+    "download_note": {
+      "message": "Mungkin akan berbayar pada masa akan datang"
+    },
+    "listen": {
+      "message": "Dengar"
+    },
+    "downloading_status": {
+      "message": "Memuat Turun"
+    },
+    "download_complete": {
+      "message": "Muat Turun Selesai"
+    },
+    "please_wait_file_downloading": {
+      "message": "Sila tunggu sementara fail dimuat turun..."
+    },
+    "full_download_note": {
+      "message": "Jika fail tidak dimuat turun secara automatik, sila klik butang 'Muat Turun' di bawah."
+    },
+    "loading_preview": {
+      "message": "Memuat Pratonton"
+    },
+    "gpt4_download_note": {
+      "message": "Pengguna ChatGPT premium, pilih GPT-4o mini untuk kelajuan muat turun pantas. Tutup tetingkap untuk tukar model."
+    },
+    "cancel": {
+      "message": "Batal"
+    },
+    "cancel_download_confirmation": {
+      "message": "Adakah anda pasti mahu membatalkan muat turun?"
+    },
+    "continue_download": {
+      "message": "Teruskan Muat Turun"
+    },
+    "cancel_download": {
+      "message": "Batal Muat Turun"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader mungkin tidak 100% tepat. Jika anda dapati perbezaan, tutup tetingkap dan mulakan chat ChatGPT baharu."
+    },
+    "playback_speed": {
+      "message": "Kelajuan Main"
+    },
+    "we_appreciate_feedback": {
+      "message": "Kami menghargai maklum balas anda."
+    },
+    "feedback_prompt": {
+      "message": "Kami sentiasa mencari cara untuk penambahbaikan. Beritahu kami apa yang boleh diperbaiki."
+    },
+    "feedback_question": {
+      "message": "Apa pendapat anda tentang sambungan ini?"
+    },
+    "submit_feedback": {
+      "message": "Hantar Maklum Balas Saya"
+    },
+    "having_issues": {
+      "message": "Menghadapi masalah? Klik di sini"
+    },
+    "download_aborted": {
+      "message": "Muat Turun Dibatalkan"
+    },
+    "error_no_start": {
+      "message": "Ralat menghalang muat turun daripada bermula, sila tutup tetingkap dan cuba lagi"
+    },
+    "error_stopped_midway": {
+      "message": "Muat turun terhenti akibat ralat, muat turun audio yang telah diproses setakat ini di bawah."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Adakah anda pasti mahu membatalkan muat turun?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Anda mahu batalkan muat turun?"
+    },
+    "note_partial_audio": {
+      "message": "Nota: Klik butang muat turun di atas untuk audio yang telah diproses setakat ini."
+    },
+    "are_you_sure": {
+      "message": "Adakah anda pasti"
+    },
+    "gpt_reader_notice": {
+      "message": "Notis GPT Reader"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader memecahkan teks panjang kepada bahagian kecil dan menghantarnya ke ChatGPT. Anda mungkin mencapai had sementara. Jika berlaku, tunggu kira-kira sejam."
+    },
+    "acknowledge_and_accept": {
+      "message": "Dengan meneruskan, anda mengakui dan menerima ini."
+    },
+    "continue": {
+      "message": "Teruskan"
+    },
+    "close": {
+      "message": "Tutup"
+    },
+    "something_went_wrong": {
+      "message": "Terdapat ralat!"
+    },
+    "offline_warning": {
+      "message": "Anda kelihatan di luar talian! Sila semak rangkaian dan cuba lagi!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader mengambil masa lebih lama daripada biasa. Tutup tetingkap untuk semak ralat. GPT-4 disyorkan."
+    },
+    "voice_selector_description": {
+      "message": "Pilih daripada pelbagai suara ChatGPT yang dipertingkat. Lakukan sebelum memuat naik teks."
+    },
+    "cannot_upload_one_file": {
+      "message": "Tidak boleh muat naik lebih daripada 1 fail pada satu masa"
+    },
+    "cannot_upload_more_files": {
+      "message": "Tidak boleh muat naik lebih daripada $1 fail"
+    },
+    "file_rejected": {
+      "message": "Fail $1 ditolak"
+    },
+    "uploading_files": {
+      "message": "Sedang muat naik $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 dimuat naik"
+    },
+    "failed_upload": {
+      "message": "Gagal memuat naik $1"
+    },
+    "chatgpt_issue": {
+      "message": "Nampaknya ChatGPT menghadapi masalah, sila semak laman mereka."
+    },
+    "unsupported_file_type": {
+      "message": "Jenis fail tidak disokong"
+    },
+    "no_files_selected": {
+      "message": "Tiada fail dipilih"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Permudahkan bacaan dokumen panjang dengan GPT"
+    },
+    "back": {
+      "message": "Kembali"
+    },
+    "ongoing_conversation_error": {
+      "message": "Terdapat perbualan aktif atau had telah dicapai. Sila tunggu dan cuba lagi!"
+    },
+    "chat_error": {
+      "message": "ChatGPT mungkin menunjukkan ralat atau anda telah capai had. Semak laman mereka."
+    },
+    "gpt_reader_logo": {
+      "message": "Logo GPT Reader"
+    },
+    "login_to_use": {
+      "message": "Log masuk untuk guna"
+    },
+    "activate": {
+      "message": "Aktifkan"
+    },
+    "feedback": {
+      "message": "Maklum Balas"
+    },
+    "input_required_error": {
+      "message": "Medan ini diperlukan (min 5 aksara)"
+    },
+    "please_wait_previous": {
+      "message": "Sila tunggu sehingga permintaan sebelumnya selesai"
+    },
+    "presence_confirmation_title": {
+      "message": "Masih di sini?"
+    },
+    "presence_confirmation_description": {
+      "message": "Masih di sini?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Ya, saya mahu terus mendengar"
+    },
+    "presence_confirmation_no": {
+      "message": "Tidak, saya sudah selesai"
+    }
+}
+  

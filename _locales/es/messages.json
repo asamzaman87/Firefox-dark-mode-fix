@@ -1,0 +1,221 @@
+{
+  "extensionName": {
+    "message": "GPT Reader: TTS AI gratis, voces ChatGPT"
+  },
+  "extensionDescription": {
+    "message": "Texto a voz natural ChatGPT para PDFs, artículos y docs. Descarga o escucha con voces premium en GPT Reader"
+  },
+  "play_voice": {
+    "message": "Tocar voz"
+  },
+  "stop": {
+    "message": "Alto"
+  },
+  "drag_and_drop_files": {
+    "message": "Arrastra o clic para elegir archivos"
+  },
+  "upload_limit": {
+    "message": "Sube un archivo hasta 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Escribe o pega txt"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Pega o escribe tu txt"
+  },
+  "title": {
+    "message": "Tit."
+  },
+  "text": {
+    "message": "Txt"
+  },
+  "submit": {
+    "message": "Enviar"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "¿Descargar o escuchar el audio?"
+  },
+  "download": {
+    "message": "Descarga"
+  },
+  "download_note": {
+    "message": "Podría tener muro de pago"
+  },
+  "listen": {
+    "message": "Oír"
+  },
+  "downloading_status": {
+    "message": "Bajando"
+  },
+  "download_complete": {
+    "message": "Descarga completa"
+  },
+  "please_wait_file_downloading": {
+    "message": "Espera mientras se descarga el archivo..."
+  },
+  "full_download_note": {
+    "message": "Si no se descargó solo, haz clic en 'Descarga' abajo."
+  },
+  "loading_preview": {
+    "message": "Cargando"
+  },
+  "gpt4_download_note": {
+    "message": "Usuarios premium de ChatGPT, asegúrense de usar GPT-4o mini para descargas rápidas y eviten modelos lentos. Cierra la superposición para cambiar de modelo."
+  },
+  "cancel": {
+    "message": "Anula"
+  },
+  "cancel_download_confirmation": {
+    "message": "¿Seguro que deseas cancelar la descarga?"
+  },
+  "continue_download": {
+    "message": "Seguir descarga"
+  },
+  "cancel_download": {
+    "message": "Anula descarga"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader puede generar audio con imprecisiones. Si notas diferencias, cierra la superposición y abre un nuevo chat ChatGPT para usar GPT Reader de nuevo."
+  },
+  "playback_speed": {
+    "message": "Velocidad"
+  },
+  "we_appreciate_feedback": {
+    "message": "Agradecemos tu opinión."
+  },
+  "feedback_prompt": {
+    "message": "Buscamos mejorar. Dinos cómo podemos hacerlo mejor."
+  },
+  "feedback_question": {
+    "message": "¿Qué opinas de esta extensión?"
+  },
+  "submit_feedback": {
+    "message": "Enviar opinión"
+  },
+  "having_issues": {
+    "message": "¿Problemas? Clic aquí"
+  },
+  "download_aborted": {
+    "message": "Baja cancelada"
+  },
+  "error_no_start": {
+    "message": "Error impide inicio. Cierra la superposición y vuelve a intentarlo."
+  },
+  "error_stopped_midway": {
+    "message": "La descarga se detuvo por error. Descarga lo procesado hasta ahora con el botón abajo."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "¿Seguro que deseas cancelar la descarga?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "¿Deseas cancelar la descarga?"
+  },
+  "note_partial_audio": {
+    "message": "Nota: Haz clic arriba para bajar el audio procesado hasta ahora."
+  },
+  "are_you_sure": {
+    "message": "¿Seguro?"
+  },
+  "gpt_reader_notice": {
+    "message": "Aviso GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader divide textos grandes en partes y las envía a ChatGPT. Es normal y, si excedes el límite, espera una hora antes de reintentar."
+  },
+  "acknowledge_and_accept": {
+    "message": "Al continuar, aceptas esto como parte del uso de la extensión."
+  },
+  "continue": {
+    "message": "Seguir"
+  },
+  "close": {
+    "message": "Cerr."
+  },
+  "something_went_wrong": {
+    "message": "¡Error!"
+  },
+  "offline_warning": {
+    "message": "¡Sin conexión! Revisa tu red e intenta de nuevo!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader tarda más de lo normal. Revisa si hay error cerrando la superposición. Se recomienda usar modelos GPT-4 para mejores resultados. Cambia modelo cerrando la superposición y usando el menú superior."
+  },
+  "voice_selector_description": {
+    "message": "Elige entre varias voces mejoradas de ChatGPT. La selección debe hacerse antes de subir tu texto."
+  },
+  "cannot_upload_one_file": {
+    "message": "Solo se permite 1 archivo a la vez"
+  },
+  "cannot_upload_more_files": {
+    "message": "No se permiten más de $1 archivos"
+  },
+  "file_rejected": {
+    "message": "Archivo $1 rechazado"
+  },
+  "uploading_files": {
+    "message": "Subiendo $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 subido"
+  },
+  "failed_upload": {
+    "message": "Error al subir $1"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT presenta problemas. Consulta su web para detalles."
+  },
+  "unsupported_file_type": {
+    "message": "Tipo de archivo no admitido"
+  },
+  "no_files_selected": {
+    "message": "Sin archivos"
+  },
+  "untitled_file": {
+    "message": "SinTit.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Facilita la lectura con GPT"
+  },
+  "back": {
+    "message": "Vol."
+  },
+  "ongoing_conversation_error": {
+    "message": "Conversación activa o límite superado. Espera e inténtalo más tarde!"
+  },
+  "chat_error": {
+    "message": "Parece que ChatGPT muestra un error, genera un aviso, o has superado el límite. Consulta la web de ChatGPT."
+  },
+  "gpt_reader_logo": {
+    "message": "Logo GPT Reader"
+  },
+  "login_to_use": {
+    "message": "Accede"
+  },
+  "activate": {
+    "message": "Activa"
+  },
+  "feedback": {
+    "message": "Opinión"
+  },
+  "input_required_error": {
+    "message": "Campo obligatorio (mín 5 carac.)"
+  },
+  "please_wait_previous": {
+    "message": "Espera a que termine la solicitud anterior"
+  },
+  "presence_confirmation_title": {
+    "message": "¿Sigues aquí?"
+  },
+  "presence_confirmation_description": {
+    "message": "¿Sigues aquí?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Sí, sigo escuchando"
+  },
+  "presence_confirmation_no": {
+    "message": "No, ya terminé"
+  }
+}

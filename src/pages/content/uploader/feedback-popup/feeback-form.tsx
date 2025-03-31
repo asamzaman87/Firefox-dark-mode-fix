@@ -38,8 +38,8 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
         <Form {...form}>
             <form className="w-full space-y-6 [&_label]:text-lg [&_button]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
                 <div className="w-full space-y-2">
-                    <h1 className="text-xl">We appreciate your feedback.</h1>
-                    <p className="text-gray-500 text-sm">We are always looking for ways to improve our services. Please let us know what we can do better.</p>
+                    <h1 className="text-xl">{chrome.i18n.getMessage("we_appreciate_feedback")}</h1>
+                    <p className="text-gray-500 text-sm">{chrome.i18n.getMessage("feedback_prompt")}</p>
                 </div>
                 <FormField
                     control={form.control}
@@ -60,13 +60,13 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                     render={({ field }) => (
                         <FormItem className="w-full">
                             <FormControl>
-                                <Textarea className="resize-none rounded-lg min-h-[50dvh] placeholder:text-gray-400 placeholder:text-sm" placeholder="What do you think about this extension?" {...field} />
+                                <Textarea className="resize-none rounded-lg min-h-[50dvh] placeholder:text-gray-400 placeholder:text-sm" placeholder={chrome.i18n.getMessage("feedback_question")} {...field} />
                             </FormControl>
                             <FormMessage className="text-red-600" />
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"} className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">{loading ? <Loader2Icon className="animate-spin size-4" /> : "Submit My Feedback"}</Button>
+                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"} className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">{loading ? <Loader2Icon className="animate-spin size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
                 </DialogFooter>
             </form>
         </Form>

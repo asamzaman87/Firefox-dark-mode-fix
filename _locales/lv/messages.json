@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: bezmaksas AI teksts uz runu ar ChatGPT balsīm, TTS"
+    },
+    "extensionDescription": {
+      "message": "Dabisks ChatGPT AI teksts uz runu (TTS) PDF, rakstiem un dokumentiem. Lejupielādējiet vai klausieties augstas kvalitātes balsīs, izmantojot GPT Reader"
+    },
+    "play_voice": {
+      "message": "Atskaņot balsi"
+    },
+    "stop": {
+      "message": "Apturēt"
+    },
+    "drag_and_drop_files": {
+      "message": "Velciet failus šeit vai klikšķiniet, lai izvēlētos"
+    },
+    "upload_limit": {
+      "message": "Var augšupielādēt failu līdz 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Ierakstiet vai ielīmējiet tekstu"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Ielīmējiet vai ierakstiet savu tekstu"
+    },
+    "title": {
+      "message": "Virsraksts"
+    },
+    "text": {
+      "message": "Teksts"
+    },
+    "submit": {
+      "message": "Iesniegt"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Vai vēlaties lejupielādēt vai klausīties audio?"
+    },
+    "download": {
+      "message": "Lejupielādēt"
+    },
+    "download_note": {
+      "message": "Var nākotnē kļūt par maksas pakalpojumu"
+    },
+    "listen": {
+      "message": "Klausīties"
+    },
+    "downloading_status": {
+      "message": "Lejupielāde"
+    },
+    "download_complete": {
+      "message": "Lejupielāde pabeigta"
+    },
+    "please_wait_file_downloading": {
+      "message": "Lūdzu, uzgaidiet, kamēr fails tiek lejupielādēts..."
+    },
+    "full_download_note": {
+      "message": "Ja fails nelejupielādējās automātiski, noklikšķiniet uz 'Lejupielādēt' zemāk."
+    },
+    "loading_preview": {
+      "message": "Ielādē priekšskatījumu"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT premium lietotāji, izvēlieties GPT-4o mini, lai paātrinātu lejupielādi. Aizveriet logu, lai mainītu modeli."
+    },
+    "cancel": {
+      "message": "Atcelt"
+    },
+    "cancel_download_confirmation": {
+      "message": "Vai tiešām vēlaties atcelt lejupielādi?"
+    },
+    "continue_download": {
+      "message": "Turpināt lejupielādi"
+    },
+    "cancel_download": {
+      "message": "Atcelt lejupielādi"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader var radīt ne pilnīgi precīzu audio. Ja pamanāt atšķirības, aizveriet logu un sāciet jaunu ChatGPT sesiju."
+    },
+    "playback_speed": {
+      "message": "Atskaņošanas ātrums"
+    },
+    "we_appreciate_feedback": {
+      "message": "Mēs novērtējam jūsu atsauksmes."
+    },
+    "feedback_prompt": {
+      "message": "Vienmēr cenšamies uzlabot. Lūdzu, pastāstiet, kā varam būt labāki."
+    },
+    "feedback_question": {
+      "message": "Ko domājat par šo paplašinājumu?"
+    },
+    "submit_feedback": {
+      "message": "Iesniegt atsauksmes"
+    },
+    "having_issues": {
+      "message": "Ir problēmas? Klikšķiniet šeit"
+    },
+    "download_aborted": {
+      "message": "Lejupielāde pārtraukta"
+    },
+    "error_no_start": {
+      "message": "Kļūda neļāva sākt lejupielādi, lūdzu, aizveriet logu un mēģiniet vēlreiz"
+    },
+    "error_stopped_midway": {
+      "message": "Lejupielāde apstājās kļūdas dēļ, lejupielādējiet apstrādāto audio tālāk."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Vai tiešām vēlaties atcelt lejupielādi?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Vēlaties atcelt lejupielādi?"
+    },
+    "note_partial_audio": {
+      "message": "Piezīme: Noklikšķiniet uz augšējās lejupielādes pogas, lai iegūtu līdz šim apstrādāto audio."
+    },
+    "are_you_sure": {
+      "message": "Vai esat pārliecināts"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader paziņojums"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader sadala garu tekstu mazākos gabalos un nosūta tos uz ChatGPT. Iespējams, uz laiku sasniegsiet limitu. Ja tā notiek, pagaidiet aptuveni stundu."
+    },
+    "acknowledge_and_accept": {
+      "message": "Turpinot, jūs to apstiprināt un pieņemat."
+    },
+    "continue": {
+      "message": "Turpināt"
+    },
+    "close": {
+      "message": "Aizvērt"
+    },
+    "something_went_wrong": {
+      "message": "Radās kļūda!"
+    },
+    "offline_warning": {
+      "message": "Izskatās, ka esat bezsaistē! Pārbaudiet tīklu un mēģiniet vēlreiz!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader darbojas lēnāk nekā parasti. Aizveriet logu, lai pārbaudītu kļūdu. Ieteicams GPT-4."
+    },
+    "voice_selector_description": {
+      "message": "Izvēlieties no dažādām ChatGPT uzlabotām balsīm. Veiciet izvēli pirms teksta augšupielādes."
+    },
+    "cannot_upload_one_file": {
+      "message": "Nevar augšupielādēt vairāk par 1 failu vienlaikus"
+    },
+    "cannot_upload_more_files": {
+      "message": "Nevar augšupielādēt vairāk par $1 failiem"
+    },
+    "file_rejected": {
+      "message": "Fails $1 tika noraidīts"
+    },
+    "uploading_files": {
+      "message": "Augšupielādē $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 augšupielādēts"
+    },
+    "failed_upload": {
+      "message": "$1 augšupielāde neizdevās"
+    },
+    "chatgpt_issue": {
+      "message": "Izskatās, ka ChatGPT piedzīvo problēmas. Lūdzu, pārbaudiet viņu vietni."
+    },
+    "unsupported_file_type": {
+      "message": "Neatbalstīts faila tips"
+    },
+    "no_files_selected": {
+      "message": "Nav izvēlēti faili"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Vienkāršojiet garu dokumentu lasīšanu ar GPT"
+    },
+    "back": {
+      "message": "Atpakaļ"
+    },
+    "ongoing_conversation_error": {
+      "message": "Ir aktīva saruna vai sasniegts limits. Lūdzu, uzgaidiet un mēģiniet vēlāk!"
+    },
+    "chat_error": {
+      "message": "Iespējams, ChatGPT rāda kļūdu vai esat sasniedzis limitu. Pārbaudiet vietni."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader logotips"
+    },
+    "login_to_use": {
+      "message": "Pieslēgties, lai lietotu"
+    },
+    "activate": {
+      "message": "Aktivizēt"
+    },
+    "feedback": {
+      "message": "Atsauksmes"
+    },
+    "input_required_error": {
+      "message": "Šis lauks ir obligāts (min 5 rakstzīmes)"
+    },
+    "please_wait_previous": {
+      "message": "Lūdzu, uzgaidiet, līdz iepriekšējais pieprasījums ir pabeigts"
+    },
+    "presence_confirmation_title": {
+      "message": "Vai jūs joprojām esat šeit?"
+    },
+    "presence_confirmation_description": {
+      "message": "Vai jūs joprojām esat šeit?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Jā, vēlos turpināt klausīties"
+    },
+    "presence_confirmation_no": {
+      "message": "Nē, esmu pabeidzis"
+    }
+}
+  

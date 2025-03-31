@@ -17,7 +17,9 @@ const Slider = React.forwardRef<
 
   return (
     <div>
-      <p className="text-lg font-medium text-center mx-auto w-max mb-2.5 text-gray-800 dark:text-gray-100">Playback Speed</p>
+      <p className="text-lg font-medium text-center mx-auto w-max mb-2.5 text-gray-800 dark:text-gray-100">
+        {chrome.i18n.getMessage("playback_speed")}
+      </p>
       <div className='mb-2.5 flex flex-row justify-between w-full'>
         {range.map((tick) => (
           <span

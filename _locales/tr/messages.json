@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: ChatGPT sesleriyle ücretsiz AI metinden sese, TTS"
+    },
+    "extensionDescription": {
+      "message": "PDF, makale ve belgeler için doğal ChatGPT AI metinden sese (TTS). GPT Reader ile yüksek kaliteli sesleri dinleyin veya indirin"
+    },
+    "play_voice": {
+      "message": "Sesi Oynat"
+    },
+    "stop": {
+      "message": "Durdur"
+    },
+    "drag_and_drop_files": {
+      "message": "Dosyaları buraya sürükleyin veya seçmek için tıklayın"
+    },
+    "upload_limit": {
+      "message": "24 MB'a kadar bir dosya yükleyebilirsiniz"
+    },
+    "type_or_paste_text": {
+      "message": "Metni yazın veya yapıştırın"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Metninizi yapıştırın veya yazın"
+    },
+    "title": {
+      "message": "Başlık"
+    },
+    "text": {
+      "message": "Metin"
+    },
+    "submit": {
+      "message": "Gönder"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Sesi indirmek mi yoksa dinlemek mi istersiniz?"
+    },
+    "download": {
+      "message": "İndir"
+    },
+    "download_note": {
+      "message": "Gelecekte ücretli olabilir"
+    },
+    "listen": {
+      "message": "Dinle"
+    },
+    "downloading_status": {
+      "message": "İndiriliyor"
+    },
+    "download_complete": {
+      "message": "İndirme Tamamlandı"
+    },
+    "please_wait_file_downloading": {
+      "message": "Dosya indirilirken lütfen bekleyin..."
+    },
+    "full_download_note": {
+      "message": "Dosya otomatik indirilmediyse, aşağıdaki 'İndir' düğmesine tıklayın."
+    },
+    "loading_preview": {
+      "message": "Önizleme Yükleniyor"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT premium kullanıcıları, hızlı indirme için GPT-4o mini seçin. Modeli değiştirmek için pencereyi kapatın."
+    },
+    "cancel": {
+      "message": "İptal"
+    },
+    "cancel_download_confirmation": {
+      "message": "İndirmeyi iptal etmek istediğinize emin misiniz?"
+    },
+    "continue_download": {
+      "message": "İndirmeye Devam Et"
+    },
+    "cancel_download": {
+      "message": "İndirmeyi İptal Et"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader %100 doğru olmayabilir. Fark görürseniz pencereyi kapatıp yeni ChatGPT sohbeti başlatın."
+    },
+    "playback_speed": {
+      "message": "Oynatma Hızı"
+    },
+    "we_appreciate_feedback": {
+      "message": "Görüşlerinizi önemsiyoruz."
+    },
+    "feedback_prompt": {
+      "message": "Her zaman daha iyi olmak istiyoruz. Nasıl geliştirebileceğimizi söyleyin."
+    },
+    "feedback_question": {
+      "message": "Bu eklenti hakkında ne düşünüyorsunuz?"
+    },
+    "submit_feedback": {
+      "message": "Geri Bildirimimi Gönder"
+    },
+    "having_issues": {
+      "message": "Sorun mu var? Buraya tıklayın"
+    },
+    "download_aborted": {
+      "message": "İndirme İptal Edildi"
+    },
+    "error_no_start": {
+      "message": "Bir hata indirmeyi başlatmayı engelledi, pencereyi kapatıp yeniden deneyin"
+    },
+    "error_stopped_midway": {
+      "message": "Hata nedeniyle indirme durdu, şimdiye kadar işlenen sesi aşağıdan indirin."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "İndirmeyi iptal etmek istediğinize emin misiniz?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "İndirmeyi iptal etmek istiyor musunuz?"
+    },
+    "note_partial_audio": {
+      "message": "Not: Şu ana kadar işlenen sesi almak için yukarıdaki düğmeye tıklayın."
+    },
+    "are_you_sure": {
+      "message": "Emin misiniz"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader Duyurusu"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader uzun metni parçalara ayırıp ChatGPT'ye gönderir. Geçici olarak sınıra ulaşabilirsiniz. Eğer öyleyse, bir saat kadar bekleyin."
+    },
+    "acknowledge_and_accept": {
+      "message": "Devam ederek bunu kabul etmiş olursunuz."
+    },
+    "continue": {
+      "message": "Devam"
+    },
+    "close": {
+      "message": "Kapat"
+    },
+    "something_went_wrong": {
+      "message": "Bir şeyler ters gitti!"
+    },
+    "offline_warning": {
+      "message": "Çevrimdışı görünüyorsunuz! Ağ bağlantınızı kontrol edip tekrar deneyin!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader normalden daha yavaş. Hata kontrolü için pencereyi kapatın. GPT-4 önerilir."
+    },
+    "voice_selector_description": {
+      "message": "ChatGPT tarafından geliştirilen çeşitli seslerden seçim yapın. Metin yüklemeden önce seçin."
+    },
+    "cannot_upload_one_file": {
+      "message": "Aynı anda 1'den fazla dosya yüklenemez"
+    },
+    "cannot_upload_more_files": {
+      "message": "$1 dosyadan fazlası yüklenemez"
+    },
+    "file_rejected": {
+      "message": "$1 dosyası reddedildi"
+    },
+    "uploading_files": {
+      "message": "$1 yükleniyor..."
+    },
+    "uploaded_files": {
+      "message": "$1 yüklendi"
+    },
+    "failed_upload": {
+      "message": "$1 yüklenemedi"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT'de sorun var gibi görünüyor, sitelerini kontrol edin."
+    },
+    "unsupported_file_type": {
+      "message": "Desteklenmeyen dosya türü"
+    },
+    "no_files_selected": {
+      "message": "Hiç dosya seçilmedi"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Uzun belgeleri GPT ile kolayca okuyun"
+    },
+    "back": {
+      "message": "Geri"
+    },
+    "ongoing_conversation_error": {
+      "message": "Devam eden bir konuşma var veya sınır aşıldı. Lütfen bekleyin ve sonra tekrar deneyin!"
+    },
+    "chat_error": {
+      "message": "Muhtemelen ChatGPT bir hata gösteriyor veya sınır aşıldı. Sitelerini kontrol edin."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader Logosu"
+    },
+    "login_to_use": {
+      "message": "Kullanmak için giriş yapın"
+    },
+    "activate": {
+      "message": "Etkinleştir"
+    },
+    "feedback": {
+      "message": "Geri Bildirim"
+    },
+    "input_required_error": {
+      "message": "Bu alan zorunlu (en az 5 karakter)"
+    },
+    "please_wait_previous": {
+      "message": "Lütfen önceki isteğin bitmesini bekleyin"
+    },
+    "presence_confirmation_title": {
+      "message": "Hâlâ orada mısınız?"
+    },
+    "presence_confirmation_description": {
+      "message": "Hâlâ orada mısınız?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Evet, dinlemeye devam etmek istiyorum"
+    },
+    "presence_confirmation_no": {
+      "message": "Hayır, ben bittim"
+    }
+}
+  

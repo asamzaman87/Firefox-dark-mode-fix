@@ -69,30 +69,30 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
           <h1 className="text-xl font-bold">
             {progress >= 0 &&
               progress < 100 &&
-              `Downloading (${progress.toFixed(0)}%)`}
-            {progress === 100 && `Download Complete (${progress.toFixed(0)}%)`}
+              `${chrome.i18n.getMessage("downloading_status")} (${progress.toFixed(0)}%)`}
+            {progress === 100 && `${chrome.i18n.getMessage("download_complete")} (${progress.toFixed(0)}%)`}
           </h1>
         )}
 
         {hasError && (
           <h1 className="text-xl font-bold text-red-600">
-            {`Download Aborted (${progress.toFixed(0)}%)`}
+            {`${chrome.i18n.getMessage("download_aborted")} (${progress.toFixed(0)}%)`}
           </h1>
         )}
 
         {!hasError && (
           <p className="text-sm text-gray-700 dark:text-gray-400">
             {progress === 100
-              ? "If the file did not download automatically, please click the 'Download' button below."
-              : "Please wait while the file is being downloaded..."}
+              ? `${chrome.i18n.getMessage("full_download_note")}`
+              : `${chrome.i18n.getMessage("please_wait_file_downloading")}`}
           </p>
         )}
         {hasError && (
           <p className="text-red-500 text-wrap max-w-lg text-center">
             {progress === 0 &&
-              "An error has stopped the download from starting, please close the overlay to resolve the issue and try again"}
+              chrome.i18n.getMessage("error_no_start")}
             {progress > 0 &&
-              "Download has stopped due to an error, please download the processed audio thus far by clicking the download button below."}
+              chrome.i18n.getMessage("error_stopped_midway")}
           </p>
         )}
       </div>
@@ -105,7 +105,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
             { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
           )}
         >
-          <Loader2 className="animate-spin" /> Loading Preview
+          <Loader2 className="animate-spin" /> {chrome.i18n.getMessage("loading_preview")}
         </span>
         <span
           className={cn(
@@ -113,10 +113,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
             { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
           )}
         >
-          Dear ChatGPT premium users, make sure the model you have chosen is
-          GPT-4o mini for fastest download speeds, avoid choosing models that
-          have a slow output speed. Close the extension overlay to change the
-          model.
+          {chrome.i18n.getMessage("gpt4_download_note")}
         </span>
         <DocumentViewer content={text} />
       </div>
@@ -144,16 +141,16 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
                   className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
                 >
                   <X />
-                  Cancel
+                  {chrome.i18n.getMessage("cancel")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="relative p-4 w-max flex flex-col gap-8 justify-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                 <header className="flex flex-col gap-2">
                   <h4 className="text-lg font-medium leading-none text-wrap">
-                    Are you sure you want to cancel the download?
+                    {chrome.i18n.getMessage("cancel_download_confirmation_title")}
                   </h4>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400 sr-only">
-                    You want to cancel the download?
+                    {chrome.i18n.getMessage("cancel_download_confirmation_sr")}
                   </p>
                 </header>
                 <div className="flex gap-4 w-full justify-center flex-wrap">
@@ -162,14 +159,14 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
                     className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
                     onClick={() => toggleConfirmation(false)}
                   >
-                    Continue Download
+                    {chrome.i18n.getMessage("continue_download")}
                   </Button>
                   <Button
                     variant="ghost"
                     className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
                     onClick={onCancel}
                   >
-                    Cancel Download
+                    {chrome.i18n.getMessage("cancel_download")}
                   </Button>
                 </div>
                 {/* <Button onClick={() => setIsConfirmationOpen(false)} variant="ghost" size="icon" className="cursor-pointer absolute right-2 top-2 hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
@@ -185,14 +182,13 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
               className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
               onClick={onDownload}
             >
-              <DownloadCloud /> Download
+              <DownloadCloud /> {chrome.i18n.getMessage("download")}
             </Button>
           )}
         </div>
         {progress > 0 && (
           <p className="text-center font-medium text-gray-800 dark:text-gray-200">
-            Note: Click the download button above to download the audio for the
-            portion of your text that has been processed so far.
+            {chrome.i18n.getMessage("note_partial_audio")}
           </p>
         )}
       </div>

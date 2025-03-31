@@ -112,12 +112,12 @@ export function FileUploader(props: FileUploaderProps) {
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
 
       if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
-        toast({ description: "Cannot upload more than 1 file at a time", style: TOAST_STYLE_CONFIG });
+        toast({ description: chrome.i18n.getMessage("cannot_upload_one_file"), style: TOAST_STYLE_CONFIG });
         return;
       }
 
       if ((files?.length ?? 0) + acceptedFiles.length > maxFileCount) {
-        toast({ description: `Cannot upload more than ${maxFileCount} files`, style: TOAST_STYLE_CONFIG });
+        toast({ description: chrome.i18n.getMessage('cannot_upload_more_files', [String(maxFileCount)]), style: TOAST_STYLE_CONFIG });
         return;
       }
 
@@ -133,7 +133,7 @@ export function FileUploader(props: FileUploaderProps) {
 
       if (rejectedFiles.length > 0) {
         rejectedFiles.forEach(({ file }) => {
-          toast({ description: `File ${file.name} was rejected`, style: TOAST_STYLE_CONFIG });
+          toast({ description: chrome.i18n.getMessage('file_rejected', [file.name]), style: TOAST_STYLE_CONFIG });
         });
       }
 
@@ -146,12 +146,12 @@ export function FileUploader(props: FileUploaderProps) {
           updatedFiles.length > 0 ? `${updatedFiles.length} files` : `file`;
 
         sonner.promise(onUpload(updatedFiles), {
-          loading: `Uploading ${target}...`,
+          loading: chrome.i18n.getMessage('uploading_files', [target]),
           success: () => {
             setFiles([]);
-            return `${target} uploaded`;
+            return chrome.i18n.getMessage('uploaded_files', [target]);
           },
-          error: `Failed to upload ${target}`,
+          error: chrome.i18n.getMessage('failed_upload', [target]),
         });
       }
     },
@@ -212,7 +212,7 @@ export function FileUploader(props: FileUploaderProps) {
                   />
                 </div>
                 <p className="font-medium">
-                  Drop the File Here
+                  {chrome.i18n.getMessage('drop_file_here')}
                 </p>
               </div>
             ) : (
@@ -226,15 +226,10 @@ export function FileUploader(props: FileUploaderProps) {
                 <FileTypeIconList fileTypes={Object.keys(accept).filter(type => type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document")} />
                 <div className="flex flex-col gap-px">
                   <p className="font-medium">
-                    Drag {`'n'`} Drop Files Here, or Click to Select File
+                    {chrome.i18n.getMessage('drag_and_drop_files')}
                   </p>
                   <p className="text-sm text-gray-500">
-                    You Can Upload
-                    {maxFileCount > 1
-                      ? ` ${maxFileCount === Infinity ? "multiple" : maxFileCount
-                      }
-                      files (up to ${formatBytes(maxSize)} each)`
-                      : ` a File Up to ${formatBytes(maxSize)}`}
+                    {chrome.i18n.getMessage('upload_limit')}
                   </p>
                 </div>
               </div>

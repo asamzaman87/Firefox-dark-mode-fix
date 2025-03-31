@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: ফ্রি AI টেক্সট-টু-স্পিচ, ChatGPT ভয়েস, TTS"
+    },
+    "extensionDescription": {
+      "message": "প্রাকৃতিক ChatGPT AI টেক্সট-টু-স্পিচ (TTS) PDF, আর্টিকেল, ডক-এর জন্য। উচ্চমানের ভয়েসে পড়ুন বা ডাউনলোড করুন GPT Reader দিয়ে"
+    },
+    "play_voice": {
+      "message": "ভয়েস চালান"
+    },
+    "stop": {
+      "message": "বন্ধ"
+    },
+    "drag_and_drop_files": {
+      "message": "ফাইল টেনে আনুন বা ক্লিক করে নির্বাচন করুন"
+    },
+    "upload_limit": {
+      "message": "আপনি সর্বোচ্চ ২৪ MB পর্যন্ত ফাইল আপলোড করতে পারেন"
+    },
+    "type_or_paste_text": {
+      "message": "লিখুন বা পেস্ট করুন"
+    },
+    "type_or_paste_text_v2": {
+      "message": "আপনার টেক্সট পেস্ট বা টাইপ করুন"
+    },
+    "title": {
+      "message": "শিরোনাম"
+    },
+    "text": {
+      "message": "লেখা"
+    },
+    "submit": {
+      "message": "জমা দিন"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "অডিও ডাউনলোড করতে চান নাকি শুনতে চান?"
+    },
+    "download": {
+      "message": "ডাউনলোড"
+    },
+    "download_note": {
+      "message": "ভবিষ্যতে পেইড হতে পারে"
+    },
+    "listen": {
+      "message": "শুনুন"
+    },
+    "downloading_status": {
+      "message": "ডাউনলোড হচ্ছে"
+    },
+    "download_complete": {
+      "message": "ডাউনলোড সম্পন্ন"
+    },
+    "please_wait_file_downloading": {
+      "message": "ফাইল ডাউনলোড হওয়া পর্যন্ত অপেক্ষা করুন..."
+    },
+    "full_download_note": {
+      "message": "স্বয়ংক্রিয়ভাবে ডাউনলোড না হলে, নিচের 'ডাউনলোড' বোতামে ক্লিক করুন।"
+    },
+    "loading_preview": {
+      "message": "প্রিভিউ লোড হচ্ছে"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT প্রিমিয়াম ব্যবহারকারীরা GPT-4o mini বেছে নিন দ্রুত ডাউনলোডের জন্য। মডেল পাল্টাতে এক্সটেনশন বন্ধ করুন।"
+    },
+    "cancel": {
+      "message": "বাতিল"
+    },
+    "cancel_download_confirmation": {
+      "message": "ডাউনলোড বাতিল করতে চান?"
+    },
+    "continue_download": {
+      "message": "ডাউনলোড চালিয়ে যান"
+    },
+    "cancel_download": {
+      "message": "ডাউনলোড বাতিল"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader অডিও সম্পূর্ণ নির্ভুল নাও হতে পারে। ভুল দেখলে নতুন ChatGPT চ্যাট খুলে আবার চেষ্টা করুন।"
+    },
+    "playback_speed": {
+      "message": "প্লেব্যাক গতি"
+    },
+    "we_appreciate_feedback": {
+      "message": "আপনার মতামতকে আমরা মূল্য দিই।"
+    },
+    "feedback_prompt": {
+      "message": "আমরা সেবা উন্নত করতে চাই। আপনার পরামর্শ জানান।"
+    },
+    "feedback_question": {
+      "message": "এই এক্সটেনশন সম্পর্কে আপনার মতামত কী?"
+    },
+    "submit_feedback": {
+      "message": "আমার মতামত জমা দিন"
+    },
+    "having_issues": {
+      "message": "সমস্যা হচ্ছে? এখানে ক্লিক করুন"
+    },
+    "download_aborted": {
+      "message": "ডাউনলোড বাতিল হয়েছে"
+    },
+    "error_no_start": {
+      "message": "একটি ত্রুটির কারণে ডাউনলোড শুরু হয়নি, এক্সটেনশন বন্ধ করে পুনরায় চেষ্টা করুন"
+    },
+    "error_stopped_midway": {
+      "message": "ত্রুটির কারণে ডাউনলোড থেমে গেছে, এখন পর্যন্ত প্রক্রিয়াকৃত অডিও ডাউনলোড করতে নিচে ক্লিক করুন।"
+    },
+    "cancel_download_confirmation_title": {
+      "message": "ডাউনলোড বাতিল করতে চান?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "আপনি ডাউনলোড বাতিল করতে চান?"
+    },
+    "note_partial_audio": {
+      "message": "উল্লেখ্য: এ পর্যন্ত প্রক্রিয়াকৃত অডিও ডাউনলোড করতে উপরের বোতাম চাপুন।"
+    },
+    "are_you_sure": {
+      "message": "আপনি কি নিশ্চিত"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader নোটিশ"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader বড় টেক্সটকে ছোট অংশে ভাগ করে ChatGPT তে পাঠায়। ব্যবহার বেশি হলে সাময়িকভাবে লিমিটে পৌঁছতে পারেন। এক ঘণ্টা অপেক্ষা করে আবার চেষ্টা করুন।"
+    },
+    "acknowledge_and_accept": {
+      "message": "চালিয়ে গেলে, আপনি এটি মেনে নিচ্ছেন।"
+    },
+    "continue": {
+      "message": "চালিয়ে যান"
+    },
+    "close": {
+      "message": "বন্ধ করুন"
+    },
+    "something_went_wrong": {
+      "message": "কিছু ভুল হয়েছে!"
+    },
+    "offline_warning": {
+      "message": "আপনি অফলাইন! নেটওয়ার্ক সংযোগ পরীক্ষা করে আবার চেষ্টা করুন!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে। সম্ভবত ত্রুটি আছে। GPT-4 মডেল ব্যবহার করুন।"
+    },
+    "voice_selector_description": {
+      "message": "ChatGPT-এর উন্নত ভয়েস থেকে পছন্দ করুন। টেক্সট আপলোডের আগে ভয়েস নির্বাচন করুন।"
+    },
+    "cannot_upload_one_file": {
+      "message": "একসঙ্গে ১টির বেশি ফাইল আপলোড করা যাবে না"
+    },
+    "cannot_upload_more_files": {
+      "message": "আপলোড করা যাবে না $1টির বেশি ফাইল"
+    },
+    "file_rejected": {
+      "message": "ফাইল $1 প্রত্যাখ্যাত হয়েছে"
+    },
+    "uploading_files": {
+      "message": "$1 আপলোড হচ্ছে..."
+    },
+    "uploaded_files": {
+      "message": "$1 আপলোড সম্পন্ন"
+    },
+    "failed_upload": {
+      "message": "$1 আপলোড ব্যর্থ হয়েছে"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT তে সমস্যা হচ্ছে, সাইটে গিয়ে সমস্যা দেখুন।"
+    },
+    "unsupported_file_type": {
+      "message": "অসহায়িত ফাইল টাইপ"
+    },
+    "no_files_selected": {
+      "message": "কোনো ফাইল নির্বাচন করা হয়নি"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "GPT দিয়ে দীর্ঘ ডকুমেন্ট সহজে পড়ুন"
+    },
+    "back": {
+      "message": "ফিরে যান"
+    },
+    "ongoing_conversation_error": {
+      "message": "চলমান আলাপ বা ঘন্টাপর্যন্ত লিমিট পূর্ণ। পরে চেষ্টা করুন!"
+    },
+    "chat_error": {
+      "message": "সম্ভবত ChatGPT ত্রুটি দিচ্ছে বা সীমা অতিক্রম হয়েছে। বিস্তারিত জানতে সাইট দেখুন।"
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader লোগো"
+    },
+    "login_to_use": {
+      "message": "ব্যবহারের জন্য লগইন করুন"
+    },
+    "activate": {
+      "message": "সক্রিয় করুন"
+    },
+    "feedback": {
+      "message": "মতামত"
+    },
+    "input_required_error": {
+      "message": "এটি একটি আবশ্যিক ঘর (সর্বনিম্ন ৫ অক্ষর)"
+    },
+    "please_wait_previous": {
+      "message": "আগের অনুরোধ শেষ না হওয়া পর্যন্ত অপেক্ষা করুন"
+    },
+    "presence_confirmation_title": {
+      "message": "আপনি কি এখনো আছেন?"
+    },
+    "presence_confirmation_description": {
+      "message": "আপনি কি এখনো আছেন?"
+    },
+    "presence_confirmation_yes": {
+      "message": "হ্যাঁ, চালিয়ে যেতে চাই"
+    },
+    "presence_confirmation_no": {
+      "message": "না, আমার হয়ে গেছে"
+    }
+  }
+  

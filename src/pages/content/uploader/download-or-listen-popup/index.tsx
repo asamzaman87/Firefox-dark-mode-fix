@@ -23,13 +23,13 @@ const options: {
   meta?: string
 }[] = [
   {
-    label: "Download",
+    label: chrome.i18n.getMessage('download'),
     value: "DOWNLOAD",
     icon: <DownloadCloudIcon className="size-7" aria-hidden="true" />,
-    meta: "Subject to be behind a paywall in the future",
+    meta: chrome.i18n.getMessage('download_note'),
   },
   {
-    label: "Listen",
+    label: chrome.i18n.getMessage('listen'),
     value: "LISTEN",
     icon: <AudioLinesIcon className="size-7" aria-hidden="true" />,
   },
@@ -53,7 +53,7 @@ const DownloadOrListen: FC<InputPopupProps> = ({ onSubmit, ...props }) => {
         </DialogHeader>
         <div className="w-full space-y-4">
           <div className="w-full space-y-1">
-            <h1 className="text-xl truncate max-w-[65dvw] md:max-w-[40dvw]" title="Would you like to download or listen to the audio?">Would you like to download or listen to the audio? </h1>
+            <h1 className="text-xl truncate max-w-[65dvw] md:max-w-[40dvw]" title="Would you like to download or listen to the audio?">{chrome.i18n.getMessage('would_you_like_to_download_or_listen')} </h1>
             {/* <p className="text-gray-500 text-sm">
               Would you like to download or listen to the audio?
             </p> */}

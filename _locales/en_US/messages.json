@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: Free AI Text to Speech with ChatGPT Voices, TTS"
+    },
+    "extensionDescription": {
+      "message": "Natural ChatGPT AI text to speech (TTS) for PDFs, articles, & docs. Download or read aloud using high-quality voices with GPT Reader"
+    },
+    "play_voice": {
+      "message": "Play Voice"
+    },
+    "stop": {
+      "message": "Stop"
+    },
+    "drag_and_drop_files": {
+      "message": "Drag 'n' Drop Files Here, or Click to Select File"
+    },
+    "upload_limit": {
+      "message": "You Can Upload a File Up to 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Type or Paste Text"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Paste or type your text"
+    },
+    "title": {
+      "message": "Title"
+    },
+    "text": {
+      "message": "Text"
+    },
+    "submit": {
+      "message": "Submit"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Would you like to download or listen to the audio?"
+    },
+    "download": {
+      "message": "Download"
+    },
+    "download_note": {
+      "message": "Subject to be behind a paywall in the future"
+    },
+    "listen": {
+      "message": "Listen"
+    },
+    "downloading_status": {
+      "message": "Downloading"
+    },
+    "download_complete": {
+      "message": "Download Complete"
+    },
+    "please_wait_file_downloading": {
+      "message": "Please wait while the file is being downloaded..."
+    },
+    "full_download_note": {
+      "message": "If the file did not download automatically, please click the 'Download' button below."
+    },
+    "loading_preview": {
+      "message": "Loading Preview"
+    },
+    "gpt4_download_note": {
+      "message": "Dear ChatGPT premium users, make sure the model you choose is GPT-4o mini for faster speeds. Close the overlay to change models."
+    },
+    "cancel": {
+      "message": "Cancel"
+    },
+    "cancel_download_confirmation": {
+      "message": "Are you sure you want to cancel the download?"
+    },
+    "continue_download": {
+      "message": "Continue Download"
+    },
+    "cancel_download": {
+      "message": "Cancel Download"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader may generate audio that isn't 100% accurate. If you notice differences, close the overlay, start a new ChatGPT chat, and try again."
+    },
+    "playback_speed": {
+      "message": "Playback Speed"
+    },
+    "we_appreciate_feedback": {
+      "message": "We appreciate your feedback."
+    },
+    "feedback_prompt": {
+      "message": "We're always looking to improve. Please let us know how we can do better."
+    },
+    "feedback_question": {
+      "message": "What do you think about this extension?"
+    },
+    "submit_feedback": {
+      "message": "Submit My Feedback"
+    },
+    "having_issues": {
+      "message": "Having Issues? Click Here"
+    },
+    "download_aborted": {
+      "message": "Download Aborted"
+    },
+    "error_no_start": {
+      "message": "An error prevented the download from starting, please close the overlay and try again"
+    },
+    "error_stopped_midway": {
+      "message": "The download stopped due to an error. Download the processed audio so far below."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Are you sure you want to cancel the download?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Do you want to cancel the download?"
+    },
+    "note_partial_audio": {
+      "message": "Note: Click the download button above to get the audio processed so far."
+    },
+    "are_you_sure": {
+      "message": "Are you sure"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader Notice"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader breaks down large text into smaller chunks and sends them to ChatGPT. You may temporarily hit a limit. If so, wait about an hour."
+    },
+    "acknowledge_and_accept": {
+      "message": "By continuing, you acknowledge and accept this as part of using the extension."
+    },
+    "continue": {
+      "message": "Continue"
+    },
+    "close": {
+      "message": "Close"
+    },
+    "something_went_wrong": {
+      "message": "Something went wrong!"
+    },
+    "offline_warning": {
+      "message": "You seem to be offline! Please check your network and try again!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader is taking longer than usual. Close the overlay to check for errors. GPT-4 recommended."
+    },
+    "voice_selector_description": {
+      "message": "Choose from a variety of ChatGPT-enhanced voices. Select before uploading your text."
+    },
+    "cannot_upload_one_file": {
+      "message": "Cannot upload more than 1 file at a time"
+    },
+    "cannot_upload_more_files": {
+      "message": "Cannot upload more than $1 files"
+    },
+    "file_rejected": {
+      "message": "File $1 was rejected"
+    },
+    "uploading_files": {
+      "message": "Uploading $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 uploaded"
+    },
+    "failed_upload": {
+      "message": "Failed to upload $1"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT seems to be having issues; please check their website."
+    },
+    "unsupported_file_type": {
+      "message": "Unsupported file type"
+    },
+    "no_files_selected": {
+      "message": "No files selected"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Simplify reading long documents with GPT"
+    },
+    "back": {
+      "message": "Back"
+    },
+    "ongoing_conversation_error": {
+      "message": "There is an ongoing conversation or you've exceeded the hourly limit. Please wait!"
+    },
+    "chat_error": {
+      "message": "ChatGPT might be showing an error or you hit a limit. Check their site for details."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader Logo"
+    },
+    "login_to_use": {
+      "message": "Login to use"
+    },
+    "activate": {
+      "message": "Activate"
+    },
+    "feedback": {
+      "message": "Feedback"
+    },
+    "input_required_error": {
+      "message": "This is a required field (min 5 characters)"
+    },
+    "please_wait_previous": {
+      "message": "Please wait until the previous request finishes"
+    },
+    "presence_confirmation_title": {
+      "message": "Are you still here?"
+    },
+    "presence_confirmation_description": {
+      "message": "Are you still here?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Yes, I want to continue listening"
+    },
+    "presence_confirmation_no": {
+      "message": "No, I'm done listening"
+    }
+  }
+  

@@ -60,9 +60,10 @@ const useAudioUrl = (isDownload: boolean) => {
                 sendPrompt();
             }, 200);
         } else {
-            window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: "ChatGPT seems to be having issues, please check the ChatGPT website for the exact issue." } }));
+            const errorMessage = chrome.i18n.getMessage('chatgpt_issue');
+            window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
             toast({
-                description: "ChatGPT seems to be having issues, please check the ChatGPT website for the exact issue.",
+                description: errorMessage,
                 style: TOAST_STYLE_CONFIG
             })
         }
@@ -102,7 +103,7 @@ const useAudioUrl = (isDownload: boolean) => {
                 return await textPlainToText(file);
             }
             default:
-                toast({ description: "Unsupported file type", style: TOAST_STYLE_CONFIG });
+                toast({ description: chrome.i18n.getMessage('unsupported_file_type'), style: TOAST_STYLE_CONFIG });
                 break;
         }
     }
@@ -190,4 +191,4 @@ const useAudioUrl = (isDownload: boolean) => {
 
 }
 
-export default useAudioUrl
+export default useAudioUrl;

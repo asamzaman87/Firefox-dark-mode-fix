@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: AI gratuit de conversie text-în-vorbire cu voci ChatGPT, TTS"
+    },
+    "extensionDescription": {
+      "message": "Conversie naturală ChatGPT AI text-în-vorbire (TTS) pentru PDF-uri, articole și documente. Descarcă sau citește cu voci de înaltă calitate în GPT Reader"
+    },
+    "play_voice": {
+      "message": "Redă voce"
+    },
+    "stop": {
+      "message": "Oprește"
+    },
+    "drag_and_drop_files": {
+      "message": "Trage fișiere aici sau dă clic pentru a selecta"
+    },
+    "upload_limit": {
+      "message": "Poți încărca un fișier de până la 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Tastează sau lipește textul"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Lipește sau tastează textul tău"
+    },
+    "title": {
+      "message": "Titlu"
+    },
+    "text": {
+      "message": "Text"
+    },
+    "submit": {
+      "message": "Trimite"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Vrei să descarci sau să asculți fișierul audio?"
+    },
+    "download": {
+      "message": "Descarcă"
+    },
+    "download_note": {
+      "message": "Poate deveni contra cost în viitor"
+    },
+    "listen": {
+      "message": "Ascultă"
+    },
+    "downloading_status": {
+      "message": "Se descarcă"
+    },
+    "download_complete": {
+      "message": "Descărcare completă"
+    },
+    "please_wait_file_downloading": {
+      "message": "Așteaptă, fișierul se descarcă..."
+    },
+    "full_download_note": {
+      "message": "Dacă fișierul nu s-a descărcat automat, dă clic pe „Descarcă” mai jos."
+    },
+    "loading_preview": {
+      "message": "Se încarcă previzualizarea"
+    },
+    "gpt4_download_note": {
+      "message": "Utilizatori premium ChatGPT, folosiți GPT-4o mini pentru descărcări mai rapide. Închide fereastra pentru a schimba modelul."
+    },
+    "cancel": {
+      "message": "Anulează"
+    },
+    "cancel_download_confirmation": {
+      "message": "Sigur vrei să anulezi descărcarea?"
+    },
+    "continue_download": {
+      "message": "Continuă descărcarea"
+    },
+    "cancel_download": {
+      "message": "Anulează descărcarea"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader poate genera audio care nu este 100% exact. Dacă observi diferențe, închide fereastra și pornește un nou chat ChatGPT."
+    },
+    "playback_speed": {
+      "message": "Viteză redare"
+    },
+    "we_appreciate_feedback": {
+      "message": "Apreciem feedback-ul tău."
+    },
+    "feedback_prompt": {
+      "message": "Căutăm mereu îmbunătățiri. Spune-ne ce putem face mai bine."
+    },
+    "feedback_question": {
+      "message": "Ce părere ai despre această extensie?"
+    },
+    "submit_feedback": {
+      "message": "Trimite feedback-ul meu"
+    },
+    "having_issues": {
+      "message": "Ai probleme? Dă clic aici"
+    },
+    "download_aborted": {
+      "message": "Descărcare anulată"
+    },
+    "error_no_start": {
+      "message": "O eroare a împiedicat pornirea descărcării, închide fereastra și încearcă din nou"
+    },
+    "error_stopped_midway": {
+      "message": "Descărcarea s-a oprit din cauza unei erori, descarcă audio-ul procesat până acum mai jos."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Sigur vrei să anulezi descărcarea?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Vrei să anulezi descărcarea?"
+    },
+    "note_partial_audio": {
+      "message": "Notă: Dă clic pe butonul de descărcare de mai sus pentru a obține audio-ul procesat până acum."
+    },
+    "are_you_sure": {
+      "message": "Ești sigur"
+    },
+    "gpt_reader_notice": {
+      "message": "Notificare GPT Reader"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader împarte textul lung în segmente și le trimite la ChatGPT. Temporar, poți atinge limita. Dacă se întâmplă, așteaptă cam o oră."
+    },
+    "acknowledge_and_accept": {
+      "message": "Continuând, recunoști și accepți acest lucru."
+    },
+    "continue": {
+      "message": "Continuă"
+    },
+    "close": {
+      "message": "Închide"
+    },
+    "something_went_wrong": {
+      "message": "Ceva n-a mers bine!"
+    },
+    "offline_warning": {
+      "message": "Se pare că ești offline! Verifică rețeaua și încearcă din nou!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader răspunde mai încet decât de obicei. Închide fereastra pentru a verifica erorile. GPT-4 recomandat."
+    },
+    "voice_selector_description": {
+      "message": "Alege dintre vocile îmbunătățite ale ChatGPT. Selectează înainte de a încărca textul."
+    },
+    "cannot_upload_one_file": {
+      "message": "Nu poți încărca mai mult de 1 fișier simultan"
+    },
+    "cannot_upload_more_files": {
+      "message": "Nu poți încărca mai mult de $1 fișiere"
+    },
+    "file_rejected": {
+      "message": "Fișierul $1 a fost respins"
+    },
+    "uploading_files": {
+      "message": "Se încarcă $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 încărcat"
+    },
+    "failed_upload": {
+      "message": "Încărcarea lui $1 a eșuat"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT pare să aibă probleme. Verifică site-ul lor."
+    },
+    "unsupported_file_type": {
+      "message": "Tip de fișier neacceptat"
+    },
+    "no_files_selected": {
+      "message": "Niciun fișier selectat"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Simplifică citirea documentelor lungi cu GPT"
+    },
+    "back": {
+      "message": "Înapoi"
+    },
+    "ongoing_conversation_error": {
+      "message": "Există o conversație în desfășurare sau ai depășit limita. Așteaptă și încearcă mai târziu!"
+    },
+    "chat_error": {
+      "message": "E posibil ca ChatGPT să afișeze o eroare sau ai atins limita. Verifică site-ul lor."
+    },
+    "gpt_reader_logo": {
+      "message": "Siglă GPT Reader"
+    },
+    "login_to_use": {
+      "message": "Conectează-te pentru a folosi"
+    },
+    "activate": {
+      "message": "Activează"
+    },
+    "feedback": {
+      "message": "Feedback"
+    },
+    "input_required_error": {
+      "message": "Câmp obligatoriu (min 5 caractere)"
+    },
+    "please_wait_previous": {
+      "message": "Așteaptă până se încheie cererea anterioară"
+    },
+    "presence_confirmation_title": {
+      "message": "Încă ești aici?"
+    },
+    "presence_confirmation_description": {
+      "message": "Încă ești aici?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Da, vreau să continui ascultarea"
+    },
+    "presence_confirmation_no": {
+      "message": "Nu, am terminat"
+    }
+}
+  

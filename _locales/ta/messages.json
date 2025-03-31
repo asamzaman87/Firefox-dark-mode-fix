@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: ChatGPT குரல்கள் கொண்ட இலவச AI உரை முதல் பேசும், TTS"
+    },
+    "extensionDescription": {
+      "message": "PDF, கட்டுரைகள், மற்றும் ஆவணங்களுக்கான ChatGPT AI உரை முதல் பேசும் (TTS). GPT Reader மூலம் உயர்தர குரல்களைப் பயன்படுத்தி படிக்கவோ பதிவிறக்கவோ செய்யலாம்"
+    },
+    "play_voice": {
+      "message": "குரல் இயக்கு"
+    },
+    "stop": {
+      "message": "நிறுத்து"
+    },
+    "drag_and_drop_files": {
+      "message": "பைல்களை இங்கே இழுத்து அல்லது கிளிக் செய்து தேர்ந்தெடுக்கவும்"
+    },
+    "upload_limit": {
+      "message": "அதிகபட்சம் 24 MB வரை பதிவேற்றலாம்"
+    },
+    "type_or_paste_text": {
+      "message": "உரையை தட்டச்சு செய்யவும் அல்லது ஒட்டவும்"
+    },
+    "type_or_paste_text_v2": {
+      "message": "உங்கள் உரையை ஒட்டவோ அல்லது தட்டச்சு செய்யவோ செய்யவும்"
+    },
+    "title": {
+      "message": "தலைப்பு"
+    },
+    "text": {
+      "message": "உரை"
+    },
+    "submit": {
+      "message": "சமர்ப்பிக்க"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "ஆடியோவை பதிவிறக்க வேண்டுமா அல்லது கேட்க வேண்டுமா?"
+    },
+    "download": {
+      "message": "பதிவிறக்க"
+    },
+    "download_note": {
+      "message": "எதிர்காலத்தில் கட்டணமாக மாற்றப்படலாம்"
+    },
+    "listen": {
+      "message": "கேளுங்கள்"
+    },
+    "downloading_status": {
+      "message": "பதிவிறக்கம் நடைபெறுகிறது"
+    },
+    "download_complete": {
+      "message": "பதிவிறக்கம் முடிந்தது"
+    },
+    "please_wait_file_downloading": {
+      "message": "பைல் பதிவிறக்கம் நடைபெறும்போது சிறிது நேரம் காத்திருக்கவும்..."
+    },
+    "full_download_note": {
+      "message": "பைல் தானாக பதிவிறங்கவில்லை என்றால், கீழே உள்ள 'பதிவிறக்க' பட்டனை கிளிக் செய்யவும்."
+    },
+    "loading_preview": {
+      "message": "முன்நோக்க காட்சி ஏற்றப்படுகிறது"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT பிரிமியம் பயனர்கள், வேகமான பதிவிறக்கத்திற்காக GPT-4o mini ஐ தேர்வு செய்யவும். மாதிரி மாற்ற விண்டோவை மூடவும்."
+    },
+    "cancel": {
+      "message": "ரத்துசெய்"
+    },
+    "cancel_download_confirmation": {
+      "message": "பதிவிறக்கத்தை ரத்துசெய்ய விரும்புகிறீர்களா?"
+    },
+    "continue_download": {
+      "message": "பதிவிறக்கத்தை தொடரவும்"
+    },
+    "cancel_download": {
+      "message": "பதிவிறக்கத்தை ரத்துசெய்"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader சதவிகித துல்லியம் இல்லாமல் இருக்கலாம். வேறுபாடு தெரிந்தால், விண்டோவை மூடி புதிய ChatGPT உரையாடலைத் தொடங்கவும்."
+    },
+    "playback_speed": {
+      "message": "ப்ளேபேக் வேகம்"
+    },
+    "we_appreciate_feedback": {
+      "message": "உங்கள் கருத்தை மதிக்கிறோம்."
+    },
+    "feedback_prompt": {
+      "message": "நாங்கள் எப்போதும் மேம்படுத்த முற்படுகிறோம். மேலும் எதை செய்யலாம் என கூறுங்கள்."
+    },
+    "feedback_question": {
+      "message": "இந்த நீட்டிப்பைப் பற்றி உங்களின் கருத்து என்ன?"
+    },
+    "submit_feedback": {
+      "message": "எனது கருத்தை சமர்ப்பிக்க"
+    },
+    "having_issues": {
+      "message": "பிரச்சினை உள்ளதா? இங்கே கிளிக் செய்யவும்"
+    },
+    "download_aborted": {
+      "message": "பதிவிறக்கம் நிறுத்தப்பட்டது"
+    },
+    "error_no_start": {
+      "message": "ஒரு பிழை காரணமாக பதிவிறக்கம் தொடங்கவில்லை, விண்டோவை மூடி மீண்டும் முயற்சிக்கவும்"
+    },
+    "error_stopped_midway": {
+      "message": "பிழை காரணமாக பதிவிறக்கம் நிறுத்தப்பட்டது. இதுவரை உருவாக்கப்பட்ட ஆடியோவை கீழே பதிவிறக்கவும்."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "பதிவிறக்கத்தை ரத்துசெய்ய வேண்டுமா?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "பதிவிறக்கத்தை ரத்துசெய்ய விரும்புகிறீர்களா?"
+    },
+    "note_partial_audio": {
+      "message": "குறிப்பு: இதுவரை உருவாக்கப்பட்ட ஆடியோவைப் பெற மேலே உள்ள பட்டனை அழுத்தவும்."
+    },
+    "are_you_sure": {
+      "message": "உறுதியா"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader அறிவிப்பு"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader நீளமான உரையை சிறிய பகுதியாக பிரித்து ChatGPT க்கு அனுப்புகிறது. ஒரு நேரத்தில் வரம்பை அடையலாம். அப்படி நடந்தால், ஒரு மணி நேரம் காத்திருக்கவும்."
+    },
+    "acknowledge_and_accept": {
+      "message": "தொடர்வதன் மூலம், இதை ஏற்றுக் கொள்கிறீர்கள்."
+    },
+    "continue": {
+      "message": "தொடரவும்"
+    },
+    "close": {
+      "message": "மூடு"
+    },
+    "something_went_wrong": {
+      "message": "ஏதோ தவறாகிவிட்டது!"
+    },
+    "offline_warning": {
+      "message": "நீங்கள் ஆஃப்லைனில் இருப்பதாக தோன்றுகிறது! இணைப்பை சரிபார்த்து மீண்டும் முயற்சி செய்யவும்!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader சாதாரணத்தைவிட நீளமான நேரம் எடுக்கிறது. பிழையை சரிபார்க்க விண்டோவை மூடவும். GPT-4 பரிந்துரைக்கப்படுகிறது."
+    },
+    "voice_selector_description": {
+      "message": "ChatGPT ஆல் மேம்படுத்தப்பட்ட பல்வேறு குரல்களிலிருந்து தேர்வுசெய்க. உரையை பதிவேற்றுவதற்கு முன் இதை தேர்ந்தெடுக்கவும்."
+    },
+    "cannot_upload_one_file": {
+      "message": "ஒரே நேரத்தில் 1 ற்கும் மேல் பதிவேற்ற முடியாது"
+    },
+    "cannot_upload_more_files": {
+      "message": "$1 இற்கும் மேல் பதிவேற்ற முடியாது"
+    },
+    "file_rejected": {
+      "message": "$1 பைல் நிராகரிக்கப்பட்டது"
+    },
+    "uploading_files": {
+      "message": "$1 பதிவேற்றம் நடைபெறுகிறது..."
+    },
+    "uploaded_files": {
+      "message": "$1 பதிவேற்றப்பட்டது"
+    },
+    "failed_upload": {
+      "message": "$1 பதிவேற்றம் தோல்வி"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT ல் பிரச்சினை இருப்பதாக தெரிகிறது, அவர்களின் தளத்தைச் சரிபார்க்கவும்."
+    },
+    "unsupported_file_type": {
+      "message": "ஆதரிக்கப்படாத பைல் வகை"
+    },
+    "no_files_selected": {
+      "message": "யாரும் பைல் தேர்ந்தெடுக்கவில்லை"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "GPT ஐப் பயன்படுத்தி நீளமான ஆவணங்களின் வாசிப்பை எளிதாக்கவும்"
+    },
+    "back": {
+      "message": "மீண்டும்"
+    },
+    "ongoing_conversation_error": {
+      "message": "உரையாடல் நடந்து கொண்டிருக்கிறது அல்லது வரம்பை கடந்து விட்டீர்கள். காத்திருந்து பிறகு முயற்சிக்கவும்!"
+    },
+    "chat_error": {
+      "message": "ChatGPT ஒரு பிழை காட்டக்கூடும் அல்லது வரம்பை அடைந்திருக்கலாம். அவர்களின் தளத்தை சரிபார்க்கவும்."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader லோகோ"
+    },
+    "login_to_use": {
+      "message": "பயன்படுத்த உள்நுழைக"
+    },
+    "activate": {
+      "message": "செயல்படுத்தவும்"
+    },
+    "feedback": {
+      "message": "கருத்து"
+    },
+    "input_required_error": {
+      "message": "இது ஒரு அவசியமான புலம் (குறைந்தபட்சம் 5 எழுத்துகள்)"
+    },
+    "please_wait_previous": {
+      "message": "முந்தைய கோரிக்கை முடிவடைய வரை காத்திருக்கவும்"
+    },
+    "presence_confirmation_title": {
+      "message": "நீங்கள் இன்னும் இருக்கிறீர்களா?"
+    },
+    "presence_confirmation_description": {
+      "message": "நீங்கள் இன்னும் இருக்கிறீர்களா?"
+    },
+    "presence_confirmation_yes": {
+      "message": "ஆம், தொடரச்செய்ய விரும்புகிறேன்"
+    },
+    "presence_confirmation_no": {
+      "message": "இல்லை, நான் முடித்து விட்டேன்"
+    }
+}
+  

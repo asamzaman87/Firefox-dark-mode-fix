@@ -28,7 +28,7 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                         </div>
                         <div className="flex flex-col items-end justify-center gap-px">
                             <p className="font-medium text-center">
-                                Type or Paste Text
+                                {chrome.i18n.getMessage('type_or_paste_text')}
                             </p>
                         </div>
                     </div>
@@ -41,8 +41,8 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                 className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
             >
                 <DialogHeader>
-                    <DialogTitle className="text-center">Type Or Paste Text</DialogTitle>
-                    <DialogDescription className="sr-only">Paste or type your text</DialogDescription>
+                    <DialogTitle className="text-center">{chrome.i18n.getMessage('type_or_paste_text')}</DialogTitle>
+                    <DialogDescription className="sr-only">{chrome.i18n.getMessage('type_or_paste_text_v2')}</DialogDescription>
                 </DialogHeader>
                 <InputForm disabled={disabled} onSubmit={onSubmit} />
             </DialogContent>

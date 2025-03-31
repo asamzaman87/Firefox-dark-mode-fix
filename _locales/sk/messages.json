@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: Bezplatné AI text na reč s hlasmi ChatGPT, TTS"
+    },
+    "extensionDescription": {
+      "message": "Prirodzené ChatGPT AI text-to-speech (TTS) pre PDF, články a dokumenty. Stiahni alebo prečítaj nahlas s kvalitnými hlasmi v GPT Reader"
+    },
+    "play_voice": {
+      "message": "Prehrať hlas"
+    },
+    "stop": {
+      "message": "Stop"
+    },
+    "drag_and_drop_files": {
+      "message": "Presuň súbory sem alebo klikni pre výber"
+    },
+    "upload_limit": {
+      "message": "Môžeš nahrať súbor do 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Napíš alebo vlož text"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Vlož alebo napíš svoj text"
+    },
+    "title": {
+      "message": "Názov"
+    },
+    "text": {
+      "message": "Text"
+    },
+    "submit": {
+      "message": "Odoslať"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Chceš stiahnuť alebo počúvať audio?"
+    },
+    "download": {
+      "message": "Stiahnuť"
+    },
+    "download_note": {
+      "message": "V budúcnosti môže byť spoplatnené"
+    },
+    "listen": {
+      "message": "Počúvaj"
+    },
+    "downloading_status": {
+      "message": "Sťahovanie"
+    },
+    "download_complete": {
+      "message": "Sťahovanie dokončené"
+    },
+    "please_wait_file_downloading": {
+      "message": "Počkajte, kým sa súbor sťahuje..."
+    },
+    "full_download_note": {
+      "message": "Ak sa súbor nestiahol automaticky, kliknite na 'Stiahnuť' nižšie."
+    },
+    "loading_preview": {
+      "message": "Načítavam náhľad"
+    },
+    "gpt4_download_note": {
+      "message": "Používatelia ChatGPT premium, zvoľte GPT-4o mini pre rýchlejšie sťahovanie. Zatvorte okno na zmenu modelu."
+    },
+    "cancel": {
+      "message": "Zrušiť"
+    },
+    "cancel_download_confirmation": {
+      "message": "Naozaj chceš zrušiť sťahovanie?"
+    },
+    "continue_download": {
+      "message": "Pokračovať v sťahovaní"
+    },
+    "cancel_download": {
+      "message": "Zrušiť sťahovanie"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader nemusí byť 100 % presný. Ak si všimneš rozdiely, zatvor okno a začni nový ChatGPT chat."
+    },
+    "playback_speed": {
+      "message": "Rýchlosť prehrávania"
+    },
+    "we_appreciate_feedback": {
+      "message": "Vážime si tvoju spätnú väzbu."
+    },
+    "feedback_prompt": {
+      "message": "Stále sa snažíme zlepšovať. Daj nám vedieť, čo môžeme robiť lepšie."
+    },
+    "feedback_question": {
+      "message": "Čo si myslíš o tomto rozšírení?"
+    },
+    "submit_feedback": {
+      "message": "Odoslať moju spätnú väzbu"
+    },
+    "having_issues": {
+      "message": "Máš problémy? Klikni sem"
+    },
+    "download_aborted": {
+      "message": "Sťahovanie zrušené"
+    },
+    "error_no_start": {
+      "message": "Chyba zabránila začiatku sťahovania, zatvor okno a skús znova"
+    },
+    "error_stopped_midway": {
+      "message": "Sťahovanie zastavené kvôli chybe, stiahni doteraz spracované audio nižšie."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Naozaj chceš zrušiť sťahovanie?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Chceš zrušiť sťahovanie?"
+    },
+    "note_partial_audio": {
+      "message": "Poznámka: Klikni na tlačidlo vyššie na stiahnutie spracovaného audia."
+    },
+    "are_you_sure": {
+      "message": "Si si istý"
+    },
+    "gpt_reader_notice": {
+      "message": "Oznámenie GPT Reader"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader rozdeľuje dlhý text na menšie časti a posiela ich do ChatGPT. Môžeš dočasne dosiahnuť limit. Ak áno, počkaj asi hodinu."
+    },
+    "acknowledge_and_accept": {
+      "message": "Pokračovaním to berieš na vedomie a súhlasíš."
+    },
+    "continue": {
+      "message": "Pokračovať"
+    },
+    "close": {
+      "message": "Zavrieť"
+    },
+    "something_went_wrong": {
+      "message": "Niečo sa pokazilo!"
+    },
+    "offline_warning": {
+      "message": "Vyzerá to, že si offline! Skontroluj sieť a skús znova!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader je pomalší než obvykle. Zavri okno a skontroluj chyby. Odporúča sa GPT-4."
+    },
+    "voice_selector_description": {
+      "message": "Vyber si z vylepšených ChatGPT hlasov. Urob to pred nahraním textu."
+    },
+    "cannot_upload_one_file": {
+      "message": "Nemožno nahrať viac ako 1 súbor naraz"
+    },
+    "cannot_upload_more_files": {
+      "message": "Nemožno nahrať viac ako $1 súborov"
+    },
+    "file_rejected": {
+      "message": "Súbor $1 bol odmietnutý"
+    },
+    "uploading_files": {
+      "message": "Nahrávam $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 nahraný"
+    },
+    "failed_upload": {
+      "message": "Nahratie $1 zlyhalo"
+    },
+    "chatgpt_issue": {
+      "message": "Zdá sa, že ChatGPT má problém, skontroluj ich stránku."
+    },
+    "unsupported_file_type": {
+      "message": "Nepodporovaný typ súboru"
+    },
+    "no_files_selected": {
+      "message": "Žiadne vybrané súbory"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Zjednoduš čítanie dlhých dokumentov pomocou GPT"
+    },
+    "back": {
+      "message": "Späť"
+    },
+    "ongoing_conversation_error": {
+      "message": "Prebieha konverzácia alebo si prekročil limit. Počkaj a skús neskôr!"
+    },
+    "chat_error": {
+      "message": "ChatGPT môže zobrazovať chybu alebo si dosiahol limit. Skontroluj ich stránku."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader logo"
+    },
+    "login_to_use": {
+      "message": "Prihlás sa na používanie"
+    },
+    "activate": {
+      "message": "Aktivovať"
+    },
+    "feedback": {
+      "message": "Spätná väzba"
+    },
+    "input_required_error": {
+      "message": "Toto pole je povinné (min 5 znakov)"
+    },
+    "please_wait_previous": {
+      "message": "Počkaj, kým sa dokončí predchádzajúca požiadavka"
+    },
+    "presence_confirmation_title": {
+      "message": "Stále si tu?"
+    },
+    "presence_confirmation_description": {
+      "message": "Stále si tu?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Áno, chcem pokračovať v počúvaní"
+    },
+    "presence_confirmation_no": {
+      "message": "Nie, skončil som"
+    }
+}
+  

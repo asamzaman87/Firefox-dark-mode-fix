@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: ChatGPT వాయిస్‌లతో ఉచిత AI టెక్స్ట్ టు స్పీచ్, TTS"
+    },
+    "extensionDescription": {
+      "message": "PDFలు, వ్యాసాలు, డాక్యుమెంట్ల కోసం ChatGPT AI టెక్స్ట్ టు స్పీచ్ (TTS). GPT Reader ద్వారా అధిక నాణ్యత గల వాయిస్‌లు వినండి లేదా డౌన్‌లోడ్ చేసుకోండి"
+    },
+    "play_voice": {
+      "message": "వాయిస్ ప్లే చేయండి"
+    },
+    "stop": {
+      "message": "ఆపండి"
+    },
+    "drag_and_drop_files": {
+      "message": "ఫైల్‌లను ఇక్కడకి డ్రాగ్ చేయండి లేదా సెలెక్ట్ చేసేందుకు క్లిక్ చేయండి"
+    },
+    "upload_limit": {
+      "message": "24 MB వరకు ఫైల్‌ని అప్‌లోడ్ చేయవచ్చు"
+    },
+    "type_or_paste_text": {
+      "message": "టెక్స్ట్ టైప్ చేయండి లేదా పేస్ట్ చేయండి"
+    },
+    "type_or_paste_text_v2": {
+      "message": "మీ టెక్స్ట్‌ను పేస్ట్ చేయండి లేదా టైప్ చేయండి"
+    },
+    "title": {
+      "message": "శీర్షిక"
+    },
+    "text": {
+      "message": "టెక్స్ట్"
+    },
+    "submit": {
+      "message": "సబ్మిట్"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "మీరు ఆడియోని డౌన్‌లోడ్ చేయాలనుకుంటున్నారా లేదా వినాలనుకుంటున్నారా?"
+    },
+    "download": {
+      "message": "డౌన్‌లోడ్"
+    },
+    "download_note": {
+      "message": "భవిష్యత్తులో చెల్లింపుతో మారవచ్చు"
+    },
+    "listen": {
+      "message": "వినండి"
+    },
+    "downloading_status": {
+      "message": "డౌన్‌లోడ్ అవుతోంది"
+    },
+    "download_complete": {
+      "message": "డౌన్‌లోడ్ పూర్తైంది"
+    },
+    "please_wait_file_downloading": {
+      "message": "ఫైల్ డౌన్‌లోడ్ అవుతున్నప్పుడు వేచి ఉండండి..."
+    },
+    "full_download_note": {
+      "message": "ఫైల్ ఆటోమేటిక్‌గా డౌన్‌లోడ్ కాకపోతే, కింద ఉన్న 'డౌన్‌లోడ్' బటన్‌పై క్లిక్ చేయండి."
+    },
+    "loading_preview": {
+      "message": "ప్రివ్యూ లోడవుతోంది"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT ప్రీమియమ్ వాడుకదారులు ఫాస్ట్ డౌన్‌లోడ్ కోసం GPT-4o mini ఎంచుకోండి. మోడల్ మార్చేందుకు విండోను క్లోజ్ చేయండి."
+    },
+    "cancel": {
+      "message": "రద్దు"
+    },
+    "cancel_download_confirmation": {
+      "message": "మీరు డౌన్‌లోడ్‌ని రద్దు చేయాలనుకుంటున్నారా?"
+    },
+    "continue_download": {
+      "message": "డౌన్‌లోడ్ కొనసాగించండి"
+    },
+    "cancel_download": {
+      "message": "డౌన్‌లోడ్ రద్దు చేయండి"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader పూర్తిగా సరిగ్గా ఉండకపోవచ్చు. తేడాలు కనబడితే విండోని క్లోజ్ చేసి కొత్త ChatGPT చాట్ ప్రారంభించండి."
+    },
+    "playback_speed": {
+      "message": "ప్లేబ్యాక్ స్పీడ్"
+    },
+    "we_appreciate_feedback": {
+      "message": "మీ అభిప్రాయాన్ని మేము విలువగా చూస్తున్నాం."
+    },
+    "feedback_prompt": {
+      "message": "మేము ఎల్లప్పుడూ మెరుగుపడడానికి చూస్తున్నాం. మేము ఇంకా ఏమి చేయగలమో చెప్పండి."
+    },
+    "feedback_question": {
+      "message": "ఈ ఎక్స్టెన్షన్ గురించి మీ అభిప్రాయం ఏమిటి?"
+    },
+    "submit_feedback": {
+      "message": "నా అభిప్రాయాన్ని సమర్పించండి"
+    },
+    "having_issues": {
+      "message": "ఇబ్బందులు వస్తున్నాయా? ఇక్కడ క్లిక్ చేయండి"
+    },
+    "download_aborted": {
+      "message": "డౌన్‌లోడ్ నిలిపివేశారు"
+    },
+    "error_no_start": {
+      "message": "ఒక తప్పుదోవ వల్ల డౌన్‌లోడ్ ప్రారంభించలేకపోయింది, విండోని క్లోజ్ చేసి మళ్లీ ప్రయత్నించండి"
+    },
+    "error_stopped_midway": {
+      "message": "డౌన్‌లోడ్ లోపంతో నిలిపివేసింది, ఇప్పటివరకు ప్రాసెస్ చేసిన ఆడియోని డౌన్‌లోడ్ చేయండి."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "మీరు డౌన్‌లోడ్‌ని రద్దు చేయాలనుకుంటున్నారా?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "డౌన్‌లోడ్‌ని రద్దు చేయాలనుకుంటున్నారా?"
+    },
+    "note_partial_audio": {
+      "message": "గమనిక: ఇప్పటివరకు ప్రాసెస్ చేసిన ఆడియోని పొందడానికి పై డౌన్‌లోడ్ బటన్‌పై క్లిక్ చేయండి."
+    },
+    "are_you_sure": {
+      "message": "మీరు ఖచ్చితంగా అలా అనుకుంటున్నారా"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader నోటీసు"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader పెద్ద టెక్స్ట్‌ని చిన్న భాగాలుగా విభజించి ChatGPTకి పంపుతుంది. మీరు తాత్కాలికంగా లిమిట్‌కు చేరవచ్చు. అలా అయితే, గంట సేపు వేచిచూడండి."
+    },
+    "acknowledge_and_accept": {
+      "message": "తదుపరి చర్య ద్వారా మీరు దీన్ని అంగీకరిస్తున్నారు."
+    },
+    "continue": {
+      "message": "కంటిన్యూ"
+    },
+    "close": {
+      "message": "క్లోజ్"
+    },
+    "something_went_wrong": {
+      "message": "ఎదో తప్పు జరిగింది!"
+    },
+    "offline_warning": {
+      "message": "మీరు ఆఫ్‌లైన్‌లో ఉన్నట్లు కనబడుతోంది! నెట్వర్క్‌ని చెక్ చేసి మళ్లీ ప్రయత్నించండి!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader సాధారణంగా మించిన సమయం తీసుకుంటోంది. ఎర్రర్ కోసం విండోని క్లోజ్ చేయండి. GPT-4ను సూచిస్తాం."
+    },
+    "voice_selector_description": {
+      "message": "ChatGPT మెరుగుపరచిన వాయిస్‌లలో ఒకటిని ఎంచుకోండి. టెక్స్ట్‌ని అప్‌లోడ్ చేసేముందు ఎంచుకోండి."
+    },
+    "cannot_upload_one_file": {
+      "message": "ఒకేసారి ఒక ఫైల్‌కంటే ఎక్కువ అప్‌లోడ్ చేయడం సాధ్యం కాదు"
+    },
+    "cannot_upload_more_files": {
+      "message": "$1 కంటే ఎక్కువ ఫైల్‌లను అప్‌లోడ్ చేయడం సాధ్యం కాదు"
+    },
+    "file_rejected": {
+      "message": "$1 ఫైల్ తిరస్కరించబడింది"
+    },
+    "uploading_files": {
+      "message": "$1 అప్‌లోడ్ అవుతోంది..."
+    },
+    "uploaded_files": {
+      "message": "$1 అప్‌లోడ్ అయ్యింది"
+    },
+    "failed_upload": {
+      "message": "$1 అప్‌లోడ్ విఫలమైంది"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPTకు సమస్యలు ఉన్నట్లు తెలుస్తోంది, వారి సైట్ని చూడండి."
+    },
+    "unsupported_file_type": {
+      "message": "సపోర్ట్ కాని ఫైల్ రకం"
+    },
+    "no_files_selected": {
+      "message": "ఫైల్‌లను ఎంచుకోలేదు"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "GPT ఉపయోగించి దీర్ఘ డాక్యుమెంట్ల చదవడాన్ని సులభతరం చేయండి"
+    },
+    "back": {
+      "message": "వెనక్కి"
+    },
+    "ongoing_conversation_error": {
+      "message": "ప్రస్తుత చాట్ జరుగుతోంది లేదా మీరు లిమిట్‌ను మించారు. వేచి ఉండండి మరల ప్రయత్నించండి!"
+    },
+    "chat_error": {
+      "message": "ChatGPTలో ఏదో లోపం ఉంది లేదా మీరు పరిమితికి చేరుకున్నారు. వారి సైట్ని చెక్ చేయండి."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader లోగో"
+    },
+    "login_to_use": {
+      "message": "ఉపయోగించడానికి లాగిన్ అవ్వండి"
+    },
+    "activate": {
+      "message": "సక్రియంచేయండి"
+    },
+    "feedback": {
+      "message": "ఫీడ్బాక్"
+    },
+    "input_required_error": {
+      "message": "ఇది తప్పనిసరి ఫీల్డ్ (కనీసం 5 అక్షరాలు)"
+    },
+    "please_wait_previous": {
+      "message": "మునుపటి అభ్యర్థన పూర్తయ్యేవరకు వేచి ఉండండి"
+    },
+    "presence_confirmation_title": {
+      "message": "మీరు ఇంకా ఇక్కడే ఉన్నారా?"
+    },
+    "presence_confirmation_description": {
+      "message": "మీరు ఇంకా ఇక్కడే ఉన్నారా?"
+    },
+    "presence_confirmation_yes": {
+      "message": "అవును, వినడాన్ని కొనసాగించాలనుకుంటున్నాను"
+    },
+    "presence_confirmation_no": {
+      "message": "లేదూ, నేను పూర్తయ్యాను"
+    }
+}
+  

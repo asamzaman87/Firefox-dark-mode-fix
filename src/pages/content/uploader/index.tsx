@@ -32,9 +32,7 @@ function Uploader() {
   const { isAuthenticated } = useAuthToken();
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
-  // const supportModelToast = useRef<string | null>(null);
-
-  //sending the auth status to the background script
+  // sending the auth status to the background script
   useMemo(() => {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
@@ -120,7 +118,7 @@ function Uploader() {
       // setTimeout(()=>setIsActive(true), 200);
       return 
     }
-    return toast({ description:"There is an on-going conversation or you have exceeded the hourly limit. Please wait try again later!", duration:5000, style: TOAST_STYLE_CONFIG });
+    return toast({ description: chrome.i18n.getMessage("ongoing_conversation_error"), duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
   // const isO1PreviewOrO1MiniModelSelected = () => {
@@ -188,7 +186,7 @@ function Uploader() {
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     if (isComposerSpeechButtonPresentOnDom()) {
       //if the speech button is present on the dom, add speech found text to the input and open the popup
-      addTextToInputAndOpen("GPT Reader"); 
+      addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader")); 
       return setIsActive(true);
     }
 
@@ -198,7 +196,7 @@ function Uploader() {
       setIsActive(false);
       setOpenTries(tries => tries + 1);
       if (openTries >= 1) {
-        toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check the ChatGPT website for the exact issue.", style: TOAST_STYLE_CONFIG });
+        toast({ description: chrome.i18n.getMessage("chat_error"), style: TOAST_STYLE_CONFIG });
         setTimeout(() => setOpenTries(0), 5000);
       }
       return;
@@ -248,7 +246,7 @@ function Uploader() {
               })
             }
             >
-            <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && "Login to use"} {isAuthenticated && "Activate"} GPT Reader
+            <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader
           </Button>
         </DialogTrigger>
         <DialogContent

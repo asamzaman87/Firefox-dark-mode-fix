@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: 免費AI文字轉語音，含ChatGPT語音，TTS"
+    },
+    "extensionDescription": {
+      "message": "自然ChatGPT AI文字轉語音 (TTS)，適用於PDF、文章、文件。使用高品質語音在GPT Reader下載或朗讀"
+    },
+    "play_voice": {
+      "message": "播放語音"
+    },
+    "stop": {
+      "message": "停止"
+    },
+    "drag_and_drop_files": {
+      "message": "拖曳檔案至此，或點擊選擇檔案"
+    },
+    "upload_limit": {
+      "message": "可上傳最大24 MB的檔案"
+    },
+    "type_or_paste_text": {
+      "message": "輸入或貼上文字"
+    },
+    "type_or_paste_text_v2": {
+      "message": "貼上或輸入文字"
+    },
+    "title": {
+      "message": "標題"
+    },
+    "text": {
+      "message": "文字"
+    },
+    "submit": {
+      "message": "送出"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "要下載還是收聽音訊？"
+    },
+    "download": {
+      "message": "下載"
+    },
+    "download_note": {
+      "message": "未來可能需要付費"
+    },
+    "listen": {
+      "message": "收聽"
+    },
+    "downloading_status": {
+      "message": "下載中"
+    },
+    "download_complete": {
+      "message": "下載完成"
+    },
+    "please_wait_file_downloading": {
+      "message": "請稍候，檔案下載中..."
+    },
+    "full_download_note": {
+      "message": "若未自動下載，請點擊下方「下載」按鈕。"
+    },
+    "loading_preview": {
+      "message": "載入預覽"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT高級用戶請使用GPT-4o mini以加快下載。關閉介面後可切換模型。"
+    },
+    "cancel": {
+      "message": "取消"
+    },
+    "cancel_download_confirmation": {
+      "message": "確定要取消下載嗎？"
+    },
+    "continue_download": {
+      "message": "繼續下載"
+    },
+    "cancel_download": {
+      "message": "取消下載"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader產生的音訊可能不完全準確。若發現差異，關閉介面並開新ChatGPT對話重試。"
+    },
+    "playback_speed": {
+      "message": "播放速度"
+    },
+    "we_appreciate_feedback": {
+      "message": "我們珍視你的回饋。"
+    },
+    "feedback_prompt": {
+      "message": "我們持續改進服務，請告訴我們如何做得更好。"
+    },
+    "feedback_question": {
+      "message": "你對此擴充功能有何看法？"
+    },
+    "submit_feedback": {
+      "message": "提交回饋"
+    },
+    "having_issues": {
+      "message": "遇到問題？點此"
+    },
+    "download_aborted": {
+      "message": "下載已中止"
+    },
+    "error_no_start": {
+      "message": "錯誤導致下載無法開始，請關閉介面後重試"
+    },
+    "error_stopped_midway": {
+      "message": "下載因錯誤而停止，可點下方按鈕下載已處理的音訊。"
+    },
+    "cancel_download_confirmation_title": {
+      "message": "確定要取消下載嗎？"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "是否取消下載？"
+    },
+    "note_partial_audio": {
+      "message": "注意：點擊上方下載按鈕可取得目前處理的音訊。"
+    },
+    "are_you_sure": {
+      "message": "你確定嗎"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader通知"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader將長文分段並傳送至ChatGPT。可能暫時達到限制，如發生請等待約一小時。"
+    },
+    "acknowledge_and_accept": {
+      "message": "繼續即表示你承認並接受。"
+    },
+    "continue": {
+      "message": "繼續"
+    },
+    "close": {
+      "message": "關閉"
+    },
+    "something_went_wrong": {
+      "message": "出現錯誤！"
+    },
+    "offline_warning": {
+      "message": "似乎已離線！請檢查網路後再試！"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader回應較慢。關閉介面檢查錯誤。建議使用GPT-4。"
+    },
+    "voice_selector_description": {
+      "message": "選擇ChatGPT優化語音。請在上傳文字前完成選擇。"
+    },
+    "cannot_upload_one_file": {
+      "message": "一次只能上傳一個檔案"
+    },
+    "cannot_upload_more_files": {
+      "message": "無法上傳超過 $1 個檔案"
+    },
+    "file_rejected": {
+      "message": "檔案 $1 已被拒絕"
+    },
+    "uploading_files": {
+      "message": "正在上傳 $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 已上傳"
+    },
+    "failed_upload": {
+      "message": "上傳 $1 失敗"
+    },
+    "chatgpt_issue": {
+      "message": "ChatGPT似乎有問題，請查看其網站以獲取詳情。"
+    },
+    "unsupported_file_type": {
+      "message": "不支援的檔案類型"
+    },
+    "no_files_selected": {
+      "message": "尚未選擇檔案"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "使用GPT簡化閱讀長文件"
+    },
+    "back": {
+      "message": "返回"
+    },
+    "ongoing_conversation_error": {
+      "message": "當前有對話或已超限，請稍後重試！"
+    },
+    "chat_error": {
+      "message": "ChatGPT可能錯誤或已達上限，請查看其網站。"
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader標誌"
+    },
+    "login_to_use": {
+      "message": "登入以使用"
+    },
+    "activate": {
+      "message": "啟用"
+    },
+    "feedback": {
+      "message": "回饋"
+    },
+    "input_required_error": {
+      "message": "此為必填欄位 (最少5個字元)"
+    },
+    "please_wait_previous": {
+      "message": "請等待上一個請求完成"
+    },
+    "presence_confirmation_title": {
+      "message": "你還在嗎？"
+    },
+    "presence_confirmation_description": {
+      "message": "你還在嗎？"
+    },
+    "presence_confirmation_yes": {
+      "message": "是的，我想繼續收聽"
+    },
+    "presence_confirmation_no": {
+      "message": "不，我已完成"
+    }
+  }
+  

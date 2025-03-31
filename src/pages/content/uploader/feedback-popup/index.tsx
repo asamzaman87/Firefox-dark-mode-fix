@@ -69,8 +69,8 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
                 className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
             >
                 <DialogHeader className="sr-only">
-                    <DialogTitle>Feedback</DialogTitle>
-                    <DialogDescription className="sr-only">Paste or type your text</DialogDescription>
+                    <DialogTitle>{chrome.i18n.getMessage("feedback")}</DialogTitle>
+                    <DialogDescription className="sr-only">{chrome.i18n.getMessage("type_or_paste_text_v2")}</DialogDescription>
                 </DialogHeader>
                 <FeedbackForm loading={loading} onSubmit={onSubmit} />
             </DialogContent>

@@ -13,7 +13,7 @@ import { z } from "zod";
 
 const formSchema = z.object({
     title: z.string().optional(),
-    text: z.string().min(5, { message: "This is a required field (min 5 characters)" })
+    text: z.string().min(5, { message: chrome.i18n.getMessage('input_required_error') })
 })
 
 export interface InputFormProps {
@@ -33,7 +33,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-        if (disabled) return toast({ description: "Please wait until the previous request is completed", style: TOAST_STYLE_CONFIG });
+        if (disabled) return toast({ description: chrome.i18n.getMessage('please_wait_previous'), style: TOAST_STYLE_CONFIG });
         onSubmit(values);
     }
 
@@ -45,7 +45,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                     name="title"
                     render={({ field }) => (
                         <FormItem className="w-full">
-                            <FormLabel>Title</FormLabel>
+                            <FormLabel>{chrome.i18n.getMessage('title')}</FormLabel>
                             <FormControl>
                                 <Input className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" {...field} />
                             </FormControl>
@@ -57,7 +57,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                     name="text"
                     render={({ field }) => (
                         <FormItem className="w-full">
-                            <FormLabel>Text</FormLabel>
+                            <FormLabel>{chrome.i18n.getMessage('text')}</FormLabel>
                             <FormControl>
                                 <Textarea className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 resize-none rounded min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 outline-none" {...field} />
                             </FormControl>
@@ -66,7 +66,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                     )} />
                 <DialogFooter>
                     <Button disabled={disabled} type="submit" variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
-                        <Send /> Submit
+                        <Send /> {chrome.i18n.getMessage('submit')}
                     </Button>
                 </DialogFooter>
             </form>

@@ -1,0 +1,222 @@
+{
+    "extensionName": {
+      "message": "GPT Reader: nemokamas AI teksto į kalbą su ChatGPT balsais, TTS"
+    },
+    "extensionDescription": {
+      "message": "Natūralus ChatGPT AI teksto į kalbą (TTS) PDF, straipsniams ir dokumentams. Atsisiųskite arba klausykitės aukštos kokybės balsų su GPT Reader"
+    },
+    "play_voice": {
+      "message": "Leisti balsą"
+    },
+    "stop": {
+      "message": "Stabdyti"
+    },
+    "drag_and_drop_files": {
+      "message": "Nutempkite failus čia arba spustelėkite pasirinkti"
+    },
+    "upload_limit": {
+      "message": "Galite įkelti failą iki 24 MB"
+    },
+    "type_or_paste_text": {
+      "message": "Įveskite arba įklijuokite tekstą"
+    },
+    "type_or_paste_text_v2": {
+      "message": "Įklijuokite arba įrašykite savo tekstą"
+    },
+    "title": {
+      "message": "Pavadinimas"
+    },
+    "text": {
+      "message": "Tekstas"
+    },
+    "submit": {
+      "message": "Pateikti"
+    },
+    "would_you_like_to_download_or_listen": {
+      "message": "Ar norėtumėte atsisiųsti ar pasiklausyti garso?"
+    },
+    "download": {
+      "message": "Atsisiųsti"
+    },
+    "download_note": {
+      "message": "Ateityje gali tapti mokama"
+    },
+    "listen": {
+      "message": "Klausyti"
+    },
+    "downloading_status": {
+      "message": "Atsisiunčiama"
+    },
+    "download_complete": {
+      "message": "Atsisiuntimas baigtas"
+    },
+    "please_wait_file_downloading": {
+      "message": "Palaukite, kol failas bus atsisiųstas..."
+    },
+    "full_download_note": {
+      "message": "Jei failas neatsisiuntė automatiškai, spustelėkite 'Atsisiųsti' žemiau."
+    },
+    "loading_preview": {
+      "message": "Įkeliama peržiūra"
+    },
+    "gpt4_download_note": {
+      "message": "ChatGPT premium vartotojai, pasirinkite GPT-4o mini, kad paspartintumėte atsisiuntimą. Uždarykite langą norėdami pakeisti modelį."
+    },
+    "cancel": {
+      "message": "Atšaukti"
+    },
+    "cancel_download_confirmation": {
+      "message": "Ar tikrai norite atšaukti atsisiuntimą?"
+    },
+    "continue_download": {
+      "message": "Tęsti atsisiuntimą"
+    },
+    "cancel_download": {
+      "message": "Atšaukti atsisiuntimą"
+    },
+    "accuracy_warning": {
+      "message": "GPT Reader gali kurti ne visai tikslų garsą. Jei pastebite skirtumų, uždarykite langą ir pradėkite naują ChatGPT pokalbį."
+    },
+    "playback_speed": {
+      "message": "Atkūrimo greitis"
+    },
+    "we_appreciate_feedback": {
+      "message": "Vertiname jūsų atsiliepimus."
+    },
+    "feedback_prompt": {
+      "message": "Nuolat ieškome būdų tobulėti. Prašome pasidalinti, ką galime padaryti geriau."
+    },
+    "feedback_question": {
+      "message": "Ką manote apie šį plėtinį?"
+    },
+    "submit_feedback": {
+      "message": "Pateikti atsiliepimą"
+    },
+    "having_issues": {
+      "message": "Iškilo problemų? Spustelėkite čia"
+    },
+    "download_aborted": {
+      "message": "Atsisiuntimas nutrauktas"
+    },
+    "error_no_start": {
+      "message": "Klaida neleido pradėti atsisiuntimo, uždarykite langą ir bandykite dar kartą"
+    },
+    "error_stopped_midway": {
+      "message": "Atsisiuntimas sustojo dėl klaidos. Atsisiųskite apdorotą garsą žemiau."
+    },
+    "cancel_download_confirmation_title": {
+      "message": "Ar tikrai norite atšaukti atsisiuntimą?"
+    },
+    "cancel_download_confirmation_sr": {
+      "message": "Norite atšaukti atsisiuntimą?"
+    },
+    "note_partial_audio": {
+      "message": "Pastaba: spustelėkite aukščiau esantį atsisiuntimo mygtuką, kad gautumėte iki šiol apdorotą garsą."
+    },
+    "are_you_sure": {
+      "message": "Ar esate tikri"
+    },
+    "gpt_reader_notice": {
+      "message": "GPT Reader pranešimas"
+    },
+    "gpt_reader_chunk_explanation": {
+      "message": "GPT Reader ilgesnį tekstą suskaido į mažesnes dalis ir siunčia jas ChatGPT. Galite laikinai pasiekti ribą. Jei taip nutinka, palaukite apie valandą."
+    },
+    "acknowledge_and_accept": {
+      "message": "Tęsdami, jūs tai patvirtinate ir priimate."
+    },
+    "continue": {
+      "message": "Tęsti"
+    },
+    "close": {
+      "message": "Uždaryti"
+    },
+    "something_went_wrong": {
+      "message": "Įvyko klaida!"
+    },
+    "offline_warning": {
+      "message": "Panašu, kad esate neprisijungę! Patikrinkite tinklą ir bandykite dar kartą!"
+    },
+    "slow_response_warning": {
+      "message": "GPT Reader veikia lėčiau nei įprastai. Uždarykite langą, kad patikrintumėte klaidą. Rekomenduojama GPT-4."
+    },
+    "voice_selector_description": {
+      "message": "Rinkitės iš kelių ChatGPT patobulintų balsų. Atlikite pasirinkimą prieš įkeliant tekstą."
+    },
+    "cannot_upload_one_file": {
+      "message": "Negalima įkelti daugiau nei 1 failo vienu metu"
+    },
+    "cannot_upload_more_files": {
+      "message": "Negalima įkelti daugiau nei $1 failų"
+    },
+    "file_rejected": {
+      "message": "Failas $1 atmestas"
+    },
+    "uploading_files": {
+      "message": "Įkeliamas $1..."
+    },
+    "uploaded_files": {
+      "message": "$1 įkeltas"
+    },
+    "failed_upload": {
+      "message": "$1 įkelti nepavyko"
+    },
+    "chatgpt_issue": {
+      "message": "Panašu, kad kyla ChatGPT problemų. Patikrinkite jų svetainę."
+    },
+    "unsupported_file_type": {
+      "message": "Nepalaikomas failo tipas"
+    },
+    "no_files_selected": {
+      "message": "Nepasirinkta jokių failų"
+    },
+    "untitled_file": {
+      "message": "Untitled.txt"
+    },
+    "gpt_reader": {
+      "message": "GPT Reader"
+    },
+    "simplify_reading": {
+      "message": "Supaprastinkite ilgų dokumentų skaitymą su GPT"
+    },
+    "back": {
+      "message": "Atgal"
+    },
+    "ongoing_conversation_error": {
+      "message": "Vyksta pokalbis arba pasiekėte ribą. Prašome palaukti ir bandyti vėliau!"
+    },
+    "chat_error": {
+      "message": "Galbūt ChatGPT rodo klaidą arba pasiekėte ribą. Patikrinkite jų svetainę."
+    },
+    "gpt_reader_logo": {
+      "message": "GPT Reader logotipas"
+    },
+    "login_to_use": {
+      "message": "Prisijunkite, kad naudotumėte"
+    },
+    "activate": {
+      "message": "Aktyvuoti"
+    },
+    "feedback": {
+      "message": "Atsiliepimai"
+    },
+    "input_required_error": {
+      "message": "Šis laukas privalomas (min. 5 simboliai)"
+    },
+    "please_wait_previous": {
+      "message": "Palaukite, kol bus užbaigtas ankstesnis prašymas"
+    },
+    "presence_confirmation_title": {
+      "message": "Vis dar esate čia?"
+    },
+    "presence_confirmation_description": {
+      "message": "Vis dar esate čia?"
+    },
+    "presence_confirmation_yes": {
+      "message": "Taip, noriu tęsti klausymą"
+    },
+    "presence_confirmation_no": {
+      "message": "Ne, baigiau"
+    }
+}
+  

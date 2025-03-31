@@ -64,7 +64,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             }
         } catch (e) {
             const error = e as Error;
-            toast({ description: "Something went wrong!" + "\n" + JSON.stringify(error), style: TOAST_STYLE_CONFIG });
+            toast({ description: chrome.i18n.getMessage("something_went_wrong") + "\n" + JSON.stringify(error), style: TOAST_STYLE_CONFIG });
         }
     }, [token, audioUrls, audioPlayer, playRate])
 
@@ -199,7 +199,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     //check for network connection via navigator
     const updateConnectionStatus = () => {
         if (!navigator.onLine) {
-            toast({ description: "You seem to be offline! Please check your network connection and try again!", style: TOAST_STYLE_CONFIG });
+            toast({ description: chrome.i18n.getMessage("offline_warning"), style: TOAST_STYLE_CONFIG });
         }
     }
 
@@ -218,7 +218,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         const isActive = localStorage.getItem("gptr/active") === "true";
         const isAudioLoading = localStorage.getItem("gptr/is-first-audio-loading") === "true";
         if (isActive && isAudioLoading) {
-            const { id } = toast({ description: "GPT Reader seems to be taking longer than usual. Please check for an error by closing the overlay. It is recommended to use the GPT-4 models for the best results. You can change models by closing the overlay and clicking on the top left drop down model button.", style: TOAST_STYLE_CONFIG });
+            const { id } = toast({ description: chrome.i18n.getMessage("slow_response_warning"), style: TOAST_STYLE_CONFIG });
             toast15SecRef.current = id;
         } else {
             if (toast15SecRef.current) dismiss(toast15SecRef.current);
