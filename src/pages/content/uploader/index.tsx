@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -240,13 +239,13 @@ function Uploader() {
             onMouseOut={() => setMinimised(true)}
             className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", 
               {
-                "translate-x-36": minimised && isAuthenticated, 
                 "!z-[50]" : isActive || isOverlayFallback,
-                "translate-x-44": !isAuthenticated && minimised 
               })
             }
             >
-            <img src={LOGO} alt="GPT Reader Logo" className="size-6" /> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader
+            <img src={LOGO} alt="GPT Reader Logo" className="size-6" />{!minimised && (
+              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader</>
+            )}
           </Button>
         </DialogTrigger>
         <DialogContent
