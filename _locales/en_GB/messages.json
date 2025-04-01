@@ -120,7 +120,7 @@
       "message": "GPT Reader Notice"
     },
     "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader breaks large text into smaller chunks and sends them to ChatGPT. You may temporarily reach a rate limit. If so, please wait about an hour."
+      "message": "GPT Reader works by breaking down large text into smaller chunks and sending them to ChatGPT for analysis. This is a normal and expected process. However, depending on your usage, you might temporarily reach ChatGPT's rate limits. If this happens, you may need to wait about an hour before using ChatGPT or this extension again."
     },
     "acknowledge_and_accept": {
       "message": "By continuing, you acknowledge and accept this as part of using the extension."
