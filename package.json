@@ -6,7 +6,7 @@
   "url": "https://www.gpt-reader.com/",
   "scripts": {
     "build": "bun run build:chrome && bun run build:firefox && cp -r _locales dist_chrome/ && cp -r _locales dist_firefox/",
-    "zip:build": "zip -r dist_chrome.zip dist_chrome/ && zip -r dist_firefox.zip dist_firefox/",
+    "zip:build": "zip -r dist_chrome.zip dist_chrome/ && (cd dist_firefox && zip -r ../dist_firefox.zip .) && zip -r dist_edge.zip dist_chrome/ -x \"dist_chrome/.vite/*\"",
     "build:chrome": "vite build --config vite.config.chrome.ts",
     "build:firefox": "vite build --config vite.config.firefox.ts",
     "dev": "nodemon --config nodemon.chrome.json",
