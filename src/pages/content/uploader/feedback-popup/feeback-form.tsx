@@ -60,7 +60,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                     render={({ field }) => (
                         <FormItem className="w-full">
                             <FormControl>
-                                <Textarea className="resize-none rounded-lg min-h-[50dvh] placeholder:text-gray-400 placeholder:text-sm" placeholder={chrome.i18n.getMessage("feedback_question")} {...field} />
+                                <Textarea className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 resize-none rounded min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 outline-none"  placeholder={chrome.i18n.getMessage("feedback_question")}  {...field} />     
                             </FormControl>
                             <FormMessage className="text-red-600" />
                         </FormItem>

@@ -101,7 +101,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
       <div className="relative size-full overflow-y-auto">
         <span
           className={cn(
-            "z-[1] rounded-full text-sm px-4 py-2 text-white dark:text-black bg-gray-800 dark:bg-gray-400 absolute top-4 right-1/2 translate-x-1/2 -translate-y-2 size-max inline-flex justify-center items-center gap-2",
+            "z-[1] rounded-full text-sm px-4 py-2 text-white dark:text-black bg-gray-800 dark:bg-gray-100 absolute top-4 right-1/2 translate-x-1/2 -translate-y-2 size-max inline-flex justify-center items-center gap-2",
             { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
           )}
         >
@@ -109,7 +109,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         </span>
         <span
           className={cn(
-            "max-w-lg rounded-md z-[1] text-wrap text-center text-sm font-medium p-4 text-white dark:text-black bg-gray-800 dark:bg-gray-400 absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-12 size-max inline-flex justify-center items-center gap-2",
+            "max-w-lg rounded-md z-[1] text-wrap text-center text-sm font-medium p-4 text-white dark:text-black bg-gray-800 dark:bg-gray-100 absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-12 size-max inline-flex justify-center items-center gap-2",
             { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
           )}
         >
