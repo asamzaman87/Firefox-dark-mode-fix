@@ -156,7 +156,7 @@ const useAudioUrl = (isDownload: boolean) => {
           // Create a temporary download link and trigger a click to start download
           const downloadLink = document.createElement("a");
           downloadLink.href = combinedUrl;
-          downloadLink.download = `${sanitisedFileName}.mp3`;
+          downloadLink.download = `${sanitisedFileName}.aac`;
           document.body.appendChild(downloadLink);
           downloadLink.click();
     
