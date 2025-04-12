@@ -7,7 +7,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
@@ -127,6 +127,18 @@ function Uploader() {
     return speechButton !== null;
   }
 
+  const clickStopButtonIfPresent = async (): Promise<void> => {
+    const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
+    if (stopButton) {
+      stopButton.click();
+      try {
+        await waitForElement("[data-testid='composer-speech-button']", 1500);
+      } catch (error) {
+        setIsActive(false);
+      }
+    }
+  };
+
   //add speech found text to the input and open the popup
   const addTextToInputAndOpen = (text: string) => {
     const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
@@ -139,25 +151,25 @@ function Uploader() {
     return toast({ description: chrome.i18n.getMessage("ongoing_conversation_error"), duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
-  // const isO1PreviewOrO1MiniModelSelected = () => {
-  //   const isSupportedModel = (models: string | string[]) => MODELS_TO_REJECT.some((model) => models.includes(model));
-  //   //checking if the user has a last used model stored in local storage
-  //   if (userId) {
-  //     const lastUsedModelKey = findMatchLocalStorageKey(userId);
-  //     if (lastUsedModelKey) {
-  //       const lastUsedModel = localStorage.getItem(lastUsedModelKey);
-  //       if (lastUsedModel) {
-  //         return isSupportedModel(lastUsedModel);
-  //       }
-  //     }
-  //   }
-  //   // if the user has not used a model before, check if the model switcher is present on the dom
-  //   const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
-  //   if (modelSwitcher) {
-  //     return isSupportedModel(modelSwitcher.innerHTML);
-  //   }
-  //   return false
-  // };
+  const isBadModel = () => {
+    const isSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
+    //checking if the user has a last used model stored in local storage
+    // if (userId) {
+    //   const lastUsedModelKey = findMatchLocalStorageKey(userId);
+    //   if (lastUsedModelKey) {
+    //     const lastUsedModel = localStorage.getItem(lastUsedModelKey);
+    //     if (lastUsedModel) {
+    //       return isSupportedModel(lastUsedModel);
+    //     }
+    //   }
+    // }
+    // if the user has not used a model before, check if the model switcher is present on the dom
+    const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
+    if (modelSwitcher) {
+      return isSupportedModel(modelSwitcher.innerHTML);
+    }
+    return false
+  };
 
   const onOpenChange = async (open: boolean) => {
     if(!open) {
@@ -191,26 +203,12 @@ function Uploader() {
     }
     
     window.localStorage.removeItem("gptr/redirect-to-login");
-    
-    //check if the user has selected o1-preview or o1-mini and prompt them to select other models
-    // if(isO1PreviewOrO1MiniModelSelected()){
-    //   const {id} = toast({ description:"GPT Reader does not support o1 based models due to their slower speeds. Please switch to another ChatGPT model by using the model drop down on the top left.", duration:5000, style: TOAST_STYLE_CONFIG });
-    //   supportModelToast.current = id;
-    //   return;
-    // }
-    //clear the toast if model is supported
-    // if(supportModelToast.current) dismiss(supportModelToast.current);
+
+    await clickStopButtonIfPresent();
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     if (isComposerSpeechButtonPresentOnDom()) {
       addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
-      setIsActive(true);
-      return;
-    }
-  
-    // Wait for full page load if not yet complete
-    if (document.readyState !== "complete") {
-      await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
     }
   
     // If the send button is missing, wait until it appears
@@ -219,20 +217,20 @@ function Uploader() {
         await waitForElement("[data-testid='send-button']", 5000);
       } catch (error) {
         setIsActive(false);
-        setOpenTries((prev) => prev + 1);
-        if (openTries >= 1) {
-          toast({
-            description: chrome.i18n.getMessage("chat_error"),
-            style: TOAST_STYLE_CONFIG,
-          });
-          setTimeout(() => setOpenTries(0), 5000);
-        }
+        toast({
+          description: chrome.i18n.getMessage("chat_error"),
+          style: TOAST_STYLE_CONFIG,
+        });
         return;
       }
     }
   
-    // Extra delay to ensure ChatGPT's UI is fully initialized
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // to avoid the content not loaded issue
+    addTextToInputAndOpen(""); 
+    //check if the user has selected a slow model
+    if(isBadModel()){
+      toast({ description:"GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model maybe too slow.", duration:5000, style: TOAST_STYLE_CONFIG });
+    }
     setIsActive(true);
   }; 
 

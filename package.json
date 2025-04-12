@@ -1,6 +1,6 @@
 {
   "name": "gpt-reader",
-  "version": "1.0.13.1",
+  "version": "1.0.14",
   "description": "Natural ChatGPT AI text to speech (TTS) for PDFs, articles, & docs. Download or read aloud using high-quality voices with GPT Reader",
   "license": "MIT",
   "url": "https://www.gpt-reader.com/",
