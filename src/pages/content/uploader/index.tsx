@@ -17,6 +17,25 @@ export interface PromptProps {
 }
 
 function Uploader() {
+  const waitForElement = (selector: string, timeout = 5000): Promise<Element> => {
+    return new Promise((resolve, reject) => {
+      const el = document.querySelector(selector);
+      if (el) return resolve(el);
+      const observer = new MutationObserver(() => {
+        const elFound = document.querySelector(selector);
+        if (elFound) {
+          observer.disconnect();
+          resolve(elFound);
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`Timeout: Element ${selector} not found.`));
+      }, timeout);
+    });
+  };
+  
   const [prompts, setPrompts] = useState<PromptProps[]>([]);
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
@@ -140,7 +159,7 @@ function Uploader() {
   //   return false
   // };
 
-  const onOpenChange = (open: boolean) => {
+  const onOpenChange = async (open: boolean) => {
     if(!open) {
       //show confirmation for cancel download if download is in progress
       const download = window.localStorage.getItem("gptr/download");
@@ -184,25 +203,38 @@ function Uploader() {
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     if (isComposerSpeechButtonPresentOnDom()) {
-      //if the speech button is present on the dom, add speech found text to the input and open the popup
-      addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader")); 
-      return setIsActive(true);
-    }
-
-    // if the send button is not present on the dom show error message
-    if (!isSendButtonPresentOnDom() && open) {
-
-      setIsActive(false);
-      setOpenTries(tries => tries + 1);
-      if (openTries >= 1) {
-        toast({ description: chrome.i18n.getMessage("chat_error"), style: TOAST_STYLE_CONFIG });
-        setTimeout(() => setOpenTries(0), 5000);
-      }
+      addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
+      setIsActive(true);
       return;
     }
-    
-    setIsActive(open);
-  }
+  
+    // Wait for full page load if not yet complete
+    if (document.readyState !== "complete") {
+      await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
+    }
+  
+    // If the send button is missing, wait until it appears
+    if (!isSendButtonPresentOnDom()) {
+      try {
+        await waitForElement("[data-testid='send-button']", 5000);
+      } catch (error) {
+        setIsActive(false);
+        setOpenTries((prev) => prev + 1);
+        if (openTries >= 1) {
+          toast({
+            description: chrome.i18n.getMessage("chat_error"),
+            style: TOAST_STYLE_CONFIG,
+          });
+          setTimeout(() => setOpenTries(0), 5000);
+        }
+        return;
+      }
+    }
+  
+    // Extra delay to ensure ChatGPT's UI is fully initialized
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsActive(true);
+  }; 
 
   const handleConfirm = (state: boolean) => {
     if(!state) return onOpenChange(false);
