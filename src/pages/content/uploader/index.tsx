@@ -131,11 +131,7 @@ function Uploader() {
     const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
     if (stopButton) {
       stopButton.click();
-      try {
-        await waitForElement("[data-testid='composer-speech-button']", 1500);
-      } catch (error) {
-        setIsActive(false);
-      }
+      await waitForElement("[data-testid='composer-speech-button']", 1500);
     }
   };
 
@@ -145,10 +141,9 @@ function Uploader() {
     if (textarea) {
       textarea.innerHTML = `<p>${text}</p>`;
       textarea.focus();
-      // setTimeout(()=>setIsActive(true), 200);
-      return 
+    } else {
+      console.log('Having trouble finding the textarea');
     }
-    return toast({ description: chrome.i18n.getMessage("ongoing_conversation_error"), duration:5000, style: TOAST_STYLE_CONFIG });
   }
 
   const isBadModel = () => {
@@ -207,9 +202,7 @@ function Uploader() {
     await clickStopButtonIfPresent();
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
-    if (isComposerSpeechButtonPresentOnDom()) {
-      addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
-    }
+    addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
   
     // If the send button is missing, wait until it appears
     if (!isSendButtonPresentOnDom()) {
@@ -224,7 +217,6 @@ function Uploader() {
         return;
       }
     }
-  
     // to avoid the content not loaded issue
     addTextToInputAndOpen(""); 
     //check if the user has selected a slow model
