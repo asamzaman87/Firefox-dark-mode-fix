@@ -132,7 +132,7 @@ function Uploader() {
     if (stopButton) {
       stopButton.click();
       try {
-        await waitForElement("[data-testid='send-button']", 1500);
+        await waitForElement("[data-testid='composer-speech-button']", 1500);
       } catch (error) {
         console.log(error);
       }
