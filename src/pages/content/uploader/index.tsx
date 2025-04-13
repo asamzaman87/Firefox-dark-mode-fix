@@ -131,7 +131,11 @@ function Uploader() {
     const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
     if (stopButton) {
       stopButton.click();
-      await waitForElement("[data-testid='composer-speech-button']", 1500);
+      try {
+        await waitForElement("[data-testid='send-button']", 1500);
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 
