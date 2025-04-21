@@ -49,7 +49,7 @@ const DialogContent = React.forwardRef<
       {children}
       {closeButton &&
         <DialogPrimitive.Close className="cursor-pointer absolute right-4 top-4">
-          <Button variant="ghost" size="icon" className="hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+          <Button variant="ghost" size="icon" className="hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
             <X />
             <span className="sr-only">{chrome.i18n.getMessage("close")}</span>
           </Button>

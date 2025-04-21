@@ -33,7 +33,7 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
         </section>
 
         <footer className="flex items-end justify-center gap-4">
-          <Button className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 hover:bg-gray-900 bg-gray-900 text-gray-100" size={"lg"} onClick={() => setConfirmed(true)}>
+          <Button variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all" onClick={() => setConfirmed(true)}>
             {chrome.i18n.getMessage("continue")}
           </Button>
           {/* <Button className="rounded-lg text-lg" size={"lg"} variant={"outline"} onClick={() => setConfirmed(false)}>No</Button> */}

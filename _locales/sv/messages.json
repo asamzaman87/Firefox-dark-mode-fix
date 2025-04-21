@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Gratis AI text-till-tal med ChatGPT-röster, TTS"
-    },
-    "extensionDescription": {
-      "message": "Naturligt ChatGPT AI text-till-tal (TTS) för PDF:er, artiklar och dokument. Ladda ner eller lyssna med högkvalitativa röster i GPT Reader"
-    },
-    "play_voice": {
-      "message": "Spela röst"
-    },
-    "stop": {
-      "message": "Stoppa"
-    },
-    "drag_and_drop_files": {
-      "message": "Dra och släpp filer här eller klicka för att välja"
-    },
-    "upload_limit": {
-      "message": "Du kan ladda upp en fil upp till 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Skriv eller klistra in text"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Klistra in eller skriv din text"
-    },
-    "title": {
-      "message": "Titel"
-    },
-    "text": {
-      "message": "Text"
-    },
-    "submit": {
-      "message": "Skicka"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Vill du ladda ner eller lyssna på ljudet?"
-    },
-    "download": {
-      "message": "Ladda ner"
-    },
-    "download_note": {
-      "message": "Kan bli betalversion i framtiden"
-    },
-    "listen": {
-      "message": "Lyssna"
-    },
-    "downloading_status": {
-      "message": "Laddar ner"
-    },
-    "download_complete": {
-      "message": "Nedladdning klar"
-    },
-    "please_wait_file_downloading": {
-      "message": "Vänta medan filen laddas ner..."
-    },
-    "full_download_note": {
-      "message": "Om filen inte laddades ner automatiskt, klicka på 'Ladda ner' nedan."
-    },
-    "loading_preview": {
-      "message": "Laddar förhandsvisning"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT premium-användare, välj GPT-4o mini för snabbare nedladdning. Stäng fönstret för att byta modell."
-    },
-    "cancel": {
-      "message": "Avbryt"
-    },
-    "cancel_download_confirmation": {
-      "message": "Är du säker på att du vill avbryta nedladdningen?"
-    },
-    "continue_download": {
-      "message": "Fortsätt nedladdning"
-    },
-    "cancel_download": {
-      "message": "Avbryt nedladdning"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader kanske inte är 100 % korrekt. Om du märker skillnader, stäng fönstret och starta en ny ChatGPT-chatt."
-    },
-    "playback_speed": {
-      "message": "Uppspelningshastighet"
-    },
-    "we_appreciate_feedback": {
-      "message": "Vi uppskattar din feedback."
-    },
-    "feedback_prompt": {
-      "message": "Vi försöker alltid bli bättre. Berätta vad vi kan göra."
-    },
-    "feedback_question": {
-      "message": "Vad tycker du om detta tillägg?"
-    },
-    "submit_feedback": {
-      "message": "Skicka min feedback"
-    },
-    "having_issues": {
-      "message": "Problem? Klicka här"
-    },
-    "download_aborted": {
-      "message": "Nedladdning avbruten"
-    },
-    "error_no_start": {
-      "message": "Ett fel hindrade nedladdningen från att starta, stäng fönstret och försök igen"
-    },
-    "error_stopped_midway": {
-      "message": "Nedladdningen stoppades p.g.a. fel. Ladda ner bearbetat ljud hittills nedan."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Är du säker på att du vill avbryta nedladdningen?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Vill du avbryta nedladdningen?"
-    },
-    "note_partial_audio": {
-      "message": "Obs! Klicka på knappen ovan för att ladda ner ljudet som hittills bearbetats."
-    },
-    "are_you_sure": {
-      "message": "Är du säker"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader-notis"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader delar upp långa texter i mindre delar och skickar dem till ChatGPT. Du kan tillfälligt nå en gräns. Om så, vänta en timme."
-    },
-    "acknowledge_and_accept": {
-      "message": "Genom att fortsätta godkänner du detta."
-    },
-    "continue": {
-      "message": "Fortsätt"
-    },
-    "close": {
-      "message": "Stäng"
-    },
-    "something_went_wrong": {
-      "message": "Något gick fel!"
-    },
-    "offline_warning": {
-      "message": "Du verkar vara offline! Kontrollera nätverket och försök igen!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader tar längre tid än vanligt. Stäng fönstret för att kontrollera fel. GPT-4 rekommenderas."
-    },
-    "voice_selector_description": {
-      "message": "Välj bland olika ChatGPT-förbättrade röster. Gör valet innan du laddar upp texten."
-    },
-    "cannot_upload_one_file": {
-      "message": "Kan inte ladda upp mer än 1 fil åt gången"
-    },
-    "cannot_upload_more_files": {
-      "message": "Kan inte ladda upp fler än $1 filer"
-    },
-    "file_rejected": {
-      "message": "Filen $1 avvisades"
-    },
-    "uploading_files": {
-      "message": "Laddar upp $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 uppladdad"
-    },
-    "failed_upload": {
-      "message": "Misslyckades med att ladda upp $1"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT verkar ha problem, kolla deras webbplats."
-    },
-    "unsupported_file_type": {
-      "message": "Filtyp stöds ej"
-    },
-    "no_files_selected": {
-      "message": "Inga filer valda"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Förenkla läsning av långa dokument med GPT"
-    },
-    "back": {
-      "message": "Tillbaka"
-    },
-    "ongoing_conversation_error": {
-      "message": "Det pågår en konversation eller gräns är nådd. Vänta och försök igen!"
-    },
-    "chat_error": {
-      "message": "ChatGPT visar kanske ett fel eller du nådde en gräns. Kolla deras webbplats."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader-logga"
-    },
-    "login_to_use": {
-      "message": "Logga in för att använda"
-    },
-    "activate": {
-      "message": "Aktivera"
-    },
-    "feedback": {
-      "message": "Feedback"
-    },
-    "input_required_error": {
-      "message": "Detta fält är obligatoriskt (min 5 tecken)"
-    },
-    "please_wait_previous": {
-      "message": "Vänta tills den föregående förfrågan är klar"
-    },
-    "presence_confirmation_title": {
-      "message": "Är du fortfarande här?"
-    },
-    "presence_confirmation_description": {
-      "message": "Är du fortfarande här?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Ja, jag vill fortsätta lyssna"
-    },
-    "presence_confirmation_no": {
-      "message": "Nej, jag är klar"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Gratis AI text-till-tal med ChatGPT-röster, TTS"
+  },
+  "extensionDescription": {
+    "message": "Naturligt ChatGPT AI text-till-tal (TTS) för PDF:er, artiklar och dokument. Ladda ner eller lyssna med högkvalitativa röster i GPT Reader"
+  },
+  "play_voice": {
+    "message": "Spela röst"
+  },
+  "stop": {
+    "message": "Stoppa"
+  },
+  "drag_and_drop_files": {
+    "message": "Dra och släpp filer här eller klicka för att välja"
+  },
+  "upload_limit": {
+    "message": "Du kan ladda upp en fil upp till 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Skriv eller klistra in text"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Klistra in eller skriv din text"
+  },
+  "title": {
+    "message": "Titel"
+  },
+  "text": {
+    "message": "Text"
+  },
+  "submit": {
+    "message": "Skicka"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Vill du ladda ner eller lyssna på ljudet?"
+  },
+  "download": {
+    "message": "Ladda ner"
+  },
+  "download_note": {
+    "message": "Kan bli betalversion i framtiden"
+  },
+  "listen": {
+    "message": "Lyssna"
+  },
+  "downloading_status": {
+    "message": "Laddar ner"
+  },
+  "download_complete": {
+    "message": "Nedladdning klar"
+  },
+  "please_wait_file_downloading": {
+    "message": "Vänta medan filen laddas ner..."
+  },
+  "full_download_note": {
+    "message": "Om filen inte laddades ner automatiskt, klicka på 'Ladda ner' nedan."
+  },
+  "loading_preview": {
+    "message": "Laddar förhandsvisning"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT premium-användare, välj GPT-4o mini för snabbare nedladdning. Stäng fönstret för att byta modell."
+  },
+  "cancel": {
+    "message": "Avbryt"
+  },
+  "cancel_download_confirmation": {
+    "message": "Är du säker på att du vill avbryta nedladdningen?"
+  },
+  "continue_download": {
+    "message": "Fortsätt nedladdning"
+  },
+  "cancel_download": {
+    "message": "Avbryt nedladdning"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader kanske inte är 100 % korrekt. Om du märker skillnader, stäng fönstret och starta en ny ChatGPT-chatt."
+  },
+  "playback_speed": {
+    "message": "Uppspelningshastighet"
+  },
+  "we_appreciate_feedback": {
+    "message": "Vi uppskattar din feedback."
+  },
+  "feedback_prompt": {
+    "message": "Vi försöker alltid bli bättre. Berätta vad vi kan göra."
+  },
+  "feedback_question": {
+    "message": "Vad tycker du om detta tillägg?"
+  },
+  "submit_feedback": {
+    "message": "Skicka min feedback"
+  },
+  "having_issues": {
+    "message": "Problem? Klicka här"
+  },
+  "download_aborted": {
+    "message": "Nedladdning avbruten"
+  },
+  "error_no_start": {
+    "message": "Ett fel hindrade nedladdningen från att starta, stäng fönstret och försök igen"
+  },
+  "error_stopped_midway": {
+    "message": "Nedladdningen stoppades p.g.a. fel. Ladda ner bearbetat ljud hittills nedan."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Är du säker på att du vill avbryta nedladdningen?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Vill du avbryta nedladdningen?"
+  },
+  "note_partial_audio": {
+    "message": "Obs! Klicka på knappen ovan för att ladda ner ljudet som hittills bearbetats."
+  },
+  "are_you_sure": {
+    "message": "Är du säker"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader-notis"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader delar upp långa texter i mindre delar och skickar dem till ChatGPT. Du kan tillfälligt nå en gräns. Om så, vänta en timme."
+  },
+  "acknowledge_and_accept": {
+    "message": "Genom att fortsätta godkänner du detta."
+  },
+  "continue": {
+    "message": "Fortsätt"
+  },
+  "close": {
+    "message": "Stäng"
+  },
+  "something_went_wrong": {
+    "message": "Något gick fel!"
+  },
+  "offline_warning": {
+    "message": "Du verkar vara offline! Kontrollera nätverket och försök igen!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader tar längre tid än vanligt. Stäng fönstret för att kontrollera fel. GPT-4 rekommenderas."
+  },
+  "voice_selector_description": {
+    "message": "Välj bland olika ChatGPT-förbättrade röster. Gör valet innan du laddar upp texten."
+  },
+  "cannot_upload_one_file": {
+    "message": "Kan inte ladda upp mer än 1 fil åt gången"
+  },
+  "cannot_upload_more_files": {
+    "message": "Kan inte ladda upp fler än $1 filer"
+  },
+  "file_rejected": {
+    "message": "Filen $1 avvisades"
+  },
+  "uploading_files": {
+    "message": "Laddar upp $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 uppladdad"
+  },
+  "failed_upload": {
+    "message": "Misslyckades med att ladda upp $1"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT verkar ha problem, kolla deras webbplats."
+  },
+  "unsupported_file_type": {
+    "message": "Filtyp stöds ej"
+  },
+  "no_files_selected": {
+    "message": "Inga filer valda"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Förenkla läsning av långa dokument med GPT"
+  },
+  "back": {
+    "message": "Tillbaka"
+  },
+  "ongoing_conversation_error": {
+    "message": "Det pågår en konversation eller gräns är nådd. Vänta och försök igen!"
+  },
+  "chat_error": {
+    "message": "ChatGPT visar kanske ett fel eller du nådde en gräns. Kolla deras webbplats."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader-logga"
+  },
+  "login_to_use": {
+    "message": "Logga in för att använda"
+  },
+  "activate": {
+    "message": "Aktivera"
+  },
+  "feedback": {
+    "message": "Feedback"
+  },
+  "input_required_error": {
+    "message": "Detta fält är obligatoriskt (min 5 tecken)"
+  },
+  "please_wait_previous": {
+    "message": "Vänta tills den föregående förfrågan är klar"
+  },
+  "presence_confirmation_title": {
+    "message": "Är du fortfarande här?"
+  },
+  "presence_confirmation_description": {
+    "message": "Är du fortfarande här?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Ja, jag vill fortsätta lyssna"
+  },
+  "presence_confirmation_no": {
+    "message": "Nej, jag är klar"
+  },
+  "download_confirm": {
+    "message": "Detta kommer att ladda ner ljudet för den del av din text som har bearbetats hittills. Är du säker på att du vill fortsätta?"
+  },
+  "male": {
+    "message": "man"
+  },
+  "female": {
+    "message": "kvinna"
+  },
+  "yes": {
+    "message": "Ja"
+  },
+  "no": {
+    "message": "Nej"
+  },
+  "feedback_thanks": {
+    "message": "Tack för din värdefulla feedback!"
+  },
+  "five_stars": {
+    "message": "Vi uppskattar din feedback mycket och är engagerade i att kontinuerligt förbättra vår tjänst. Överväg att lämna en femstjärnig recension på Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Ta mig till butiken"
+  },
+  "volume": {
+    "message": "Volym"
+  }
 }
-  

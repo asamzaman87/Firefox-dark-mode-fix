@@ -1,5 +1,5 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { Chunk, splitIntoChunksV1, splitIntoChunksV2 } from "@/lib/utils";
+import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -18,7 +18,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const [progress, setProgress] = useState<number>(0);
     const [downloadPreviewText, setDownloadPreviewText] = useState<string>();
-    const {blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
+    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
 
     useMemo(() => {
         if (blobs.length === 0) {
@@ -56,6 +56,7 @@ const useAudioUrl = (isDownload: boolean) => {
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
             textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
+            localStorage.setItem("gptr/is-first-audio-loading", String(id == "0"));
             setTimeout(() => {
                 sendPrompt();
             }, 200);
@@ -68,7 +69,7 @@ const useAudioUrl = (isDownload: boolean) => {
             })
         }
     }, []);
-
+    
     const splitAndSendPrompt = async (text: string) => {
         //console.log("SPLIT_AND_SEND_PROMPT");
         setText(text);
@@ -116,8 +117,8 @@ const useAudioUrl = (isDownload: boolean) => {
         setText("");
         setIsLoading(false);
         resetStreamListener();
+        setProgress(0);
         if(isDownload){
-            setProgress(0);
             setDownloadPreviewText(undefined);
         }
     }

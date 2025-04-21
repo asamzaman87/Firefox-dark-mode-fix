@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Tasuta AI teksti kõneks ChatGPT häältega, TTS"
-    },
-    "extensionDescription": {
-      "message": "Loomulik ChatGPT AI tekst-kõneks (TTS) PDF-ide, artiklite ja dokumentide jaoks. Laadi alla või kuula kvaliteetsete häältega GPT Readeris"
-    },
-    "play_voice": {
-      "message": "Esita hääl"
-    },
-    "stop": {
-      "message": "Stopp"
-    },
-    "drag_and_drop_files": {
-      "message": "Lohista failid siia või klõpsa valimiseks"
-    },
-    "upload_limit": {
-      "message": "Saad üles laadida kuni 24 MB faili"
-    },
-    "type_or_paste_text": {
-      "message": "Sisesta või kleebi tekst"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Kleebi või sisesta oma tekst"
-    },
-    "title": {
-      "message": "Pealkiri"
-    },
-    "text": {
-      "message": "Tekst"
-    },
-    "submit": {
-      "message": "Saada"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Kas soovite heli alla laadida või kuulata?"
-    },
-    "download": {
-      "message": "Laadi alla"
-    },
-    "download_note": {
-      "message": "Võib tulevikus muutuda tasuliseks"
-    },
-    "listen": {
-      "message": "Kuula"
-    },
-    "downloading_status": {
-      "message": "Allalaadimine"
-    },
-    "download_complete": {
-      "message": "Allalaadimine valmis"
-    },
-    "please_wait_file_downloading": {
-      "message": "Oodake, fail on allalaadimisel..."
-    },
-    "full_download_note": {
-      "message": "Kui fail ei laaditud automaatselt alla, klõpsake allolevat 'Laadi alla' nuppu."
-    },
-    "loading_preview": {
-      "message": "Eelvaate laadimine"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT premium-kasutajatele: valige GPT-4o mini kiiremaks allalaadimiseks. Mudeli vahetamiseks sulgege aken."
-    },
-    "cancel": {
-      "message": "Tühista"
-    },
-    "cancel_download_confirmation": {
-      "message": "Kas olete kindel, et soovite allalaadimise tühistada?"
-    },
-    "continue_download": {
-      "message": "Jätka allalaadimist"
-    },
-    "cancel_download": {
-      "message": "Tühista allalaadimine"
-    },
-    "accuracy_warning": {
-      "message": "GPT Readeri loodud heli ei pruugi olla 100% täpne. Kui märkate erinevusi, sulgege aken, avage uus ChatGPT vestlus ja proovige uuesti."
-    },
-    "playback_speed": {
-      "message": "Taasesituse kiirus"
-    },
-    "we_appreciate_feedback": {
-      "message": "Hindame teie tagasisidet."
-    },
-    "feedback_prompt": {
-      "message": "Otsime alati võimalusi paranemiseks. Andke meile teada, mida saaksime paremini teha."
-    },
-    "feedback_question": {
-      "message": "Mida arvate sellest laiendusest?"
-    },
-    "submit_feedback": {
-      "message": "Saada tagasiside"
-    },
-    "having_issues": {
-      "message": "Probleeme? Klõpsake siia"
-    },
-    "download_aborted": {
-      "message": "Allalaadimine katkestatud"
-    },
-    "error_no_start": {
-      "message": "Tõrge takistas allalaadimise alustamist. Sulgege aken ja proovige uuesti"
-    },
-    "error_stopped_midway": {
-      "message": "Allalaadimine peatus vea tõttu. Klõpsake all, et laadida seni töödeldud heli."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Kas soovite kindlasti allalaadimise tühistada?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Soovite allalaadimise tühistada?"
-    },
-    "note_partial_audio": {
-      "message": "Märkus: Klõpsake ülalolevat nuppu, et laadida seni töödeldud heli."
-    },
-    "are_you_sure": {
-      "message": "Olete kindel"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader teade"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader jagab pika teksti väikesteks osadeks ja saadab need ChatGPT-le. Võite ajutiselt jõuda limiidini. Sel juhul oodake umbes tund."
-    },
-    "acknowledge_and_accept": {
-      "message": "Jätkates kinnitate ja nõustute sellega."
-    },
-    "continue": {
-      "message": "Jätka"
-    },
-    "close": {
-      "message": "Sulge"
-    },
-    "something_went_wrong": {
-      "message": "Midagi läks valesti!"
-    },
-    "offline_warning": {
-      "message": "Paistab, et olete võrguühenduseta! Kontrollige võrku ja proovige uuesti!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader töötab tavalisest aeglasemalt. Vigade kontrollimiseks sulgege aken. Soovitatav on GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Valige mitmesuguste ChatGPT täiustatud häälte hulgast. Valik tehke enne teksti üleslaadimist."
-    },
-    "cannot_upload_one_file": {
-      "message": "Ei saa korraga rohkem kui 1 faili üles laadida"
-    },
-    "cannot_upload_more_files": {
-      "message": "Ei saa üles laadida üle $1 faili"
-    },
-    "file_rejected": {
-      "message": "Fail $1 lükati tagasi"
-    },
-    "uploading_files": {
-      "message": "Laadin üles $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 üles laaditud"
-    },
-    "failed_upload": {
-      "message": "Faili $1 üleslaadimine ebaõnnestus"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT-l tundub olevat probleeme, vaadake nende veebisaiti."
-    },
-    "unsupported_file_type": {
-      "message": "Failitüüp pole toetatud"
-    },
-    "no_files_selected": {
-      "message": "Ühtegi faili pole valitud"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Lihtsusta pikkade dokumentide lugemist GPT abil"
-    },
-    "back": {
-      "message": "Tagasi"
-    },
-    "ongoing_conversation_error": {
-      "message": "Käimasolev vestlus või olete limiidi ületanud. Oodake ja proovige hiljem!"
-    },
-    "chat_error": {
-      "message": "ChatGPT võib kuvada tõrget või olete jõudnud limiidini. Kontrollige nende saiti."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Readeri logo"
-    },
-    "login_to_use": {
-      "message": "Sisselogimine vajalik"
-    },
-    "activate": {
-      "message": "Aktiveeri"
-    },
-    "feedback": {
-      "message": "Tagasiside"
-    },
-    "input_required_error": {
-      "message": "See on kohustuslik väli (min 5 märki)"
-    },
-    "please_wait_previous": {
-      "message": "Oodake, kuni eelmine päring on lõpetatud"
-    },
-    "presence_confirmation_title": {
-      "message": "Kas olete veel siin?"
-    },
-    "presence_confirmation_description": {
-      "message": "Kas olete veel siin?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Jah, soovin jätkata kuulamist"
-    },
-    "presence_confirmation_no": {
-      "message": "Ei, olen valmis"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Tasuta AI teksti kõneks ChatGPT häältega, TTS"
+  },
+  "extensionDescription": {
+    "message": "Loomulik ChatGPT AI tekst-kõneks (TTS) PDF-ide, artiklite ja dokumentide jaoks. Laadi alla või kuula kvaliteetsete häältega GPT Readeris"
+  },
+  "play_voice": {
+    "message": "Esita hääl"
+  },
+  "stop": {
+    "message": "Stopp"
+  },
+  "drag_and_drop_files": {
+    "message": "Lohista failid siia või klõpsa valimiseks"
+  },
+  "upload_limit": {
+    "message": "Saad üles laadida kuni 24 MB faili"
+  },
+  "type_or_paste_text": {
+    "message": "Sisesta või kleebi tekst"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Kleebi või sisesta oma tekst"
+  },
+  "title": {
+    "message": "Pealkiri"
+  },
+  "text": {
+    "message": "Tekst"
+  },
+  "submit": {
+    "message": "Saada"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Kas soovite heli alla laadida või kuulata?"
+  },
+  "download": {
+    "message": "Laadi alla"
+  },
+  "download_note": {
+    "message": "Võib tulevikus muutuda tasuliseks"
+  },
+  "listen": {
+    "message": "Kuula"
+  },
+  "downloading_status": {
+    "message": "Allalaadimine"
+  },
+  "download_complete": {
+    "message": "Allalaadimine valmis"
+  },
+  "please_wait_file_downloading": {
+    "message": "Oodake, fail on allalaadimisel..."
+  },
+  "full_download_note": {
+    "message": "Kui fail ei laaditud automaatselt alla, klõpsake allolevat 'Laadi alla' nuppu."
+  },
+  "loading_preview": {
+    "message": "Eelvaate laadimine"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT premium-kasutajatele: valige GPT-4o mini kiiremaks allalaadimiseks. Mudeli vahetamiseks sulgege aken."
+  },
+  "cancel": {
+    "message": "Tühista"
+  },
+  "cancel_download_confirmation": {
+    "message": "Kas olete kindel, et soovite allalaadimise tühistada?"
+  },
+  "continue_download": {
+    "message": "Jätka allalaadimist"
+  },
+  "cancel_download": {
+    "message": "Tühista allalaadimine"
+  },
+  "accuracy_warning": {
+    "message": "GPT Readeri loodud heli ei pruugi olla 100% täpne. Kui märkate erinevusi, sulgege aken, avage uus ChatGPT vestlus ja proovige uuesti."
+  },
+  "playback_speed": {
+    "message": "Taasesituse kiirus"
+  },
+  "we_appreciate_feedback": {
+    "message": "Hindame teie tagasisidet."
+  },
+  "feedback_prompt": {
+    "message": "Otsime alati võimalusi paranemiseks. Andke meile teada, mida saaksime paremini teha."
+  },
+  "feedback_question": {
+    "message": "Mida arvate sellest laiendusest?"
+  },
+  "submit_feedback": {
+    "message": "Saada tagasiside"
+  },
+  "having_issues": {
+    "message": "Probleeme? Klõpsake siia"
+  },
+  "download_aborted": {
+    "message": "Allalaadimine katkestatud"
+  },
+  "error_no_start": {
+    "message": "Tõrge takistas allalaadimise alustamist. Sulgege aken ja proovige uuesti"
+  },
+  "error_stopped_midway": {
+    "message": "Allalaadimine peatus vea tõttu. Klõpsake all, et laadida seni töödeldud heli."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Kas soovite kindlasti allalaadimise tühistada?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Soovite allalaadimise tühistada?"
+  },
+  "note_partial_audio": {
+    "message": "Märkus: Klõpsake ülalolevat nuppu, et laadida seni töödeldud heli."
+  },
+  "are_you_sure": {
+    "message": "Olete kindel"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader teade"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader jagab pika teksti väikesteks osadeks ja saadab need ChatGPT-le. Võite ajutiselt jõuda limiidini. Sel juhul oodake umbes tund."
+  },
+  "acknowledge_and_accept": {
+    "message": "Jätkates kinnitate ja nõustute sellega."
+  },
+  "continue": {
+    "message": "Jätka"
+  },
+  "close": {
+    "message": "Sulge"
+  },
+  "something_went_wrong": {
+    "message": "Midagi läks valesti!"
+  },
+  "offline_warning": {
+    "message": "Paistab, et olete võrguühenduseta! Kontrollige võrku ja proovige uuesti!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader töötab tavalisest aeglasemalt. Vigade kontrollimiseks sulgege aken. Soovitatav on GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Valige mitmesuguste ChatGPT täiustatud häälte hulgast. Valik tehke enne teksti üleslaadimist."
+  },
+  "cannot_upload_one_file": {
+    "message": "Ei saa korraga rohkem kui 1 faili üles laadida"
+  },
+  "cannot_upload_more_files": {
+    "message": "Ei saa üles laadida üle $1 faili"
+  },
+  "file_rejected": {
+    "message": "Fail $1 lükati tagasi"
+  },
+  "uploading_files": {
+    "message": "Laadin üles $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 üles laaditud"
+  },
+  "failed_upload": {
+    "message": "Faili $1 üleslaadimine ebaõnnestus"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT-l tundub olevat probleeme, vaadake nende veebisaiti."
+  },
+  "unsupported_file_type": {
+    "message": "Failitüüp pole toetatud"
+  },
+  "no_files_selected": {
+    "message": "Ühtegi faili pole valitud"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Lihtsusta pikkade dokumentide lugemist GPT abil"
+  },
+  "back": {
+    "message": "Tagasi"
+  },
+  "ongoing_conversation_error": {
+    "message": "Käimasolev vestlus või olete limiidi ületanud. Oodake ja proovige hiljem!"
+  },
+  "chat_error": {
+    "message": "ChatGPT võib kuvada tõrget või olete jõudnud limiidini. Kontrollige nende saiti."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Readeri logo"
+  },
+  "login_to_use": {
+    "message": "Sisselogimine vajalik"
+  },
+  "activate": {
+    "message": "Aktiveeri"
+  },
+  "feedback": {
+    "message": "Tagasiside"
+  },
+  "input_required_error": {
+    "message": "See on kohustuslik väli (min 5 märki)"
+  },
+  "please_wait_previous": {
+    "message": "Oodake, kuni eelmine päring on lõpetatud"
+  },
+  "presence_confirmation_title": {
+    "message": "Kas olete veel siin?"
+  },
+  "presence_confirmation_description": {
+    "message": "Kas olete veel siin?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Jah, soovin jätkata kuulamist"
+  },
+  "presence_confirmation_no": {
+    "message": "Ei, olen valmis"
+  },
+  "download_confirm": {
+    "message": "See laadib alla osa teie tekstist, mida on seni töödeldud, helifaili. Kas olete kindel, et soovite jätkata?"
+  },
+  "male": {
+    "message": "mees"
+  },
+  "female": {
+    "message": "naine"
+  },
+  "yes": {
+    "message": "Jah"
+  },
+  "no": {
+    "message": "Ei"
+  },
+  "feedback_thanks": {
+    "message": "Täname teid väärtusliku tagasiside eest!"
+  },
+  "five_stars": {
+    "message": "Teie tagasisidet hinnatakse väga ning oleme pühendunud oma teenuse pidevale täiustamisele. Palun jätke Chrome Web Store'is viis tärni hinnang!"
+  },
+  "store_redirect": {
+    "message": "Mine poodi"
+  },
+  "volume": {
+    "message": "Helitugevus"
   }
-  
+}

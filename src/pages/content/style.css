@@ -1,5 +1,24 @@
 @import "tailwindcss";
 @tailwind utilities;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme{
+    --animate-heartbeat: heartbeat 1.5s ease-in-out infinite;
+    @keyframes heartbeat {
+        0%, 100% {
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.1);
+        }
+        50% {
+          transform: scale(1);
+        }
+        75% {
+          transform: scale(1.1);
+        }
+      }
+}
 
 /* Added to fix the issue with the extension style overriding page style on firefox */
 /* Targeting Firefox with a media query for screen widths 768px and above */
@@ -15,5 +34,23 @@
         .max-md\:hidden {
             display: none;
         }
+    }
+}
+/* fix for the header hide on mobile screen*/
+@media (min-width: 48rem) {
+    .md\:hidden {
+        display: none;
+    }
+}
+
+/*Fix for Skip to content button in the header*/
+.translate-y-\[-100lvh\] {
+    --tw-translate-y: -100lvh;
+}
+
+/* fixes the title on tha main page*/
+@container thread (width >= 32rem) {
+    .\@lg\/thread\:block {
+        display: block;
     }
 }

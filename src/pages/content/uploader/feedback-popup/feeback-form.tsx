@@ -66,7 +66,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"} className="w-full text-lg rounded-lg dark:bg-gray-200 dark:text-gray-900 bg-gray-900 text-gray-100">{loading ? <Loader2Icon className="animate-spin size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
+                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"}  className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">{loading ? <Loader2Icon className="animate-spin size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
                 </DialogFooter>
             </form>
         </Form>

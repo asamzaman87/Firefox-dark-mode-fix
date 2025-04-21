@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: ChatGPT വോയിസുകളുള്ള സൗജന്യ AI ടെക്സ്റ്റ് ടു സ്‌പീച്ച്, TTS"
-    },
-    "extensionDescription": {
-      "message": "PDF, ലേഖനങ്ങൾ, ഡോക്യുമെന്റുകൾക്ക് ChatGPT AI ടെക്സ്റ്റ് ടു സ്‌പീച്ച് (TTS). GPT Reader ഉപയോഗിച്ച് ഉയർന്ന നിലവാരമുള്ള വോയിസിൽ വായിക്കുക അല്ലെങ്കിൽ ഡൗൺലോഡ് ചെയ്യുക"
-    },
-    "play_voice": {
-      "message": "വോയിസ് പ്ലേ"
-    },
-    "stop": {
-      "message": "നിര്‍ത്തുക"
-    },
-    "drag_and_drop_files": {
-      "message": "ഫയലുകൾ ഇവിടേക്ക് വലിച്ചിടുക, അല്ലെങ്കിൽ സെലക്റ്റ് ചെയ്യാൻ ക്ലിക് ചെയ്യുക"
-    },
-    "upload_limit": {
-      "message": "നിങ്ങൾക്ക് 24 MB വരെ ഫയൽ അപ്ലോഡ് ചെയ്യാം"
-    },
-    "type_or_paste_text": {
-      "message": "ടെക്സ്റ്റ് ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ പേസ്റ്റ് ചെയ്യുക"
-    },
-    "type_or_paste_text_v2": {
-      "message": "നിങ്ങളുടെ ടെക്സ്റ്റ് പേസ്റ്റ് ചെയ്യുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക"
-    },
-    "title": {
-      "message": "തലക്കെട്ട്"
-    },
-    "text": {
-      "message": "ടെക്സ്റ്റ്"
-    },
-    "submit": {
-      "message": "സബ്മിറ്റ്"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "ഓഡിയോ ഡൗൺലോഡ് ചെയ്യണോ, 아니ൽ കേൾക്കണോ?"
-    },
-    "download": {
-      "message": "ഡൗൺലോഡ്"
-    },
-    "download_note": {
-      "message": "ഭാവിയിൽ പെയ്ഡ് ആകാം"
-    },
-    "listen": {
-      "message": "കേൾക്കുക"
-    },
-    "downloading_status": {
-      "message": "ഡൗൺലോഡ് നടക്കുന്നു"
-    },
-    "download_complete": {
-      "message": "ഡൗൺലോഡ് പൂർത്തിയായി"
-    },
-    "please_wait_file_downloading": {
-      "message": "ഫയൽ ഡൗൺലോഡ് നടക്കുമ്പോൾ ക്ഷമിക്കൂ..."
-    },
-    "full_download_note": {
-      "message": "ഫയൽ സ്വയമേവ ഡൗൺലോഡായില്ലെങ്കിൽ, താഴെ 'ഡൗൺലോഡ്' ക്ലിക്ക് ചെയ്യുക."
-    },
-    "loading_preview": {
-      "message": "പ്രിവ്യൂ ലോഡായി വരുന്നു"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT പ്രീമിയം യൂസേഴ്സ്, GPT-4o mini തിരഞ്ഞെടുക്കുക വേഗതയ്ക്ക്. മോഡൽ മാറ്റാൻ വിംഡോ/clഓവർ ചെയ്യുക."
-    },
-    "cancel": {
-      "message": "റദ്ദാക്കുക"
-    },
-    "cancel_download_confirmation": {
-      "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
-    },
-    "continue_download": {
-      "message": "ഡൗൺലോഡ് തുടരുക"
-    },
-    "cancel_download": {
-      "message": "ഡൗൺലോഡ് റദ്ദാക്കുക"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader ഉത്പാദിപ്പിക്കുന്ന ഓഡിയോ 100% ശരിയാണെന്ന് വരില്ല. വ്യത്യാസങ്ങൾ കാണുകയാണെങ്കിൽ, വിൻഡോ/clഅടുത്ത് ചെയ്തു, ChatGPT ചാറ്റ് പുതുതായി തുടങ്ങുക."
-    },
-    "playback_speed": {
-      "message": "പ്ലേബാക്ക് സ്പീഡ്"
-    },
-    "we_appreciate_feedback": {
-      "message": "നിങ്ങളുടെ പ്രതികരണം ഞങ്ങൾ അസംഖ്യംവളരേർ."
-    },
-    "feedback_prompt": {
-      "message": "നിങ്ങളുടെ അഭിപ്രായങ്ങൾ പറഞ്ഞു നമുക്ക് വികസിപ്പിക്കാൻ കഴിയും."
-    },
-    "feedback_question": {
-      "message": "ഈ എക്സ്റ്റൻഷൻ കുറിച്ച് നിങ്ങളുടെ അഭിപ്രായം എന്താണ്?"
-    },
-    "submit_feedback": {
-      "message": "എന്റെ ഫീഡ്ബാക്ക് സമർപ്പിക്കുക"
-    },
-    "having_issues": {
-      "message": "പ്രശ്നങ്ങളുണ്ടോ? ഇവിടെ ക്ലിക്ക് ചെയ്യൂ"
-    },
-    "download_aborted": {
-      "message": "ഡൗൺലോഡ് ആബോർട്ടായി"
-    },
-    "error_no_start": {
-      "message": "ഒരു പിഴവിന് കാരണം ഡൗൺലോഡ് തുടങ്ങാൻ സാധിച്ചില്ല, വിൻഡോ/clഅടുത്ത് ചെയ്തു വീണ്ടും ശ്രമിക്കുക"
-    },
-    "error_stopped_midway": {
-      "message": "പിഴവിന്റെ കാരണം ഡൗൺലോഡ് നിൽക്കുകയായി, ഇതുവരെ പ്രോസസ്സ് ചെയ്ത ഓഡിയോ താഴെ ഡൗൺലോഡ് ചെയ്യുക."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
-    },
-    "note_partial_audio": {
-      "message": "കുറിപ്പ്: ഇതുവരെ പ്രോസസ്സ് ചെയ്ത ഓഡിയോ വാങ്ങാൻ മുകളിൽ ക്ലിക്ക് ചെയ്യുക."
-    },
-    "are_you_sure": {
-      "message": "നിങ്ങൾക്ക് തീർച്ചയാണോ"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader അറിയിപ്പ്"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader വലിയ ടെക്സ്റ്റ് ചെറിയ ചെറിയ ഭാഗങ്ങളായി വേർതിരിച്ച് ChatGPT-ലേക്ക് അയയ്ക്കുന്നു. ചിലപ്പോൾ ലിമിറ്റ് വരെ എത്താം. അതിനാൽ ~1 മണിക്കൂർ കാത്തിരിക്കണം."
-    },
-    "acknowledge_and_accept": {
-      "message": "തുടരുമ്പോൾ, നിങ്ങൾ ഇതിനെ അംഗീകരിക്കുന്നു."
-    },
-    "continue": {
-      "message": "തുടരുക"
-    },
-    "close": {
-      "message": "അടയ്ക്കുക"
-    },
-    "something_went_wrong": {
-      "message": "ഇവിടെയൊക്കെയെങ്കിലും പിഴവ്!"
-    },
-    "offline_warning": {
-      "message": "നിങ്ങൾ ഓഫ്ലൈനാണെന്നു തോന്നുന്നു! നെറ്റ്‌കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader സാധാരണക്കാൾ അധികസമയമെടുക്കുന്നു. പിഴവ് പരിശോധിക്കാൻ വിൻഡോ/clഅടുത്ത് ചെയ്യുക. GPT-4 വിപുലമാണ്."
-    },
-    "voice_selector_description": {
-      "message": "ChatGPT മെച്ചപ്പെടുത്തിയ വിവിധ വോയിസുകളിൽ നിന്ന് തിരഞ്ഞെടുക്കുക. ടെക്സ്റ്റ് അപ്ലോഡ് ചെയ്യുന്നതിന് മുമ്പ് തന്നെ സെലക്റ്റ് ചെയ്യുക."
-    },
-    "cannot_upload_one_file": {
-      "message": "ഒരേ സമയത്ത് 1ൽ അധികം ഫയൽ അപ്ലോഡ് ചെയ്യാനാകില്ല"
-    },
-    "cannot_upload_more_files": {
-      "message": "$1ൽ അധികം ഫയൽ അപ്ലോഡ് ചെയ്യാനാകില്ല"
-    },
-    "file_rejected": {
-      "message": "$1 ഫയൽ നിരാകരിച്ചിരിക്കുന്നു"
-    },
-    "uploading_files": {
-      "message": "$1 അപ്ലോഡ് ചെയ്യുന്നുമ..."
-    },
-    "uploaded_files": {
-      "message": "$1 അപ്ലോഡായി"
-    },
-    "failed_upload": {
-      "message": "$1 അപ്ലോഡ് പരാജയപ്പെട്ടു"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT-ന് പ്രശ്നങ്ങൾ കാണുന്നു, അവരുടെയൊരെങ്ങോ സൈറ്റ് പരിശോധിക്കുക."
-    },
-    "unsupported_file_type": {
-      "message": "അനുപാലിത ഫയൽ തരം"
-    },
-    "no_files_selected": {
-      "message": "ഒരു ഫയലും സെലക്റ്റ് ചെയ്തിട്ടില്ല"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "GPT ഉപയോഗിച്ച് നീണ്ട ഡോക്യുമെന്റുകൾ സിമ്പ്ലിഫൈ ചെയ്യൂ"
-    },
-    "back": {
-      "message": "തിരികെ"
-    },
-    "ongoing_conversation_error": {
-      "message": "ഒരു സംവാദം നടക്കുന്നു അല്ലെങ്കിൽ നിങ്ങൾ ലിമിറ്റ് കൈവരിച്ചിരിക്കുന്നു. ദയവായി കാത്തിരിക്കൂ!"
-    },
-    "chat_error": {
-      "message": "ChatGPT ഒരു പിഴവ് കാണിക്കുന്നതാകാം, അല്ലെങ്കിൽ ലിമിറ്റ് കടന്നിരിക്കുന്നു. സൈറ്റ് പരിശോധിക്കുക."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader ലോഗോ"
-    },
-    "login_to_use": {
-      "message": "ഉപയോഗിക്കാൻ ലോഗിൻ ചെയ്യുക"
-    },
-    "activate": {
-      "message": "സജിവമാക്കുക"
-    },
-    "feedback": {
-      "message": "ഫീഡ്ബാക്ക്"
-    },
-    "input_required_error": {
-      "message": "ഇത് ഒരു നിർബന്ധിത ഫീൽഡ് ആണ് (കുറഞ്ഞത് 5 അക്ഷരങ്ങൾ)"
-    },
-    "please_wait_previous": {
-      "message": "മുൻ അഭ്യർത്ഥന പൂർത്തിയാകുന്നത് വരെ കാത്തിരിക്കുക"
-    },
-    "presence_confirmation_title": {
-      "message": "ഇനിയും ഇവിടെ തന്നെയാണോ?"
-    },
-    "presence_confirmation_description": {
-      "message": "ഇനിയും ഇവിടെ തന്നെയാണോ?"
-    },
-    "presence_confirmation_yes": {
-      "message": "ആൺ, ഞാൻ കേൾക്കുന്നത് തുടരാൻ ആഗ്രഹിക്കുന്നു"
-    },
-    "presence_confirmation_no": {
-      "message": "ഇല്ല, ഞാൻ പൂർത്തിയാക്കി"
-    }
+  "extensionName": {
+    "message": "GPT Reader: ChatGPT വോയിസുകളുള്ള സൗജന്യ AI ടെക്സ്റ്റ് ടു സ്‌പീച്ച്, TTS"
+  },
+  "extensionDescription": {
+    "message": "PDF, ലേഖനങ്ങൾ, ഡോക്യുമെന്റുകൾക്ക് ChatGPT AI ടെക്സ്റ്റ് ടു സ്‌പീച്ച് (TTS). GPT Reader ഉപയോഗിച്ച് ഉയർന്ന നിലവാരമുള്ള വോയിസിൽ വായിക്കുക അല്ലെങ്കിൽ ഡൗൺലോഡ് ചെയ്യുക"
+  },
+  "play_voice": {
+    "message": "വോയിസ് പ്ലേ"
+  },
+  "stop": {
+    "message": "നിര്‍ത്തുക"
+  },
+  "drag_and_drop_files": {
+    "message": "ഫയലുകൾ ഇവിടേക്ക് വലിച്ചിടുക, അല്ലെങ്കിൽ സെലക്റ്റ് ചെയ്യാൻ ക്ലിക് ചെയ്യുക"
+  },
+  "upload_limit": {
+    "message": "നിങ്ങൾക്ക് 24 MB വരെ ഫയൽ അപ്ലോഡ് ചെയ്യാം"
+  },
+  "type_or_paste_text": {
+    "message": "ടെക്സ്റ്റ് ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ പേസ്റ്റ് ചെയ്യുക"
+  },
+  "type_or_paste_text_v2": {
+    "message": "നിങ്ങളുടെ ടെക്സ്റ്റ് പേസ്റ്റ് ചെയ്യുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക"
+  },
+  "title": {
+    "message": "തലക്കെട്ട്"
+  },
+  "text": {
+    "message": "ടെക്സ്റ്റ്"
+  },
+  "submit": {
+    "message": "സബ്മിറ്റ്"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "ഓഡിയോ ഡൗൺലോഡ് ചെയ്യണോ, 아니ൽ കേൾക്കണോ?"
+  },
+  "download": {
+    "message": "ഡൗൺലോഡ്"
+  },
+  "download_note": {
+    "message": "ഭാവിയിൽ പെയ്ഡ് ആകാം"
+  },
+  "listen": {
+    "message": "കേൾക്കുക"
+  },
+  "downloading_status": {
+    "message": "ഡൗൺലോഡ് നടക്കുന്നു"
+  },
+  "download_complete": {
+    "message": "ഡൗൺലോഡ് പൂർത്തിയായി"
+  },
+  "please_wait_file_downloading": {
+    "message": "ഫയൽ ഡൗൺലോഡ് നടക്കുമ്പോൾ ക്ഷമിക്കൂ..."
+  },
+  "full_download_note": {
+    "message": "ഫയൽ സ്വയമേവ ഡൗൺലോഡായില്ലെങ്കിൽ, താഴെ 'ഡൗൺലോഡ്' ക്ലിക്ക് ചെയ്യുക."
+  },
+  "loading_preview": {
+    "message": "പ്രിവ്യൂ ലോഡായി വരുന്നു"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT പ്രീമിയം യൂസേഴ്സ്, GPT-4o mini തിരഞ്ഞെടുക്കുക വേഗതയ്ക്ക്. മോഡൽ മാറ്റാൻ വിംഡോ/clഓവർ ചെയ്യുക."
+  },
+  "cancel": {
+    "message": "റദ്ദാക്കുക"
+  },
+  "cancel_download_confirmation": {
+    "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
+  },
+  "continue_download": {
+    "message": "ഡൗൺലോഡ് തുടരുക"
+  },
+  "cancel_download": {
+    "message": "ഡൗൺലോഡ് റദ്ദാക്കുക"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader ഉത്പാദിപ്പിക്കുന്ന ഓഡിയോ 100% ശരിയാണെന്ന് വരില്ല. വ്യത്യാസങ്ങൾ കാണുകയാണെങ്കിൽ, വിൻഡോ/clഅടുത്ത് ചെയ്തു, ChatGPT ചാറ്റ് പുതുതായി തുടങ്ങുക."
+  },
+  "playback_speed": {
+    "message": "പ്ലേബാക്ക് സ്പീഡ്"
+  },
+  "we_appreciate_feedback": {
+    "message": "നിങ്ങളുടെ പ്രതികരണം ഞങ്ങൾ അസംഖ്യംവളരേർ."
+  },
+  "feedback_prompt": {
+    "message": "നിങ്ങളുടെ അഭിപ്രായങ്ങൾ പറഞ്ഞു നമുക്ക് വികസിപ്പിക്കാൻ കഴിയും."
+  },
+  "feedback_question": {
+    "message": "ഈ എക്സ്റ്റൻഷൻ കുറിച്ച് നിങ്ങളുടെ അഭിപ്രായം എന്താണ്?"
+  },
+  "submit_feedback": {
+    "message": "എന്റെ ഫീഡ്ബാക്ക് സമർപ്പിക്കുക"
+  },
+  "having_issues": {
+    "message": "പ്രശ്നങ്ങളുണ്ടോ? ഇവിടെ ക്ലിക്ക് ചെയ്യൂ"
+  },
+  "download_aborted": {
+    "message": "ഡൗൺലോഡ് ആബോർട്ടായി"
+  },
+  "error_no_start": {
+    "message": "ഒരു പിഴവിന് കാരണം ഡൗൺലോഡ് തുടങ്ങാൻ സാധിച്ചില്ല, വിൻഡോ/clഅടുത്ത് ചെയ്തു വീണ്ടും ശ്രമിക്കുക"
+  },
+  "error_stopped_midway": {
+    "message": "പിഴവിന്റെ കാരണം ഡൗൺലോഡ് നിൽക്കുകയായി, ഇതുവരെ പ്രോസസ്സ് ചെയ്ത ഓഡിയോ താഴെ ഡൗൺലോഡ് ചെയ്യുക."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "ഡൗൺലോഡ് റദ്ദാക്കണോ?"
+  },
+  "note_partial_audio": {
+    "message": "കുറിപ്പ്: ഇതുവരെ പ്രോസസ്സ് ചെയ്ത ഓഡിയോ വാങ്ങാൻ മുകളിൽ ക്ലിക്ക് ചെയ്യുക."
+  },
+  "are_you_sure": {
+    "message": "നിങ്ങൾക്ക് തീർച്ചയാണോ"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader അറിയിപ്പ്"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader വലിയ ടെക്സ്റ്റ് ചെറിയ ചെറിയ ഭാഗങ്ങളായി വേർതിരിച്ച് ChatGPT-ലേക്ക് അയയ്ക്കുന്നു. ചിലപ്പോൾ ലിമിറ്റ് വരെ എത്താം. അതിനാൽ ~1 മണിക്കൂർ കാത്തിരിക്കണം."
+  },
+  "acknowledge_and_accept": {
+    "message": "തുടരുമ്പോൾ, നിങ്ങൾ ഇതിനെ അംഗീകരിക്കുന്നു."
+  },
+  "continue": {
+    "message": "തുടരുക"
+  },
+  "close": {
+    "message": "അടയ്ക്കുക"
+  },
+  "something_went_wrong": {
+    "message": "ഇവിടെയൊക്കെയെങ്കിലും പിഴവ്!"
+  },
+  "offline_warning": {
+    "message": "നിങ്ങൾ ഓഫ്ലൈനാണെന്നു തോന്നുന്നു! നെറ്റ്‌കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader സാധാരണക്കാൾ അധികസമയമെടുക്കുന്നു. പിഴവ് പരിശോധിക്കാൻ വിൻഡോ/clഅടുത്ത് ചെയ്യുക. GPT-4 വിപുലമാണ്."
+  },
+  "voice_selector_description": {
+    "message": "ChatGPT മെച്ചപ്പെടുത്തിയ വിവിധ വോയിസുകളിൽ നിന്ന് തിരഞ്ഞെടുക്കുക. ടെക്സ്റ്റ് അപ്ലോഡ് ചെയ്യുന്നതിന് മുമ്പ് തന്നെ സെലക്റ്റ് ചെയ്യുക."
+  },
+  "cannot_upload_one_file": {
+    "message": "ഒരേ സമയത്ത് 1ൽ അധികം ഫയൽ അപ്ലോഡ് ചെയ്യാനാകില്ല"
+  },
+  "cannot_upload_more_files": {
+    "message": "$1ൽ അധികം ഫയൽ അപ്ലോഡ് ചെയ്യാനാകില്ല"
+  },
+  "file_rejected": {
+    "message": "$1 ഫയൽ നിരാകരിച്ചിരിക്കുന്നു"
+  },
+  "uploading_files": {
+    "message": "$1 അപ്ലോഡ് ചെയ്യുന്നുമ..."
+  },
+  "uploaded_files": {
+    "message": "$1 അപ്ലോഡായി"
+  },
+  "failed_upload": {
+    "message": "$1 അപ്ലോഡ് പരാജയപ്പെട്ടു"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT-ന് പ്രശ്നങ്ങൾ കാണുന്നു, അവരുടെയൊരെങ്ങോ സൈറ്റ് പരിശോധിക്കുക."
+  },
+  "unsupported_file_type": {
+    "message": "അനുപാലിത ഫയൽ തരം"
+  },
+  "no_files_selected": {
+    "message": "ഒരു ഫയലും സെലക്റ്റ് ചെയ്തിട്ടില്ല"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "GPT ഉപയോഗിച്ച് നീണ്ട ഡോക്യുമെന്റുകൾ സിമ്പ്ലിഫൈ ചെയ്യൂ"
+  },
+  "back": {
+    "message": "തിരികെ"
+  },
+  "ongoing_conversation_error": {
+    "message": "ഒരു സംവാദം നടക്കുന്നു അല്ലെങ്കിൽ നിങ്ങൾ ലിമിറ്റ് കൈവരിച്ചിരിക്കുന്നു. ദയവായി കാത്തിരിക്കൂ!"
+  },
+  "chat_error": {
+    "message": "ChatGPT ഒരു പിഴവ് കാണിക്കുന്നതാകാം, അല്ലെങ്കിൽ ലിമിറ്റ് കടന്നിരിക്കുന്നു. സൈറ്റ് പരിശോധിക്കുക."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader ലോഗോ"
+  },
+  "login_to_use": {
+    "message": "ഉപയോഗിക്കാൻ ലോഗിൻ ചെയ്യുക"
+  },
+  "activate": {
+    "message": "സജിവമാക്കുക"
+  },
+  "feedback": {
+    "message": "ഫീഡ്ബാക്ക്"
+  },
+  "input_required_error": {
+    "message": "ഇത് ഒരു നിർബന്ധിത ഫീൽഡ് ആണ് (കുറഞ്ഞത് 5 അക്ഷരങ്ങൾ)"
+  },
+  "please_wait_previous": {
+    "message": "മുൻ അഭ്യർത്ഥന പൂർത്തിയാകുന്നത് വരെ കാത്തിരിക്കുക"
+  },
+  "presence_confirmation_title": {
+    "message": "ഇനിയും ഇവിടെ തന്നെയാണോ?"
+  },
+  "presence_confirmation_description": {
+    "message": "ഇനിയും ഇവിടെ തന്നെയാണോ?"
+  },
+  "presence_confirmation_yes": {
+    "message": "ആൺ, ഞാൻ കേൾക്കുന്നത് തുടരാൻ ആഗ്രഹിക്കുന്നു"
+  },
+  "presence_confirmation_no": {
+    "message": "ഇല്ല, ഞാൻ പൂർത്തിയാക്കി"
+  },
+  "download_confirm": {
+    "message": "ഇതോടെ ഇതുവരെ പ്രോസസ്സുചെയ്‌ത നിങ്ങളുടെ ടെക്സ്റ്റിന്റെ ഭാഗത്തിന് വേണ്ടി ഓഡിയോ ഡൗൺലോഡ് ചെയ്യപ്പെടും. തുടരാൻ നിങ്ങൾ ഉറപ്പാണോ?"
+  },
+  "male": {
+    "message": "പുരുഷൻ"
+  },
+  "female": {
+    "message": "സ്ത്രീ"
+  },
+  "yes": {
+    "message": "അതെ"
+  },
+  "no": {
+    "message": "ഇല്ല"
+  },
+  "feedback_thanks": {
+    "message": "നിങ്ങളുടെ വിലപ്പെട്ട പ്രതികരണത്തിന് നന്ദി!"
+  },
+  "five_stars": {
+    "message": "നിങ്ങളുടെ അഭിപ്രായം ഞങ്ങൾക്ക് വളരെ പ്രാധാന്യമുള്ളതാണ്, കൂടാതെ ഞങ്ങൾ ഞങ്ങളുടെ സേവനം തുടർച്ചയായി മെച്ചപ്പെടുത്തുന്നതിൽ പ്രതിബദ്ധരാണ്. ദയവായി Chrome Web Store-ൽ 5 നക്ഷത്ര റേറ്റിംഗ് നൽകാൻ പരിഗണിക്കുക!"
+  },
+  "store_redirect": {
+    "message": "എനിക്ക് സ്റ്റോറിലേക്ക് കൊണ്ടുപോവുക"
+  },
+  "volume": {
+    "message": "വോള്യം"
+  }
 }
-  

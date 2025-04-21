@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: המרת טקסט לקול בחינם עם קולות ChatGPT, TTS"
-    },
-    "extensionDescription": {
-      "message": "המרת טקסט לקול (TTS) טבעית של ChatGPT עבור PDF, מאמרים ומסמכים. הורד או האזן בקולות איכותיים באמצעות GPT Reader"
-    },
-    "play_voice": {
-      "message": "נגן קול"
-    },
-    "stop": {
-      "message": "עצור"
-    },
-    "drag_and_drop_files": {
-      "message": "גרור ושחרר קבצים כאן, או לחץ לבחירת קובץ"
-    },
-    "upload_limit": {
-      "message": "ניתן להעלות קובץ עד 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "הקלד או הדבק טקסט"
-    },
-    "type_or_paste_text_v2": {
-      "message": "הדבק או הקלד את הטקסט שלך"
-    },
-    "title": {
-      "message": "כותרת"
-    },
-    "text": {
-      "message": "טקסט"
-    },
-    "submit": {
-      "message": "שלח"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "האם תרצה להוריד או להאזין לאודיו?"
-    },
-    "download": {
-      "message": "הורד"
-    },
-    "download_note": {
-      "message": "ייתכן שיידרש תשלום בעתיד"
-    },
-    "listen": {
-      "message": "האזן"
-    },
-    "downloading_status": {
-      "message": "מוריד"
-    },
-    "download_complete": {
-      "message": "ההורדה הושלמה"
-    },
-    "please_wait_file_downloading": {
-      "message": "אנא המתן בזמן שהקובץ מורד..."
-    },
-    "full_download_note": {
-      "message": "אם הקובץ לא ירד אוטומטית, לחץ על 'הורד' למטה."
-    },
-    "loading_preview": {
-      "message": "טוען תצוגה מקדימה"
-    },
-    "gpt4_download_note": {
-      "message": "למשתמשי ChatGPT פרימיום, בחרו ב-GPT-4o mini להורדה מהירה. סגור את החלון להחלפת המודל."
-    },
-    "cancel": {
-      "message": "בטל"
-    },
-    "cancel_download_confirmation": {
-      "message": "האם אתה בטוח שברצונך לבטל את ההורדה?"
-    },
-    "continue_download": {
-      "message": "המשך בהורדה"
-    },
-    "cancel_download": {
-      "message": "בטל הורדה"
-    },
-    "accuracy_warning": {
-      "message": "ייתכן ש-GPT Reader לא יהיה מדויק ב-100%. אם אתה מבחין בשוני, סגור את החלון, פתח צ'אט ChatGPT חדש ונסה שוב."
-    },
-    "playback_speed": {
-      "message": "מהירות השמעה"
-    },
-    "we_appreciate_feedback": {
-      "message": "אנו מעריכים את המשוב שלך."
-    },
-    "feedback_prompt": {
-      "message": "אנו תמיד מחפשים לשפר. אנא ספר לנו מה ניתן לשפר."
-    },
-    "feedback_question": {
-      "message": "מה דעתך על התוסף הזה?"
-    },
-    "submit_feedback": {
-      "message": "שלח משוב"
-    },
-    "having_issues": {
-      "message": "יש בעיות? לחץ כאן"
-    },
-    "download_aborted": {
-      "message": "ההורדה בוטלה"
-    },
-    "error_no_start": {
-      "message": "שגיאה מנעה את תחילת ההורדה, אנא סגור את החלון ונסה שוב"
-    },
-    "error_stopped_midway": {
-      "message": "ההורדה הופסקה עקב שגיאה, הורד את החלק שעובד עד כה למטה."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "האם אתה בטוח שברצונך לבטל את ההורדה?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "האם ברצונך לבטל את ההורדה?"
-    },
-    "note_partial_audio": {
-      "message": "הערה: לחץ על כפתור ההורדה למעלה כדי להוריד את האודיו המעובד עד כה."
-    },
-    "are_you_sure": {
-      "message": "האם אתה בטוח"
-    },
-    "gpt_reader_notice": {
-      "message": "הערת GPT Reader"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader מחלק טקסט ארוך לחלקים קטנים ושולח ל-ChatGPT. ייתכן שתגיע זמנית למגבלה. אם כן, המתן כשעה."
-    },
-    "acknowledge_and_accept": {
-      "message": "בהמשך, אתה מאשר ומקבל זאת כחלק מהשימוש בתוסף."
-    },
-    "continue": {
-      "message": "המשך"
-    },
-    "close": {
-      "message": "סגור"
-    },
-    "something_went_wrong": {
-      "message": "משהו השתבש!"
-    },
-    "offline_warning": {
-      "message": "נראה שאתה לא מקוון! בדוק את החיבור ונסה שוב!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader איטי מהרגיל. סגור את החלון כדי לבדוק שגיאה. מומלץ GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "בחר מתוך מגוון קולות משופרים של ChatGPT. בחר לפני העלאת הטקסט."
-    },
-    "cannot_upload_one_file": {
-      "message": "לא ניתן להעלות יותר מקובץ אחד בכל פעם"
-    },
-    "cannot_upload_more_files": {
-      "message": "לא ניתן להעלות יותר מ-$1 קבצים"
-    },
-    "file_rejected": {
-      "message": "הקובץ $1 נדחה"
-    },
-    "uploading_files": {
-      "message": "מעלה $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 הועלה"
-    },
-    "failed_upload": {
-      "message": "העלאת $1 נכשלה"
-    },
-    "chatgpt_issue": {
-      "message": "נראה שיש בעיה ב-ChatGPT, בדוק באתר שלהם."
-    },
-    "unsupported_file_type": {
-      "message": "סוג קובץ לא נתמך"
-    },
-    "no_files_selected": {
-      "message": "לא נבחרו קבצים"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "פשט את הקריאה של מסמכים ארוכים בעזרת GPT"
-    },
-    "back": {
-      "message": "חזור"
-    },
-    "ongoing_conversation_error": {
-      "message": "יש שיחה מתמשכת או שהגעת למגבלה. אנא המתן ונסה שוב!"
-    },
-    "chat_error": {
-      "message": "ייתכן ש-ChatGPT מציג שגיאה או שהגעת למגבלה. בדוק באתר."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader לוגו"
-    },
-    "login_to_use": {
-      "message": "התחבר כדי להשתמש"
-    },
-    "activate": {
-      "message": "הפעל"
-    },
-    "feedback": {
-      "message": "משוב"
-    },
-    "input_required_error": {
-      "message": "זהו שדה חובה (לפחות 5 תווים)"
-    },
-    "please_wait_previous": {
-      "message": "אנא המתן עד שהבקשה הקודמת תסתיים"
-    },
-    "presence_confirmation_title": {
-      "message": "עדיין כאן?"
-    },
-    "presence_confirmation_description": {
-      "message": "עדיין כאן?"
-    },
-    "presence_confirmation_yes": {
-      "message": "כן, רוצה להמשיך להאזין"
-    },
-    "presence_confirmation_no": {
-      "message": "לא, סיימתי"
-    }
+  "extensionName": {
+    "message": "GPT Reader: המרת טקסט לקול בחינם עם קולות ChatGPT, TTS"
+  },
+  "extensionDescription": {
+    "message": "המרת טקסט לקול (TTS) טבעית של ChatGPT עבור PDF, מאמרים ומסמכים. הורד או האזן בקולות איכותיים באמצעות GPT Reader"
+  },
+  "play_voice": {
+    "message": "נגן קול"
+  },
+  "stop": {
+    "message": "עצור"
+  },
+  "drag_and_drop_files": {
+    "message": "גרור ושחרר קבצים כאן, או לחץ לבחירת קובץ"
+  },
+  "upload_limit": {
+    "message": "ניתן להעלות קובץ עד 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "הקלד או הדבק טקסט"
+  },
+  "type_or_paste_text_v2": {
+    "message": "הדבק או הקלד את הטקסט שלך"
+  },
+  "title": {
+    "message": "כותרת"
+  },
+  "text": {
+    "message": "טקסט"
+  },
+  "submit": {
+    "message": "שלח"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "האם תרצה להוריד או להאזין לאודיו?"
+  },
+  "download": {
+    "message": "הורד"
+  },
+  "download_note": {
+    "message": "ייתכן שיידרש תשלום בעתיד"
+  },
+  "listen": {
+    "message": "האזן"
+  },
+  "downloading_status": {
+    "message": "מוריד"
+  },
+  "download_complete": {
+    "message": "ההורדה הושלמה"
+  },
+  "please_wait_file_downloading": {
+    "message": "אנא המתן בזמן שהקובץ מורד..."
+  },
+  "full_download_note": {
+    "message": "אם הקובץ לא ירד אוטומטית, לחץ על 'הורד' למטה."
+  },
+  "loading_preview": {
+    "message": "טוען תצוגה מקדימה"
+  },
+  "gpt4_download_note": {
+    "message": "למשתמשי ChatGPT פרימיום, בחרו ב-GPT-4o mini להורדה מהירה. סגור את החלון להחלפת המודל."
+  },
+  "cancel": {
+    "message": "בטל"
+  },
+  "cancel_download_confirmation": {
+    "message": "האם אתה בטוח שברצונך לבטל את ההורדה?"
+  },
+  "continue_download": {
+    "message": "המשך בהורדה"
+  },
+  "cancel_download": {
+    "message": "בטל הורדה"
+  },
+  "accuracy_warning": {
+    "message": "ייתכן ש-GPT Reader לא יהיה מדויק ב-100%. אם אתה מבחין בשוני, סגור את החלון, פתח צ'אט ChatGPT חדש ונסה שוב."
+  },
+  "playback_speed": {
+    "message": "מהירות השמעה"
+  },
+  "we_appreciate_feedback": {
+    "message": "אנו מעריכים את המשוב שלך."
+  },
+  "feedback_prompt": {
+    "message": "אנו תמיד מחפשים לשפר. אנא ספר לנו מה ניתן לשפר."
+  },
+  "feedback_question": {
+    "message": "מה דעתך על התוסף הזה?"
+  },
+  "submit_feedback": {
+    "message": "שלח משוב"
+  },
+  "having_issues": {
+    "message": "יש בעיות? לחץ כאן"
+  },
+  "download_aborted": {
+    "message": "ההורדה בוטלה"
+  },
+  "error_no_start": {
+    "message": "שגיאה מנעה את תחילת ההורדה, אנא סגור את החלון ונסה שוב"
+  },
+  "error_stopped_midway": {
+    "message": "ההורדה הופסקה עקב שגיאה, הורד את החלק שעובד עד כה למטה."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "האם אתה בטוח שברצונך לבטל את ההורדה?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "האם ברצונך לבטל את ההורדה?"
+  },
+  "note_partial_audio": {
+    "message": "הערה: לחץ על כפתור ההורדה למעלה כדי להוריד את האודיו המעובד עד כה."
+  },
+  "are_you_sure": {
+    "message": "האם אתה בטוח"
+  },
+  "gpt_reader_notice": {
+    "message": "הערת GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader מחלק טקסט ארוך לחלקים קטנים ושולח ל-ChatGPT. ייתכן שתגיע זמנית למגבלה. אם כן, המתן כשעה."
+  },
+  "acknowledge_and_accept": {
+    "message": "בהמשך, אתה מאשר ומקבל זאת כחלק מהשימוש בתוסף."
+  },
+  "continue": {
+    "message": "המשך"
+  },
+  "close": {
+    "message": "סגור"
+  },
+  "something_went_wrong": {
+    "message": "משהו השתבש!"
+  },
+  "offline_warning": {
+    "message": "נראה שאתה לא מקוון! בדוק את החיבור ונסה שוב!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader איטי מהרגיל. סגור את החלון כדי לבדוק שגיאה. מומלץ GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "בחר מתוך מגוון קולות משופרים של ChatGPT. בחר לפני העלאת הטקסט."
+  },
+  "cannot_upload_one_file": {
+    "message": "לא ניתן להעלות יותר מקובץ אחד בכל פעם"
+  },
+  "cannot_upload_more_files": {
+    "message": "לא ניתן להעלות יותר מ-$1 קבצים"
+  },
+  "file_rejected": {
+    "message": "הקובץ $1 נדחה"
+  },
+  "uploading_files": {
+    "message": "מעלה $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 הועלה"
+  },
+  "failed_upload": {
+    "message": "העלאת $1 נכשלה"
+  },
+  "chatgpt_issue": {
+    "message": "נראה שיש בעיה ב-ChatGPT, בדוק באתר שלהם."
+  },
+  "unsupported_file_type": {
+    "message": "סוג קובץ לא נתמך"
+  },
+  "no_files_selected": {
+    "message": "לא נבחרו קבצים"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "פשט את הקריאה של מסמכים ארוכים בעזרת GPT"
+  },
+  "back": {
+    "message": "חזור"
+  },
+  "ongoing_conversation_error": {
+    "message": "יש שיחה מתמשכת או שהגעת למגבלה. אנא המתן ונסה שוב!"
+  },
+  "chat_error": {
+    "message": "ייתכן ש-ChatGPT מציג שגיאה או שהגעת למגבלה. בדוק באתר."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader לוגו"
+  },
+  "login_to_use": {
+    "message": "התחבר כדי להשתמש"
+  },
+  "activate": {
+    "message": "הפעל"
+  },
+  "feedback": {
+    "message": "משוב"
+  },
+  "input_required_error": {
+    "message": "זהו שדה חובה (לפחות 5 תווים)"
+  },
+  "please_wait_previous": {
+    "message": "אנא המתן עד שהבקשה הקודמת תסתיים"
+  },
+  "presence_confirmation_title": {
+    "message": "עדיין כאן?"
+  },
+  "presence_confirmation_description": {
+    "message": "עדיין כאן?"
+  },
+  "presence_confirmation_yes": {
+    "message": "כן, רוצה להמשיך להאזין"
+  },
+  "presence_confirmation_no": {
+    "message": "לא, סיימתי"
+  },
+  "download_confirm": {
+    "message": "פעולה זו תוריד את הקול עבור החלק מהטקסט שלך שעבר עיבוד עד כה. האם אתה בטוח שברצונך להמשיך?"
+  },
+  "male": {
+    "message": "זכר"
+  },
+  "female": {
+    "message": "נקבה"
+  },
+  "yes": {
+    "message": "כן"
+  },
+  "no": {
+    "message": "לא"
+  },
+  "feedback_thanks": {
+    "message": "תודה על המשוב היקר שלך!"
+  },
+  "five_stars": {
+    "message": "אנו מעריכים מאוד את המשוב שלך ונשארים מחויבים לשיפור מתמיד של השירות שלנו. אנא שקול להשאיר דירוג חמש כוכבים בChrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "קח אותי לחנות"
+  },
+  "volume": {
+    "message": "עוצמת קול"
   }
-  
+}

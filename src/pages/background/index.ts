@@ -54,6 +54,10 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
             chrome.tabs.create({ url: YOUTUBE_FAQ_VIDEO });
             break;
         }
+        case "OPEN_REVIEWS":{
+            chrome.tabs.create({ url: request.url });
+            break;
+        }
 
         // case "UPDATE_BADGE_STATE":{
         //     if(request.state){
@@ -132,16 +136,18 @@ chrome.tabs.onActivated.addListener(async () => {
 chrome.runtime.onInstalled.addListener(async () => {
     const manifest = chrome.runtime.getManifest();
     const currentVersion = manifest.version;
-    const {version: previousVersion} = await chrome.storage.sync.get("version");
+    // Should switch to an explicit read, so for first time users the popup is always opened correctly
+    const stored = await chrome.storage.sync.get("version");
+    const previousVersion = stored.version;
     
     //update to latest version and return to prevent opening popup (indicates on update)
     if(previousVersion) {
-        chrome.storage.sync.set({ version: currentVersion });    
+        await chrome.storage.sync.set({ version: currentVersion });    
         return;
     }
     
     //if version not set yet, set it to current version and continue to opening popup
-    if(!previousVersion) chrome.storage.sync.set({ version: currentVersion }); //to persist on update to sent message to avoid opening popup on update
+    await chrome.storage.sync.set({ version: currentVersion }); //to persist on update to sent message to avoid opening popup on update
 
     const tabId = await switchToActiveTab();
     if (tabId) {
@@ -151,19 +157,36 @@ chrome.runtime.onInstalled.addListener(async () => {
     }
 })
 
-//click on extension icon to switch to gpt
+// click on extension icon to switch to gpt
 chrome.action.onClicked.addListener(async () => {
     const tabId = await switchToActiveTab();
-    if (tabId) {
-        chrome.storage.local.set({ origin: true });
-        //open overlay after new tab creation
-        if (typeof tabId === "string") {
-            //wait for 5 seconds as a new tab was created if tabId is a string
-            // setTimeout(() => chrome.tabs.sendMessage(+tabId.split("::")[0], { type: "OPEN_POPUP" }), 5000);
-            return;
-        }
-         chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
-    }
-})
+    if (!tabId) return;
 
+    chrome.storage.local.set({ origin: true });
+
+    // A new ChatGPT tab was created (tabId is a "123::new_tab" string)
+    if (typeof tabId === "string") {
+        const numericId = +tabId.split("::")[0];
+
+        // wait until the tab’s status === "complete", then send the popup message
+        const listener = (updatedTabId: number, info: chrome.tabs.TabChangeInfo) => {
+            if (updatedTabId === numericId && info.status === "complete") {
+                chrome.tabs.onUpdated.removeListener(listener);
+                chrome.tabs.sendMessage(numericId, {
+                type: "OPEN_POPUP",
+                payload: "ORIGIN_VERIFIED"
+                });
+            }
+        };
+        chrome.tabs.onUpdated.addListener(listener);
+        return;
+    }
+
+    // Existing ChatGPT tab – send immediately
+    chrome.tabs.sendMessage(tabId, {
+        type: "OPEN_POPUP",
+        payload: "ORIGIN_VERIFIED"
+    });
+});
+  
 chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM)

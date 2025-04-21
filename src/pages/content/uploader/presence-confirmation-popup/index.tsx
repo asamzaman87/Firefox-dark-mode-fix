@@ -41,10 +41,10 @@ const PresenceConfirmationPopup: FC<PresenceConfirmationPopupProps> = ({ open, s
         </DialogHeader>
         <div className="flex flex-col items-center justify-center gap-4 p-4">
           <div className="flex gap-4 justify-center">
-            <Button disabled={loading} variant="outline" size="sm" className="w-full" onClick={onYes}>
+            <Button disabled={loading} variant="ghost" size="sm" className="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all" onClick={onYes}>
               {loading && <LoaderCircleIcon className="size-6 animate-spin" />} {chrome.i18n.getMessage("presence_confirmation_yes")}
             </Button>
-            <Button disabled={loading} variant="outline" size="sm" className="w-full" onClick={onNo}>
+            <Button disabled={loading} size="sm" onClick={onNo} variant={"ghost"} className="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
               {chrome.i18n.getMessage("presence_confirmation_no")}
             </Button>
           </div>

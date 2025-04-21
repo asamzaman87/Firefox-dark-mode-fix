@@ -7,16 +7,16 @@ import { cn } from "@/lib/utils"
 
 const ratingVariants = {
   default: {
-    star: "text-foreground",
-    emptyStar: "text-muted-foreground",
+    star: "text-foreground hover:scale-115 active:scale-105 transition-all",
+    emptyStar: "text-muted-foreground hover:scale-115 active:scale-105 transition-all",
   },
   destructive: {
-    star: "text-red-500",
-    emptyStar: "text-red-200",
+    star: "text-red-500 hover:scale-115 active:scale-105 transition-all",
+    emptyStar: "text-red-200 hover:scale-115 active:scale-105 transition-all",
   },
   yellow: {
-    star: "text-yellow-500",
-    emptyStar: "text-yellow-200",
+    star: "text-yellow-500 hover:scale-115 active:scale-105 transition-all",
+    emptyStar: "text-yellow-200 hover:scale-115 active:scale-105 transition-all",
   },
 }
 

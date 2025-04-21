@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: AI gratis de text a veu amb veus ChatGPT, TTS"
-    },
-    "extensionDescription": {
-      "message": "Text a veu natural amb ChatGPT (TTS) per a PDFs, articles i documents. Descarrega o escolta amb veus d'alta qualitat amb GPT Reader"
-    },
-    "play_voice": {
-      "message": "Reprodueix veu"
-    },
-    "stop": {
-      "message": "Atura"
-    },
-    "drag_and_drop_files": {
-      "message": "Arrossega fitxers aquí o fes clic per seleccionar-ne"
-    },
-    "upload_limit": {
-      "message": "Pots pujar un fitxer de fins a 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Escriu o enganxa text"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Enganxa o escriu el teu text"
-    },
-    "title": {
-      "message": "Títol"
-    },
-    "text": {
-      "message": "Text"
-    },
-    "submit": {
-      "message": "Envia"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Vols descarregar o escoltar l'àudio?"
-    },
-    "download": {
-      "message": "Descarrega"
-    },
-    "download_note": {
-      "message": "Podria ser de pagament en el futur"
-    },
-    "listen": {
-      "message": "Escolta"
-    },
-    "downloading_status": {
-      "message": "Descarregant"
-    },
-    "download_complete": {
-      "message": "Descarrega completada"
-    },
-    "please_wait_file_downloading": {
-      "message": "Espera mentre es descarrega el fitxer..."
-    },
-    "full_download_note": {
-      "message": "Si no s'ha descarregat automàticament, fes clic a 'Descarrega' a continuació."
-    },
-    "loading_preview": {
-      "message": "Carregant vista prèvia"
-    },
-    "gpt4_download_note": {
-      "message": "Usuaris premium de ChatGPT, trieu GPT-4o mini per a més velocitat. Tanqueu la finestra per canviar de model."
-    },
-    "cancel": {
-      "message": "Cancel·la"
-    },
-    "cancel_download_confirmation": {
-      "message": "Segur que vols cancel·lar la descàrrega?"
-    },
-    "continue_download": {
-      "message": "Continua la descàrrega"
-    },
-    "cancel_download": {
-      "message": "Cancel·la la descàrrega"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader pot generar àudio no 100% exacte. Si notes diferències, tanca la finestra i inicia un nou xat de ChatGPT i prova de nou."
-    },
-    "playback_speed": {
-      "message": "Velocitat de reproducció"
-    },
-    "we_appreciate_feedback": {
-      "message": "Agraïm els teus comentaris."
-    },
-    "feedback_prompt": {
-      "message": "Sempre busquem maneres de millorar. Fes-nos saber què podem fer millor."
-    },
-    "feedback_question": {
-      "message": "Què en penses d'aquesta extensió?"
-    },
-    "submit_feedback": {
-      "message": "Envia els meus comentaris"
-    },
-    "having_issues": {
-      "message": "Tens problemes? Fes clic aquí"
-    },
-    "download_aborted": {
-      "message": "Descàrrega cancel·lada"
-    },
-    "error_no_start": {
-      "message": "Un error ha impedit iniciar la descàrrega. Tanca la finestra i prova de nou."
-    },
-    "error_stopped_midway": {
-      "message": "La descàrrega s'ha aturat per un error. Descarrega l'àudio processat fins ara fent clic a continuació."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Segur que vols cancel·lar la descàrrega?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Vols cancel·lar la descàrrega?"
-    },
-    "note_partial_audio": {
-      "message": "Nota: fes clic al botó de descarrega de dalt per obtenir l'àudio processat fins ara."
-    },
-    "are_you_sure": {
-      "message": "Estàs segur?"
-    },
-    "gpt_reader_notice": {
-      "message": "Avís de GPT Reader"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader processa textos llargs en trossos i els envia a ChatGPT. Podries arribar al límit temporalment. Si passa, espera una hora."
-    },
-    "acknowledge_and_accept": {
-      "message": "En continuar, reconeixes i acceptes això."
-    },
-    "continue": {
-      "message": "Continua"
-    },
-    "close": {
-      "message": "Tanca"
-    },
-    "something_went_wrong": {
-      "message": "Alguna cosa ha fallat!"
-    },
-    "offline_warning": {
-      "message": "Sembla que estàs fora de línia! Comprova la teva connexió i torna-ho a provar!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader està trigant més del normal. Tanca la finestra per comprovar l'error. Es recomana fer servir GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Tria entre diverses veus millorades de ChatGPT. Selecciona la veu abans de pujar el text."
-    },
-    "cannot_upload_one_file": {
-      "message": "No es pot pujar més d'un fitxer alhora"
-    },
-    "cannot_upload_more_files": {
-      "message": "No es poden pujar més de $1 fitxers"
-    },
-    "file_rejected": {
-      "message": "El fitxer $1 ha estat rebutjat"
-    },
-    "uploading_files": {
-      "message": "Pujant $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 pujat"
-    },
-    "failed_upload": {
-      "message": "No s'ha pogut pujar $1"
-    },
-    "chatgpt_issue": {
-      "message": "Sembla que ChatGPT té problemes. Comprova el lloc web de ChatGPT."
-    },
-    "unsupported_file_type": {
-      "message": "Tipus de fitxer no compatible"
-    },
-    "no_files_selected": {
-      "message": "No s'ha seleccionat cap fitxer"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Simplifica la lectura de documents llargs amb GPT"
-    },
-    "back": {
-      "message": "Enrere"
-    },
-    "ongoing_conversation_error": {
-      "message": "Hi ha una conversa en curs o has superat el límit horari. Espera i prova més tard!"
-    },
-    "chat_error": {
-      "message": "Sembla que ChatGPT mostra un error o has arribat al límit. Consulta el seu lloc web."
-    },
-    "gpt_reader_logo": {
-      "message": "Logotip GPT Reader"
-    },
-    "login_to_use": {
-      "message": "Inicia sessió per utilitzar"
-    },
-    "activate": {
-      "message": "Activa"
-    },
-    "feedback": {
-      "message": "Comentaris"
-    },
-    "input_required_error": {
-      "message": "Aquest camp és obligatori (mínim 5 caràcters)"
-    },
-    "please_wait_previous": {
-      "message": "Espera que acabi la sol·licitud anterior"
-    },
-    "presence_confirmation_title": {
-      "message": "Encara hi ets?"
-    },
-    "presence_confirmation_description": {
-      "message": "Encara hi ets?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Sí, vull continuar escoltant"
-    },
-    "presence_confirmation_no": {
-      "message": "No, ja he acabat"
-    }
+  "extensionName": {
+    "message": "GPT Reader: AI gratis de text a veu amb veus ChatGPT, TTS"
+  },
+  "extensionDescription": {
+    "message": "Text a veu natural amb ChatGPT (TTS) per a PDFs, articles i documents. Descarrega o escolta amb veus d'alta qualitat amb GPT Reader"
+  },
+  "play_voice": {
+    "message": "Reprodueix veu"
+  },
+  "stop": {
+    "message": "Atura"
+  },
+  "drag_and_drop_files": {
+    "message": "Arrossega fitxers aquí o fes clic per seleccionar-ne"
+  },
+  "upload_limit": {
+    "message": "Pots pujar un fitxer de fins a 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Escriu o enganxa text"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Enganxa o escriu el teu text"
+  },
+  "title": {
+    "message": "Títol"
+  },
+  "text": {
+    "message": "Text"
+  },
+  "submit": {
+    "message": "Envia"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Vols descarregar o escoltar l'àudio?"
+  },
+  "download": {
+    "message": "Descarrega"
+  },
+  "download_note": {
+    "message": "Podria ser de pagament en el futur"
+  },
+  "listen": {
+    "message": "Escolta"
+  },
+  "downloading_status": {
+    "message": "Descarregant"
+  },
+  "download_complete": {
+    "message": "Descarrega completada"
+  },
+  "please_wait_file_downloading": {
+    "message": "Espera mentre es descarrega el fitxer..."
+  },
+  "full_download_note": {
+    "message": "Si no s'ha descarregat automàticament, fes clic a 'Descarrega' a continuació."
+  },
+  "loading_preview": {
+    "message": "Carregant vista prèvia"
+  },
+  "gpt4_download_note": {
+    "message": "Usuaris premium de ChatGPT, trieu GPT-4o mini per a més velocitat. Tanqueu la finestra per canviar de model."
+  },
+  "cancel": {
+    "message": "Cancel·la"
+  },
+  "cancel_download_confirmation": {
+    "message": "Segur que vols cancel·lar la descàrrega?"
+  },
+  "continue_download": {
+    "message": "Continua la descàrrega"
+  },
+  "cancel_download": {
+    "message": "Cancel·la la descàrrega"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader pot generar àudio no 100% exacte. Si notes diferències, tanca la finestra i inicia un nou xat de ChatGPT i prova de nou."
+  },
+  "playback_speed": {
+    "message": "Velocitat de reproducció"
+  },
+  "we_appreciate_feedback": {
+    "message": "Agraïm els teus comentaris."
+  },
+  "feedback_prompt": {
+    "message": "Sempre busquem maneres de millorar. Fes-nos saber què podem fer millor."
+  },
+  "feedback_question": {
+    "message": "Què en penses d'aquesta extensió?"
+  },
+  "submit_feedback": {
+    "message": "Envia els meus comentaris"
+  },
+  "having_issues": {
+    "message": "Tens problemes? Fes clic aquí"
+  },
+  "download_aborted": {
+    "message": "Descàrrega cancel·lada"
+  },
+  "error_no_start": {
+    "message": "Un error ha impedit iniciar la descàrrega. Tanca la finestra i prova de nou."
+  },
+  "error_stopped_midway": {
+    "message": "La descàrrega s'ha aturat per un error. Descarrega l'àudio processat fins ara fent clic a continuació."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Segur que vols cancel·lar la descàrrega?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Vols cancel·lar la descàrrega?"
+  },
+  "note_partial_audio": {
+    "message": "Nota: fes clic al botó de descarrega de dalt per obtenir l'àudio processat fins ara."
+  },
+  "are_you_sure": {
+    "message": "Estàs segur?"
+  },
+  "gpt_reader_notice": {
+    "message": "Avís de GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader processa textos llargs en trossos i els envia a ChatGPT. Podries arribar al límit temporalment. Si passa, espera una hora."
+  },
+  "acknowledge_and_accept": {
+    "message": "En continuar, reconeixes i acceptes això."
+  },
+  "continue": {
+    "message": "Continua"
+  },
+  "close": {
+    "message": "Tanca"
+  },
+  "something_went_wrong": {
+    "message": "Alguna cosa ha fallat!"
+  },
+  "offline_warning": {
+    "message": "Sembla que estàs fora de línia! Comprova la teva connexió i torna-ho a provar!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader està trigant més del normal. Tanca la finestra per comprovar l'error. Es recomana fer servir GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Tria entre diverses veus millorades de ChatGPT. Selecciona la veu abans de pujar el text."
+  },
+  "cannot_upload_one_file": {
+    "message": "No es pot pujar més d'un fitxer alhora"
+  },
+  "cannot_upload_more_files": {
+    "message": "No es poden pujar més de $1 fitxers"
+  },
+  "file_rejected": {
+    "message": "El fitxer $1 ha estat rebutjat"
+  },
+  "uploading_files": {
+    "message": "Pujant $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 pujat"
+  },
+  "failed_upload": {
+    "message": "No s'ha pogut pujar $1"
+  },
+  "chatgpt_issue": {
+    "message": "Sembla que ChatGPT té problemes. Comprova el lloc web de ChatGPT."
+  },
+  "unsupported_file_type": {
+    "message": "Tipus de fitxer no compatible"
+  },
+  "no_files_selected": {
+    "message": "No s'ha seleccionat cap fitxer"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Simplifica la lectura de documents llargs amb GPT"
+  },
+  "back": {
+    "message": "Enrere"
+  },
+  "ongoing_conversation_error": {
+    "message": "Hi ha una conversa en curs o has superat el límit horari. Espera i prova més tard!"
+  },
+  "chat_error": {
+    "message": "Sembla que ChatGPT mostra un error o has arribat al límit. Consulta el seu lloc web."
+  },
+  "gpt_reader_logo": {
+    "message": "Logotip GPT Reader"
+  },
+  "login_to_use": {
+    "message": "Inicia sessió per utilitzar"
+  },
+  "activate": {
+    "message": "Activa"
+  },
+  "feedback": {
+    "message": "Comentaris"
+  },
+  "input_required_error": {
+    "message": "Aquest camp és obligatori (mínim 5 caràcters)"
+  },
+  "please_wait_previous": {
+    "message": "Espera que acabi la sol·licitud anterior"
+  },
+  "presence_confirmation_title": {
+    "message": "Encara hi ets?"
+  },
+  "presence_confirmation_description": {
+    "message": "Encara hi ets?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Sí, vull continuar escoltant"
+  },
+  "presence_confirmation_no": {
+    "message": "No, ja he acabat"
+  },
+  "download_confirm": {
+    "message": "Això descarregarà l’àudio de la part del teu text que s’ha processat fins ara. Estàs segur que vols continuar?"
+  },
+  "male": {
+    "message": "masculí"
+  },
+  "female": {
+    "message": "femení"
+  },
+  "yes": {
+    "message": "Sí"
+  },
+  "no": {
+    "message": "No"
+  },
+  "feedback_thanks": {
+    "message": "Gràcies pel teu valuós comentari!"
+  },
+  "five_stars": {
+    "message": "Els teus comentaris són molt valorats i estem compromesos a millorar constantment el nostre servei. Si us plau, deixa una valoració de cinc estrelles al Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Porta’m a la botiga"
+  },
+  "volume": {
+    "message": "Volum"
   }
-  
+}

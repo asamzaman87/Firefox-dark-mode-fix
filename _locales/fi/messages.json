@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Ilmainen tekoälytekstistä puheeksi ChatGPT-äänillä, TTS"
-    },
-    "extensionDescription": {
-      "message": "Luonnollinen ChatGPT AI tekstistä puheeksi (TTS) PDF-tiedostoille, artikkeleille ja asiakirjoille. Lataa tai kuuntele laadukkailla äänillä GPT Readerissa"
-    },
-    "play_voice": {
-      "message": "Toista ääni"
-    },
-    "stop": {
-      "message": "Pysäytä"
-    },
-    "drag_and_drop_files": {
-      "message": "Vedä ja pudota tiedostot tähän tai klikkaa valitaksesi"
-    },
-    "upload_limit": {
-      "message": "Voit ladata tiedoston, joka on enintään 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Kirjoita tai liitä teksti"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Liitä tai kirjoita teksti"
-    },
-    "title": {
-      "message": "Otsikko"
-    },
-    "text": {
-      "message": "Teksti"
-    },
-    "submit": {
-      "message": "Lähetä"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Haluatko ladata vai kuunnella äänitiedoston?"
-    },
-    "download": {
-      "message": "Lataa"
-    },
-    "download_note": {
-      "message": "Saattaa tulevaisuudessa olla maksullinen"
-    },
-    "listen": {
-      "message": "Kuuntele"
-    },
-    "downloading_status": {
-      "message": "Ladataan"
-    },
-    "download_complete": {
-      "message": "Lataus valmis"
-    },
-    "please_wait_file_downloading": {
-      "message": "Odota, tiedostoa ladataan..."
-    },
-    "full_download_note": {
-      "message": "Jos tiedosto ei latautunut automaattisesti, klikkaa 'Lataa' -painiketta alla."
-    },
-    "loading_preview": {
-      "message": "Esikatselua ladataan"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT Premium -käyttäjät, valitkaa GPT-4o mini nopeampaan lataukseen. Sulje ikkuna vaihtaaksesi mallia."
-    },
-    "cancel": {
-      "message": "Peruuta"
-    },
-    "cancel_download_confirmation": {
-      "message": "Haluatko varmasti peruuttaa latauksen?"
-    },
-    "continue_download": {
-      "message": "Jatka latausta"
-    },
-    "cancel_download": {
-      "message": "Peruuta lataus"
-    },
-    "accuracy_warning": {
-      "message": "GPT Readerin tuottama ääni ei välttämättä ole täysin tarkka. Jos huomaat eroja, sulje ikkuna, avaa uusi ChatGPT-keskustelu ja yritä uudelleen."
-    },
-    "playback_speed": {
-      "message": "Toistonopeus"
-    },
-    "we_appreciate_feedback": {
-      "message": "Arvostamme palautettasi."
-    },
-    "feedback_prompt": {
-      "message": "Haluamme aina parantaa. Kerro, mitä voisimme tehdä paremmin."
-    },
-    "feedback_question": {
-      "message": "Mitä mieltä olet tästä laajennuksesta?"
-    },
-    "submit_feedback": {
-      "message": "Lähetä palautteeni"
-    },
-    "having_issues": {
-      "message": "Ongelmia? Klikkaa tästä"
-    },
-    "download_aborted": {
-      "message": "Lataus keskeytetty"
-    },
-    "error_no_start": {
-      "message": "Virhe esti latauksen alkamisen, sulje ikkuna ja yritä uudelleen"
-    },
-    "error_stopped_midway": {
-      "message": "Lataus pysähtyi virheen vuoksi. Lataa tähän mennessä käsitelty ääni klikkaamalla alla."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Haluatko varmasti peruuttaa latauksen?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Haluatko peruuttaa latauksen?"
-    },
-    "note_partial_audio": {
-      "message": "Huom: Klikkaa yläpuolella olevaa latauspainiketta saadaksesi tähän asti käsitellyn äänen."
-    },
-    "are_you_sure": {
-      "message": "Oletko varma"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader -ilmoitus"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader jakaa pitkät tekstit pienempiin osiin ja lähettää ne ChatGPT:lle. Saatat väliaikaisesti saavuttaa rajan. Odota tunti, jos näin käy."
-    },
-    "acknowledge_and_accept": {
-      "message": "Jatkamalla hyväksyt tämän osana laajennuksen käyttöä."
-    },
-    "continue": {
-      "message": "Jatka"
-    },
-    "close": {
-      "message": "Sulje"
-    },
-    "something_went_wrong": {
-      "message": "Jotain meni pieleen!"
-    },
-    "offline_warning": {
-      "message": "Vaikuttaa siltä, että olet offline-tilassa! Tarkista verkko ja yritä uudelleen!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader toimii tavallista hitaammin. Sulje ikkuna virheiden tarkistamiseksi. GPT-4 suositeltu."
-    },
-    "voice_selector_description": {
-      "message": "Valitse ChatGPT:n parannelluista äänistä. Valitse ennen tekstin lataamista."
-    },
-    "cannot_upload_one_file": {
-      "message": "Voit ladata vain yhden tiedoston kerrallaan"
-    },
-    "cannot_upload_more_files": {
-      "message": "Ei voi ladata useampaa kuin $1 tiedostoa"
-    },
-    "file_rejected": {
-      "message": "Tiedosto $1 hylätty"
-    },
-    "uploading_files": {
-      "message": "Ladataan $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 ladattu"
-    },
-    "failed_upload": {
-      "message": "$1 lataus epäonnistui"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT:llä on ilmeisesti ongelmia, tarkista heidän sivustonsa."
-    },
-    "unsupported_file_type": {
-      "message": "Tiedostotyyppiä ei tueta"
-    },
-    "no_files_selected": {
-      "message": "Ei valittuja tiedostoja"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Yksinkertaista pitkien asiakirjojen lukua GPT:n avulla"
-    },
-    "back": {
-      "message": "Takaisin"
-    },
-    "ongoing_conversation_error": {
-      "message": "Keskustelu on käynnissä tai olet ylittänyt rajan. Odota ja yritä myöhemmin!"
-    },
-    "chat_error": {
-      "message": "ChatGPT saattaa näyttää virheen tai olet saavuttanut rajan. Tarkista sivusto."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader -logo"
-    },
-    "login_to_use": {
-      "message": "Kirjaudu sisään käyttääksesi"
-    },
-    "activate": {
-      "message": "Aktivoi"
-    },
-    "feedback": {
-      "message": "Palaute"
-    },
-    "input_required_error": {
-      "message": "Tämä on pakollinen kenttä (väh. 5 merkkiä)"
-    },
-    "please_wait_previous": {
-      "message": "Odota edellisen pyynnön valmistumista"
-    },
-    "presence_confirmation_title": {
-      "message": "Oletko yhä paikalla?"
-    },
-    "presence_confirmation_description": {
-      "message": "Oletko yhä paikalla?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Kyllä, haluan jatkaa kuuntelua"
-    },
-    "presence_confirmation_no": {
-      "message": "En, olen valmis"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Ilmainen tekoälytekstistä puheeksi ChatGPT-äänillä, TTS"
+  },
+  "extensionDescription": {
+    "message": "Luonnollinen ChatGPT AI tekstistä puheeksi (TTS) PDF-tiedostoille, artikkeleille ja asiakirjoille. Lataa tai kuuntele laadukkailla äänillä GPT Readerissa"
+  },
+  "play_voice": {
+    "message": "Toista ääni"
+  },
+  "stop": {
+    "message": "Pysäytä"
+  },
+  "drag_and_drop_files": {
+    "message": "Vedä ja pudota tiedostot tähän tai klikkaa valitaksesi"
+  },
+  "upload_limit": {
+    "message": "Voit ladata tiedoston, joka on enintään 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Kirjoita tai liitä teksti"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Liitä tai kirjoita teksti"
+  },
+  "title": {
+    "message": "Otsikko"
+  },
+  "text": {
+    "message": "Teksti"
+  },
+  "submit": {
+    "message": "Lähetä"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Haluatko ladata vai kuunnella äänitiedoston?"
+  },
+  "download": {
+    "message": "Lataa"
+  },
+  "download_note": {
+    "message": "Saattaa tulevaisuudessa olla maksullinen"
+  },
+  "listen": {
+    "message": "Kuuntele"
+  },
+  "downloading_status": {
+    "message": "Ladataan"
+  },
+  "download_complete": {
+    "message": "Lataus valmis"
+  },
+  "please_wait_file_downloading": {
+    "message": "Odota, tiedostoa ladataan..."
+  },
+  "full_download_note": {
+    "message": "Jos tiedosto ei latautunut automaattisesti, klikkaa 'Lataa' -painiketta alla."
+  },
+  "loading_preview": {
+    "message": "Esikatselua ladataan"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT Premium -käyttäjät, valitkaa GPT-4o mini nopeampaan lataukseen. Sulje ikkuna vaihtaaksesi mallia."
+  },
+  "cancel": {
+    "message": "Peruuta"
+  },
+  "cancel_download_confirmation": {
+    "message": "Haluatko varmasti peruuttaa latauksen?"
+  },
+  "continue_download": {
+    "message": "Jatka latausta"
+  },
+  "cancel_download": {
+    "message": "Peruuta lataus"
+  },
+  "accuracy_warning": {
+    "message": "GPT Readerin tuottama ääni ei välttämättä ole täysin tarkka. Jos huomaat eroja, sulje ikkuna, avaa uusi ChatGPT-keskustelu ja yritä uudelleen."
+  },
+  "playback_speed": {
+    "message": "Toistonopeus"
+  },
+  "we_appreciate_feedback": {
+    "message": "Arvostamme palautettasi."
+  },
+  "feedback_prompt": {
+    "message": "Haluamme aina parantaa. Kerro, mitä voisimme tehdä paremmin."
+  },
+  "feedback_question": {
+    "message": "Mitä mieltä olet tästä laajennuksesta?"
+  },
+  "submit_feedback": {
+    "message": "Lähetä palautteeni"
+  },
+  "having_issues": {
+    "message": "Ongelmia? Klikkaa tästä"
+  },
+  "download_aborted": {
+    "message": "Lataus keskeytetty"
+  },
+  "error_no_start": {
+    "message": "Virhe esti latauksen alkamisen, sulje ikkuna ja yritä uudelleen"
+  },
+  "error_stopped_midway": {
+    "message": "Lataus pysähtyi virheen vuoksi. Lataa tähän mennessä käsitelty ääni klikkaamalla alla."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Haluatko varmasti peruuttaa latauksen?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Haluatko peruuttaa latauksen?"
+  },
+  "note_partial_audio": {
+    "message": "Huom: Klikkaa yläpuolella olevaa latauspainiketta saadaksesi tähän asti käsitellyn äänen."
+  },
+  "are_you_sure": {
+    "message": "Oletko varma"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader -ilmoitus"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader jakaa pitkät tekstit pienempiin osiin ja lähettää ne ChatGPT:lle. Saatat väliaikaisesti saavuttaa rajan. Odota tunti, jos näin käy."
+  },
+  "acknowledge_and_accept": {
+    "message": "Jatkamalla hyväksyt tämän osana laajennuksen käyttöä."
+  },
+  "continue": {
+    "message": "Jatka"
+  },
+  "close": {
+    "message": "Sulje"
+  },
+  "something_went_wrong": {
+    "message": "Jotain meni pieleen!"
+  },
+  "offline_warning": {
+    "message": "Vaikuttaa siltä, että olet offline-tilassa! Tarkista verkko ja yritä uudelleen!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader toimii tavallista hitaammin. Sulje ikkuna virheiden tarkistamiseksi. GPT-4 suositeltu."
+  },
+  "voice_selector_description": {
+    "message": "Valitse ChatGPT:n parannelluista äänistä. Valitse ennen tekstin lataamista."
+  },
+  "cannot_upload_one_file": {
+    "message": "Voit ladata vain yhden tiedoston kerrallaan"
+  },
+  "cannot_upload_more_files": {
+    "message": "Ei voi ladata useampaa kuin $1 tiedostoa"
+  },
+  "file_rejected": {
+    "message": "Tiedosto $1 hylätty"
+  },
+  "uploading_files": {
+    "message": "Ladataan $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 ladattu"
+  },
+  "failed_upload": {
+    "message": "$1 lataus epäonnistui"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT:llä on ilmeisesti ongelmia, tarkista heidän sivustonsa."
+  },
+  "unsupported_file_type": {
+    "message": "Tiedostotyyppiä ei tueta"
+  },
+  "no_files_selected": {
+    "message": "Ei valittuja tiedostoja"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Yksinkertaista pitkien asiakirjojen lukua GPT:n avulla"
+  },
+  "back": {
+    "message": "Takaisin"
+  },
+  "ongoing_conversation_error": {
+    "message": "Keskustelu on käynnissä tai olet ylittänyt rajan. Odota ja yritä myöhemmin!"
+  },
+  "chat_error": {
+    "message": "ChatGPT saattaa näyttää virheen tai olet saavuttanut rajan. Tarkista sivusto."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader -logo"
+  },
+  "login_to_use": {
+    "message": "Kirjaudu sisään käyttääksesi"
+  },
+  "activate": {
+    "message": "Aktivoi"
+  },
+  "feedback": {
+    "message": "Palaute"
+  },
+  "input_required_error": {
+    "message": "Tämä on pakollinen kenttä (väh. 5 merkkiä)"
+  },
+  "please_wait_previous": {
+    "message": "Odota edellisen pyynnön valmistumista"
+  },
+  "presence_confirmation_title": {
+    "message": "Oletko yhä paikalla?"
+  },
+  "presence_confirmation_description": {
+    "message": "Oletko yhä paikalla?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Kyllä, haluan jatkaa kuuntelua"
+  },
+  "presence_confirmation_no": {
+    "message": "En, olen valmis"
+  },
+  "download_confirm": {
+    "message": "Tämä lataa sen osan tekstistäsi, jota on käsitelty tähän mennessä, äänen. Oletko varma, että haluat jatkaa?"
+  },
+  "male": {
+    "message": "mies"
+  },
+  "female": {
+    "message": "nainen"
+  },
+  "yes": {
+    "message": "Kyllä"
+  },
+  "no": {
+    "message": "Ei"
+  },
+  "feedback_thanks": {
+    "message": "Kiitos arvokkaasta palautteestasi!"
+  },
+  "five_stars": {
+    "message": "Arvostamme palautettasi suuresti ja olemme sitoutuneet jatkuvasti parantamaan palveluamme. Harkitse, jätätkö 5 tähden arvostelun Chrome Web Storeen!"
+  },
+  "store_redirect": {
+    "message": "Vie minut kauppaan"
+  },
+  "volume": {
+    "message": "Äänenvoimakkuus"
   }
-  
+}

@@ -51,7 +51,7 @@ const PdfViewer: FC<PdfViewerProps> = ({ file }) => {
     return (
         <div className='flex flex-row justify-center items-center gap-2 size-full'>
             <Button
-                className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                className="hover:scale-115 active:scale-105 transition-all [&_svg]:size-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
                 variant={"ghost"}
                 size={"icon"}
                 disabled={pageNumber <= 1}
@@ -61,17 +61,17 @@ const PdfViewer: FC<PdfViewerProps> = ({ file }) => {
                 <ChevronLeft />
             </Button>
 
-            <div className="flex flex-col gap-2 relative">
-                <span className="z-10 absolute bottom-2 right-2 px-4 py-2 text-sm font-medium text-muted-foreground text-center mx-auto rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
+            <div className="flex flex-col gap-2 relative overflow-y-auto max-h-full">
+                <span className="z-10 fixed bottom-2 right-32 px-4 py-2 text-sm font-medium text-muted-foreground text-center mx-auto rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
                     Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
                 </span>
                 <Document file={samplePDF} onLoadSuccess={onDocumentLoadSuccess}>
-                    <Page pageNumber={pageNumber} loading={<div className="h-[628.5px] w-[393.4786px] flex items-center justify-center"><Loader2Icon className='size-6 animate-spin' /></div>} />
+                    <Page className={"mb-32! mx-0.5! mt-0.5! rounded! drop-shadow! [&>canvas]:rounded!"}  pageNumber={pageNumber} loading={<div className="h-[628.5px] w-[393.4786px] flex items-center justify-center"><Loader2Icon className='size-6 animate-spin' /></div>} />
                 </Document>
             </div>
 
             <Button
-                className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                className="hover:scale-115 active:scale-105 transition-all [&_svg]:size-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
                 variant={"ghost"}
                 size={"icon"}
                 disabled={pageNumber >= numPages}

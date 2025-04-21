@@ -169,7 +169,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
                     {chrome.i18n.getMessage("cancel_download")}
                   </Button>
                 </div>
-                {/* <Button onClick={() => setIsConfirmationOpen(false)} variant="ghost" size="icon" className="cursor-pointer absolute right-2 top-2 hover:scale-110  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                {/* <Button onClick={() => setIsConfirmationOpen(false)} variant="ghost" size="icon" className="cursor-pointer absolute right-2 top-2 hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
                   <X />
                   <span className="sr-only">Close</span>
                 </Button> */}

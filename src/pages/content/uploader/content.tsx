@@ -1,19 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/ui/file-uploader";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, HelpCircleIcon } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
 import DownloadOrListen from "./download-or-listen-popup";
 import FeedbackPopup from "./feedback-popup";
 import { InputFormProps } from "./input-popup/input-form";
 import InputPopup from "./input-popup/popup";
-import Player from "./player";
+import PlayerBackup from "./player";
 import PresenceConfirmationPopup from "./presence-confirmation-popup";
 import Previews from "./previews";
 import VoiceSelector from "./voice-selector";
@@ -38,13 +39,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [showDownloadOrListen, setShowDownloadOrListen] = useState<boolean>(false);
     const [fileExtractedText, setFileExtractedText] = useState<string>(); //ToDo: to find a better way to handle this
     const [showDownloadCancelConfirmation, setShowDownloadCancelConfirmation] = useState<boolean>(false);
-    const { downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, isStreamLoading } = useAudioPlayer(isDownload);
+    const [isDownloadConfirmationOpen, setIsDownloadConfirmationOpen] = useState<boolean>(false);
+    const { isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess } = useAudioPlayer(isDownload);
 
     useMemo(() => {
-        if(isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
+        if (isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
     }, [isCancelDownloadConfirmation])
 
-    const resetDownloader= ()=>{
+    const resetDownloader = () => {
         setIsDownload(false);
         setIsCancelDownloadConfirmation(false)
         setShowDownloadCancelConfirmation(false)
@@ -62,13 +64,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }
 
     const onBackClick = () => {
-        if(isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
+        if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
         //if is playing, wait for 500ms before resetting to avoid further chunk from being sent (May not work with 2g-3g networks)
-        if(isPlaying){
-            setTimeout(()=>{
+        if (isPlaying) {
+            setTimeout(() => {
                 resetter();
             }, 500)
-        }else{
+        } else {
             resetter();
         }
         setIsBackPressed(true);
@@ -124,7 +126,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [pastedText, files, fileExtractedText]);
 
     const onDownloadOrListenSubmit = useCallback(async (value: "DOWNLOAD" | "LISTEN") => {
-        if(value === "DOWNLOAD"){
+        if (value === "DOWNLOAD") {
             setIsDownload(value === "DOWNLOAD");
             localStorage.setItem("gptr/download", "true");
         }
@@ -149,7 +151,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const onDownloadCancel = useCallback(() => {
         resetter();
-        if(isCancelDownloadConfirmation){
+        if (isCancelDownloadConfirmation) {
             setIsCancelDownloadConfirmation(false);
             onOverlayOpenChange(false); //Close overlay if download cancellled from close button
         }
@@ -157,7 +159,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [resetter, setShowDownloadCancelConfirmation])
 
     const onContinueDownload = useCallback((state: boolean) => {
-       if(!state) setIsCancelDownloadConfirmation(state); //resetting the state if user clicks on no after triggering the confirmation by the close button
+        if (!state) setIsCancelDownloadConfirmation(state); //resetting the state if user clicks on no after triggering the confirmation by the close button
         setShowDownloadCancelConfirmation(state);
     }, [resetter])
 
@@ -165,34 +167,77 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         <>
             <DialogHeader className={cn("h-max", { "sr-only": isDownload })}>
                 <DialogTitle className={"inline-flex flex-col justify-center items-center gap-2"}>
-                    {title ? title
+                    {title ?
+                        <div className="inline-flex justify-center w-full items-center gap-3">
+                            <p className="truncate max-w-[20dvw]">{title}</p>
+                            <Popover onOpenChange={setIsDownloadConfirmationOpen} open={isDownloadConfirmationOpen}>
+                                <PopoverTrigger asChild>
+                                    <div className="relative size-10 hover:scale-115 active:scale-105 transition-all cursor-pointer">
+                                        <Button
+                                            disabled={!isPaused && !isPlaying}
+                                            variant="ghost"
+                                            size={"icon"}
+                                            className="absolute top-1/2 start-1/2 transform -translate-y-1/2 -translate-x-1/2 rounded-full [&_svg]:size-6"
+                                        >
+                                            <DownloadCloud />
+                                        </Button>
+                                        <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="18" cy="18" r="16" fill="none" className="transition-all ease-in-out stroke-current text-gray-800 dark:text-gray-100" strokeWidth="2"></circle>
+                                            <circle cx="18" cy="18" r="16" fill="none" className="transition-all ease-in-out stroke-current text-gray-100 dark:text-gray-700" strokeWidth="2" strokeDasharray="100" strokeDashoffset={progress} strokeLinecap="square"></circle>
+                                        </svg>
+                                    </div>
+                                    {/* <span className={cn("absolute transition-all left-0 bottom-0 bg-blue-800 w-full max-h-full", { "bg-green-600": progress === 100 })} style={{ height: `${progress}%` }}></span> */}
+                                </PopoverTrigger>
+                                <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-wrap">{chrome.i18n.getMessage("download_confirm")}</p>
+                                        <div className="flex gap-4 w-full justify-center flex-wrap">
+                                            <Button
+                                                variant="ghost"
+                                                className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                                                onClick={() => { handleDownload(); setIsDownloadConfirmationOpen(false) }}
+                                            >
+                                                {chrome.i18n.getMessage("yes")}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                                                onClick={() => setIsDownloadConfirmationOpen(false)}
+                                            >
+                                                {chrome.i18n.getMessage("no")}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         : <>{!prompts.length && <img src={logo} alt={chrome.i18n.getMessage("gpt_reader_logo")} className="size-10" />} {chrome.i18n.getMessage("gpt_reader")}</>}
                 </DialogTitle>
                 <DialogDescription className="sr-only">{chrome.i18n.getMessage("simplify_reading")}</DialogDescription>
             </DialogHeader>
             <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
-                <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": (prompts.length > 0 || isDownload )})}>
+                <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": (prompts.length > 0 || isDownload) })}>
                     <ThemeToggle />
                 </div>
-                <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform":( prompts.length > 0 || isDownload)})}>
+                <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform": (prompts.length > 0 || isDownload) })}>
                     <FeedbackPopup />
                 </div>
                 <div className={cn("absolute top-4 right-16 size-max")}>
-                    <Button variant="ghost" onClick={()=> chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
-                        <HelpCircleIcon/> {chrome.i18n.getMessage("having_issues")}
+                    <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                        <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
                     </Button>
                 </div>
 
-                 <PresenceConfirmationPopup loading={isLoading} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />       
-                 <DownloadOrListen onSubmit={onDownloadOrListenSubmit} open={showDownloadOrListen} onOpenChange={(state)=>{
-                    if(!state) resetter()
+                <PresenceConfirmationPopup loading={isLoading} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />
+                <DownloadOrListen onSubmit={onDownloadOrListenSubmit} open={showDownloadOrListen} onOpenChange={(state) => {
+                    if (!state) resetter()
                     setShowDownloadOrListen(state);
                 }} />
 
                 {(prompts.length === 0 && !isDownload) ? <VoiceSelector voice={voices} setVoices={setVoices} disabled={isVoiceLoading} loading={isVoiceLoading} /> : null}
 
-                {(prompts.length > 0 || isDownload) && <Button title={chrome.i18n.getMessage("back")} size={"icon"} onClick={onBackClick} className="hover:scale-110  transition-allfont-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">{chrome.i18n.getMessage("back")}</span></Button>}
-                    
+                {(prompts.length > 0 || isDownload) && <Button title={chrome.i18n.getMessage("back")} size={"icon"} onClick={onBackClick} className="hover:scale-115 active:scale-105  transition-all font-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">{chrome.i18n.getMessage("back")}</span></Button>}
+
                 {
                     (prompts.length > 0 || isDownload) ?
                         <Previews setDownloadCancelConfirmation={onContinueDownload} downloadCancelConfirmation={showDownloadCancelConfirmation} downloadPreviewText={downloadPreviewText} onDownload={handleDownload} onDownloadCancel={onDownloadCancel} file={files[0]} content={text} isDowloading={isDownload} progress={progress} />
@@ -206,17 +251,19 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                         />
                 }
 
-                <Player isFirstChunk={isLoading} showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading || isStreamLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} />
+                {/* <Player currentTime={currentPlayTime} duration={playTimeDuration} handleVolumeChange={handleVolumeChange} volume={volume} onForward={onForward} onRewind={onRewind} isFirstChunk={isLoading} showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading || isStreamLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} /> */}
+                <PlayerBackup areSeekControlsAvailable={isTypeAACSupported} replay={replay} partialChunkCompletedPlaying={partialChunkCompletedPlaying} setPlaybackEnded={setHasCompletePlaying} showControls={prompts.length > 0} playRate={playRate} handlePlayRateChange={handlePlayRateChange} playbackEnded={hasCompletePlaying} isPaused={isPaused} isLoading={isLoading || isFetching} volume={volume} handleVolumeChange={handleVolumeChange} onScrub={onScrub} play={play} pause={pause} currentTime={currentPlayTime} duration={playTimeDuration} isPlaying={isPlaying} onForward={onForward} onRewind={onRewind} />
 
                 {
                     (!prompts?.length && !isDownload) ?
                         <InputPopup disabled={isPlaying || isFetching} onSubmit={onFormSubmit} />
                         : null
                 }
+                {prompts.length > 0 && !isDownload && <InfoIcon onClick={() => showInfoToast(5000)} className={cn("z-[51] hover:cursor-pointer absolute bottom-4 right-4 rounded-full hover:scale-115 active:scale-105 transition-all size-6")} />}
             </div>
         </>
 
     )
 }
 
-export default memo(Content, (p,n)=>p.isCancelDownloadConfirmation === n.isCancelDownloadConfirmation && p.prompts === n.prompts);
+export default memo(Content, (p, n) => p.isCancelDownloadConfirmation === n.isCancelDownloadConfirmation && p.prompts === n.prompts);

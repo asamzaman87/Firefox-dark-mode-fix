@@ -14,7 +14,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({ content }) => {
 
     return (
         <div className="text-[23px] size-full overflow-y-auto max-h-full text-justify [&_p]:my-4 [&_p]:leading-loose sm:px-[15%]">
-            <div ref={divRef} className="p-10 mb-10 bg-white dark:bg-black min-h-full h-max rounded drop-shadow">
+            <div ref={divRef} className="p-10 mb-32 bg-white dark:bg-black min-h-full h-max rounded drop-shadow">
 
             </div>
         </div>

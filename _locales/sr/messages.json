@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Besplatan AI tekst-u-govor sa ChatGPT glasovima, TTS"
-    },
-    "extensionDescription": {
-      "message": "Prirodni ChatGPT AI tekst-u-govor (TTS) za PDF, članke i dokumenta. Preuzmi ili slušaj uz visokokvalitetne glasove u GPT Reader"
-    },
-    "play_voice": {
-      "message": "Pusti glas"
-    },
-    "stop": {
-      "message": "Zaustavi"
-    },
-    "drag_and_drop_files": {
-      "message": "Prevucite fajlove ovde ili kliknite za odabir"
-    },
-    "upload_limit": {
-      "message": "Možete postaviti fajl do 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Ukucajte ili nalepite tekst"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Nalepite ili ukucajte svoj tekst"
-    },
-    "title": {
-      "message": "Naslov"
-    },
-    "text": {
-      "message": "Tekst"
-    },
-    "submit": {
-      "message": "Pošalji"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Želite li da preuzmete ili slušate audio?"
-    },
-    "download": {
-      "message": "Preuzmi"
-    },
-    "download_note": {
-      "message": "Može postati naplatno u budućnosti"
-    },
-    "listen": {
-      "message": "Slušaj"
-    },
-    "downloading_status": {
-      "message": "Preuzimanje"
-    },
-    "download_complete": {
-      "message": "Preuzimanje završeno"
-    },
-    "please_wait_file_downloading": {
-      "message": "Sačekajte dok se fajl preuzima..."
-    },
-    "full_download_note": {
-      "message": "Ako se fajl nije automatski preuzeo, kliknite 'Preuzmi' ispod."
-    },
-    "loading_preview": {
-      "message": "Učitavanje pregleda"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT premium korisnici, izaberite GPT-4o mini za brže preuzimanje. Zatvorite prozor za promenu modela."
-    },
-    "cancel": {
-      "message": "Otkaži"
-    },
-    "cancel_download_confirmation": {
-      "message": "Da li ste sigurni da želite otkazati preuzimanje?"
-    },
-    "continue_download": {
-      "message": "Nastavi preuzimanje"
-    },
-    "cancel_download": {
-      "message": "Otkaži preuzimanje"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader možda neće biti 100% tačan. Ako primetite razlike, zatvorite prozor i pokrenite novi ChatGPT chat."
-    },
-    "playback_speed": {
-      "message": "Brzina reprodukcije"
-    },
-    "we_appreciate_feedback": {
-      "message": "Cenimo vaše povratne informacije."
-    },
-    "feedback_prompt": {
-      "message": "Uvek tražimo načine za poboljšanje. Recite nam kako možemo biti bolji."
-    },
-    "feedback_question": {
-      "message": "Šta mislite o ovoj ekstenziji?"
-    },
-    "submit_feedback": {
-      "message": "Pošalji svoje mišljenje"
-    },
-    "having_issues": {
-      "message": "Imate problema? Kliknite ovde"
-    },
-    "download_aborted": {
-      "message": "Preuzimanje prekinuto"
-    },
-    "error_no_start": {
-      "message": "Greška je sprečila početak preuzimanja, zatvorite prozor i pokušajte ponovo"
-    },
-    "error_stopped_midway": {
-      "message": "Preuzimanje je zaustavljeno zbog greške, preuzmite obrađeni deo ispod."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Da li ste sigurni da želite otkazati preuzimanje?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Želite da otkažete preuzimanje?"
-    },
-    "note_partial_audio": {
-      "message": "Napomena: Kliknite gornje dugme za preuzimanje da biste dobili do sada obrađeni audio."
-    },
-    "are_you_sure": {
-      "message": "Da li ste sigurni"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader obaveštenje"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader deli dugačak tekst na manje delove i šalje ih ChatGPT-u. Privremeno možete dosegnuti limit. Ako se desi, sačekajte oko sat vremena."
-    },
-    "acknowledge_and_accept": {
-      "message": "Nastavljajući, prihvatate ovo kao deo korišćenja."
-    },
-    "continue": {
-      "message": "Nastavi"
-    },
-    "close": {
-      "message": "Zatvori"
-    },
-    "something_went_wrong": {
-      "message": "Nešto je pošlo naopako!"
-    },
-    "offline_warning": {
-      "message": "Izgleda da ste van mreže! Proverite vezu i pokušajte ponovo!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader radi sporije nego obično. Zatvorite prozor da proverite grešku. GPT-4 se preporučuje."
-    },
-    "voice_selector_description": {
-      "message": "Izaberite neku od poboljšanih ChatGPT glasova. Učinite to pre slanja teksta."
-    },
-    "cannot_upload_one_file": {
-      "message": "Ne možete otpremiti više od 1 fajla odjednom"
-    },
-    "cannot_upload_more_files": {
-      "message": "Ne možete otpremiti više od $1 fajlova"
-    },
-    "file_rejected": {
-      "message": "Fajl $1 je odbijen"
-    },
-    "uploading_files": {
-      "message": "Otpremanje $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 otpremljen"
-    },
-    "failed_upload": {
-      "message": "Neuspešno otpremanje $1"
-    },
-    "chatgpt_issue": {
-      "message": "Izgleda da ChatGPT ima problem, proverite njihov sajt."
-    },
-    "unsupported_file_type": {
-      "message": "Nesupported tip fajla"
-    },
-    "no_files_selected": {
-      "message": "Nema izabranih fajlova"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Pojednostavite čitanje dugih dokumenata uz GPT"
-    },
-    "back": {
-      "message": "Nazad"
-    },
-    "ongoing_conversation_error": {
-      "message": "Postoji aktivan razgovor ili ste dostigli limit. Sačekajte i pokušajte kasnije!"
-    },
-    "chat_error": {
-      "message": "Možda ChatGPT prikazuje grešku ili ste dostigli limit. Proverite njihov sajt."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader logo"
-    },
-    "login_to_use": {
-      "message": "Prijavite se za korišćenje"
-    },
-    "activate": {
-      "message": "Aktiviraj"
-    },
-    "feedback": {
-      "message": "Povratna informacija"
-    },
-    "input_required_error": {
-      "message": "Ovo je obavezno polje (min 5 karaktera)"
-    },
-    "please_wait_previous": {
-      "message": "Sačekajte da se završi prethodni zahtev"
-    },
-    "presence_confirmation_title": {
-      "message": "Još uvek ste tu?"
-    },
-    "presence_confirmation_description": {
-      "message": "Još uvek ste tu?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Da, želim nastaviti slušanje"
-    },
-    "presence_confirmation_no": {
-      "message": "Ne, završio sam"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Besplatan AI tekst-u-govor sa ChatGPT glasovima, TTS"
+  },
+  "extensionDescription": {
+    "message": "Prirodni ChatGPT AI tekst-u-govor (TTS) za PDF, članke i dokumenta. Preuzmi ili slušaj uz visokokvalitetne glasove u GPT Reader"
+  },
+  "play_voice": {
+    "message": "Pusti glas"
+  },
+  "stop": {
+    "message": "Zaustavi"
+  },
+  "drag_and_drop_files": {
+    "message": "Prevucite fajlove ovde ili kliknite za odabir"
+  },
+  "upload_limit": {
+    "message": "Možete postaviti fajl do 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Ukucajte ili nalepite tekst"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Nalepite ili ukucajte svoj tekst"
+  },
+  "title": {
+    "message": "Naslov"
+  },
+  "text": {
+    "message": "Tekst"
+  },
+  "submit": {
+    "message": "Pošalji"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Želite li da preuzmete ili slušate audio?"
+  },
+  "download": {
+    "message": "Preuzmi"
+  },
+  "download_note": {
+    "message": "Može postati naplatno u budućnosti"
+  },
+  "listen": {
+    "message": "Slušaj"
+  },
+  "downloading_status": {
+    "message": "Preuzimanje"
+  },
+  "download_complete": {
+    "message": "Preuzimanje završeno"
+  },
+  "please_wait_file_downloading": {
+    "message": "Sačekajte dok se fajl preuzima..."
+  },
+  "full_download_note": {
+    "message": "Ako se fajl nije automatski preuzeo, kliknite 'Preuzmi' ispod."
+  },
+  "loading_preview": {
+    "message": "Učitavanje pregleda"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT premium korisnici, izaberite GPT-4o mini za brže preuzimanje. Zatvorite prozor za promenu modela."
+  },
+  "cancel": {
+    "message": "Otkaži"
+  },
+  "cancel_download_confirmation": {
+    "message": "Da li ste sigurni da želite otkazati preuzimanje?"
+  },
+  "continue_download": {
+    "message": "Nastavi preuzimanje"
+  },
+  "cancel_download": {
+    "message": "Otkaži preuzimanje"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader možda neće biti 100% tačan. Ako primetite razlike, zatvorite prozor i pokrenite novi ChatGPT chat."
+  },
+  "playback_speed": {
+    "message": "Brzina reprodukcije"
+  },
+  "we_appreciate_feedback": {
+    "message": "Cenimo vaše povratne informacije."
+  },
+  "feedback_prompt": {
+    "message": "Uvek tražimo načine za poboljšanje. Recite nam kako možemo biti bolji."
+  },
+  "feedback_question": {
+    "message": "Šta mislite o ovoj ekstenziji?"
+  },
+  "submit_feedback": {
+    "message": "Pošalji svoje mišljenje"
+  },
+  "having_issues": {
+    "message": "Imate problema? Kliknite ovde"
+  },
+  "download_aborted": {
+    "message": "Preuzimanje prekinuto"
+  },
+  "error_no_start": {
+    "message": "Greška je sprečila početak preuzimanja, zatvorite prozor i pokušajte ponovo"
+  },
+  "error_stopped_midway": {
+    "message": "Preuzimanje je zaustavljeno zbog greške, preuzmite obrađeni deo ispod."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Da li ste sigurni da želite otkazati preuzimanje?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Želite da otkažete preuzimanje?"
+  },
+  "note_partial_audio": {
+    "message": "Napomena: Kliknite gornje dugme za preuzimanje da biste dobili do sada obrađeni audio."
+  },
+  "are_you_sure": {
+    "message": "Da li ste sigurni"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader obaveštenje"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader deli dugačak tekst na manje delove i šalje ih ChatGPT-u. Privremeno možete dosegnuti limit. Ako se desi, sačekajte oko sat vremena."
+  },
+  "acknowledge_and_accept": {
+    "message": "Nastavljajući, prihvatate ovo kao deo korišćenja."
+  },
+  "continue": {
+    "message": "Nastavi"
+  },
+  "close": {
+    "message": "Zatvori"
+  },
+  "something_went_wrong": {
+    "message": "Nešto je pošlo naopako!"
+  },
+  "offline_warning": {
+    "message": "Izgleda da ste van mreže! Proverite vezu i pokušajte ponovo!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader radi sporije nego obično. Zatvorite prozor da proverite grešku. GPT-4 se preporučuje."
+  },
+  "voice_selector_description": {
+    "message": "Izaberite neku od poboljšanih ChatGPT glasova. Učinite to pre slanja teksta."
+  },
+  "cannot_upload_one_file": {
+    "message": "Ne možete otpremiti više od 1 fajla odjednom"
+  },
+  "cannot_upload_more_files": {
+    "message": "Ne možete otpremiti više od $1 fajlova"
+  },
+  "file_rejected": {
+    "message": "Fajl $1 je odbijen"
+  },
+  "uploading_files": {
+    "message": "Otpremanje $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 otpremljen"
+  },
+  "failed_upload": {
+    "message": "Neuspešno otpremanje $1"
+  },
+  "chatgpt_issue": {
+    "message": "Izgleda da ChatGPT ima problem, proverite njihov sajt."
+  },
+  "unsupported_file_type": {
+    "message": "Nesupported tip fajla"
+  },
+  "no_files_selected": {
+    "message": "Nema izabranih fajlova"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Pojednostavite čitanje dugih dokumenata uz GPT"
+  },
+  "back": {
+    "message": "Nazad"
+  },
+  "ongoing_conversation_error": {
+    "message": "Postoji aktivan razgovor ili ste dostigli limit. Sačekajte i pokušajte kasnije!"
+  },
+  "chat_error": {
+    "message": "Možda ChatGPT prikazuje grešku ili ste dostigli limit. Proverite njihov sajt."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader logo"
+  },
+  "login_to_use": {
+    "message": "Prijavite se za korišćenje"
+  },
+  "activate": {
+    "message": "Aktiviraj"
+  },
+  "feedback": {
+    "message": "Povratna informacija"
+  },
+  "input_required_error": {
+    "message": "Ovo je obavezno polje (min 5 karaktera)"
+  },
+  "please_wait_previous": {
+    "message": "Sačekajte da se završi prethodni zahtev"
+  },
+  "presence_confirmation_title": {
+    "message": "Još uvek ste tu?"
+  },
+  "presence_confirmation_description": {
+    "message": "Još uvek ste tu?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Da, želim nastaviti slušanje"
+  },
+  "presence_confirmation_no": {
+    "message": "Ne, završio sam"
+  },
+  "download_confirm": {
+    "message": "Ово ће преузети аудио за део вашег текста који је до сада обрађен. Да ли сте сигурни да желите да наставите?"
+  },
+  "male": {
+    "message": "мушки"
+  },
+  "female": {
+    "message": "женски"
+  },
+  "yes": {
+    "message": "Да"
+  },
+  "no": {
+    "message": "Не"
+  },
+  "feedback_thanks": {
+    "message": "Хвала на вашој вредној повратној информацији!"
+  },
+  "five_stars": {
+    "message": "Ваша повратна информација је веома цењена и посвећени смо сталном унапређењу наших услуга. Молимо вас да оставите 5-звездану оцену на Chrome Web Store."
+  },
+  "store_redirect": {
+    "message": "Отведи ме у продавницу"
+  },
+  "volume": {
+    "message": "Гласноћа"
+  }
 }
-  

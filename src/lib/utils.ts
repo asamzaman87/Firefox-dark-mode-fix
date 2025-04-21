@@ -64,7 +64,7 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
         targetSize = initialChunkSize;
       } else {
         // Increase the target size by 50%, ensuring it does not exceed maxChunkSize
-        targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
+        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
       }
     } else {
       // Accumulate the sentence into the current chunk
@@ -204,3 +204,12 @@ export const findMatchLocalStorageKey = (key: string) => {
   }
   return null;
 }
+
+export const formatSeconds = (s: number): string => {
+  const [h, m, sec] = [
+    Math.floor(s / 3600),
+    Math.floor((s % 3600) / 60),
+    (s % 60),
+  ].map((v: number) => v.toFixed(0).toString().padStart(2, "0"));
+  return h === "00" ? `${m}:${sec}` : `${h}:${m}:${sec}`;
+};

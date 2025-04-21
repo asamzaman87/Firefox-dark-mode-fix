@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: ChatGPT音声対応の無料AI音声変換, TTS"
-    },
-    "extensionDescription": {
-      "message": "自然なChatGPT AIテキスト読み上げ(TTS)をPDF、記事、文書で。高品質音声でのダウンロードまたは音読はGPT Readerで"
-    },
-    "play_voice": {
-      "message": "音声再生"
-    },
-    "stop": {
-      "message": "停止"
-    },
-    "drag_and_drop_files": {
-      "message": "ファイルをここにドラッグ＆ドロップ、またはクリックして選択"
-    },
-    "upload_limit": {
-      "message": "24 MBまでのファイルをアップロードできます"
-    },
-    "type_or_paste_text": {
-      "message": "テキストを入力または貼り付け"
-    },
-    "type_or_paste_text_v2": {
-      "message": "テキストを貼り付けるか入力してください"
-    },
-    "title": {
-      "message": "タイトル"
-    },
-    "text": {
-      "message": "テキスト"
-    },
-    "submit": {
-      "message": "送信"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "音声をダウンロードしますか、それとも再生しますか？"
-    },
-    "download": {
-      "message": "ダウンロード"
-    },
-    "download_note": {
-      "message": "将来的に有料になる可能性があります"
-    },
-    "listen": {
-      "message": "再生"
-    },
-    "downloading_status": {
-      "message": "ダウンロード中"
-    },
-    "download_complete": {
-      "message": "ダウンロード完了"
-    },
-    "please_wait_file_downloading": {
-      "message": "ファイルをダウンロード中です。しばらくお待ちください..."
-    },
-    "full_download_note": {
-      "message": "ファイルが自動的にダウンロードされない場合は、下の「ダウンロード」ボタンをクリックしてください。"
-    },
-    "loading_preview": {
-      "message": "プレビューを読み込み中"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPTプレミアムユーザーの方は、GPT-4o miniで高速ダウンロード可能です。モデル変更は拡張ウィンドウを閉じて行ってください。"
-    },
-    "cancel": {
-      "message": "キャンセル"
-    },
-    "cancel_download_confirmation": {
-      "message": "本当にダウンロードをキャンセルしますか？"
-    },
-    "continue_download": {
-      "message": "ダウンロードを続行"
-    },
-    "cancel_download": {
-      "message": "ダウンロードをキャンセル"
-    },
-    "accuracy_warning": {
-      "message": "GPT Readerの音声は完全に正確ではない可能性があります。差異を感じた場合、ウィンドウを閉じ、新たにChatGPTチャットを開いて再試行してください。"
-    },
-    "playback_speed": {
-      "message": "再生速度"
-    },
-    "we_appreciate_feedback": {
-      "message": "フィードバックをいただけると助かります。"
-    },
-    "feedback_prompt": {
-      "message": "サービス向上のため、ぜひ改善点をお知らせください。"
-    },
-    "feedback_question": {
-      "message": "この拡張機能についてどう思いますか？"
-    },
-    "submit_feedback": {
-      "message": "フィードバックを送信"
-    },
-    "having_issues": {
-      "message": "問題がありますか？こちらをクリック"
-    },
-    "download_aborted": {
-      "message": "ダウンロード中止"
-    },
-    "error_no_start": {
-      "message": "エラーによりダウンロードを開始できませんでした。ウィンドウを閉じて再度お試しください"
-    },
-    "error_stopped_midway": {
-      "message": "エラーが発生しダウンロードが停止しました。これまで処理された音声をダウンロードしてください。"
-    },
-    "cancel_download_confirmation_title": {
-      "message": "本当にダウンロードをキャンセルしますか？"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "ダウンロードをキャンセルしますか？"
-    },
-    "note_partial_audio": {
-      "message": "注意: 上部のダウンロードボタンから、これまでに処理された音声を取得できます。"
-    },
-    "are_you_sure": {
-      "message": "よろしいですか"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader通知"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Readerは長文を小分割しChatGPTに送信します。一時的に上限に達することがあります。発生した場合は約1時間お待ちください。"
-    },
-    "acknowledge_and_accept": {
-      "message": "続行することで、これを承認し受け入れたとみなします。"
-    },
-    "continue": {
-      "message": "続行"
-    },
-    "close": {
-      "message": "閉じる"
-    },
-    "something_went_wrong": {
-      "message": "問題が発生しました！"
-    },
-    "offline_warning": {
-      "message": "オフラインのようです！ネットワークを確認して再試行してください！"
-    },
-    "slow_response_warning": {
-      "message": "GPT Readerの応答が通常より遅いです。エラー確認のためウィンドウを閉じてください。GPT-4推奨。"
-    },
-    "voice_selector_description": {
-      "message": "ChatGPT強化音声の中から選択。テキストをアップロードする前に選んでください。"
-    },
-    "cannot_upload_one_file": {
-      "message": "一度にアップロードできるファイルは1つまでです"
-    },
-    "cannot_upload_more_files": {
-      "message": "$1以上のファイルはアップロードできません"
-    },
-    "file_rejected": {
-      "message": "ファイル $1 は拒否されました"
-    },
-    "uploading_files": {
-      "message": "$1 をアップロード中..."
-    },
-    "uploaded_files": {
-      "message": "$1 をアップロードしました"
-    },
-    "failed_upload": {
-      "message": "$1 のアップロードに失敗しました"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPTに問題があるようです。サイトを確認してください。"
-    },
-    "unsupported_file_type": {
-      "message": "対応していないファイル形式です"
-    },
-    "no_files_selected": {
-      "message": "ファイルが選択されていません"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "GPTで長文ドキュメントの読書を簡単に"
-    },
-    "back": {
-      "message": "戻る"
-    },
-    "ongoing_conversation_error": {
-      "message": "会話が進行中か、制限を超えています。しばらく待って再試行してください！"
-    },
-    "chat_error": {
-      "message": "ChatGPTがエラーを表示するか、上限に達した可能性があります。サイトを確認してください。"
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Readerロゴ"
-    },
-    "login_to_use": {
-      "message": "使用するにはログインしてください"
-    },
-    "activate": {
-      "message": "有効化"
-    },
-    "feedback": {
-      "message": "フィードバック"
-    },
-    "input_required_error": {
-      "message": "必須フィールドです（最低5文字）"
-    },
-    "please_wait_previous": {
-      "message": "前のリクエストが完了するまでお待ちください"
-    },
-    "presence_confirmation_title": {
-      "message": "まだいますか？"
-    },
-    "presence_confirmation_description": {
-      "message": "まだいますか？"
-    },
-    "presence_confirmation_yes": {
-      "message": "はい、続けて聞きたいです"
-    },
-    "presence_confirmation_no": {
-      "message": "いいえ、終わりにします"
-    }
+  "extensionName": {
+    "message": "GPT Reader: ChatGPT音声対応の無料AI音声変換, TTS"
+  },
+  "extensionDescription": {
+    "message": "自然なChatGPT AIテキスト読み上げ(TTS)をPDF、記事、文書で。高品質音声でのダウンロードまたは音読はGPT Readerで"
+  },
+  "play_voice": {
+    "message": "音声再生"
+  },
+  "stop": {
+    "message": "停止"
+  },
+  "drag_and_drop_files": {
+    "message": "ファイルをここにドラッグ＆ドロップ、またはクリックして選択"
+  },
+  "upload_limit": {
+    "message": "24 MBまでのファイルをアップロードできます"
+  },
+  "type_or_paste_text": {
+    "message": "テキストを入力または貼り付け"
+  },
+  "type_or_paste_text_v2": {
+    "message": "テキストを貼り付けるか入力してください"
+  },
+  "title": {
+    "message": "タイトル"
+  },
+  "text": {
+    "message": "テキスト"
+  },
+  "submit": {
+    "message": "送信"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "音声をダウンロードしますか、それとも再生しますか？"
+  },
+  "download": {
+    "message": "ダウンロード"
+  },
+  "download_note": {
+    "message": "将来的に有料になる可能性があります"
+  },
+  "listen": {
+    "message": "再生"
+  },
+  "downloading_status": {
+    "message": "ダウンロード中"
+  },
+  "download_complete": {
+    "message": "ダウンロード完了"
+  },
+  "please_wait_file_downloading": {
+    "message": "ファイルをダウンロード中です。しばらくお待ちください..."
+  },
+  "full_download_note": {
+    "message": "ファイルが自動的にダウンロードされない場合は、下の「ダウンロード」ボタンをクリックしてください。"
+  },
+  "loading_preview": {
+    "message": "プレビューを読み込み中"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPTプレミアムユーザーの方は、GPT-4o miniで高速ダウンロード可能です。モデル変更は拡張ウィンドウを閉じて行ってください。"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "cancel_download_confirmation": {
+    "message": "本当にダウンロードをキャンセルしますか？"
+  },
+  "continue_download": {
+    "message": "ダウンロードを続行"
+  },
+  "cancel_download": {
+    "message": "ダウンロードをキャンセル"
+  },
+  "accuracy_warning": {
+    "message": "GPT Readerの音声は完全に正確ではない可能性があります。差異を感じた場合、ウィンドウを閉じ、新たにChatGPTチャットを開いて再試行してください。"
+  },
+  "playback_speed": {
+    "message": "再生速度"
+  },
+  "we_appreciate_feedback": {
+    "message": "フィードバックをいただけると助かります。"
+  },
+  "feedback_prompt": {
+    "message": "サービス向上のため、ぜひ改善点をお知らせください。"
+  },
+  "feedback_question": {
+    "message": "この拡張機能についてどう思いますか？"
+  },
+  "submit_feedback": {
+    "message": "フィードバックを送信"
+  },
+  "having_issues": {
+    "message": "問題がありますか？こちらをクリック"
+  },
+  "download_aborted": {
+    "message": "ダウンロード中止"
+  },
+  "error_no_start": {
+    "message": "エラーによりダウンロードを開始できませんでした。ウィンドウを閉じて再度お試しください"
+  },
+  "error_stopped_midway": {
+    "message": "エラーが発生しダウンロードが停止しました。これまで処理された音声をダウンロードしてください。"
+  },
+  "cancel_download_confirmation_title": {
+    "message": "本当にダウンロードをキャンセルしますか？"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "ダウンロードをキャンセルしますか？"
+  },
+  "note_partial_audio": {
+    "message": "注意: 上部のダウンロードボタンから、これまでに処理された音声を取得できます。"
+  },
+  "are_you_sure": {
+    "message": "よろしいですか"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader通知"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Readerは長文を小分割しChatGPTに送信します。一時的に上限に達することがあります。発生した場合は約1時間お待ちください。"
+  },
+  "acknowledge_and_accept": {
+    "message": "続行することで、これを承認し受け入れたとみなします。"
+  },
+  "continue": {
+    "message": "続行"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "something_went_wrong": {
+    "message": "問題が発生しました！"
+  },
+  "offline_warning": {
+    "message": "オフラインのようです！ネットワークを確認して再試行してください！"
+  },
+  "slow_response_warning": {
+    "message": "GPT Readerの応答が通常より遅いです。エラー確認のためウィンドウを閉じてください。GPT-4推奨。"
+  },
+  "voice_selector_description": {
+    "message": "ChatGPT強化音声の中から選択。テキストをアップロードする前に選んでください。"
+  },
+  "cannot_upload_one_file": {
+    "message": "一度にアップロードできるファイルは1つまでです"
+  },
+  "cannot_upload_more_files": {
+    "message": "$1以上のファイルはアップロードできません"
+  },
+  "file_rejected": {
+    "message": "ファイル $1 は拒否されました"
+  },
+  "uploading_files": {
+    "message": "$1 をアップロード中..."
+  },
+  "uploaded_files": {
+    "message": "$1 をアップロードしました"
+  },
+  "failed_upload": {
+    "message": "$1 のアップロードに失敗しました"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPTに問題があるようです。サイトを確認してください。"
+  },
+  "unsupported_file_type": {
+    "message": "対応していないファイル形式です"
+  },
+  "no_files_selected": {
+    "message": "ファイルが選択されていません"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "GPTで長文ドキュメントの読書を簡単に"
+  },
+  "back": {
+    "message": "戻る"
+  },
+  "ongoing_conversation_error": {
+    "message": "会話が進行中か、制限を超えています。しばらく待って再試行してください！"
+  },
+  "chat_error": {
+    "message": "ChatGPTがエラーを表示するか、上限に達した可能性があります。サイトを確認してください。"
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Readerロゴ"
+  },
+  "login_to_use": {
+    "message": "使用するにはログインしてください"
+  },
+  "activate": {
+    "message": "有効化"
+  },
+  "feedback": {
+    "message": "フィードバック"
+  },
+  "input_required_error": {
+    "message": "必須フィールドです（最低5文字）"
+  },
+  "please_wait_previous": {
+    "message": "前のリクエストが完了するまでお待ちください"
+  },
+  "presence_confirmation_title": {
+    "message": "まだいますか？"
+  },
+  "presence_confirmation_description": {
+    "message": "まだいますか？"
+  },
+  "presence_confirmation_yes": {
+    "message": "はい、続けて聞きたいです"
+  },
+  "presence_confirmation_no": {
+    "message": "いいえ、終わりにします"
+  },
+  "download_confirm": {
+    "message": "これまでに処理されたテキスト部分の音声をダウンロードします。続行してもよろしいですか？"
+  },
+  "male": {
+    "message": "男性"
+  },
+  "female": {
+    "message": "女性"
+  },
+  "yes": {
+    "message": "はい"
+  },
+  "no": {
+    "message": "いいえ"
+  },
+  "feedback_thanks": {
+    "message": "貴重なフィードバックをありがとうございます！"
+  },
+  "five_stars": {
+    "message": "フィードバックを大変感謝しており、サービスの継続的な向上に努めています。ぜひ Chrome Web Store で5つ星の評価をお願いします！"
+  },
+  "store_redirect": {
+    "message": "ストアへ移動"
+  },
+  "volume": {
+    "message": "ボリューム"
+  }
 }
-  

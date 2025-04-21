@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Gratis AI tekst-naar-spraak met ChatGPT-stemmen, TTS"
-    },
-    "extensionDescription": {
-      "message": "Natuurlijk ChatGPT AI tekst-naar-spraak (TTS) voor PDF's, artikelen en documenten. Download of laat voorlezen met hoge kwaliteit in GPT Reader"
-    },
-    "play_voice": {
-      "message": "Stem afspelen"
-    },
-    "stop": {
-      "message": "Stop"
-    },
-    "drag_and_drop_files": {
-      "message": "Sleep bestanden hierheen of klik om te selecteren"
-    },
-    "upload_limit": {
-      "message": "Je kunt een bestand tot 24 MB uploaden"
-    },
-    "type_or_paste_text": {
-      "message": "Typ of plak tekst"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Plak of typ je tekst"
-    },
-    "title": {
-      "message": "Titel"
-    },
-    "text": {
-      "message": "Tekst"
-    },
-    "submit": {
-      "message": "Verzenden"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Wil je de audio downloaden of beluisteren?"
-    },
-    "download": {
-      "message": "Download"
-    },
-    "download_note": {
-      "message": "Kan in de toekomst betaald worden"
-    },
-    "listen": {
-      "message": "Luister"
-    },
-    "downloading_status": {
-      "message": "Bezig met downloaden"
-    },
-    "download_complete": {
-      "message": "Download voltooid"
-    },
-    "please_wait_file_downloading": {
-      "message": "Even geduld, het bestand wordt gedownload..."
-    },
-    "full_download_note": {
-      "message": "Als het niet automatisch downloadt, klik op 'Download' hieronder."
-    },
-    "loading_preview": {
-      "message": "Voorbeeld laden"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT premium-gebruikers, kies GPT-4o mini voor sneller downloaden. Sluit de overlay om van model te wisselen."
-    },
-    "cancel": {
-      "message": "Annuleren"
-    },
-    "cancel_download_confirmation": {
-      "message": "Weet je zeker dat je de download wilt annuleren?"
-    },
-    "continue_download": {
-      "message": "Doorgaan met downloaden"
-    },
-    "cancel_download": {
-      "message": "Annuleer download"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader kan audio genereren die niet 100% accuraat is. Zie je verschillen, sluit de overlay, start een nieuwe ChatGPT-chat en probeer opnieuw."
-    },
-    "playback_speed": {
-      "message": "Afspelsnelheid"
-    },
-    "we_appreciate_feedback": {
-      "message": "We waarderen je feedback."
-    },
-    "feedback_prompt": {
-      "message": "We willen altijd verbeteren. Laat ons weten hoe."
-    },
-    "feedback_question": {
-      "message": "Wat vind je van deze extensie?"
-    },
-    "submit_feedback": {
-      "message": "Mijn feedback verzenden"
-    },
-    "having_issues": {
-      "message": "Problemen? Klik hier"
-    },
-    "download_aborted": {
-      "message": "Download afgebroken"
-    },
-    "error_no_start": {
-      "message": "Een fout verhinderde de start van de download. Sluit de overlay en probeer het opnieuw"
-    },
-    "error_stopped_midway": {
-      "message": "Download gestopt door een fout. Download het tot nu toe verwerkte audio via de knop hieronder."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Weet je zeker dat je de download wilt annuleren?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Download annuleren?"
-    },
-    "note_partial_audio": {
-      "message": "Opmerking: klik op de bovenstaande knop om de tot dusver verwerkte audio te downloaden."
-    },
-    "are_you_sure": {
-      "message": "Weet je het zeker"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader-melding"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader breekt lange tekst op in kleinere stukken en stuurt die naar ChatGPT. Je kunt tijdelijk een limiet bereiken. Wacht ongeveer een uur als dat gebeurt."
-    },
-    "acknowledge_and_accept": {
-      "message": "Door te doorgaan erken en accepteer je dit."
-    },
-    "continue": {
-      "message": "Doorgaan"
-    },
-    "close": {
-      "message": "Sluiten"
-    },
-    "something_went_wrong": {
-      "message": "Er is iets misgegaan!"
-    },
-    "offline_warning": {
-      "message": "Je lijkt offline te zijn! Controleer je netwerk en probeer opnieuw!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader duurt langer dan normaal. Sluit de overlay om fouten te checken. GPT-4 wordt aanbevolen."
-    },
-    "voice_selector_description": {
-      "message": "Kies uit diverse verbeterde ChatGPT-stemmen. Maak je keuze voor je tekst uploadt."
-    },
-    "cannot_upload_one_file": {
-      "message": "Je kunt niet meer dan 1 bestand tegelijk uploaden"
-    },
-    "cannot_upload_more_files": {
-      "message": "Kan niet meer dan $1 bestanden uploaden"
-    },
-    "file_rejected": {
-      "message": "Bestand $1 is geweigerd"
-    },
-    "uploading_files": {
-      "message": "$1 wordt geüpload..."
-    },
-    "uploaded_files": {
-      "message": "$1 geüpload"
-    },
-    "failed_upload": {
-      "message": "Upload van $1 mislukt"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT lijkt problemen te hebben. Bekijk de site voor details."
-    },
-    "unsupported_file_type": {
-      "message": "Niet-ondersteund bestandstype"
-    },
-    "no_files_selected": {
-      "message": "Geen bestanden geselecteerd"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Vereenvoudig het lezen van lange documenten met GPT"
-    },
-    "back": {
-      "message": "Terug"
-    },
-    "ongoing_conversation_error": {
-      "message": "Er is een lopend gesprek of je hebt de limiet bereikt. Wacht en probeer later opnieuw!"
-    },
-    "chat_error": {
-      "message": "ChatGPT toont mogelijk een fout of je limiet is bereikt. Bekijk de site."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader-logo"
-    },
-    "login_to_use": {
-      "message": "Inloggen om te gebruiken"
-    },
-    "activate": {
-      "message": "Activeren"
-    },
-    "feedback": {
-      "message": "Feedback"
-    },
-    "input_required_error": {
-      "message": "Dit veld is verplicht (min. 5 tekens)"
-    },
-    "please_wait_previous": {
-      "message": "Wacht tot het vorige verzoek is voltooid"
-    },
-    "presence_confirmation_title": {
-      "message": "Ben je er nog?"
-    },
-    "presence_confirmation_description": {
-      "message": "Ben je er nog?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Ja, ik wil doorgaan met luisteren"
-    },
-    "presence_confirmation_no": {
-      "message": "Nee, ik ben klaar"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Gratis AI tekst-naar-spraak met ChatGPT-stemmen, TTS"
+  },
+  "extensionDescription": {
+    "message": "Natuurlijk ChatGPT AI tekst-naar-spraak (TTS) voor PDF's, artikelen en documenten. Download of laat voorlezen met hoge kwaliteit in GPT Reader"
+  },
+  "play_voice": {
+    "message": "Stem afspelen"
+  },
+  "stop": {
+    "message": "Stop"
+  },
+  "drag_and_drop_files": {
+    "message": "Sleep bestanden hierheen of klik om te selecteren"
+  },
+  "upload_limit": {
+    "message": "Je kunt een bestand tot 24 MB uploaden"
+  },
+  "type_or_paste_text": {
+    "message": "Typ of plak tekst"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Plak of typ je tekst"
+  },
+  "title": {
+    "message": "Titel"
+  },
+  "text": {
+    "message": "Tekst"
+  },
+  "submit": {
+    "message": "Verzenden"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Wil je de audio downloaden of beluisteren?"
+  },
+  "download": {
+    "message": "Download"
+  },
+  "download_note": {
+    "message": "Kan in de toekomst betaald worden"
+  },
+  "listen": {
+    "message": "Luister"
+  },
+  "downloading_status": {
+    "message": "Bezig met downloaden"
+  },
+  "download_complete": {
+    "message": "Download voltooid"
+  },
+  "please_wait_file_downloading": {
+    "message": "Even geduld, het bestand wordt gedownload..."
+  },
+  "full_download_note": {
+    "message": "Als het niet automatisch downloadt, klik op 'Download' hieronder."
+  },
+  "loading_preview": {
+    "message": "Voorbeeld laden"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT premium-gebruikers, kies GPT-4o mini voor sneller downloaden. Sluit de overlay om van model te wisselen."
+  },
+  "cancel": {
+    "message": "Annuleren"
+  },
+  "cancel_download_confirmation": {
+    "message": "Weet je zeker dat je de download wilt annuleren?"
+  },
+  "continue_download": {
+    "message": "Doorgaan met downloaden"
+  },
+  "cancel_download": {
+    "message": "Annuleer download"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader kan audio genereren die niet 100% accuraat is. Zie je verschillen, sluit de overlay, start een nieuwe ChatGPT-chat en probeer opnieuw."
+  },
+  "playback_speed": {
+    "message": "Afspelsnelheid"
+  },
+  "we_appreciate_feedback": {
+    "message": "We waarderen je feedback."
+  },
+  "feedback_prompt": {
+    "message": "We willen altijd verbeteren. Laat ons weten hoe."
+  },
+  "feedback_question": {
+    "message": "Wat vind je van deze extensie?"
+  },
+  "submit_feedback": {
+    "message": "Mijn feedback verzenden"
+  },
+  "having_issues": {
+    "message": "Problemen? Klik hier"
+  },
+  "download_aborted": {
+    "message": "Download afgebroken"
+  },
+  "error_no_start": {
+    "message": "Een fout verhinderde de start van de download. Sluit de overlay en probeer het opnieuw"
+  },
+  "error_stopped_midway": {
+    "message": "Download gestopt door een fout. Download het tot nu toe verwerkte audio via de knop hieronder."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Weet je zeker dat je de download wilt annuleren?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Download annuleren?"
+  },
+  "note_partial_audio": {
+    "message": "Opmerking: klik op de bovenstaande knop om de tot dusver verwerkte audio te downloaden."
+  },
+  "are_you_sure": {
+    "message": "Weet je het zeker"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader-melding"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader breekt lange tekst op in kleinere stukken en stuurt die naar ChatGPT. Je kunt tijdelijk een limiet bereiken. Wacht ongeveer een uur als dat gebeurt."
+  },
+  "acknowledge_and_accept": {
+    "message": "Door te doorgaan erken en accepteer je dit."
+  },
+  "continue": {
+    "message": "Doorgaan"
+  },
+  "close": {
+    "message": "Sluiten"
+  },
+  "something_went_wrong": {
+    "message": "Er is iets misgegaan!"
+  },
+  "offline_warning": {
+    "message": "Je lijkt offline te zijn! Controleer je netwerk en probeer opnieuw!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader duurt langer dan normaal. Sluit de overlay om fouten te checken. GPT-4 wordt aanbevolen."
+  },
+  "voice_selector_description": {
+    "message": "Kies uit diverse verbeterde ChatGPT-stemmen. Maak je keuze voor je tekst uploadt."
+  },
+  "cannot_upload_one_file": {
+    "message": "Je kunt niet meer dan 1 bestand tegelijk uploaden"
+  },
+  "cannot_upload_more_files": {
+    "message": "Kan niet meer dan $1 bestanden uploaden"
+  },
+  "file_rejected": {
+    "message": "Bestand $1 is geweigerd"
+  },
+  "uploading_files": {
+    "message": "$1 wordt geüpload..."
+  },
+  "uploaded_files": {
+    "message": "$1 geüpload"
+  },
+  "failed_upload": {
+    "message": "Upload van $1 mislukt"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT lijkt problemen te hebben. Bekijk de site voor details."
+  },
+  "unsupported_file_type": {
+    "message": "Niet-ondersteund bestandstype"
+  },
+  "no_files_selected": {
+    "message": "Geen bestanden geselecteerd"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Vereenvoudig het lezen van lange documenten met GPT"
+  },
+  "back": {
+    "message": "Terug"
+  },
+  "ongoing_conversation_error": {
+    "message": "Er is een lopend gesprek of je hebt de limiet bereikt. Wacht en probeer later opnieuw!"
+  },
+  "chat_error": {
+    "message": "ChatGPT toont mogelijk een fout of je limiet is bereikt. Bekijk de site."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader-logo"
+  },
+  "login_to_use": {
+    "message": "Inloggen om te gebruiken"
+  },
+  "activate": {
+    "message": "Activeren"
+  },
+  "feedback": {
+    "message": "Feedback"
+  },
+  "input_required_error": {
+    "message": "Dit veld is verplicht (min. 5 tekens)"
+  },
+  "please_wait_previous": {
+    "message": "Wacht tot het vorige verzoek is voltooid"
+  },
+  "presence_confirmation_title": {
+    "message": "Ben je er nog?"
+  },
+  "presence_confirmation_description": {
+    "message": "Ben je er nog?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Ja, ik wil doorgaan met luisteren"
+  },
+  "presence_confirmation_no": {
+    "message": "Nee, ik ben klaar"
+  },
+  "download_confirm": {
+    "message": "Dit zal de audio downloaden voor het deel van je tekst dat tot nu toe is verwerkt. Weet je zeker dat je wilt doorgaan?"
+  },
+  "male": {
+    "message": "masculien"
+  },
+  "female": {
+    "message": "feminien"
+  },
+  "yes": {
+    "message": "Ja"
+  },
+  "no": {
+    "message": "Nee"
+  },
+  "feedback_thanks": {
+    "message": "Bedankt voor je waardevolle feedback!"
+  },
+  "five_stars": {
+    "message": "We waarderen je feedback enorm en blijven ons inzetten om onze service continu te verbeteren. Overweeg alsjeblieft een vijfsterrenbeoordeling achter te laten in de Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Breng me naar de winkel"
+  },
+  "volume": {
+    "message": "Luidheid"
   }
-  
+}

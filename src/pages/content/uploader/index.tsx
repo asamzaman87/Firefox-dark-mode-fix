@@ -35,16 +35,17 @@ function Uploader() {
       }, timeout);
     });
   };
-  
+
   const [prompts, setPrompts] = useState<PromptProps[]>([]);
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
-  const [openTries, setOpenTries] = useState<number>(0);
+  // const [openTries, setOpenTries] = useState<number>(0);
   const [minimised, setMinimised] = useState<boolean>(true);
   const [confirmed, setConfirmed] = useState<boolean>(false);
   const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
+  const [isOffline, setIsOffline] = useState<boolean>(false);
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
@@ -55,9 +56,21 @@ function Uploader() {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
 
+  //removes draft conversations from local storage on page unload (prevents causing content not loaded error)
+  useEffect(() => {
+    const handleUnload = (event: BeforeUnloadEvent) => {
+      localStorage.removeItem("oai/apps/conversationDrafts");
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, []);
+
 
   useEffect(() => {
-    if(!document.getElementById("gpt-reader-injected")){
+    if (!document.getElementById("gpt-reader-injected")) {
       const s = document.createElement('script');
       s.id = "gpt-reader-injected";
       s.src = chrome.runtime.getURL('injected.js');
@@ -86,14 +99,14 @@ function Uploader() {
     }
 
     chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
-    
+
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");
-    setConfirmed(cnf==="true");
+    setConfirmed(cnf === "true");
   }, []);
 
   //toddo: refactor as this might exceed space
-  useEffect(()=>{
+  useEffect(() => {
     const interval = setInterval(() => {
       const active = window.localStorage.getItem("gptr/active");
       if (active && active === "true") {
@@ -101,15 +114,15 @@ function Uploader() {
       }
     }, 500);
     setOverlayAciveInterval(interval);
-    return ()=>{
-      if(overActiveInterval) clearInterval(overActiveInterval);
+    return () => {
+      if (overActiveInterval) clearInterval(overActiveInterval);
     }
-  },[])
+  }, [])
 
   useEffect(() => {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
-    if(isRedirectToLogin && isRedirectToLogin==="true" && isAuthenticated){
+    if (isRedirectToLogin && isRedirectToLogin === "true" && isAuthenticated) {
       //console.log("redirecting to login");
       chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
@@ -122,10 +135,10 @@ function Uploader() {
   }
 
   //check if the speech button is present on the dom
-  const isComposerSpeechButtonPresentOnDom = () => {
-    const speechButton: HTMLDivElement | null = document.querySelector("[data-testid='composer-speech-button']");
-    return speechButton !== null;
-  }
+  // const isComposerSpeechButtonPresentOnDom = () => {
+  //   const speechButton: HTMLDivElement | null = document.querySelector("[data-testid='composer-speech-button']");
+  //   return speechButton !== null;
+  // }
 
   const clickStopButtonIfPresent = async (): Promise<void> => {
     const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
@@ -171,19 +184,19 @@ function Uploader() {
   };
 
   const onOpenChange = async (open: boolean) => {
-    if(!open) {
+    if (!open) {
       //show confirmation for cancel download if download is in progress
       const download = window.localStorage.getItem("gptr/download");
-      if(download && download === "true"){
+      if (download && download === "true") {
         setIsCancelDownloadConfirmation(true);
         return
       }
       setIsActive(false);
-      return 
+      return
     }
     const aoc = window.localStorage.getItem("gptr/aoc");
     //return if overlay is already active.
-    if(open && aoc && +aoc>0) {
+    if (open && aoc && +aoc > 0) {
       setIsOverlayFallback(true);
       return;
     }
@@ -194,20 +207,20 @@ function Uploader() {
         window.localStorage.setItem("gptr/redirect-to-login", "true");
         chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
         loginBtn?.click();
-      }else{
+      } else {
         //send message to background to try again if user is not authorised and login btn not present
         chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
       }
       return;
     }
-    
+
     window.localStorage.removeItem("gptr/redirect-to-login");
 
     await clickStopButtonIfPresent();
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text
     addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
-  
+
     // If the send button is missing, wait until it appears
     if (!isSendButtonPresentOnDom()) {
       try {
@@ -222,53 +235,74 @@ function Uploader() {
       }
     }
     // to avoid the content not loaded issue
-    addTextToInputAndOpen(""); 
+    addTextToInputAndOpen("");
     //check if the user has selected a slow model
-    if(isBadModel()){
-      toast({ description:"GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model maybe too slow.", duration:5000, style: TOAST_STYLE_CONFIG });
+    if (isBadModel()) {
+      toast({ description: "GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model maybe too slow.", duration: 5000, style: TOAST_STYLE_CONFIG });
     }
     setIsActive(true);
-  }; 
+  };
 
   const handleConfirm = (state: boolean) => {
-    if(!state) return onOpenChange(false);
+    if (!state) return onOpenChange(false);
     window.localStorage.setItem("gptr/confirmation", String(state));
     setConfirmed(state)
   }
 
-  useMemo(()=>{
+  useMemo(() => {
     // chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
     window.localStorage.setItem("gptr/active", String(isActive)); //set overlay state to storage
-    if(isActive){
+    if (isActive) {
       //set active overlay count
       const aoc = window.localStorage.getItem("gptr/aoc");
       const count = aoc ? +aoc : 0;
-      window.localStorage.setItem("gptr/aoc", String(count+1));
+      window.localStorage.setItem("gptr/aoc", String(count + 1));
 
       //clear the origins (onClick and onInstall once overlay is opened)
       chrome.runtime.sendMessage({ type: "CLEAR_ORIGIN" });
-    }else{
+    } else {
       //reset active overlay count
       window.localStorage.setItem("gptr/aoc", "0");
     }
-  },[isActive])
+  }, [isActive])
+
+
+  //check for network connection via navigator
+  const updateConnectionStatus = () => {
+    setIsOffline(!navigator.onLine);
+    if (!navigator.onLine) {
+      toast({ description: chrome.i18n.getMessage("offline_warning"), style: TOAST_STYLE_CONFIG });
+    }
+  }
+
+  useEffect(() => {
+    // audioPlayer.addEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    return () => {
+      // audioPlayer.removeEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
+      window.removeEventListener('online', updateConnectionStatus);
+      window.removeEventListener('offline', updateConnectionStatus);
+    }
+  }, []);
 
   return (
     <>
       <Dialog open={isActive} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>
           <Button
+            disabled={isOffline}
             ref={activateButton}
             variant="outline"
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full bg-white dark:bg-gray-900 p-2 border border-r-0 border-gray-200 dark:border-gray-700 transition-all", 
+            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full! bg-gray-100! dark:bg-gray-900! p-2 border border-r-0 border-gray-200! dark:border-gray-700! transition-all",
               {
-                "!z-[50]" : isActive || isOverlayFallback,
+                "!z-[50]": isActive || isOverlayFallback,
               })
             }
-            >
+          >
             <img src={LOGO} alt="GPT Reader Logo" className="size-6" />{!minimised && (
               <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader</>
             )}
@@ -278,10 +312,10 @@ function Uploader() {
           onInteractOutside={(e: Event) => {
             e.preventDefault(); //prevents mask click close
           }}
-          className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-6", prompts?.length && "pb-0")}
+          className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-4", prompts?.length && "pb-0")}
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-          {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts}/>}
+          {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}
         </DialogContent>
       </Dialog>
       <Toaster />

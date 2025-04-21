@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Darmowy AI Tekst na mowę z głosami ChatGPT, TTS"
-    },
-    "extensionDescription": {
-      "message": "Naturalna synteza mowy ChatGPT AI dla PDF, artykułów i dokumentów. Pobierz lub odczytaj na głos przy użyciu wysokiej jakości głosów w GPT Reader"
-    },
-    "play_voice": {
-      "message": "Odtwórz głos"
-    },
-    "stop": {
-      "message": "Zatrzymaj"
-    },
-    "drag_and_drop_files": {
-      "message": "Przeciągnij pliki tutaj lub kliknij, aby wybrać"
-    },
-    "upload_limit": {
-      "message": "Możesz przesłać plik do 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Wpisz lub wklej tekst"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Wklej lub wpisz swój tekst"
-    },
-    "title": {
-      "message": "Tytuł"
-    },
-    "text": {
-      "message": "Tekst"
-    },
-    "submit": {
-      "message": "Wyślij"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Czy chcesz pobrać czy posłuchać audio?"
-    },
-    "download": {
-      "message": "Pobierz"
-    },
-    "download_note": {
-      "message": "Może w przyszłości być płatne"
-    },
-    "listen": {
-      "message": "Słuchaj"
-    },
-    "downloading_status": {
-      "message": "Pobieranie"
-    },
-    "download_complete": {
-      "message": "Pobieranie zakończone"
-    },
-    "please_wait_file_downloading": {
-      "message": "Proszę czekać, plik jest pobierany..."
-    },
-    "full_download_note": {
-      "message": "Jeśli plik nie pobierze się automatycznie, kliknij przycisk 'Pobierz' poniżej."
-    },
-    "loading_preview": {
-      "message": "Ładowanie podglądu"
-    },
-    "gpt4_download_note": {
-      "message": "Użytkownicy ChatGPT premium, wybierz GPT-4o mini dla szybszego pobierania. Zamknij okno, aby zmienić model."
-    },
-    "cancel": {
-      "message": "Anuluj"
-    },
-    "cancel_download_confirmation": {
-      "message": "Czy na pewno chcesz anulować pobieranie?"
-    },
-    "continue_download": {
-      "message": "Kontynuuj pobieranie"
-    },
-    "cancel_download": {
-      "message": "Anuluj pobieranie"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader może generować audio, które nie jest w 100% dokładne. Jeśli zauważysz różnice, zamknij okno i rozpocznij nowy czat z ChatGPT."
-    },
-    "playback_speed": {
-      "message": "Prędkość odtwarzania"
-    },
-    "we_appreciate_feedback": {
-      "message": "Doceniamy Twoją opinię."
-    },
-    "feedback_prompt": {
-      "message": "Zawsze dążymy do ulepszeń. Daj nam znać, co możemy poprawić."
-    },
-    "feedback_question": {
-      "message": "Co sądzisz o tym rozszerzeniu?"
-    },
-    "submit_feedback": {
-      "message": "Wyślij moją opinię"
-    },
-    "having_issues": {
-      "message": "Masz problemy? Kliknij tutaj"
-    },
-    "download_aborted": {
-      "message": "Pobieranie przerwane"
-    },
-    "error_no_start": {
-      "message": "Błąd uniemożliwił rozpoczęcie pobierania, zamknij okno i spróbuj ponownie"
-    },
-    "error_stopped_midway": {
-      "message": "Pobieranie przerwane z powodu błędu. Pobierz dotychczas przetworzony dźwięk poniżej."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Czy na pewno chcesz anulować pobieranie?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Czy chcesz anulować pobieranie?"
-    },
-    "note_partial_audio": {
-      "message": "Uwaga: Kliknij przycisk pobierania powyżej, aby pobrać dotychczas przetworzony dźwięk."
-    },
-    "are_you_sure": {
-      "message": "Czy jesteś pewny"
-    },
-    "gpt_reader_notice": {
-      "message": "Komunikat GPT Reader"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader dzieli długi tekst na mniejsze części i wysyła je do ChatGPT. Możesz chwilowo osiągnąć limit. Jeśli tak, odczekaj około godziny."
-    },
-    "acknowledge_and_accept": {
-      "message": "Kontynuując, potwierdzasz i akceptujesz to jako część korzystania z rozszerzenia."
-    },
-    "continue": {
-      "message": "Kontynuuj"
-    },
-    "close": {
-      "message": "Zamknij"
-    },
-    "something_went_wrong": {
-      "message": "Coś poszło nie tak!"
-    },
-    "offline_warning": {
-      "message": "Wygląda na to, że jesteś offline! Sprawdź połączenie i spróbuj ponownie!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader działa wolniej niż zwykle. Zamknij okno, aby sprawdzić błędy. Zalecamy GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Wybierz spośród różnych ulepszonych głosów ChatGPT. Wybierz przed przesłaniem tekstu."
-    },
-    "cannot_upload_one_file": {
-      "message": "Nie można przesłać więcej niż 1 pliku jednocześnie"
-    },
-    "cannot_upload_more_files": {
-      "message": "Nie można przesłać więcej niż $1 plików"
-    },
-    "file_rejected": {
-      "message": "Plik $1 został odrzucony"
-    },
-    "uploading_files": {
-      "message": "Przesyłanie $1..."
-    },
-    "uploaded_files": {
-      "message": "$1 przesłano"
-    },
-    "failed_upload": {
-      "message": "Nie udało się przesłać $1"
-    },
-    "chatgpt_issue": {
-      "message": "Wygląda na to, że ChatGPT ma problemy; sprawdź ich stronę."
-    },
-    "unsupported_file_type": {
-      "message": "Nieobsługiwany typ pliku"
-    },
-    "no_files_selected": {
-      "message": "Nie wybrano plików"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Uprość czytanie długich dokumentów z GPT"
-    },
-    "back": {
-      "message": "Wstecz"
-    },
-    "ongoing_conversation_error": {
-      "message": "Trwa rozmowa lub przekroczyłeś limit godzinowy. Proszę poczekać!"
-    },
-    "chat_error": {
-      "message": "ChatGPT może wyświetlać błąd lub osiągnąłeś limit. Sprawdź ich stronę."
-    },
-    "gpt_reader_logo": {
-      "message": "Logo GPT Reader"
-    },
-    "login_to_use": {
-      "message": "Zaloguj się, aby używać"
-    },
-    "activate": {
-      "message": "Aktywuj"
-    },
-    "feedback": {
-      "message": "Opinie"
-    },
-    "input_required_error": {
-      "message": "To pole jest wymagane (min. 5 znaków)"
-    },
-    "please_wait_previous": {
-      "message": "Proszę czekać, aż poprzednie żądanie się zakończy"
-    },
-    "presence_confirmation_title": {
-      "message": "Czy nadal jesteś tutaj?"
-    },
-    "presence_confirmation_description": {
-      "message": "Czy nadal jesteś tutaj?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Tak, chcę kontynuować słuchanie"
-    },
-    "presence_confirmation_no": {
-      "message": "Nie, skończyłem"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Darmowy AI Tekst na mowę z głosami ChatGPT, TTS"
+  },
+  "extensionDescription": {
+    "message": "Naturalna synteza mowy ChatGPT AI dla PDF, artykułów i dokumentów. Pobierz lub odczytaj na głos przy użyciu wysokiej jakości głosów w GPT Reader"
+  },
+  "play_voice": {
+    "message": "Odtwórz głos"
+  },
+  "stop": {
+    "message": "Zatrzymaj"
+  },
+  "drag_and_drop_files": {
+    "message": "Przeciągnij pliki tutaj lub kliknij, aby wybrać"
+  },
+  "upload_limit": {
+    "message": "Możesz przesłać plik do 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Wpisz lub wklej tekst"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Wklej lub wpisz swój tekst"
+  },
+  "title": {
+    "message": "Tytuł"
+  },
+  "text": {
+    "message": "Tekst"
+  },
+  "submit": {
+    "message": "Wyślij"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Czy chcesz pobrać czy posłuchać audio?"
+  },
+  "download": {
+    "message": "Pobierz"
+  },
+  "download_note": {
+    "message": "Może w przyszłości być płatne"
+  },
+  "listen": {
+    "message": "Słuchaj"
+  },
+  "downloading_status": {
+    "message": "Pobieranie"
+  },
+  "download_complete": {
+    "message": "Pobieranie zakończone"
+  },
+  "please_wait_file_downloading": {
+    "message": "Proszę czekać, plik jest pobierany..."
+  },
+  "full_download_note": {
+    "message": "Jeśli plik nie pobierze się automatycznie, kliknij przycisk 'Pobierz' poniżej."
+  },
+  "loading_preview": {
+    "message": "Ładowanie podglądu"
+  },
+  "gpt4_download_note": {
+    "message": "Użytkownicy ChatGPT premium, wybierz GPT-4o mini dla szybszego pobierania. Zamknij okno, aby zmienić model."
+  },
+  "cancel": {
+    "message": "Anuluj"
+  },
+  "cancel_download_confirmation": {
+    "message": "Czy na pewno chcesz anulować pobieranie?"
+  },
+  "continue_download": {
+    "message": "Kontynuuj pobieranie"
+  },
+  "cancel_download": {
+    "message": "Anuluj pobieranie"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader może generować audio, które nie jest w 100% dokładne. Jeśli zauważysz różnice, zamknij okno i rozpocznij nowy czat z ChatGPT."
+  },
+  "playback_speed": {
+    "message": "Prędkość odtwarzania"
+  },
+  "we_appreciate_feedback": {
+    "message": "Doceniamy Twoją opinię."
+  },
+  "feedback_prompt": {
+    "message": "Zawsze dążymy do ulepszeń. Daj nam znać, co możemy poprawić."
+  },
+  "feedback_question": {
+    "message": "Co sądzisz o tym rozszerzeniu?"
+  },
+  "submit_feedback": {
+    "message": "Wyślij moją opinię"
+  },
+  "having_issues": {
+    "message": "Masz problemy? Kliknij tutaj"
+  },
+  "download_aborted": {
+    "message": "Pobieranie przerwane"
+  },
+  "error_no_start": {
+    "message": "Błąd uniemożliwił rozpoczęcie pobierania, zamknij okno i spróbuj ponownie"
+  },
+  "error_stopped_midway": {
+    "message": "Pobieranie przerwane z powodu błędu. Pobierz dotychczas przetworzony dźwięk poniżej."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Czy na pewno chcesz anulować pobieranie?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Czy chcesz anulować pobieranie?"
+  },
+  "note_partial_audio": {
+    "message": "Uwaga: Kliknij przycisk pobierania powyżej, aby pobrać dotychczas przetworzony dźwięk."
+  },
+  "are_you_sure": {
+    "message": "Czy jesteś pewny"
+  },
+  "gpt_reader_notice": {
+    "message": "Komunikat GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader dzieli długi tekst na mniejsze części i wysyła je do ChatGPT. Możesz chwilowo osiągnąć limit. Jeśli tak, odczekaj około godziny."
+  },
+  "acknowledge_and_accept": {
+    "message": "Kontynuując, potwierdzasz i akceptujesz to jako część korzystania z rozszerzenia."
+  },
+  "continue": {
+    "message": "Kontynuuj"
+  },
+  "close": {
+    "message": "Zamknij"
+  },
+  "something_went_wrong": {
+    "message": "Coś poszło nie tak!"
+  },
+  "offline_warning": {
+    "message": "Wygląda na to, że jesteś offline! Sprawdź połączenie i spróbuj ponownie!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader działa wolniej niż zwykle. Zamknij okno, aby sprawdzić błędy. Zalecamy GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Wybierz spośród różnych ulepszonych głosów ChatGPT. Wybierz przed przesłaniem tekstu."
+  },
+  "cannot_upload_one_file": {
+    "message": "Nie można przesłać więcej niż 1 pliku jednocześnie"
+  },
+  "cannot_upload_more_files": {
+    "message": "Nie można przesłać więcej niż $1 plików"
+  },
+  "file_rejected": {
+    "message": "Plik $1 został odrzucony"
+  },
+  "uploading_files": {
+    "message": "Przesyłanie $1..."
+  },
+  "uploaded_files": {
+    "message": "$1 przesłano"
+  },
+  "failed_upload": {
+    "message": "Nie udało się przesłać $1"
+  },
+  "chatgpt_issue": {
+    "message": "Wygląda na to, że ChatGPT ma problemy; sprawdź ich stronę."
+  },
+  "unsupported_file_type": {
+    "message": "Nieobsługiwany typ pliku"
+  },
+  "no_files_selected": {
+    "message": "Nie wybrano plików"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Uprość czytanie długich dokumentów z GPT"
+  },
+  "back": {
+    "message": "Wstecz"
+  },
+  "ongoing_conversation_error": {
+    "message": "Trwa rozmowa lub przekroczyłeś limit godzinowy. Proszę poczekać!"
+  },
+  "chat_error": {
+    "message": "ChatGPT może wyświetlać błąd lub osiągnąłeś limit. Sprawdź ich stronę."
+  },
+  "gpt_reader_logo": {
+    "message": "Logo GPT Reader"
+  },
+  "login_to_use": {
+    "message": "Zaloguj się, aby używać"
+  },
+  "activate": {
+    "message": "Aktywuj"
+  },
+  "feedback": {
+    "message": "Opinie"
+  },
+  "input_required_error": {
+    "message": "To pole jest wymagane (min. 5 znaków)"
+  },
+  "please_wait_previous": {
+    "message": "Proszę czekać, aż poprzednie żądanie się zakończy"
+  },
+  "presence_confirmation_title": {
+    "message": "Czy nadal jesteś tutaj?"
+  },
+  "presence_confirmation_description": {
+    "message": "Czy nadal jesteś tutaj?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Tak, chcę kontynuować słuchanie"
+  },
+  "presence_confirmation_no": {
+    "message": "Nie, skończyłem"
+  },
+  "download_confirm": {
+    "message": "To pobierze audio dla części twojego tekstu, która została dotychczas przetworzona. Czy na pewno chcesz kontynuować?"
+  },
+  "male": {
+    "message": "męski"
+  },
+  "female": {
+    "message": "żeński"
+  },
+  "yes": {
+    "message": "Tak"
+  },
+  "no": {
+    "message": "Nie"
+  },
+  "feedback_thanks": {
+    "message": "Dziękujemy za Twoją cenną opinię!"
+  },
+  "five_stars": {
+    "message": "Twoja opinia jest dla nas bardzo ważna i zobowiązujemy się do ciągłego doskonalenia naszych usług. Prosimy o wystawienie oceny pięciogwiazdkowej w Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Przenieś mnie do sklepu"
+  },
+  "volume": {
+    "message": "Głośność"
+  }
 }
-  

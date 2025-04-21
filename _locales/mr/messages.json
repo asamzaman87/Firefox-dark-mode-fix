@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: ChatGPT आवाजांसह मोफत AI टेक्स्ट टू स्पीच, TTS"
-    },
-    "extensionDescription": {
-      "message": "PDFs, लेख, व दस्तांसाठी नैसर्गिक ChatGPT AI टेक्स्ट टू स्पीच (TTS). GPT Reader मधून उच्च-गुणवत्तेच्या आवाजात वाचा किंवा डाउनलोड करा"
-    },
-    "play_voice": {
-      "message": "आवाज प्ले करा"
-    },
-    "stop": {
-      "message": "थांबवा"
-    },
-    "drag_and_drop_files": {
-      "message": "फाईल येथे ड्रॅग करा, किंवा सिलेक्ट करण्यासाठी क्लिक करा"
-    },
-    "upload_limit": {
-      "message": "तुम्ही 24 MB पर्यंत फाईल अपलोड करू शकता"
-    },
-    "type_or_paste_text": {
-      "message": "टेक्स्ट टाइप करा किंवा पेस्ट करा"
-    },
-    "type_or_paste_text_v2": {
-      "message": "तुमचा टेक्स्ट पेस्ट करा किंवा टाइप करा"
-    },
-    "title": {
-      "message": "शीर्षक"
-    },
-    "text": {
-      "message": "मजकूर"
-    },
-    "submit": {
-      "message": "सबमिट"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "तुम्हाला ऑडिओ डाउनलोड करायचा आहे की ऐकायचा?"
-    },
-    "download": {
-      "message": "डाउनलोड"
-    },
-    "download_note": {
-      "message": "भविष्यात शुल्क लागू होऊ शकते"
-    },
-    "listen": {
-      "message": "ऐका"
-    },
-    "downloading_status": {
-      "message": "डाउनलोड सुरू आहे"
-    },
-    "download_complete": {
-      "message": "डाउनलोड पूर्ण"
-    },
-    "please_wait_file_downloading": {
-      "message": "कृपया प्रतीक्षा करा, फाईल डाउनलोड होत आहे..."
-    },
-    "full_download_note": {
-      "message": "फाईल स्वयंचलितरीत्या डाउनलोड झाली नाही तर, खालील 'डाउनलोड' बटणावर क्लिक करा."
-    },
-    "loading_preview": {
-      "message": "प्रिव्ह्यू लोड होत आहे"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT प्रीमियम वापरकर्ते, जलद डाउनलोडसाठी GPT-4o mini निवडा. मॉडेल बदलण्यासाठी विंडो बंद करा."
-    },
-    "cancel": {
-      "message": "रद्द करा"
-    },
-    "cancel_download_confirmation": {
-      "message": "तुम्हाला डाउनलोड रद्द करायचे आहे का?"
-    },
-    "continue_download": {
-      "message": "डाउनलोड सुरू ठेवा"
-    },
-    "cancel_download": {
-      "message": "डाउनलोड रद्द करा"
-    },
-    "accuracy_warning": {
-      "message": "GPT Reader ने तयार केलेला आवाज 100% अचूक नसू शकतो. जर फरक जाणवला तर विंडो बंद करून नवीन ChatGPT चॅट सुरू करा."
-    },
-    "playback_speed": {
-      "message": "प्लेबॅक गती"
-    },
-    "we_appreciate_feedback": {
-      "message": "आम्ही तुमच्या प्रतिसादाचे कौतुक करतो."
-    },
-    "feedback_prompt": {
-      "message": "आम्ही सदैव सुधारणा शोधत असतो. कृपया आम्हाला काय सुधारता येईल ते सांगा."
-    },
-    "feedback_question": {
-      "message": "या एक्स्टेंशनबद्दल तुमचे मत काय आहे?"
-    },
-    "submit_feedback": {
-      "message": "माझे फीडबॅक सबमिट करा"
-    },
-    "having_issues": {
-      "message": "समस्या येत आहे? इथे क्लिक करा"
-    },
-    "download_aborted": {
-      "message": "डाउनलोड रद्द करण्यात आले"
-    },
-    "error_no_start": {
-      "message": "चुकीमुळे डाउनलोड सुरू होऊ शकले नाही, कृपया विंडो बंद करून पुन्हा प्रयत्न करा"
-    },
-    "error_stopped_midway": {
-      "message": "चुकामुळे डाउनलोड थांबले, आतापर्यंत तयार झालेला आवाज डाउनलोड करा."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "तुम्हाला डाउनलोड रद्द करायचे आहे का?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "डाउनलोड रद्द करायचे आहे का?"
-    },
-    "note_partial_audio": {
-      "message": "नोंद: वरच्या डाउनलोड बटणावर क्लिक करून आतापर्यंत तयार केलेला आवाज घ्या."
-    },
-    "are_you_sure": {
-      "message": "तुम्हाला खात्री आहे"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader नोटीस"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "GPT Reader लांब मजकूर छोटे भाग करून ChatGPT ला पाठवतो. कधी कधी तात्पुरते लिमिट गाठू शकता. तसे झाल्यास, सुमारे 1 तास थांबा."
-    },
-    "acknowledge_and_accept": {
-      "message": "पुढे जाताना तुम्ही हे मान्य करता."
-    },
-    "continue": {
-      "message": "सुरू ठेवा"
-    },
-    "close": {
-      "message": "बंद करा"
-    },
-    "something_went_wrong": {
-      "message": "काहीतरी चुकले!"
-    },
-    "offline_warning": {
-      "message": "तुम्ही ऑफलाईन दिसत आहात! कृपया नेटवर्क तपासा आणि पुन्हा प्रयत्न करा!"
-    },
-    "slow_response_warning": {
-      "message": "GPT Reader सामान्यपेक्षा जास्त वेळ घेत आहे. चूक तपासण्यासाठी विंडो बंद करा. GPT-4 वापरण्याची शिफारस."
-    },
-    "voice_selector_description": {
-      "message": "ChatGPT ने सुधारलेल्या आवाजांपैकी निवडा. मजकूर अपलोड करण्याआधी निवड करा."
-    },
-    "cannot_upload_one_file": {
-      "message": "एकावेळी 1 पेक्षा जास्त फाईल अपलोड करू शकत नाही"
-    },
-    "cannot_upload_more_files": {
-      "message": "$1 पेक्षा जास्त फाईल अपलोड करू शकत नाही"
-    },
-    "file_rejected": {
-      "message": "$1 फाईल नाकारण्यात आली"
-    },
-    "uploading_files": {
-      "message": "$1 अपलोड होत आहे..."
-    },
-    "uploaded_files": {
-      "message": "$1 अपलोड झाले"
-    },
-    "failed_upload": {
-      "message": "$1 अपलोड करण्यात अयशस्वी"
-    },
-    "chatgpt_issue": {
-      "message": "ChatGPT ला काही समस्या असाव्यात, कृपया त्यांच्या साइटवर तपासा."
-    },
-    "unsupported_file_type": {
-      "message": "असमर्थित फाईल प्रकार"
-    },
-    "no_files_selected": {
-      "message": "कोणतीही फाईल निवडली नाही"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "GPT वापरून लांब दस्तावेजांचे वाचन सुलभ करा"
-    },
-    "back": {
-      "message": "मागे"
-    },
-    "ongoing_conversation_error": {
-      "message": "सध्या संभाषण सुरू आहे किंवा तुम्ही मर्यादा ओलांडली आहे. कृपया थांबा!"
-    },
-    "chat_error": {
-      "message": "शायद ChatGPT एरर दाखवत आहे किंवा तुम्ही लिमिट गाठली आहे. त्यांच्या साइटवर तपासा."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader लोगो"
-    },
-    "login_to_use": {
-      "message": "वापरण्यासाठी लॉगिन करा"
-    },
-    "activate": {
-      "message": "सक्रिय करा"
-    },
-    "feedback": {
-      "message": "प्रतिसाद"
-    },
-    "input_required_error": {
-      "message": "हे एक आवश्यक फील्ड आहे (किमान 5 वर्ण)"
-    },
-    "please_wait_previous": {
-      "message": "कृपया मागील विनंती पूर्ण होईपर्यंत थांबा"
-    },
-    "presence_confirmation_title": {
-      "message": "तुम्ही अजूनही येथे आहात?"
-    },
-    "presence_confirmation_description": {
-      "message": "तुम्ही अजूनही येथे आहात?"
-    },
-    "presence_confirmation_yes": {
-      "message": "होय, मी ऐकत राहू इच्छितो"
-    },
-    "presence_confirmation_no": {
-      "message": "नाही, मी पूर्ण केले"
-    }
+  "extensionName": {
+    "message": "GPT Reader: ChatGPT आवाजांसह मोफत AI टेक्स्ट टू स्पीच, TTS"
+  },
+  "extensionDescription": {
+    "message": "PDFs, लेख, व दस्तांसाठी नैसर्गिक ChatGPT AI टेक्स्ट टू स्पीच (TTS). GPT Reader मधून उच्च-गुणवत्तेच्या आवाजात वाचा किंवा डाउनलोड करा"
+  },
+  "play_voice": {
+    "message": "आवाज प्ले करा"
+  },
+  "stop": {
+    "message": "थांबवा"
+  },
+  "drag_and_drop_files": {
+    "message": "फाईल येथे ड्रॅग करा, किंवा सिलेक्ट करण्यासाठी क्लिक करा"
+  },
+  "upload_limit": {
+    "message": "तुम्ही 24 MB पर्यंत फाईल अपलोड करू शकता"
+  },
+  "type_or_paste_text": {
+    "message": "टेक्स्ट टाइप करा किंवा पेस्ट करा"
+  },
+  "type_or_paste_text_v2": {
+    "message": "तुमचा टेक्स्ट पेस्ट करा किंवा टाइप करा"
+  },
+  "title": {
+    "message": "शीर्षक"
+  },
+  "text": {
+    "message": "मजकूर"
+  },
+  "submit": {
+    "message": "सबमिट"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "तुम्हाला ऑडिओ डाउनलोड करायचा आहे की ऐकायचा?"
+  },
+  "download": {
+    "message": "डाउनलोड"
+  },
+  "download_note": {
+    "message": "भविष्यात शुल्क लागू होऊ शकते"
+  },
+  "listen": {
+    "message": "ऐका"
+  },
+  "downloading_status": {
+    "message": "डाउनलोड सुरू आहे"
+  },
+  "download_complete": {
+    "message": "डाउनलोड पूर्ण"
+  },
+  "please_wait_file_downloading": {
+    "message": "कृपया प्रतीक्षा करा, फाईल डाउनलोड होत आहे..."
+  },
+  "full_download_note": {
+    "message": "फाईल स्वयंचलितरीत्या डाउनलोड झाली नाही तर, खालील 'डाउनलोड' बटणावर क्लिक करा."
+  },
+  "loading_preview": {
+    "message": "प्रिव्ह्यू लोड होत आहे"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT प्रीमियम वापरकर्ते, जलद डाउनलोडसाठी GPT-4o mini निवडा. मॉडेल बदलण्यासाठी विंडो बंद करा."
+  },
+  "cancel": {
+    "message": "रद्द करा"
+  },
+  "cancel_download_confirmation": {
+    "message": "तुम्हाला डाउनलोड रद्द करायचे आहे का?"
+  },
+  "continue_download": {
+    "message": "डाउनलोड सुरू ठेवा"
+  },
+  "cancel_download": {
+    "message": "डाउनलोड रद्द करा"
+  },
+  "accuracy_warning": {
+    "message": "GPT Reader ने तयार केलेला आवाज 100% अचूक नसू शकतो. जर फरक जाणवला तर विंडो बंद करून नवीन ChatGPT चॅट सुरू करा."
+  },
+  "playback_speed": {
+    "message": "प्लेबॅक गती"
+  },
+  "we_appreciate_feedback": {
+    "message": "आम्ही तुमच्या प्रतिसादाचे कौतुक करतो."
+  },
+  "feedback_prompt": {
+    "message": "आम्ही सदैव सुधारणा शोधत असतो. कृपया आम्हाला काय सुधारता येईल ते सांगा."
+  },
+  "feedback_question": {
+    "message": "या एक्स्टेंशनबद्दल तुमचे मत काय आहे?"
+  },
+  "submit_feedback": {
+    "message": "माझे फीडबॅक सबमिट करा"
+  },
+  "having_issues": {
+    "message": "समस्या येत आहे? इथे क्लिक करा"
+  },
+  "download_aborted": {
+    "message": "डाउनलोड रद्द करण्यात आले"
+  },
+  "error_no_start": {
+    "message": "चुकीमुळे डाउनलोड सुरू होऊ शकले नाही, कृपया विंडो बंद करून पुन्हा प्रयत्न करा"
+  },
+  "error_stopped_midway": {
+    "message": "चुकामुळे डाउनलोड थांबले, आतापर्यंत तयार झालेला आवाज डाउनलोड करा."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "तुम्हाला डाउनलोड रद्द करायचे आहे का?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "डाउनलोड रद्द करायचे आहे का?"
+  },
+  "note_partial_audio": {
+    "message": "नोंद: वरच्या डाउनलोड बटणावर क्लिक करून आतापर्यंत तयार केलेला आवाज घ्या."
+  },
+  "are_you_sure": {
+    "message": "तुम्हाला खात्री आहे"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader नोटीस"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "GPT Reader लांब मजकूर छोटे भाग करून ChatGPT ला पाठवतो. कधी कधी तात्पुरते लिमिट गाठू शकता. तसे झाल्यास, सुमारे 1 तास थांबा."
+  },
+  "acknowledge_and_accept": {
+    "message": "पुढे जाताना तुम्ही हे मान्य करता."
+  },
+  "continue": {
+    "message": "सुरू ठेवा"
+  },
+  "close": {
+    "message": "बंद करा"
+  },
+  "something_went_wrong": {
+    "message": "काहीतरी चुकले!"
+  },
+  "offline_warning": {
+    "message": "तुम्ही ऑफलाईन दिसत आहात! कृपया नेटवर्क तपासा आणि पुन्हा प्रयत्न करा!"
+  },
+  "slow_response_warning": {
+    "message": "GPT Reader सामान्यपेक्षा जास्त वेळ घेत आहे. चूक तपासण्यासाठी विंडो बंद करा. GPT-4 वापरण्याची शिफारस."
+  },
+  "voice_selector_description": {
+    "message": "ChatGPT ने सुधारलेल्या आवाजांपैकी निवडा. मजकूर अपलोड करण्याआधी निवड करा."
+  },
+  "cannot_upload_one_file": {
+    "message": "एकावेळी 1 पेक्षा जास्त फाईल अपलोड करू शकत नाही"
+  },
+  "cannot_upload_more_files": {
+    "message": "$1 पेक्षा जास्त फाईल अपलोड करू शकत नाही"
+  },
+  "file_rejected": {
+    "message": "$1 फाईल नाकारण्यात आली"
+  },
+  "uploading_files": {
+    "message": "$1 अपलोड होत आहे..."
+  },
+  "uploaded_files": {
+    "message": "$1 अपलोड झाले"
+  },
+  "failed_upload": {
+    "message": "$1 अपलोड करण्यात अयशस्वी"
+  },
+  "chatgpt_issue": {
+    "message": "ChatGPT ला काही समस्या असाव्यात, कृपया त्यांच्या साइटवर तपासा."
+  },
+  "unsupported_file_type": {
+    "message": "असमर्थित फाईल प्रकार"
+  },
+  "no_files_selected": {
+    "message": "कोणतीही फाईल निवडली नाही"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "GPT वापरून लांब दस्तावेजांचे वाचन सुलभ करा"
+  },
+  "back": {
+    "message": "मागे"
+  },
+  "ongoing_conversation_error": {
+    "message": "सध्या संभाषण सुरू आहे किंवा तुम्ही मर्यादा ओलांडली आहे. कृपया थांबा!"
+  },
+  "chat_error": {
+    "message": "शायद ChatGPT एरर दाखवत आहे किंवा तुम्ही लिमिट गाठली आहे. त्यांच्या साइटवर तपासा."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader लोगो"
+  },
+  "login_to_use": {
+    "message": "वापरण्यासाठी लॉगिन करा"
+  },
+  "activate": {
+    "message": "सक्रिय करा"
+  },
+  "feedback": {
+    "message": "प्रतिसाद"
+  },
+  "input_required_error": {
+    "message": "हे एक आवश्यक फील्ड आहे (किमान 5 वर्ण)"
+  },
+  "please_wait_previous": {
+    "message": "कृपया मागील विनंती पूर्ण होईपर्यंत थांबा"
+  },
+  "presence_confirmation_title": {
+    "message": "तुम्ही अजूनही येथे आहात?"
+  },
+  "presence_confirmation_description": {
+    "message": "तुम्ही अजूनही येथे आहात?"
+  },
+  "presence_confirmation_yes": {
+    "message": "होय, मी ऐकत राहू इच्छितो"
+  },
+  "presence_confirmation_no": {
+    "message": "नाही, मी पूर्ण केले"
+  },
+  "download_confirm": {
+    "message": "हे आपल्याला अद्याप प्रक्रियेत आलेल्या आपल्या मजकुराच्या भागासाठी ऑडियो डाउनलोड करेल. आपण नक्कीच पुढे जाणार आहात का?"
+  },
+  "male": {
+    "message": "पुरुष"
+  },
+  "female": {
+    "message": "स्त्री"
+  },
+  "yes": {
+    "message": "हो"
+  },
+  "no": {
+    "message": "नाही"
+  },
+  "feedback_thanks": {
+    "message": "आपल्या मौल्यवान अभिप्रायाबद्दल धन्यवाद!"
+  },
+  "five_stars": {
+    "message": "आपला अभिप्राय आम्हाला अतिशय महत्त्वाचा आहे आणि आम्ही आमच्या सेवेतील सातत्यपूर्ण सुधारणा करण्यास कटिबद्ध आहोत. कृपया Chrome Web Store वर 5-तारे रेटिंग देण्याचा विचार करा!"
+  },
+  "store_redirect": {
+    "message": "मला स्टोअरकडे घेऊन जा"
+  },
+  "volume": {
+    "message": "वॉल्यूम"
+  }
 }
-  

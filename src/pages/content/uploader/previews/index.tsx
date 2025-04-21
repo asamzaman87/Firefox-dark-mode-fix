@@ -1,6 +1,6 @@
 import { FC, memo } from "react";
 import DocumentViewer from "./document-viewer";
-import DownloadPreview from "./dowload-preview";
+import DownloadPreview from "./download-preview";
 import PdfViewer from "./pdf-viewer";
 
 interface PreviewsProps {

@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Libreng AI Text-to-Speech na may ChatGPT Voices, TTS"
-    },
-    "extensionDescription": {
-      "message": "Natural na ChatGPT AI text-to-speech (TTS) para sa PDF, artikulo, at docs. I-download o basahin nang malakas gamit ang de-kalidad na boses sa GPT Reader"
-    },
-    "play_voice": {
-      "message": "I-play ang Boses"
-    },
-    "stop": {
-      "message": "Ihinto"
-    },
-    "drag_and_drop_files": {
-      "message": "I-drag at i-drop ang mga file dito, o i-click para pumili"
-    },
-    "upload_limit": {
-      "message": "Maaari kang mag-upload ng file hanggang 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "I-type o i-paste ang teksto"
-    },
-    "type_or_paste_text_v2": {
-      "message": "I-paste o i-type ang iyong teksto"
-    },
-    "title": {
-      "message": "Pamagat"
-    },
-    "text": {
-      "message": "Teksto"
-    },
-    "submit": {
-      "message": "Ipasa"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Gusto mo bang i-download o pakinggan ang audio?"
-    },
-    "download": {
-      "message": "I-download"
-    },
-    "download_note": {
-      "message": "Maaring maging paid feature sa hinaharap"
-    },
-    "listen": {
-      "message": "Makinig"
-    },
-    "downloading_status": {
-      "message": "Nagda-download"
-    },
-    "download_complete": {
-      "message": "Tapos na ang pag-download"
-    },
-    "please_wait_file_downloading": {
-      "message": "Hintayin habang dina-download ang file..."
-    },
-    "full_download_note": {
-      "message": "Kung hindi awtomatikong na-download, i-click ang 'I-download' button sa ibaba."
-    },
-    "loading_preview": {
-      "message": "Naglo-load ng Preview"
-    },
-    "gpt4_download_note": {
-      "message": "Sa mga premium user ng ChatGPT, piliin ang GPT-4o mini para mas mabilis na download. Isara ang overlay para magpalit ng model."
-    },
-    "cancel": {
-      "message": "Kanselahin"
-    },
-    "cancel_download_confirmation": {
-      "message": "Sigurado ka bang gusto mong ikansela ang pag-download?"
-    },
-    "continue_download": {
-      "message": "Ituloy ang Pag-download"
-    },
-    "cancel_download": {
-      "message": "Kanselahin ang Pag-download"
-    },
-    "accuracy_warning": {
-      "message": "Maaaring hindi 100% tumpak ang audio na ginawa ng GPT Reader. Kung may napansing pagkakaiba, isara ang overlay at gumawa ng bagong ChatGPT chat."
-    },
-    "playback_speed": {
-      "message": "Bilis ng Pag-play"
-    },
-    "we_appreciate_feedback": {
-      "message": "Pinahahalagahan namin ang iyong feedback."
-    },
-    "feedback_prompt": {
-      "message": "Patuloy kaming naghahanap ng paraan upang mapabuti. Sabihin kung ano pa ang puwede naming gawin."
-    },
-    "feedback_question": {
-      "message": "Ano ang masasabi mo tungkol sa extension na ito?"
-    },
-    "submit_feedback": {
-      "message": "Ipasa ang Feedback Ko"
-    },
-    "having_issues": {
-      "message": "May problema? I-click ito"
-    },
-    "download_aborted": {
-      "message": "Kinansela ang pag-download"
-    },
-    "error_no_start": {
-      "message": "May error na pumigil sa pag-download na magsimula, isara ang overlay at subukang muli"
-    },
-    "error_stopped_midway": {
-      "message": "Tumigil ang pag-download dahil sa error. I-download ang naproseso nang audio sa ibaba."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Sigurado kang gusto mong ikansela ang pag-download?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Gusto mo bang ikansela ang pag-download?"
-    },
-    "note_partial_audio": {
-      "message": "Tandaan: I-click ang download button sa itaas para makuha ang naprosesong audio."
-    },
-    "are_you_sure": {
-      "message": "Sigurado ka ba"
-    },
-    "gpt_reader_notice": {
-      "message": "Paunawa ng GPT Reader"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "Hinahati ng GPT Reader ang mahabang teksto sa maliliit na bahagi at ipinapadala sa ChatGPT. Maaaring pansamantalang maabot mo ang limit. Maghintay ng mga isang oras kung mangyari."
-    },
-    "acknowledge_and_accept": {
-      "message": "Sa pagpapatuloy, kinikilala mo at tinatanggap ito."
-    },
-    "continue": {
-      "message": "Magpatuloy"
-    },
-    "close": {
-      "message": "Isara"
-    },
-    "something_went_wrong": {
-      "message": "May nangyaring mali!"
-    },
-    "offline_warning": {
-      "message": "Mukhang offline ka! Suriin ang network at subukang muli!"
-    },
-    "slow_response_warning": {
-      "message": "Mas matagal ang GPT Reader kaysa sa karaniwan. Isara ang overlay para tingnan ang error. Inirerekomenda ang GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Pumili mula sa iba't ibang ChatGPT-enhanced na boses. Gawin ang pagpili bago i-upload ang teksto."
-    },
-    "cannot_upload_one_file": {
-      "message": "Hindi puwedeng mag-upload ng higit sa 1 file nang sabay"
-    },
-    "cannot_upload_more_files": {
-      "message": "Hindi puwedeng mag-upload ng higit sa $1 file"
-    },
-    "file_rejected": {
-      "message": "Tinanggihan ang file na $1"
-    },
-    "uploading_files": {
-      "message": "Nag-u-upload ng $1..."
-    },
-    "uploaded_files": {
-      "message": "Na-upload ang $1"
-    },
-    "failed_upload": {
-      "message": "Nabigong i-upload ang $1"
-    },
-    "chatgpt_issue": {
-      "message": "Mukhang may problema sa ChatGPT. Tingnan ang kanilang website."
-    },
-    "unsupported_file_type": {
-      "message": "Hindi suportadong uri ng file"
-    },
-    "no_files_selected": {
-      "message": "Walang napiling file"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Pasimplehin ang pagbabasa ng mahahabang dokumento gamit ang GPT"
-    },
-    "back": {
-      "message": "Bumalik"
-    },
-    "ongoing_conversation_error": {
-      "message": "May kasalukuyang pag-uusap o nalampasan mo na ang limit. Maghintay at subukang muli!"
-    },
-    "chat_error": {
-      "message": "Maaaring may error sa ChatGPT o naabot mo na ang limit. Tingnan ang kanilang site."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader Logo"
-    },
-    "login_to_use": {
-      "message": "Mag-login para magamit"
-    },
-    "activate": {
-      "message": "I-activate"
-    },
-    "feedback": {
-      "message": "Feedback"
-    },
-    "input_required_error": {
-      "message": "Kinakailangang punan (min 5 characters)"
-    },
-    "please_wait_previous": {
-      "message": "Hintayin matapos ang naunang kahilingan"
-    },
-    "presence_confirmation_title": {
-      "message": "Nandito ka pa ba?"
-    },
-    "presence_confirmation_description": {
-      "message": "Nandito ka pa ba?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Oo, gusto kong magpatuloy makinig"
-    },
-    "presence_confirmation_no": {
-      "message": "Hindi, tapos na ako"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Libreng AI Text-to-Speech na may ChatGPT Voices, TTS"
+  },
+  "extensionDescription": {
+    "message": "Natural na ChatGPT AI text-to-speech (TTS) para sa PDF, artikulo, at docs. I-download o basahin nang malakas gamit ang de-kalidad na boses sa GPT Reader"
+  },
+  "play_voice": {
+    "message": "I-play ang Boses"
+  },
+  "stop": {
+    "message": "Ihinto"
+  },
+  "drag_and_drop_files": {
+    "message": "I-drag at i-drop ang mga file dito, o i-click para pumili"
+  },
+  "upload_limit": {
+    "message": "Maaari kang mag-upload ng file hanggang 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "I-type o i-paste ang teksto"
+  },
+  "type_or_paste_text_v2": {
+    "message": "I-paste o i-type ang iyong teksto"
+  },
+  "title": {
+    "message": "Pamagat"
+  },
+  "text": {
+    "message": "Teksto"
+  },
+  "submit": {
+    "message": "Ipasa"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Gusto mo bang i-download o pakinggan ang audio?"
+  },
+  "download": {
+    "message": "I-download"
+  },
+  "download_note": {
+    "message": "Maaring maging paid feature sa hinaharap"
+  },
+  "listen": {
+    "message": "Makinig"
+  },
+  "downloading_status": {
+    "message": "Nagda-download"
+  },
+  "download_complete": {
+    "message": "Tapos na ang pag-download"
+  },
+  "please_wait_file_downloading": {
+    "message": "Hintayin habang dina-download ang file..."
+  },
+  "full_download_note": {
+    "message": "Kung hindi awtomatikong na-download, i-click ang 'I-download' button sa ibaba."
+  },
+  "loading_preview": {
+    "message": "Naglo-load ng Preview"
+  },
+  "gpt4_download_note": {
+    "message": "Sa mga premium user ng ChatGPT, piliin ang GPT-4o mini para mas mabilis na download. Isara ang overlay para magpalit ng model."
+  },
+  "cancel": {
+    "message": "Kanselahin"
+  },
+  "cancel_download_confirmation": {
+    "message": "Sigurado ka bang gusto mong ikansela ang pag-download?"
+  },
+  "continue_download": {
+    "message": "Ituloy ang Pag-download"
+  },
+  "cancel_download": {
+    "message": "Kanselahin ang Pag-download"
+  },
+  "accuracy_warning": {
+    "message": "Maaaring hindi 100% tumpak ang audio na ginawa ng GPT Reader. Kung may napansing pagkakaiba, isara ang overlay at gumawa ng bagong ChatGPT chat."
+  },
+  "playback_speed": {
+    "message": "Bilis ng Pag-play"
+  },
+  "we_appreciate_feedback": {
+    "message": "Pinahahalagahan namin ang iyong feedback."
+  },
+  "feedback_prompt": {
+    "message": "Patuloy kaming naghahanap ng paraan upang mapabuti. Sabihin kung ano pa ang puwede naming gawin."
+  },
+  "feedback_question": {
+    "message": "Ano ang masasabi mo tungkol sa extension na ito?"
+  },
+  "submit_feedback": {
+    "message": "Ipasa ang Feedback Ko"
+  },
+  "having_issues": {
+    "message": "May problema? I-click ito"
+  },
+  "download_aborted": {
+    "message": "Kinansela ang pag-download"
+  },
+  "error_no_start": {
+    "message": "May error na pumigil sa pag-download na magsimula, isara ang overlay at subukang muli"
+  },
+  "error_stopped_midway": {
+    "message": "Tumigil ang pag-download dahil sa error. I-download ang naproseso nang audio sa ibaba."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Sigurado kang gusto mong ikansela ang pag-download?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Gusto mo bang ikansela ang pag-download?"
+  },
+  "note_partial_audio": {
+    "message": "Tandaan: I-click ang download button sa itaas para makuha ang naprosesong audio."
+  },
+  "are_you_sure": {
+    "message": "Sigurado ka ba"
+  },
+  "gpt_reader_notice": {
+    "message": "Paunawa ng GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "Hinahati ng GPT Reader ang mahabang teksto sa maliliit na bahagi at ipinapadala sa ChatGPT. Maaaring pansamantalang maabot mo ang limit. Maghintay ng mga isang oras kung mangyari."
+  },
+  "acknowledge_and_accept": {
+    "message": "Sa pagpapatuloy, kinikilala mo at tinatanggap ito."
+  },
+  "continue": {
+    "message": "Magpatuloy"
+  },
+  "close": {
+    "message": "Isara"
+  },
+  "something_went_wrong": {
+    "message": "May nangyaring mali!"
+  },
+  "offline_warning": {
+    "message": "Mukhang offline ka! Suriin ang network at subukang muli!"
+  },
+  "slow_response_warning": {
+    "message": "Mas matagal ang GPT Reader kaysa sa karaniwan. Isara ang overlay para tingnan ang error. Inirerekomenda ang GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Pumili mula sa iba't ibang ChatGPT-enhanced na boses. Gawin ang pagpili bago i-upload ang teksto."
+  },
+  "cannot_upload_one_file": {
+    "message": "Hindi puwedeng mag-upload ng higit sa 1 file nang sabay"
+  },
+  "cannot_upload_more_files": {
+    "message": "Hindi puwedeng mag-upload ng higit sa $1 file"
+  },
+  "file_rejected": {
+    "message": "Tinanggihan ang file na $1"
+  },
+  "uploading_files": {
+    "message": "Nag-u-upload ng $1..."
+  },
+  "uploaded_files": {
+    "message": "Na-upload ang $1"
+  },
+  "failed_upload": {
+    "message": "Nabigong i-upload ang $1"
+  },
+  "chatgpt_issue": {
+    "message": "Mukhang may problema sa ChatGPT. Tingnan ang kanilang website."
+  },
+  "unsupported_file_type": {
+    "message": "Hindi suportadong uri ng file"
+  },
+  "no_files_selected": {
+    "message": "Walang napiling file"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Pasimplehin ang pagbabasa ng mahahabang dokumento gamit ang GPT"
+  },
+  "back": {
+    "message": "Bumalik"
+  },
+  "ongoing_conversation_error": {
+    "message": "May kasalukuyang pag-uusap o nalampasan mo na ang limit. Maghintay at subukang muli!"
+  },
+  "chat_error": {
+    "message": "Maaaring may error sa ChatGPT o naabot mo na ang limit. Tingnan ang kanilang site."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader Logo"
+  },
+  "login_to_use": {
+    "message": "Mag-login para magamit"
+  },
+  "activate": {
+    "message": "I-activate"
+  },
+  "feedback": {
+    "message": "Feedback"
+  },
+  "input_required_error": {
+    "message": "Kinakailangang punan (min 5 characters)"
+  },
+  "please_wait_previous": {
+    "message": "Hintayin matapos ang naunang kahilingan"
+  },
+  "presence_confirmation_title": {
+    "message": "Nandito ka pa ba?"
+  },
+  "presence_confirmation_description": {
+    "message": "Nandito ka pa ba?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Oo, gusto kong magpatuloy makinig"
+  },
+  "presence_confirmation_no": {
+    "message": "Hindi, tapos na ako"
+  },
+  "download_confirm": {
+    "message": "Idadownload nito ang audio para sa bahagi ng iyong teksto na naproseso na hanggang ngayon. Sigurado ka bang nais mong magpatuloy?"
+  },
+  "male": {
+    "message": "lalaki"
+  },
+  "female": {
+    "message": "babae"
+  },
+  "yes": {
+    "message": "Oo"
+  },
+  "no": {
+    "message": "Hindi"
+  },
+  "feedback_thanks": {
+    "message": "Maraming salamat sa iyong mahalagang puna!"
+  },
+  "five_stars": {
+    "message": "Lubos naming pinahahalagahan ang iyong puna at patuloy kaming nagsusumikap na pagbutihin ang aming serbisyo. Mangyaring isaalang-alang ang pag-iwan ng limang bituin na pagsusuri sa Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Dalhin ako sa tindahan"
+  },
+  "volume": {
+    "message": "Lakas ng tunog"
   }
-  
+}

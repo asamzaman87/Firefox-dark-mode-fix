@@ -1,4 +1,4 @@
-import { CHUNK_TO_PAUSE_ON, LISTENERS, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, SECOND_TO_REDUCE_FROM_DURATION, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
@@ -6,67 +6,190 @@ import { useToast } from "./use-toast";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
-    const {downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, chunks, setIsPromptingPaused, isPromptingPaused, audioUrls, setAudioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl(isDownload);
-    const { isAuthenticated, token } = useAuthToken();
+    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl(isDownload);
+    const { isAuthenticated } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
     const [isAudioLoading, setAudioLoading] = useState<boolean>(false);
     const [hasCompletePlaying, setHasCompletePlaying] = useState<boolean>(false);
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [playRate, setPlayRate] = useState<number>(1);
-    const [completedPlaying, setCompletedPlaying] = useState<string[]>([]);
+    const [volume, setVolume] = useState<number>(0.5);
     const [isBackPressed, setIsBackPressed] = useState<boolean>(false);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-    const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [isPresenceModalOpen, setIsPresenceModalOpen] = useState<boolean>(false);
-    const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
+    const [playTimeDuration, setPlayTimeDuration] = useState<number>(0);
+    const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
+    const [partialChunkCompletedPlaying, setPartialChunkCompletedPlaying] = useState<boolean>(false);
+    const [arrayBuffers, setArrayBuffers] = useState<ArrayBuffer[]>([]);
+    const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
+
     const toast15SecRef = useRef<string | null>(null);
+    const infoToastIdRef = useRef<string | null>(null);
+    const currentTimeRef = useRef<number>(0);
 
-    const audioPlayer = useMemo(() => new Audio(), []);
+    const sourceBuffer = useRef<SourceBuffer | null>(null);
+    const mediaSource = useMemo(()=>new MediaSource(), [isBackPressed]);
+    const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
 
-    //handles onpause event to set isPlaying and isPaused states
-    audioPlayer.onpause = () => {
+    //resetting the media source when the user clicks on the back button or onUnmount
+    const endMediaStream = ()=>{
+        if (sourceBuffer.current) {
+            sourceBuffer.current.abort();
+            sourceBuffer.current = null;
+            try {
+                if (!mediaSource || mediaSource.readyState !== "open") return;
+                mediaSource.endOfStream();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+                // console.log("Error closing MediaSource:", error);
+            }
+        }
+    }
+
+    mediaSource.onsourceopen=()=>{
+        if (!mediaSource || mediaSource.readyState !== "open") return;
+
+        try {
+            if(!MediaSource.isTypeSupported('audio/aac'))  {
+                setIsTypeAACSupported(false);
+                return
+            }
+            sourceBuffer.current = mediaSource.addSourceBuffer('audio/aac'); // AAC codec
+
+            sourceBuffer.current.onupdateend = () => {
+                if (arrayBuffers.length > 0 && sourceBuffer.current && !sourceBuffer.current.updating) {
+                    sourceBuffer.current.appendBuffer(arrayBuffers.shift() as ArrayBuffer);
+                }
+            };
+        } catch (error) {
+            console.error("Error adding SourceBuffer:", error);
+        }
+    }
+
+    useMemo(async () => {
+      if (blobs.length && !isBackPressed && isTypeAACSupported && !isDownload) {
+        const lastElement = blobs.slice(-1).pop();
+        if (lastElement) {
+          const buffer = await lastElement.arrayBuffer();
+          setArrayBuffers((arrayBuffers) => arrayBuffers.concat(buffer));
+        }
+        return
+      }
+      setArrayBuffers([]);
+    }, [blobs]);
+
+    //appending audio to the media source to play it without blocking playback
+    useMemo(() => {
+        if (arrayBuffers.length > 0 && mediaSource.readyState === "open") {
+            if (sourceBuffer.current && !sourceBuffer.current.updating) {
+                try {
+                    sourceBuffer.current.appendBuffer(arrayBuffers.shift() as ArrayBuffer);
+                } catch (error) {
+                    console.error("Error appending buffer:", error);
+                }
+            }
+
+           if(!isPlaying && !isPaused){
+                seekAudio.playbackRate = playRate;
+                seekAudio.volume = volume;
+                seekAudio.play();
+            }
+        }
+    }, [arrayBuffers]);
+
+    //fallback if MediaSource does not support AAC on browsers
+    const playNext = useCallback(
+        async (index: number) => {
+          seekAudio.src = audioUrls[index];
+          seekAudio.id = (index + 1).toString();
+          seekAudio.playbackRate = playRate;
+          seekAudio.volume = volume;
+          if((isPlaying || !isPaused || partialChunkCompletedPlaying) || (!isPlaying && !isPaused)) seekAudio.play()
+        },
+        [audioUrls, playRate, volume]
+      );
+  
+      //initiating play
+      useMemo(() => {
+        if (audioUrls.length === 1 && !isTypeAACSupported && !isDownload) {
+          playNext(0);
+        }
+      }, [audioUrls]);
+
+    // useMemo(() => {
+    //         if (blobs.length > 0 && !hasCompletePlaying && !isDownload && !isTypeAACSupported) {
+    //             const combinedBlob = new Blob(blobs, {
+    //                 type: blobs[0]?.type || "audio/aac",
+    //             });
+    //             const combinedUrl = URL.createObjectURL(combinedBlob);
+    //             seekAudio.src = combinedUrl;
+    //             seekAudio.volume = volume;
+    //             seekAudio.playbackRate = playRate;
+    //             seekAudio.currentTime = currentTimeRef.current;
+    //             if((isPlaying || !isPaused || partialChunkCompletedPlaying) || (!isPlaying && !isPaused)) seekAudio.play();
+    //             setPartialChunkCompletedPlaying(false);
+    //             // Create an object URL for the combined blob
+    //         }
+    // }, [blobs]);
+
+    seekAudio.onloadedmetadata = () => {
+        if(!isTypeAACSupported){
+            setPlayTimeDuration(seekAudio.duration);
+        }
+    };  
+
+    seekAudio.onprogress = () => {
+        if (seekAudio.buffered.length > 0 && isTypeAACSupported) {
+            const bufferedEnd = seekAudio.buffered.end(seekAudio.buffered.length - 1);
+            setCurrentIndex(c=>c++); //stores the current index of the audio that has been processed and appended to the SourceBuffer
+            setPlayTimeDuration(bufferedEnd);
+        }
+    }
+
+    seekAudio.ontimeupdate = () => {
+        setPartialChunkCompletedPlaying(false);
+        setCurrentPlayTime(seekAudio.currentTime);
+        currentTimeRef.current = seekAudio.currentTime;
+        if (Math.round(currentPlayTime) === Math.round(playTimeDuration)) {
+            if (blobs.length !== chunks.length) return setPartialChunkCompletedPlaying(true);
+            setHasCompletePlaying(true);
+        }
+    }
+
+    seekAudio.onpause = () => {
         setIsPlaying(false);
         setIsPaused(true);
-    }
+    };
 
     //handles onplay event to set isPlaying and isPaused states
-    audioPlayer.onplay = () => {
+    seekAudio.onplay = () => {
         setIsPlaying(true);
         setIsPaused(false);
-    }
+    };
 
-    useMemo(() => {
-        if (audioUrls.length > 0 && (audioUrls.length === completedPlaying.length) && !isLoading && chunks.length === audioUrls.length) {
-            //console.log("PLAYER COMPLETED ALL CHUNKS");
+    //does not get triggered with the current implementation of the audio player (MediaSource)
+    //fallsback if MediaSource does not support AAC on browsers
+    seekAudio.onended = () => {
+      if (isTypeAACSupported) return;
+      const currentIndexPlaying = currentIndex + 1;
+      playNext(currentIndexPlaying);
+      setCurrentIndex(currentIndexPlaying);
+      if (currentIndexPlaying === chunks.length - 1) {
+        return setHasCompletePlaying(true);
+      }
+    //   return setPartialChunkCompletedPlaying(true);
+      
+    };
+
+    const onScrub = useCallback((time: number) => {
+        const currentTime = (time * playTimeDuration) / 100;
+        seekAudio.currentTime = currentTime;
+        if (Math.round(currentTime) === Math.round(playTimeDuration)) {
+            if (currentIndex !== chunks.length - 1) return setPartialChunkCompletedPlaying(true);
             setHasCompletePlaying(true);
-            setAudioUrls(completedPlaying);
-            audioPlayer.src = completedPlaying[0];
-            audioPlayer.id = "1";
-            // audioPlayer.pause();
-
-            //delayed to allow src to be set
-            setTimeout(() => {
-                setCompletedPlaying([]);
-            }, 200);
         }
-    }, [completedPlaying]);
-
-    const playNext = useCallback(async (index: number) => {
-        try {
-            if (token) {
-                audioPlayer.src = audioUrls[index];
-                audioPlayer.id = (index + 1).toString();
-                audioPlayer.playbackRate = playRate;
-                audioPlayer.play();
-                setIsPlaying(true);
-                setIsPaused(false);
-            }
-        } catch (e) {
-            const error = e as Error;
-            toast({ description: chrome.i18n.getMessage("something_went_wrong") + "\n" + JSON.stringify(error), style: TOAST_STYLE_CONFIG });
-        }
-    }, [token, audioUrls, audioPlayer, playRate])
+    }, [seekAudio, playTimeDuration, currentIndex]);
 
     const resetTimeout = () => {
         const timeoutId = localStorage.getItem("gptr/audio-timeout");
@@ -77,97 +200,98 @@ const useAudioPlayer = (isDownload: boolean) => {
     }
 
     const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
-        //console.log("RESETTING");
-        audioPlayer.pause();
-        audioPlayer.currentTime = 0;
+        // console.log("RESETTING");
+        if (seekAudio) {
+            seekAudio.pause();
+            seekAudio.currentTime = 0;
+        }
         setCurrentIndex(0);
+        setCurrentPlayTime(0);
+        setPlayTimeDuration(0);
         setIsPlaying(false);
         setIsPaused(false);
         setHasCompletePlaying(!!completeAudio);
         resetTimeout();
+        endMediaStream();
         if (full) {
-            audioPlayer.src = "";
+            seekAudio.src = "";
             resetAudioUrl();
-            audioPlayer.removeEventListener("ended", () => { });
         }
-    }, [audioPlayer, resetAudioUrl, isBackPressed])
-
-    //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
-    useMemo(() => {
-        if (isPromptingPaused) {
-            // if(currentIndex > 0 && currentIndex % CHUNK_TO_PAUSE_ON === CHUNK_TO_PAUSE_ON - 1){
-            //     setIsPresenceModalOpen(true);
-            // }
-            const chunkPlaying = +audioPlayer.id;
-            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0) {
-                setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
-            }
-        }
-    }, [isPromptingPaused, currentIndex])
-
-    const markCompleted = (url: string) => {
-        const tempComp = [...completedPlaying];
-        tempComp.push(url)
-        setCompletedPlaying(tempComp);
-    }
-
-    const handleAudioEnd = useCallback(async () => {
-        // console.log("HANDLE_AUDIO_END");
-        const current = currentIndex + 1;
-
-        if (isPromptingPaused) {
-            //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
-            //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
-            //yes from the presence modal to continue from the 10th chunk
-            if (current % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
-                pause();
-                return
-            }
-        }
-
-        markCompleted(audioPlayer.src)
-
-        if (currentIndex === audioUrls.length - 1 && !isLoading) {
-            return reset(false, true);
-        }
-
-        if (audioUrls.length > current) {
-            setCurrentIndex(current);
-            playNext(current);
-        }
-        if (isLoading && !isPlaying && audioUrls.length === current) return setIsStreamLoading(true);
-        if (isLoading && !isPlaying && audioUrls.length < current) return setIsStreamLoading(true); //fixes a bug where the stream is loading when it shouldn't be on skip -> back -> play -> skip
-    }, [currentIndex, playNext, audioUrls.length, reset, isPromptingPaused, isLoading, chunks, isPlaying])
+    }, [seekAudio, resetAudioUrl, isBackPressed])
 
     useMemo(() => {
-        if (isLoading && isStreamLoading) {
-            setAudioUrlsBeforeStop(audioUrls.length);
+        if (blobs.length && isBackPressed){
+            reset(true);
         }
-        if (!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex + 1)) {
-            setCurrentIndex(currentIndex + 1);
-            playNext(currentIndex + 1);
-            setIsStreamLoading(false);
-        }
-    }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
+    }, [blobs, isBackPressed]);
 
-    const pause = () => {
-        if (isPlaying && audioPlayer.src) {
-            audioPlayer.pause();
+    //show the presence modal if the audio currently being played is near the end of playback while the isPromptingPaused is true
+    useMemo(() => {
+        if (isPromptingPaused) {
+            if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
+                const currentTimeRounded = Math.round(currentPlayTime);
+                const durationRounded = Math.round(playTimeDuration);
+                const stopTime = durationRounded - SECOND_TO_REDUCE_FROM_DURATION; //20 seconds before the end of the audio
+                if(currentTimeRounded >= stopTime && !isPresenceModalOpen){
+                    setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
+                }
+            }
         }
-    }
-
-    const stop = useCallback(() => {
-        if (audioPlayer.src) {
-            reset()
-        }
-    }, [audioPlayer, reset])
+    }, [isPromptingPaused, currentIndex, currentPlayTime])
 
     const play = useCallback(() => {
-        if (!isPlaying) {
-            audioPlayer.playbackRate = playRate;
-            audioPlayer.play();
+        if (seekAudio) {
+            seekAudio.play();
         }
-    }, [audioPlayer, isPlaying, currentIndex, playRate])
+    }, [seekAudio]);
+
+    const pause = useCallback(() => {
+        if (seekAudio) {
+            seekAudio.pause();
+        }
+    }, [seekAudio]);
+
+
+    const stop = useCallback(() => {
+        if (seekAudio.src) {
+            reset()
+        }
+    }, [seekAudio, reset])
+
+    const replay = useCallback(async() => {
+        if(!isTypeAACSupported){
+            setCurrentIndex(0)
+            return playNext(0);
+        }
+        if (seekAudio) {
+            seekAudio.currentTime = 0;
+            play();
+        }
+    }, [seekAudio, play, reset]);
+
+    const onForward = useCallback(() => {
+        if (seekAudio) {
+            const currentTime = seekAudio.currentTime;
+            const increasedTime = currentTime + FORWARD_REWIND_TIME;
+            const finalTime = increasedTime > playTimeDuration ? playTimeDuration-0.5 : increasedTime;
+            seekAudio.currentTime = finalTime;
+        }
+    }, [seekAudio,playTimeDuration]);
+
+    const onRewind = useCallback(() => {
+        if (seekAudio) {
+            const currentTime = seekAudio.currentTime;
+            const reducedTime = currentTime - FORWARD_REWIND_TIME;
+            if(reducedTime < 0) return seekAudio.currentTime = 0;
+            seekAudio.currentTime = reducedTime;
+        }
+    }, [seekAudio]);
+
+    const handleVolumeChange = useCallback((volume: number, mute?: boolean) => {
+        seekAudio.muted = !!mute;
+        seekAudio.volume = volume;
+        setVolume(volume);
+    }, [seekAudio])
 
     //handler to toggle rate change from the play button
     const handlePlayRateChange = useCallback((reset?: boolean, rate?: number) => {
@@ -193,26 +317,8 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //controls audio player rate
     useMemo(() => {
-        audioPlayer.playbackRate = playRate;
-    }, [audioPlayer, playRate])
-
-    //check for network connection via navigator
-    const updateConnectionStatus = () => {
-        if (!navigator.onLine) {
-            toast({ description: chrome.i18n.getMessage("offline_warning"), style: TOAST_STYLE_CONFIG });
-        }
-    }
-
-    useEffect(() => {
-        audioPlayer.addEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
-        return () => {
-            audioPlayer.removeEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
-            window.removeEventListener('online', updateConnectionStatus);
-            window.removeEventListener('offline', updateConnectionStatus);
-        }
-    }, [audioPlayer, handleAudioEnd]);
+        seekAudio.playbackRate = playRate;
+    }, [seekAudio, playRate])
 
     const checkForLoadingAfterNSeconds = () => {
         const isActive = localStorage.getItem("gptr/active") === "true";
@@ -225,36 +331,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
         localStorage.removeItem("gptr/is-first-audio-loading");
     }
-
-    useMemo(() => {
-        //resetting audio url if back pressed as the synthesize api might return a delayed response after back press while a chunk had called it
-        if (audioUrls.length && isBackPressed) {
-            return reset(true);
-        }
-
-        setAudioLoading(audioUrls.length === 0); //initial loading state if the first chunk is being prompted and not playing
-        localStorage.setItem("gptr/is-first-audio-loading", String(audioUrls.length === 0));
-
-        if (audioUrls.length === 1) {
-            setCompletedPlaying([]);
-            //console.log("INIT PLAY")
-            playNext(0)
-        }
-
-        //play new audio if presence modal is open and stream is processing after click on yes
-        if (audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")) {
-            //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
-            if (isPaused) {
-                markCompleted(audioPlayer.src)
-                setCurrentIndex(currentIndex + 1);
-                playNext(currentIndex + 1);
-                setTimeout(() => {
-                    setWasPromptStopped("INIT");
-                }, 500);
-            }
-        }
-
-    }, [audioUrls.length, isBackPressed]);
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
     useMemo(() => {
@@ -271,7 +347,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //clear timeout when downloading has progress
     useMemo(() => {
-        if(isDownload && progress > 0 && timeoutId) {
+        if (isDownload && progress > 0 && timeoutId) {
             clearTimeout(timeoutId);
         }
     }, [isDownload, progress, timeoutId]);
@@ -282,7 +358,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (text.trim().length) {
             const id = setTimeout(() => {
                 checkForLoadingAfterNSeconds();
-            }, isDownload ? LOADING_TIMEOUT_FOR_DOWNLOAD :LOADING_TIMEOUT);
+            }, isDownload ? LOADING_TIMEOUT_FOR_DOWNLOAD : LOADING_TIMEOUT);
             localStorage.setItem("gptr/audio-timeout", `${id}`);
             setTimeoutId(id)
         } else {
@@ -294,45 +370,83 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }, [text.trim().length, isDownload]);
 
+    const showInfoToast = (
+        duration: number = 70000,
+        description: string = chrome.i18n.getMessage("accuracy_warning")
+    ) => {
+        const { id } = toast({
+            description,
+            style: { ...TOAST_STYLE_CONFIG_INFO, fontWeight: "600" },
+            duration,
+        });
+        infoToastIdRef.current = id;
+    };
+
+    useMemo(() => {
+        if (blobs.length > 1 || isPlaying) {
+            localStorage.removeItem("gptr/is-first-audio-loading");
+            if (infoToastIdRef.current) dismiss(infoToastIdRef.current);
+        }
+    }, [blobs, isPlaying])
+
+    useEffect(() => {
+        if (chunks.length > 0 && !isDownload) {
+            showInfoToast()
+        }
+        return () => {
+            if (infoToastIdRef.current) dismiss(infoToastIdRef.current);
+        }
+    }, [chunks.length])
+
     return {
-        isAuthenticated,
         isPlaying,
         isPaused,
+        currentIndex,
+        seekAudio,
+        ended,
+        text,
+        isVoiceLoading,
+        playRate,
+        voices,
+        isBackPressed,
+        is9ThChunk,
+        isFetching,
+        volume,
+        progress,
+        isAuthenticated,
+        partialChunkCompletedPlaying,
+        currentPlayTime,
+        playTimeDuration,
+        isPromptingPaused,
+        hasCompletePlaying,
+        downloadPreviewText,
+        isPresenceModalOpen,
+        isLoading: isAudioLoading,
         pause,
         stop,
         play,
-        currentIndex,
-        audioPlayer,
-        playNext,
+        replay,
         extractText,
         splitAndSendPrompt,
-        ended,
-        text,
-        isStreamLoading,
-        isLoading: isAudioLoading,
-        isVoiceLoading,
         reset,
-        playRate,
         handlePlayRateChange,
-        voices,
         setVoices,
-        hasCompletePlaying,
         setHasCompletePlaying,
-        isBackPressed,
         setIsBackPressed,
-        is9ThChunk,
         reStartChunkProcess,
         setIs9thChunk,
         setAudioLoading,
-        setIsPromptingPaused, isPromptingPaused,
-        isPresenceModalOpen,
+        setIsPromptingPaused,
         setIsPresenceModalOpen,
-        isFetching,
         downloadCombinedFile,
-        progress, 
         setProgress,
-        downloadPreviewText
-    }
+        onForward,
+        onRewind,
+        handleVolumeChange,
+        onScrub,
+        showInfoToast,
+        isTypeAACSupported
+    };
 
 
 }

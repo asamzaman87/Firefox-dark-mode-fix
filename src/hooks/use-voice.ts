@@ -1,10 +1,17 @@
-import { LISTENERS, VOICE } from "@/lib/constants";
+import { LISTENERS, MALE_VOICES, VOICE } from "@/lib/constants";
 import { Voice } from "@/pages/content/uploader/voice-selector";
 import { useCallback, useEffect, useState } from "react";
 
 const useVoice = () => {
     const [voices, setVoices] = useState<Voice>({ selected: VOICE, voices: [] });
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const addGenderToVoice = (detail: Voice) => {
+        const voices = detail.voices.map((voice) => {
+                return { ...voice, gender: MALE_VOICES.includes(voice.voice) ? chrome.i18n.getMessage("male") : chrome.i18n.getMessage("female") };
+        });
+        return { selected: detail.selected, voices };
+    }
 
     const handleVoiceReceived = useCallback((event: Event) => {
         const { detail } = event as Event & { detail: Voice };
@@ -13,7 +20,7 @@ const useVoice = () => {
         if (storedVoice) {
             detail.selected = storedVoice;
         }
-        setVoices(detail);
+        setVoices(addGenderToVoice(detail));
         setIsLoading(false);
     }, []);
 

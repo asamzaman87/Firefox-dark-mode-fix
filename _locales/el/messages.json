@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Δωρεάν AI μετατροπή κειμένου σε ομιλία με φωνές ChatGPT, TTS"
-    },
-    "extensionDescription": {
-      "message": "Φυσική μετατροπή κειμένου σε ομιλία (TTS) από ChatGPT για PDF, άρθρα και έγγραφα. Κατεβάστε ή ακούστε με ποιοτικές φωνές μέσω GPT Reader"
-    },
-    "play_voice": {
-      "message": "Αναπαραγωγή φωνής"
-    },
-    "stop": {
-      "message": "Διακοπή"
-    },
-    "drag_and_drop_files": {
-      "message": "Σύρετε τα αρχεία εδώ ή κάντε κλικ για επιλογή"
-    },
-    "upload_limit": {
-      "message": "Μπορείτε να ανεβάσετε αρχείο έως 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Πληκτρολογήστε ή επικολλήστε κείμενο"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Επικολλήστε ή πληκτρολογήστε το κείμενό σας"
-    },
-    "title": {
-      "message": "Τίτλος"
-    },
-    "text": {
-      "message": "Κείμενο"
-    },
-    "submit": {
-      "message": "Υποβολή"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Θέλετε να κατεβάσετε ή να ακούσετε το ηχητικό;"
-    },
-    "download": {
-      "message": "Λήψη"
-    },
-    "download_note": {
-      "message": "Ενδέχεται να απαιτεί πληρωμή στο μέλλον"
-    },
-    "listen": {
-      "message": "Ακρόαση"
-    },
-    "downloading_status": {
-      "message": "Γίνεται λήψη"
-    },
-    "download_complete": {
-      "message": "Η λήψη ολοκληρώθηκε"
-    },
-    "please_wait_file_downloading": {
-      "message": "Παρακαλώ περιμένετε όσο κατεβαίνει το αρχείο..."
-    },
-    "full_download_note": {
-      "message": "Εάν δεν έγινε αυτόματα λήψη, κάντε κλικ στο «Λήψη» παρακάτω."
-    },
-    "loading_preview": {
-      "message": "Φόρτωση προεπισκόπησης"
-    },
-    "gpt4_download_note": {
-      "message": "Αγαπητοί χρήστες ChatGPT premium, επιλέξτε GPT-4o mini για ταχύτερη λήψη. Κλείστε το παράθυρο για αλλαγή μοντέλου."
-    },
-    "cancel": {
-      "message": "Ακύρωση"
-    },
-    "cancel_download_confirmation": {
-      "message": "Είστε σίγουροι ότι θέλετε να ακυρώσετε τη λήψη;"
-    },
-    "continue_download": {
-      "message": "Συνέχιση λήψης"
-    },
-    "cancel_download": {
-      "message": "Ακύρωση λήψης"
-    },
-    "accuracy_warning": {
-      "message": "Το GPT Reader μπορεί να παράγει ήχο που δεν είναι 100% ακριβής. Αν δείτε διαφορές, κλείστε το παράθυρο, ανοίξτε νέο ChatGPT chat και δοκιμάστε ξανά."
-    },
-    "playback_speed": {
-      "message": "Ταχύτητα αναπαραγωγής"
-    },
-    "we_appreciate_feedback": {
-      "message": "Εκτιμούμε τα σχόλιά σας."
-    },
-    "feedback_prompt": {
-      "message": "Πάντα αναζητούμε τρόπους βελτίωσης. Πείτε μας τι μπορούμε να κάνουμε καλύτερα."
-    },
-    "feedback_question": {
-      "message": "Ποια είναι η γνώμη σας για αυτήν την επέκταση;"
-    },
-    "submit_feedback": {
-      "message": "Υποβολή σχολίων"
-    },
-    "having_issues": {
-      "message": "Προβλήματα; Κάντε κλικ εδώ"
-    },
-    "download_aborted": {
-      "message": "Η λήψη ακυρώθηκε"
-    },
-    "error_no_start": {
-      "message": "Ένα σφάλμα εμπόδισε την έναρξη λήψης. Κλείστε το παράθυρο και δοκιμάστε ξανά"
-    },
-    "error_stopped_midway": {
-      "message": "Η λήψη σταμάτησε λόγω σφάλματος. Κατεβάστε τον επεξεργασμένο ήχο μέχρι στιγμής παρακάτω."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Είστε σίγουροι ότι θέλετε να ακυρώσετε τη λήψη;"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Θέλετε να ακυρώσετε τη λήψη;"
-    },
-    "note_partial_audio": {
-      "message": "Σημείωση: Πατήστε το κουμπί λήψης παραπάνω για τον ήχο που έχει επεξεργαστεί ως τώρα."
-    },
-    "are_you_sure": {
-      "message": "Είστε σίγουροι"
-    },
-    "gpt_reader_notice": {
-      "message": "Ειδοποίηση GPT Reader"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "Το GPT Reader διαχωρίζει μεγάλα κείμενα σε μικρότερα μέρη και τα στέλνει στο ChatGPT. Ενδέχεται προσωρινά να φτάσετε ένα όριο. Αν συμβεί, περιμένετε περίπου μία ώρα."
-    },
-    "acknowledge_and_accept": {
-      "message": "Συνεχίζοντας, αναγνωρίζετε και αποδέχεστε αυτό στο πλαίσιο χρήσης της επέκτασης."
-    },
-    "continue": {
-      "message": "Συνέχεια"
-    },
-    "close": {
-      "message": "Κλείσιμο"
-    },
-    "something_went_wrong": {
-      "message": "Κάτι πήγε στραβά!"
-    },
-    "offline_warning": {
-      "message": "Φαίνεται πως είστε εκτός σύνδεσης! Ελέγξτε το δίκτυο και δοκιμάστε ξανά!"
-    },
-    "slow_response_warning": {
-      "message": "Το GPT Reader αργεί περισσότερο από το συνηθισμένο. Κλείστε το παράθυρο για έλεγχο σφαλμάτων. Συνιστάται GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Επιλέξτε ανάμεσα σε βελτιωμένες φωνές ChatGPT. Επιλέξτε πριν ανεβάσετε το κείμενο."
-    },
-    "cannot_upload_one_file": {
-      "message": "Δεν μπορείτε να ανεβάσετε περισσότερα από 1 αρχείο κάθε φορά"
-    },
-    "cannot_upload_more_files": {
-      "message": "Δεν μπορείτε να ανεβάσετε πάνω από $1 αρχεία"
-    },
-    "file_rejected": {
-      "message": "Το αρχείο $1 απορρίφθηκε"
-    },
-    "uploading_files": {
-      "message": "Γίνεται μεταφόρτωση του $1..."
-    },
-    "uploaded_files": {
-      "message": "Το $1 μεταφορτώθηκε"
-    },
-    "failed_upload": {
-      "message": "Αποτυχία μεταφόρτωσης $1"
-    },
-    "chatgpt_issue": {
-      "message": "Το ChatGPT φαίνεται να έχει προβλήματα. Ελέγξτε τον ιστότοπό τους."
-    },
-    "unsupported_file_type": {
-      "message": "Μη υποστηριζόμενος τύπος αρχείου"
-    },
-    "no_files_selected": {
-      "message": "Δεν επιλέχθηκαν αρχεία"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Απλοποιήστε την ανάγνωση μεγάλων εγγράφων με το GPT"
-    },
-    "back": {
-      "message": "Πίσω"
-    },
-    "ongoing_conversation_error": {
-      "message": "Υπάρχει σε εξέλιξη συνομιλία ή ξεπεράσατε το όριο. Περιμένετε και δοκιμάστε αργότερα!"
-    },
-    "chat_error": {
-      "message": "Ίσως το ChatGPT εμφανίζει σφάλμα ή φτάσατε το όριο. Ελέγξτε τον ιστότοπό τους."
-    },
-    "gpt_reader_logo": {
-      "message": "Λογότυπο GPT Reader"
-    },
-    "login_to_use": {
-      "message": "Συνδεθείτε για χρήση"
-    },
-    "activate": {
-      "message": "Ενεργοποίηση"
-    },
-    "feedback": {
-      "message": "Σχόλια"
-    },
-    "input_required_error": {
-      "message": "Απαιτείται πεδίο (τουλάχιστον 5 χαρακτήρες)"
-    },
-    "please_wait_previous": {
-      "message": "Περιμένετε να ολοκληρωθεί το προηγούμενο αίτημα"
-    },
-    "presence_confirmation_title": {
-      "message": "Είστε ακόμα εδώ;"
-    },
-    "presence_confirmation_description": {
-      "message": "Είστε ακόμα εδώ;"
-    },
-    "presence_confirmation_yes": {
-      "message": "Ναι, θέλω να συνεχίσω να ακούω"
-    },
-    "presence_confirmation_no": {
-      "message": "Όχι, τελείωσα"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Δωρεάν AI μετατροπή κειμένου σε ομιλία με φωνές ChatGPT, TTS"
+  },
+  "extensionDescription": {
+    "message": "Φυσική μετατροπή κειμένου σε ομιλία (TTS) από ChatGPT για PDF, άρθρα και έγγραφα. Κατεβάστε ή ακούστε με ποιοτικές φωνές μέσω GPT Reader"
+  },
+  "play_voice": {
+    "message": "Αναπαραγωγή φωνής"
+  },
+  "stop": {
+    "message": "Διακοπή"
+  },
+  "drag_and_drop_files": {
+    "message": "Σύρετε τα αρχεία εδώ ή κάντε κλικ για επιλογή"
+  },
+  "upload_limit": {
+    "message": "Μπορείτε να ανεβάσετε αρχείο έως 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Πληκτρολογήστε ή επικολλήστε κείμενο"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Επικολλήστε ή πληκτρολογήστε το κείμενό σας"
+  },
+  "title": {
+    "message": "Τίτλος"
+  },
+  "text": {
+    "message": "Κείμενο"
+  },
+  "submit": {
+    "message": "Υποβολή"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Θέλετε να κατεβάσετε ή να ακούσετε το ηχητικό;"
+  },
+  "download": {
+    "message": "Λήψη"
+  },
+  "download_note": {
+    "message": "Ενδέχεται να απαιτεί πληρωμή στο μέλλον"
+  },
+  "listen": {
+    "message": "Ακρόαση"
+  },
+  "downloading_status": {
+    "message": "Γίνεται λήψη"
+  },
+  "download_complete": {
+    "message": "Η λήψη ολοκληρώθηκε"
+  },
+  "please_wait_file_downloading": {
+    "message": "Παρακαλώ περιμένετε όσο κατεβαίνει το αρχείο..."
+  },
+  "full_download_note": {
+    "message": "Εάν δεν έγινε αυτόματα λήψη, κάντε κλικ στο «Λήψη» παρακάτω."
+  },
+  "loading_preview": {
+    "message": "Φόρτωση προεπισκόπησης"
+  },
+  "gpt4_download_note": {
+    "message": "Αγαπητοί χρήστες ChatGPT premium, επιλέξτε GPT-4o mini για ταχύτερη λήψη. Κλείστε το παράθυρο για αλλαγή μοντέλου."
+  },
+  "cancel": {
+    "message": "Ακύρωση"
+  },
+  "cancel_download_confirmation": {
+    "message": "Είστε σίγουροι ότι θέλετε να ακυρώσετε τη λήψη;"
+  },
+  "continue_download": {
+    "message": "Συνέχιση λήψης"
+  },
+  "cancel_download": {
+    "message": "Ακύρωση λήψης"
+  },
+  "accuracy_warning": {
+    "message": "Το GPT Reader μπορεί να παράγει ήχο που δεν είναι 100% ακριβής. Αν δείτε διαφορές, κλείστε το παράθυρο, ανοίξτε νέο ChatGPT chat και δοκιμάστε ξανά."
+  },
+  "playback_speed": {
+    "message": "Ταχύτητα αναπαραγωγής"
+  },
+  "we_appreciate_feedback": {
+    "message": "Εκτιμούμε τα σχόλιά σας."
+  },
+  "feedback_prompt": {
+    "message": "Πάντα αναζητούμε τρόπους βελτίωσης. Πείτε μας τι μπορούμε να κάνουμε καλύτερα."
+  },
+  "feedback_question": {
+    "message": "Ποια είναι η γνώμη σας για αυτήν την επέκταση;"
+  },
+  "submit_feedback": {
+    "message": "Υποβολή σχολίων"
+  },
+  "having_issues": {
+    "message": "Προβλήματα; Κάντε κλικ εδώ"
+  },
+  "download_aborted": {
+    "message": "Η λήψη ακυρώθηκε"
+  },
+  "error_no_start": {
+    "message": "Ένα σφάλμα εμπόδισε την έναρξη λήψης. Κλείστε το παράθυρο και δοκιμάστε ξανά"
+  },
+  "error_stopped_midway": {
+    "message": "Η λήψη σταμάτησε λόγω σφάλματος. Κατεβάστε τον επεξεργασμένο ήχο μέχρι στιγμής παρακάτω."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Είστε σίγουροι ότι θέλετε να ακυρώσετε τη λήψη;"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Θέλετε να ακυρώσετε τη λήψη;"
+  },
+  "note_partial_audio": {
+    "message": "Σημείωση: Πατήστε το κουμπί λήψης παραπάνω για τον ήχο που έχει επεξεργαστεί ως τώρα."
+  },
+  "are_you_sure": {
+    "message": "Είστε σίγουροι"
+  },
+  "gpt_reader_notice": {
+    "message": "Ειδοποίηση GPT Reader"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "Το GPT Reader διαχωρίζει μεγάλα κείμενα σε μικρότερα μέρη και τα στέλνει στο ChatGPT. Ενδέχεται προσωρινά να φτάσετε ένα όριο. Αν συμβεί, περιμένετε περίπου μία ώρα."
+  },
+  "acknowledge_and_accept": {
+    "message": "Συνεχίζοντας, αναγνωρίζετε και αποδέχεστε αυτό στο πλαίσιο χρήσης της επέκτασης."
+  },
+  "continue": {
+    "message": "Συνέχεια"
+  },
+  "close": {
+    "message": "Κλείσιμο"
+  },
+  "something_went_wrong": {
+    "message": "Κάτι πήγε στραβά!"
+  },
+  "offline_warning": {
+    "message": "Φαίνεται πως είστε εκτός σύνδεσης! Ελέγξτε το δίκτυο και δοκιμάστε ξανά!"
+  },
+  "slow_response_warning": {
+    "message": "Το GPT Reader αργεί περισσότερο από το συνηθισμένο. Κλείστε το παράθυρο για έλεγχο σφαλμάτων. Συνιστάται GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Επιλέξτε ανάμεσα σε βελτιωμένες φωνές ChatGPT. Επιλέξτε πριν ανεβάσετε το κείμενο."
+  },
+  "cannot_upload_one_file": {
+    "message": "Δεν μπορείτε να ανεβάσετε περισσότερα από 1 αρχείο κάθε φορά"
+  },
+  "cannot_upload_more_files": {
+    "message": "Δεν μπορείτε να ανεβάσετε πάνω από $1 αρχεία"
+  },
+  "file_rejected": {
+    "message": "Το αρχείο $1 απορρίφθηκε"
+  },
+  "uploading_files": {
+    "message": "Γίνεται μεταφόρτωση του $1..."
+  },
+  "uploaded_files": {
+    "message": "Το $1 μεταφορτώθηκε"
+  },
+  "failed_upload": {
+    "message": "Αποτυχία μεταφόρτωσης $1"
+  },
+  "chatgpt_issue": {
+    "message": "Το ChatGPT φαίνεται να έχει προβλήματα. Ελέγξτε τον ιστότοπό τους."
+  },
+  "unsupported_file_type": {
+    "message": "Μη υποστηριζόμενος τύπος αρχείου"
+  },
+  "no_files_selected": {
+    "message": "Δεν επιλέχθηκαν αρχεία"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Απλοποιήστε την ανάγνωση μεγάλων εγγράφων με το GPT"
+  },
+  "back": {
+    "message": "Πίσω"
+  },
+  "ongoing_conversation_error": {
+    "message": "Υπάρχει σε εξέλιξη συνομιλία ή ξεπεράσατε το όριο. Περιμένετε και δοκιμάστε αργότερα!"
+  },
+  "chat_error": {
+    "message": "Ίσως το ChatGPT εμφανίζει σφάλμα ή φτάσατε το όριο. Ελέγξτε τον ιστότοπό τους."
+  },
+  "gpt_reader_logo": {
+    "message": "Λογότυπο GPT Reader"
+  },
+  "login_to_use": {
+    "message": "Συνδεθείτε για χρήση"
+  },
+  "activate": {
+    "message": "Ενεργοποίηση"
+  },
+  "feedback": {
+    "message": "Σχόλια"
+  },
+  "input_required_error": {
+    "message": "Απαιτείται πεδίο (τουλάχιστον 5 χαρακτήρες)"
+  },
+  "please_wait_previous": {
+    "message": "Περιμένετε να ολοκληρωθεί το προηγούμενο αίτημα"
+  },
+  "presence_confirmation_title": {
+    "message": "Είστε ακόμα εδώ;"
+  },
+  "presence_confirmation_description": {
+    "message": "Είστε ακόμα εδώ;"
+  },
+  "presence_confirmation_yes": {
+    "message": "Ναι, θέλω να συνεχίσω να ακούω"
+  },
+  "presence_confirmation_no": {
+    "message": "Όχι, τελείωσα"
+  },
+  "download_confirm": {
+    "message": "Αυτό θα κατεβάσει τον ήχο για το τμήμα του κειμένου σας που έχει επεξεργαστεί μέχρι τώρα. Είστε σίγουροι ότι θέλετε να συνεχίσετε?"
+  },
+  "male": {
+    "message": "αρσενικό"
+  },
+  "female": {
+    "message": "θηλυκό"
+  },
+  "yes": {
+    "message": "Ναι"
+  },
+  "no": {
+    "message": "Όχι"
+  },
+  "feedback_thanks": {
+    "message": "Σας ευχαριστούμε για τα πολύτιμα σχόλιά σας!"
+  },
+  "five_stars": {
+    "message": "Τα σχόλιά σας εκτιμώνται ιδιαίτερα και δεσμευόμαστε να βελτιώνουμε συνεχώς την υπηρεσία μας. Παρακαλούμε αφήστε μια αξιολόγηση 5 αστέρων στο Chrome Web Store!"
+  },
+  "store_redirect": {
+    "message": "Μεταβείτε στο κατάστημα"
+  },
+  "volume": {
+    "message": "Ένταση"
   }
-  
+}

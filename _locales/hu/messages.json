@@ -1,222 +1,248 @@
 {
-    "extensionName": {
-      "message": "GPT Reader: Ingyenes AI szöveg-beszéd ChatGPT hangokkal, TTS"
-    },
-    "extensionDescription": {
-      "message": "Természetes ChatGPT AI szöveg-beszéd (TTS) PDF-ekhez, cikkekhez és dokumentumokhoz. Töltsd le vagy hallgasd meg kiváló hangokkal a GPT Readerben"
-    },
-    "play_voice": {
-      "message": "Hang lejátszása"
-    },
-    "stop": {
-      "message": "Leállítás"
-    },
-    "drag_and_drop_files": {
-      "message": "Húzd ide a fájlokat, vagy kattints a kiválasztáshoz"
-    },
-    "upload_limit": {
-      "message": "Feltölthető fájl mérete legfeljebb 24 MB"
-    },
-    "type_or_paste_text": {
-      "message": "Írj be vagy illessz be szöveget"
-    },
-    "type_or_paste_text_v2": {
-      "message": "Illeszd be vagy írd be a szöveged"
-    },
-    "title": {
-      "message": "Cím"
-    },
-    "text": {
-      "message": "Szöveg"
-    },
-    "submit": {
-      "message": "Küldés"
-    },
-    "would_you_like_to_download_or_listen": {
-      "message": "Szeretnéd letölteni vagy meghallgatni a hangot?"
-    },
-    "download": {
-      "message": "Letöltés"
-    },
-    "download_note": {
-      "message": "A jövőben fizetőssé válhat"
-    },
-    "listen": {
-      "message": "Hallgatás"
-    },
-    "downloading_status": {
-      "message": "Letöltés folyamatban"
-    },
-    "download_complete": {
-      "message": "Letöltés befejeződött"
-    },
-    "please_wait_file_downloading": {
-      "message": "Várj, amíg a fájl letöltődik..."
-    },
-    "full_download_note": {
-      "message": "Ha nem töltődött le automatikusan, kattints lent a „Letöltés” gombra."
-    },
-    "loading_preview": {
-      "message": "Előnézet betöltése"
-    },
-    "gpt4_download_note": {
-      "message": "ChatGPT prémium felhasználóknak ajánlott a GPT-4o mini a gyorsabb letöltéshez. Zárd be az ablakot a modellváltáshoz."
-    },
-    "cancel": {
-      "message": "Mégse"
-    },
-    "cancel_download_confirmation": {
-      "message": "Biztosan meg akarod szakítani a letöltést?"
-    },
-    "continue_download": {
-      "message": "Folytasd a letöltést"
-    },
-    "cancel_download": {
-      "message": "Letöltés megszakítása"
-    },
-    "accuracy_warning": {
-      "message": "A GPT Reader által létrehozott hang nem feltétlenül 100% pontos. Ha eltérést látsz, zárd be az ablakot, nyiss új ChatGPT-csevegést, és próbáld újra."
-    },
-    "playback_speed": {
-      "message": "Lejátszási sebesség"
-    },
-    "we_appreciate_feedback": {
-      "message": "Értékeljük a visszajelzésed."
-    },
-    "feedback_prompt": {
-      "message": "Folyamatosan javítani szeretnénk. Mondd el, mit tehetnénk jobban."
-    },
-    "feedback_question": {
-      "message": "Mit gondolsz erről a bővítményről?"
-    },
-    "submit_feedback": {
-      "message": "Küldd el a visszajelzésem"
-    },
-    "having_issues": {
-      "message": "Problémák? Kattints ide"
-    },
-    "download_aborted": {
-      "message": "A letöltés megszakítva"
-    },
-    "error_no_start": {
-      "message": "Egy hiba megakadályozta a letöltés indítását, zárd be az ablakot és próbáld újra"
-    },
-    "error_stopped_midway": {
-      "message": "A letöltés hiba miatt megállt, töltsd le az eddig feldolgozott hangot lent."
-    },
-    "cancel_download_confirmation_title": {
-      "message": "Biztosan meg akarod szakítani a letöltést?"
-    },
-    "cancel_download_confirmation_sr": {
-      "message": "Meg akarod szakítani a letöltést?"
-    },
-    "note_partial_audio": {
-      "message": "Megjegyzés: Kattints a fenti letöltés gombra az eddig feldolgozott hanghoz."
-    },
-    "are_you_sure": {
-      "message": "Biztos vagy benne"
-    },
-    "gpt_reader_notice": {
-      "message": "GPT Reader figyelmeztetés"
-    },
-    "gpt_reader_chunk_explanation": {
-      "message": "A GPT Reader hosszú szöveget kisebb részekre bont, és elküldi ChatGPT-nek. Ideiglenesen elérheted a limitet. Ha ez történik, várj kb. egy órát."
-    },
-    "acknowledge_and_accept": {
-      "message": "A folytatással elfogadod ezt a feltételt."
-    },
-    "continue": {
-      "message": "Folytatás"
-    },
-    "close": {
-      "message": "Bezár"
-    },
-    "something_went_wrong": {
-      "message": "Valami hiba történt!"
-    },
-    "offline_warning": {
-      "message": "Úgy tűnik, offline vagy! Ellenőrizd a hálózatot, és próbáld újra!"
-    },
-    "slow_response_warning": {
-      "message": "A GPT Reader lassabb a szokásosnál. Zárd be az ablakot a hibakereséshez. Ajánlott a GPT-4."
-    },
-    "voice_selector_description": {
-      "message": "Válassz a ChatGPT által javított hangok közül. Feltöltés előtt dönts."
-    },
-    "cannot_upload_one_file": {
-      "message": "Egyszerre csak 1 fájlt tölthetsz fel"
-    },
-    "cannot_upload_more_files": {
-      "message": "Nem tölthetsz fel több mint $1 fájlt"
-    },
-    "file_rejected": {
-      "message": "A(z) $1 fájl elutasítva"
-    },
-    "uploading_files": {
-      "message": "$1 feltöltése folyamatban..."
-    },
-    "uploaded_files": {
-      "message": "$1 feltöltve"
-    },
-    "failed_upload": {
-      "message": "$1 feltöltése sikertelen"
-    },
-    "chatgpt_issue": {
-      "message": "Úgy tűnik, a ChatGPT-nek gondjai vannak, nézd meg a weboldalukat."
-    },
-    "unsupported_file_type": {
-      "message": "Nem támogatott fájltípus"
-    },
-    "no_files_selected": {
-      "message": "Nincs fájl kiválasztva"
-    },
-    "untitled_file": {
-      "message": "Untitled.txt"
-    },
-    "gpt_reader": {
-      "message": "GPT Reader"
-    },
-    "simplify_reading": {
-      "message": "Egyszerűsítsd a hosszú dokumentumok olvasását a GPT segítségével"
-    },
-    "back": {
-      "message": "Vissza"
-    },
-    "ongoing_conversation_error": {
-      "message": "Folyamatban lévő beszélgetés vagy elérted a limitet. Várj és próbáld később!"
-    },
-    "chat_error": {
-      "message": "Lehet, hogy a ChatGPT hibát jelez, vagy elérted a limitet. Nézd meg az oldalukat."
-    },
-    "gpt_reader_logo": {
-      "message": "GPT Reader logó"
-    },
-    "login_to_use": {
-      "message": "Jelentkezz be a használathoz"
-    },
-    "activate": {
-      "message": "Aktiválás"
-    },
-    "feedback": {
-      "message": "Visszajelzés"
-    },
-    "input_required_error": {
-      "message": "Ez egy kötelező mező (min. 5 karakter)"
-    },
-    "please_wait_previous": {
-      "message": "Várj, amíg az előző kérés befejeződik"
-    },
-    "presence_confirmation_title": {
-      "message": "Még itt vagy?"
-    },
-    "presence_confirmation_description": {
-      "message": "Még itt vagy?"
-    },
-    "presence_confirmation_yes": {
-      "message": "Igen, tovább akarom hallgatni"
-    },
-    "presence_confirmation_no": {
-      "message": "Nem, kész vagyok"
-    }
+  "extensionName": {
+    "message": "GPT Reader: Ingyenes AI szöveg-beszéd ChatGPT hangokkal, TTS"
+  },
+  "extensionDescription": {
+    "message": "Természetes ChatGPT AI szöveg-beszéd (TTS) PDF-ekhez, cikkekhez és dokumentumokhoz. Töltsd le vagy hallgasd meg kiváló hangokkal a GPT Readerben"
+  },
+  "play_voice": {
+    "message": "Hang lejátszása"
+  },
+  "stop": {
+    "message": "Leállítás"
+  },
+  "drag_and_drop_files": {
+    "message": "Húzd ide a fájlokat, vagy kattints a kiválasztáshoz"
+  },
+  "upload_limit": {
+    "message": "Feltölthető fájl mérete legfeljebb 24 MB"
+  },
+  "type_or_paste_text": {
+    "message": "Írj be vagy illessz be szöveget"
+  },
+  "type_or_paste_text_v2": {
+    "message": "Illeszd be vagy írd be a szöveged"
+  },
+  "title": {
+    "message": "Cím"
+  },
+  "text": {
+    "message": "Szöveg"
+  },
+  "submit": {
+    "message": "Küldés"
+  },
+  "would_you_like_to_download_or_listen": {
+    "message": "Szeretnéd letölteni vagy meghallgatni a hangot?"
+  },
+  "download": {
+    "message": "Letöltés"
+  },
+  "download_note": {
+    "message": "A jövőben fizetőssé válhat"
+  },
+  "listen": {
+    "message": "Hallgatás"
+  },
+  "downloading_status": {
+    "message": "Letöltés folyamatban"
+  },
+  "download_complete": {
+    "message": "Letöltés befejeződött"
+  },
+  "please_wait_file_downloading": {
+    "message": "Várj, amíg a fájl letöltődik..."
+  },
+  "full_download_note": {
+    "message": "Ha nem töltődött le automatikusan, kattints lent a „Letöltés” gombra."
+  },
+  "loading_preview": {
+    "message": "Előnézet betöltése"
+  },
+  "gpt4_download_note": {
+    "message": "ChatGPT prémium felhasználóknak ajánlott a GPT-4o mini a gyorsabb letöltéshez. Zárd be az ablakot a modellváltáshoz."
+  },
+  "cancel": {
+    "message": "Mégse"
+  },
+  "cancel_download_confirmation": {
+    "message": "Biztosan meg akarod szakítani a letöltést?"
+  },
+  "continue_download": {
+    "message": "Folytasd a letöltést"
+  },
+  "cancel_download": {
+    "message": "Letöltés megszakítása"
+  },
+  "accuracy_warning": {
+    "message": "A GPT Reader által létrehozott hang nem feltétlenül 100% pontos. Ha eltérést látsz, zárd be az ablakot, nyiss új ChatGPT-csevegést, és próbáld újra."
+  },
+  "playback_speed": {
+    "message": "Lejátszási sebesség"
+  },
+  "we_appreciate_feedback": {
+    "message": "Értékeljük a visszajelzésed."
+  },
+  "feedback_prompt": {
+    "message": "Folyamatosan javítani szeretnénk. Mondd el, mit tehetnénk jobban."
+  },
+  "feedback_question": {
+    "message": "Mit gondolsz erről a bővítményről?"
+  },
+  "submit_feedback": {
+    "message": "Küldd el a visszajelzésem"
+  },
+  "having_issues": {
+    "message": "Problémák? Kattints ide"
+  },
+  "download_aborted": {
+    "message": "A letöltés megszakítva"
+  },
+  "error_no_start": {
+    "message": "Egy hiba megakadályozta a letöltés indítását, zárd be az ablakot és próbáld újra"
+  },
+  "error_stopped_midway": {
+    "message": "A letöltés hiba miatt megállt, töltsd le az eddig feldolgozott hangot lent."
+  },
+  "cancel_download_confirmation_title": {
+    "message": "Biztosan meg akarod szakítani a letöltést?"
+  },
+  "cancel_download_confirmation_sr": {
+    "message": "Meg akarod szakítani a letöltést?"
+  },
+  "note_partial_audio": {
+    "message": "Megjegyzés: Kattints a fenti letöltés gombra az eddig feldolgozott hanghoz."
+  },
+  "are_you_sure": {
+    "message": "Biztos vagy benne"
+  },
+  "gpt_reader_notice": {
+    "message": "GPT Reader figyelmeztetés"
+  },
+  "gpt_reader_chunk_explanation": {
+    "message": "A GPT Reader hosszú szöveget kisebb részekre bont, és elküldi ChatGPT-nek. Ideiglenesen elérheted a limitet. Ha ez történik, várj kb. egy órát."
+  },
+  "acknowledge_and_accept": {
+    "message": "A folytatással elfogadod ezt a feltételt."
+  },
+  "continue": {
+    "message": "Folytatás"
+  },
+  "close": {
+    "message": "Bezár"
+  },
+  "something_went_wrong": {
+    "message": "Valami hiba történt!"
+  },
+  "offline_warning": {
+    "message": "Úgy tűnik, offline vagy! Ellenőrizd a hálózatot, és próbáld újra!"
+  },
+  "slow_response_warning": {
+    "message": "A GPT Reader lassabb a szokásosnál. Zárd be az ablakot a hibakereséshez. Ajánlott a GPT-4."
+  },
+  "voice_selector_description": {
+    "message": "Válassz a ChatGPT által javított hangok közül. Feltöltés előtt dönts."
+  },
+  "cannot_upload_one_file": {
+    "message": "Egyszerre csak 1 fájlt tölthetsz fel"
+  },
+  "cannot_upload_more_files": {
+    "message": "Nem tölthetsz fel több mint $1 fájlt"
+  },
+  "file_rejected": {
+    "message": "A(z) $1 fájl elutasítva"
+  },
+  "uploading_files": {
+    "message": "$1 feltöltése folyamatban..."
+  },
+  "uploaded_files": {
+    "message": "$1 feltöltve"
+  },
+  "failed_upload": {
+    "message": "$1 feltöltése sikertelen"
+  },
+  "chatgpt_issue": {
+    "message": "Úgy tűnik, a ChatGPT-nek gondjai vannak, nézd meg a weboldalukat."
+  },
+  "unsupported_file_type": {
+    "message": "Nem támogatott fájltípus"
+  },
+  "no_files_selected": {
+    "message": "Nincs fájl kiválasztva"
+  },
+  "untitled_file": {
+    "message": "Untitled.txt"
+  },
+  "gpt_reader": {
+    "message": "GPT Reader"
+  },
+  "simplify_reading": {
+    "message": "Egyszerűsítsd a hosszú dokumentumok olvasását a GPT segítségével"
+  },
+  "back": {
+    "message": "Vissza"
+  },
+  "ongoing_conversation_error": {
+    "message": "Folyamatban lévő beszélgetés vagy elérted a limitet. Várj és próbáld később!"
+  },
+  "chat_error": {
+    "message": "Lehet, hogy a ChatGPT hibát jelez, vagy elérted a limitet. Nézd meg az oldalukat."
+  },
+  "gpt_reader_logo": {
+    "message": "GPT Reader logó"
+  },
+  "login_to_use": {
+    "message": "Jelentkezz be a használathoz"
+  },
+  "activate": {
+    "message": "Aktiválás"
+  },
+  "feedback": {
+    "message": "Visszajelzés"
+  },
+  "input_required_error": {
+    "message": "Ez egy kötelező mező (min. 5 karakter)"
+  },
+  "please_wait_previous": {
+    "message": "Várj, amíg az előző kérés befejeződik"
+  },
+  "presence_confirmation_title": {
+    "message": "Még itt vagy?"
+  },
+  "presence_confirmation_description": {
+    "message": "Még itt vagy?"
+  },
+  "presence_confirmation_yes": {
+    "message": "Igen, tovább akarom hallgatni"
+  },
+  "presence_confirmation_no": {
+    "message": "Nem, kész vagyok"
+  },
+  "download_confirm": {
+    "message": "Ez letölti azt az audiót, amely a szöveged azon részéhez tartozik, amit eddig feldolgoztunk. Biztosan folytatni szeretnéd?"
+  },
+  "male": {
+    "message": "férfi"
+  },
+  "female": {
+    "message": "nő"
+  },
+  "yes": {
+    "message": "Igen"
+  },
+  "no": {
+    "message": "Nem"
+  },
+  "feedback_thanks": {
+    "message": "Köszönjük értékes visszajelzésedet!"
+  },
+  "five_stars": {
+    "message": "Nagyon értékeljük a visszajelzésed, és elkötelezettek vagyunk szolgáltatásunk folyamatos fejlesztése mellett. Kérjük, hagyj ötcsillagos értékelést a Chrome Web Store-ban!"
+  },
+  "store_redirect": {
+    "message": "Vigyen a boltba"
+  },
+  "volume": {
+    "message": "Hangerő"
   }
-  
+}

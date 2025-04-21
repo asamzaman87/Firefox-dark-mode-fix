@@ -217,5 +217,32 @@
   },
   "presence_confirmation_no": {
     "message": "No, ya terminé"
+  },
+  "download_confirm": {
+    "message": "Esto descargaría el audio para la parte de tu texto que ha sido procesada hasta ahora. ¿Estás seguro de que deseas continuar?"
+  },
+  "male": {
+    "message": "masculino"
+  },
+  "female": {
+    "message": "femenino"
+  },
+  "yes": {
+    "message": "Sí"
+  },
+  "no": {
+    "message": "No"
+  },
+  "feedback_thanks": {
+    "message": "¡Gracias por tu valioso feedback!"
+  },
+  "five_stars": {
+    "message": "Tu opinión es muy apreciada y estamos comprometidos a mejorar continuamente nuestro servicio. Por favor, considera dejar una reseña de cinco estrellas en el Chrome Web Store."
+  },
+  "store_redirect": {
+    "message": "Llévame a la tienda"
+  },
+  "volume": {
+    "message": "Volumen"
   }
 }
