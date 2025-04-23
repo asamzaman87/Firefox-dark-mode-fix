@@ -8,22 +8,25 @@ interface SeekbarProps {
   duration: number;
   isLoading: boolean;
   onScrub: (time: number) => void;
+  hasPlayBackEnded?: boolean;
 }
 
 const Seekbar: FC<SeekbarProps> = ({
+  hasPlayBackEnded,
   currentTime,
   duration,
   onScrub
 }) => {
   const completed = useMemo(
-    () => (currentTime / duration) * 100,
-    [currentTime, duration]
+    () => hasPlayBackEnded ? 100 : (currentTime / duration) * 100,
+    [currentTime, duration, hasPlayBackEnded]
   );
   const isNotPlaying = useMemo(
     () => currentTime === 0 && duration === 0,
     [currentTime, duration]
   );
 
+  
   return (
     <div className="w-full flex flex-col gap-0.5 justify-between items-center">
       {isNotPlaying ? (

@@ -23,6 +23,8 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [partialChunkCompletedPlaying, setPartialChunkCompletedPlaying] = useState<boolean>(false);
     const [arrayBuffers, setArrayBuffers] = useState<ArrayBuffer[]>([]);
     const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
+    const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
+    const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
 
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
@@ -105,16 +107,18 @@ const useAudioPlayer = (isDownload: boolean) => {
             seekAudio.id = (index + 1).toString();
             seekAudio.playbackRate = playRate;
             seekAudio.volume = volume;
-            if ((isPlaying || !isPaused || partialChunkCompletedPlaying) || (!isPlaying && !isPaused)) seekAudio.play()
+            seekAudio.play()
         },
         [audioUrls, playRate, volume]
     );
 
     //initiating play
     useMemo(() => {
-        if (audioUrls.length === 1 && !isTypeAACSupported && !isDownload) {
+        if(isTypeAACSupported) return;
+        if (audioUrls.length === 1 && !isDownload) {
             playNext(0);
         }
+
         //play new audio if presence modal is open and stream is processing after click on yes
         if (audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")) {
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
@@ -128,18 +132,17 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }, [audioUrls]);
 
-    //adjust loading state when presence modal is open and stream is processing after clicking on yes
     useMemo(() => {
-        //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
-        //set isStreamLoading to true to indicate buffering
-        if (audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped === "PAUSED") {
-            setAudioLoading(isLoading && isPaused);
-            setTimeout(() => {
-                setWasPromptStopped("LOADING");
-            }, 500);
+        if(isTypeAACSupported) return;
+        if (isLoading && isStreamLoading) {
+            setAudioUrlsBeforeStop(audioUrls.length);
         }
-        if (!isPromptingPaused) setIsPresenceModalOpen(false);
-    }, [isPromptingPaused, isLoading, isPaused, wasPromptStopped])
+        if (!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex + 1)) {
+            setCurrentIndex(currentIndex + 1);
+            playNext(currentIndex + 1);
+            setIsStreamLoading(false);
+        }
+    }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
     // useMemo(() => {
     //         if (blobs.length > 0 && !hasCompletePlaying && !isDownload && !isTypeAACSupported) {
@@ -196,12 +199,12 @@ const useAudioPlayer = (isDownload: boolean) => {
     //fallsback if MediaSource does not support AAC on browsers
     seekAudio.onended = () => {
         if (isTypeAACSupported) return;
-        const currentIndexPlaying = currentIndex + 1;
-
+        const nextIndexToPlay = currentIndex + 1;
         const handlePartialCompletion = () => {
-            if (currentIndexPlaying === chunks.length - 1) {
+            if (nextIndexToPlay === chunks.length - 1) {
                 return setHasCompletePlaying(true);
             }
+            setPartialChunkCompletedPlaying(true);
         }
         
         if (isPromptingPaused) {
@@ -214,8 +217,15 @@ const useAudioPlayer = (isDownload: boolean) => {
                 return
             }
         }
-        playNext(currentIndexPlaying);
-        setCurrentIndex(currentIndexPlaying);
+
+        if (audioUrls.length > nextIndexToPlay) {
+            setCurrentIndex(nextIndexToPlay);
+            playNext(nextIndexToPlay);
+        }
+
+        if (isLoading && !isPlaying && (audioUrls.length === nextIndexToPlay || audioUrls.length < nextIndexToPlay)){
+            setIsStreamLoading(true);
+        }
         handlePartialCompletion();
         //   return setPartialChunkCompletedPlaying(true);
     };
@@ -260,13 +270,14 @@ const useAudioPlayer = (isDownload: boolean) => {
     useMemo(() => {
         if (blobs.length && isBackPressed) {
             reset(true);
+            setIsPresenceModalOpen(false);
         }
     }, [blobs, isBackPressed]);
 
     //show the presence modal if the audio currently being played is near the end of playback while the isPromptingPaused is true
     //only works if the audio/aac is supported
     useMemo(() => {
-        if (isPromptingPaused && isTypeAACSupported) {
+        if (isPromptingPaused) {
             if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
                 const currentTimeRounded = Math.round(currentPlayTime);
                 const durationRounded = Math.round(playTimeDuration);
@@ -280,13 +291,13 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
     //only works if the audio/aac is not supported
-    useMemo(() => {
-        if (isPromptingPaused && !isTypeAACSupported) {
-            if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
-                setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
-            }
-        }
-    }, [isPromptingPaused, currentIndex])
+    // useMemo(() => {
+    //     if (isPromptingPaused && !isTypeAACSupported) {
+    //         if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
+    //             setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
+    //         }
+    //     }
+    // }, [isPromptingPaused, currentIndex])
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
     //only works if the audio/aac is not supported
@@ -472,7 +483,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         hasCompletePlaying,
         downloadPreviewText,
         isPresenceModalOpen,
-        isLoading: isAudioLoading,
+        isLoading: isAudioLoading || isStreamLoading,
         pause,
         stop,
         play,

@@ -64,7 +64,7 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
         targetSize = initialChunkSize;
       } else {
         // Increase the target size by 50%, ensuring it does not exceed maxChunkSize
-        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
+        targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
       }
     } else {
       // Accumulate the sentence into the current chunk

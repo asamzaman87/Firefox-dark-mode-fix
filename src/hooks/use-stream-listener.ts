@@ -35,7 +35,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         if (response.status !== 200) {
             if (response.status === 429) {
                 ////console.log(response.status);
-                handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait an hour.", Infinity);
+                handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.", Infinity);
                 return
             }
             if (response.status === 403 || response.status === 404 || response.status === 503) {
