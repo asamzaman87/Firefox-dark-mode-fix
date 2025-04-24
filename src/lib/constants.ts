@@ -62,3 +62,6 @@ export const MALE_VOICES = ["orbit", "breeze", "cove", "ember", "fathom"];
 export const REVIEWS_CHROME = "https://chromewebstore.google.com/detail/gpt-reader-free-ai-text-t/aeggkceabpfajnglgaeadofdmeboimml/reviews";
 export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/gpt-reader";
 export const SECOND_TO_REDUCE_FROM_DURATION = 20;
+// export const BACKEND_URI = "http://localhost:3000/api"
+export const BACKEND_URI = "https://readeon.com/api"
+export const BANNER_POLLING_TIME_INTERVAL = 10000;

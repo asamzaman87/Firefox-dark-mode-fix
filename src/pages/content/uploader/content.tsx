@@ -10,6 +10,7 @@ import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
+import Announcements from "./announcements-popup";
 import DownloadOrListen from "./download-or-listen-popup";
 import FeedbackPopup from "./feedback-popup";
 import { InputFormProps } from "./input-popup/input-form";
@@ -41,7 +42,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [showDownloadCancelConfirmation, setShowDownloadCancelConfirmation] = useState<boolean>(false);
     const [isDownloadConfirmationOpen, setIsDownloadConfirmationOpen] = useState<boolean>(false);
     const { isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess } = useAudioPlayer(isDownload);
-
+    
     useMemo(() => {
         if (isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
     }, [isCancelDownloadConfirmation])
@@ -216,11 +217,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 <DialogDescription className="sr-only">{chrome.i18n.getMessage("simplify_reading")}</DialogDescription>
             </DialogHeader>
             <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
-                <div className={cn("absolute top-4 left-4 size-max", { "translate-x-14 transition-transform": (prompts.length > 0 || isDownload) })}>
+                <div className={cn("absolute top-4 left-4 size-max flex gap-2 items-center justify-center", { "translate-x-12 transition-transform": (prompts.length > 0 || isDownload) })}>
                     <ThemeToggle />
-                </div>
-                <div className={cn("absolute top-4 left-16 size-max", { "translate-x-16 transition-transform": (prompts.length > 0 || isDownload) })}>
                     <FeedbackPopup />
+                    <Announcements />
                 </div>
                 <div className={cn("absolute top-4 right-16 size-max")}>
                     <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
