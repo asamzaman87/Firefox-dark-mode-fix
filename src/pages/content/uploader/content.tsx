@@ -220,7 +220,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 <div className={cn("absolute top-4 left-4 size-max flex gap-2 items-center justify-center", { "translate-x-12 transition-transform": (prompts.length > 0 || isDownload) })}>
                     <ThemeToggle />
                     <FeedbackPopup />
-                    <Announcements />
+                    {/* <Announcements /> */}
                 </div>
                 <div className={cn("absolute top-4 right-16 size-max")}>
                     <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">

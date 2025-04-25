@@ -211,9 +211,9 @@ const useAudioPlayer = (isDownload: boolean) => {
             //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
             //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
             //yes from the presence modal to continue from the 10th chunk
-            if (currentIndex % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
+            if (nextIndexToPlay % CHUNK_TO_PAUSE_ON === 0 && audioUrls.length !== chunks.length) {
                 pause();
-                handlePartialCompletion()
+                // handlePartialCompletion();
                 return
             }
         }
@@ -277,27 +277,29 @@ const useAudioPlayer = (isDownload: boolean) => {
     //show the presence modal if the audio currently being played is near the end of playback while the isPromptingPaused is true
     //only works if the audio/aac is supported
     useMemo(() => {
-        if (isPromptingPaused) {
+        if (isPromptingPaused && !isBackPressed && isTypeAACSupported) {
             if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
                 const currentTimeRounded = Math.round(currentPlayTime);
                 const durationRounded = Math.round(playTimeDuration);
                 const stopTime = durationRounded - SECOND_TO_REDUCE_FROM_DURATION; //20 seconds before the end of the audio
+                if(currentTimeRounded >= durationRounded) return; //prevent presence modal opening when the audio is already at the end (skipped by the user)
                 if (currentTimeRounded >= stopTime && !isPresenceModalOpen) {
-                    setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
+                    setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
                 }
             }
         }
-    }, [isPromptingPaused, currentIndex, currentPlayTime])
+    }, [currentPlayTime])
 
     //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
     //only works if the audio/aac is not supported
-    // useMemo(() => {
-    //     if (isPromptingPaused && !isTypeAACSupported) {
-    //         if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
-    //             setTimeout(() => setIsPresenceModalOpen(true), 1000); //delay 1 sec to allow the audio to play for a sec
-    //         }
-    //     }
-    // }, [isPromptingPaused, currentIndex])
+    useMemo(() => {
+        if (isPromptingPaused && !isTypeAACSupported) {
+            const chunkPlaying = +seekAudio.id;
+            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0) {
+                setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
+            }
+        }
+    }, [isPromptingPaused, currentIndex])
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
     //only works if the audio/aac is not supported

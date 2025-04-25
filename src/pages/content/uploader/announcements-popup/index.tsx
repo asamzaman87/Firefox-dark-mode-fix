@@ -32,7 +32,7 @@ interface Announcement {
 }
 
 const Announcements = () => {
-  const [selectedAcc, setSelectedAcc] = useState<string>();
+  const [selectedAcc, setSelectedAcc] = useState<string[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [count, setCount] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
@@ -46,6 +46,7 @@ const Announcements = () => {
 
   const handleAnnouncementClick = () => {
     chrome.runtime.sendMessage({ type: "ANNOUNCEMENTS_OPENED", count });
+    getAnnouncements();
     setCount(0);
   };
 
@@ -56,7 +57,6 @@ const Announcements = () => {
           "Hey there 👋 ! We've got some fresh announcements. Click the megaphone 📣 icon to check them out!",
         style: TOAST_STYLE_CONFIG_INFO,
       });
-      getAnnouncements();
       if (open) handleAnnouncementClick();
     }
   }, [count]);
@@ -68,12 +68,16 @@ const Announcements = () => {
       payload: Announcement[] | number;
     }) => {
       switch (message.type) {
-        case "GET_BANNER":
+        case "GET_BANNER": {
+          const newAnnouncements = message.payload as Announcement[];
+          setSelectedAcc(newAnnouncements.map((item) => item.id));
           setAnnouncements(message.payload as Announcement[]);
           return;
-        case "GET_BANNER_COUNT":
+        }
+        case "GET_BANNER_COUNT": {
           setCount(message.payload as number);
           return;
+        }
         default:
           break;
       }
@@ -130,10 +134,10 @@ const Announcements = () => {
         <div className="max-h-[50dvh] min-h-[50dvh] overflow-y-auto p-px">
           {announcements?.length ? (
             <Accordion
-              type="single"
-              collapsible
+              type="multiple"
               className="size-full"
               onValueChange={setSelectedAcc}
+              value={selectedAcc}
             >
               {announcements.map((item) => (
                 <AccordionItem
@@ -143,7 +147,7 @@ const Announcements = () => {
                 >
                   <AccordionTrigger className="flex justify-between items-center w-full py-2">
                     <span className="inline-flex items-center flex-col gap-2">
-                      <span className="text-justify font-semibold max-w-[70dvw] truncate" title={item.title}>
+                      <span className="w-full text-justify font-semibold max-w-[70dvw] truncate" title={item.title}>
                           {item.title}
                         </span>
                       <span className="text-gray-600 dark:text-gray-500 font-medium text-sm w-full text-start">
@@ -153,12 +157,12 @@ const Announcements = () => {
                     <span>
                       <ChevronDownCircleIcon
                         className={cn("size-5", {
-                          "rotate-180": selectedAcc === item.id,
+                          "rotate-180": selectedAcc.includes(item.id),
                         })}
                       />
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="font-medium leading-relaxed">
+                  <AccordionContent className="font-medium leading-relaxed [&_a]:text-blue-600 [&_a]:underline">
                     <AnnouncementMessage message={item.message} />
                   </AccordionContent>
                 </AccordionItem>
