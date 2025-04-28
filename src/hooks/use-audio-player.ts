@@ -201,7 +201,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (isTypeAACSupported) return;
         const nextIndexToPlay = currentIndex + 1;
         const handlePartialCompletion = () => {
-            if (nextIndexToPlay === chunks.length - 1) {
+            if (nextIndexToPlay === chunks.length) {
                 return setHasCompletePlaying(true);
             }
             setPartialChunkCompletedPlaying(true);
@@ -307,8 +307,8 @@ const useAudioPlayer = (isDownload: boolean) => {
         //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
         //set isStreamLoading to true to indicate buffering
         if (audioUrls.length > 1 && !isPromptingPaused && wasPromptStopped === "PAUSED" && !isTypeAACSupported) {
-            playNext(currentIndex + 1);
-            setCurrentIndex(currentIndex + 1);
+            setAudioLoading(true)
+            setPartialChunkCompletedPlaying(true);
             setTimeout(() => {
                 setWasPromptStopped("LOADING");
             }, 500);
