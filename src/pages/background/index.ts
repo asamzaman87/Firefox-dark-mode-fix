@@ -269,6 +269,6 @@ const startPolling = async () => {
 };
 
 
-// startPolling();
+startPolling();
 
 chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM);
