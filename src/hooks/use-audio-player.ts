@@ -122,6 +122,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         //play new audio if presence modal is open and stream is processing after click on yes
         if (audioUrls.length > 1 && !isPromptingPaused && (wasPromptStopped === "PAUSED" || wasPromptStopped === "LOADING")) {
             //if audio paused after the 9th chunk (if prompting is to be pause every 9th), play next chunk (10th)
+            setAudioLoading(false);
             if (isPaused) {
                 setCurrentIndex(currentIndex + 1);
                 playNext(currentIndex + 1);
@@ -231,12 +232,14 @@ const useAudioPlayer = (isDownload: boolean) => {
     };
 
     const onScrub = useCallback((time: number) => {
+        pause() //to avoid lagging on seek
         const currentTime = (time * playTimeDuration) / 100;
         seekAudio.currentTime = currentTime;
         if (Math.round(currentTime) === Math.round(playTimeDuration)) {
             if (currentIndex !== chunks.length - 1) return setPartialChunkCompletedPlaying(true);
             setHasCompletePlaying(true);
         }
+        play();
     }, [seekAudio, playTimeDuration, currentIndex]);
 
     const resetTimeout = () => {

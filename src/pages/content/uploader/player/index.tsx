@@ -98,7 +98,6 @@ const Player: FC<PlayerBackupProps> = ({
       >
         {areSeekControlsAvailable && (
           <Seekbar
-            hasPlayBackEnded={playbackEnded}
             isLoading={isLoading}
             onScrub={onScrub}
             currentTime={currentTime}

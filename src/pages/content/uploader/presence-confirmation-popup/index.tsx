@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LoaderCircleIcon } from "lucide-react";
-import { FC } from "react";
+import { FC, memo } from "react";
 
 interface PresenceConfirmationPopupProps {
   open: boolean;
@@ -54,4 +54,4 @@ const PresenceConfirmationPopup: FC<PresenceConfirmationPopupProps> = ({ open, s
   )
 }
 
-export default PresenceConfirmationPopup;
+export default memo(PresenceConfirmationPopup);
