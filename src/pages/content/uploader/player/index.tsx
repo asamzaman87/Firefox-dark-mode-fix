@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2Icon, PauseIcon, PlayIcon, RotateCwIcon } from "lucide-react";
-import { FC, useMemo } from "react";
+import { FC, useCallback, useMemo } from "react";
 import { FastForwardIcon, RewindIcon } from "./icons";
 import PlayRateSlider from "./play-rate-slider";
 import Seekbar from "./seekbar";
@@ -69,18 +69,14 @@ const Player: FC<PlayerBackupProps> = ({
     ]
   );
 
-  useMemo(() => {
-    if (currentTime > 0 && currentTime !== duration) setPlaybackEnded(false);
-  }, [currentTime, duration]);
-
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (playbackEnded) {
       replay();
       setPlaybackEnded(false);
     }
     if (isPlaying && !playbackEnded) pause();
     if (isPaused && !playbackEnded) play();
-  };
+  },[replay, pause, play, isPlaying, isPaused, playbackEnded, setPlaybackEnded]);
 
   return (
     <div

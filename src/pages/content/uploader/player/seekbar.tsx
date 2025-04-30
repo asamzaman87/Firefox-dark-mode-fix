@@ -11,8 +11,8 @@ interface SeekbarProps {
 }
 
 const Seekbar: FC<SeekbarProps> = ({
-  currentTime,
-  duration,
+  currentTime = 0,
+  duration = 0,
   onScrub
 }) => {
   const completed = useMemo(

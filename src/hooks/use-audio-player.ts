@@ -170,19 +170,15 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.onprogress = () => {
         if (seekAudio.buffered.length > 0 && isTypeAACSupported) {
             const bufferedEnd = seekAudio.buffered.end(seekAudio.buffered.length - 1);
-            setCurrentIndex(c => c++); //stores the current index of the audio that has been processed and appended to the SourceBuffer
+            setCurrentIndex(c => c+1); //stores the current index of the audio that has been processed and appended to the SourceBuffer
             setPlayTimeDuration(bufferedEnd);
         }
     }
 
     seekAudio.ontimeupdate = () => {
-        setPartialChunkCompletedPlaying(false);
+        if(!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
         setCurrentPlayTime(seekAudio.currentTime);
         currentTimeRef.current = seekAudio.currentTime;
-        if (Math.round(currentPlayTime) === Math.round(playTimeDuration)) {
-            if (blobs.length !== chunks.length) return setPartialChunkCompletedPlaying(true);
-            setHasCompletePlaying(true);
-        }
     }
 
     seekAudio.onpause = () => {
@@ -190,8 +186,20 @@ const useAudioPlayer = (isDownload: boolean) => {
         setIsPaused(true);
     };
 
+    //controls loader state
+    useMemo(()=>{
+        if(!isTypeAACSupported) return;
+        const hasTimeCompleted = Math.round(currentPlayTime) === Math.round(playTimeDuration);
+        const isLastChunk = currentIndex === chunks.length;
+        setHasCompletePlaying(false);
+        setPartialChunkCompletedPlaying(false);
+        if(hasTimeCompleted && isLastChunk) return setHasCompletePlaying(true);
+        if(hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
+    },[currentPlayTime, playTimeDuration])
+
     //handles onplay event to set isPlaying and isPaused states
     seekAudio.onplay = () => {
+        if(!isTypeAACSupported) setHasCompletePlaying(false); //reset hasCompletedPlaying to false on firefox if the audio is playing
         setIsPlaying(true);
         setIsPaused(false);
     };
@@ -235,10 +243,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         pause() //to avoid lagging on seek
         const currentTime = (time * playTimeDuration) / 100;
         seekAudio.currentTime = currentTime;
-        if (Math.round(currentTime) === Math.round(playTimeDuration)) {
-            if (currentIndex !== chunks.length - 1) return setPartialChunkCompletedPlaying(true);
-            setHasCompletePlaying(true);
-        }
         play();
     }, [seekAudio, playTimeDuration, currentIndex]);
 
