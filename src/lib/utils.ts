@@ -206,10 +206,13 @@ export const findMatchLocalStorageKey = (key: string) => {
 }
 
 export const formatSeconds = (s: number): string => {
-  const [h, m, sec] = [
-    Math.floor(s / 3600),
-    Math.floor((s % 3600) / 60),
-    (s % 60),
-  ].map((v: number) => v.toFixed(0).toString().padStart(2, "0"));
-  return h === "00" ? `${m}:${sec}` : `${h}:${m}:${sec}`;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+
+  const hh = h.toString().padStart(2, "0");
+  const mm = m.toString().padStart(2, "0");
+  const ss = sec.toString().padStart(2, "0");
+
+  return h === 0 ? `${mm}:${ss}` : `${hh}:${mm}:${ss}`;
 };

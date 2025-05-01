@@ -29,6 +29,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
     const currentTimeRef = useRef<number>(0);
+    const isScrubbing = useRef<boolean>(false);
 
     const sourceBuffer = useRef<SourceBuffer | null>(null);
     const mediaSource = useMemo(() => new MediaSource(), [isBackPressed]);
@@ -114,7 +115,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //initiating play
     useMemo(() => {
-        if(isTypeAACSupported) return;
+        if (isTypeAACSupported) return;
         if (audioUrls.length === 1 && !isDownload) {
             playNext(0);
         }
@@ -134,7 +135,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [audioUrls]);
 
     useMemo(() => {
-        if(isTypeAACSupported) return;
+        if (isTypeAACSupported) return;
         if (isLoading && isStreamLoading) {
             setAudioUrlsBeforeStop(audioUrls.length);
         }
@@ -170,13 +171,14 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.onprogress = () => {
         if (seekAudio.buffered.length > 0 && isTypeAACSupported) {
             const bufferedEnd = seekAudio.buffered.end(seekAudio.buffered.length - 1);
-            setCurrentIndex(c => c+1); //stores the current index of the audio that has been processed and appended to the SourceBuffer
+            setCurrentIndex(c => c + 1); //stores the current index of the audio that has been processed and appended to the SourceBuffer
             setPlayTimeDuration(bufferedEnd);
         }
     }
 
     seekAudio.ontimeupdate = () => {
-        if(!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
+        if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
+        if (isScrubbing.current) return;
         setCurrentPlayTime(seekAudio.currentTime);
         currentTimeRef.current = seekAudio.currentTime;
     }
@@ -187,19 +189,19 @@ const useAudioPlayer = (isDownload: boolean) => {
     };
 
     //controls loader state
-    useMemo(()=>{
-        if(!isTypeAACSupported) return;
+    useMemo(() => {
+        if (!isTypeAACSupported) return;
         const hasTimeCompleted = Math.round(currentPlayTime) === Math.round(playTimeDuration);
         const isLastChunk = currentIndex === chunks.length;
         setHasCompletePlaying(false);
         setPartialChunkCompletedPlaying(false);
-        if(hasTimeCompleted && isLastChunk) return setHasCompletePlaying(true);
-        if(hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
-    },[currentPlayTime, playTimeDuration])
+        if (hasTimeCompleted && isLastChunk) return setHasCompletePlaying(true);
+        if (hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
+    }, [currentPlayTime, playTimeDuration])
 
     //handles onplay event to set isPlaying and isPaused states
     seekAudio.onplay = () => {
-        if(!isTypeAACSupported) setHasCompletePlaying(false); //reset hasCompletedPlaying to false on firefox if the audio is playing
+        if (!isTypeAACSupported) setHasCompletePlaying(false); //reset hasCompletedPlaying to false on firefox if the audio is playing
         setIsPlaying(true);
         setIsPaused(false);
     };
@@ -215,7 +217,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             }
             setPartialChunkCompletedPlaying(true);
         }
-        
+
         if (isPromptingPaused) {
             //pause the audio on the current chunk if prompting is paused and the user has not click yes from the presence modal
             //ex: if the prompting is to be paused on every 9th chunk and the current chunk being played is the 9th chunk, the audio will be paused until the user clicks 
@@ -232,19 +234,12 @@ const useAudioPlayer = (isDownload: boolean) => {
             playNext(nextIndexToPlay);
         }
 
-        if (isLoading && !isPlaying && (audioUrls.length === nextIndexToPlay || audioUrls.length < nextIndexToPlay)){
+        if (isLoading && !isPlaying && (audioUrls.length === nextIndexToPlay || audioUrls.length < nextIndexToPlay)) {
             setIsStreamLoading(true);
         }
         handlePartialCompletion();
         //   return setPartialChunkCompletedPlaying(true);
     };
-
-    const onScrub = useCallback((time: number) => {
-        pause() //to avoid lagging on seek
-        const currentTime = (time * playTimeDuration) / 100;
-        seekAudio.currentTime = currentTime;
-        play();
-    }, [seekAudio, playTimeDuration, currentIndex]);
 
     const resetTimeout = () => {
         const timeoutId = localStorage.getItem("gptr/audio-timeout");
@@ -289,7 +284,7 @@ const useAudioPlayer = (isDownload: boolean) => {
                 const currentTimeRounded = Math.round(currentPlayTime);
                 const durationRounded = Math.round(playTimeDuration);
                 const stopTime = durationRounded - SECOND_TO_REDUCE_FROM_DURATION; //20 seconds before the end of the audio
-                if(currentTimeRounded >= durationRounded) return; //prevent presence modal opening when the audio is already at the end (skipped by the user)
+                if (currentTimeRounded >= durationRounded) return; //prevent presence modal opening when the audio is already at the end (skipped by the user)
                 if (currentTimeRounded >= stopTime && !isPresenceModalOpen) {
                     setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
                 }
@@ -352,6 +347,14 @@ const useAudioPlayer = (isDownload: boolean) => {
             play();
         }
     }, [seekAudio, play, reset]);
+
+    const onScrub = useCallback((time: number) => {
+        isScrubbing.current = true;
+        const currentTime = (time * playTimeDuration) / 100;
+        seekAudio.currentTime = currentTime;
+        setCurrentPlayTime(currentTime);
+        isScrubbing.current = false;
+    }, [seekAudio, playTimeDuration]);
 
     const onForward = useCallback(() => {
         if (seekAudio) {

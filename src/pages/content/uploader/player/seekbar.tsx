@@ -57,6 +57,6 @@ const Seekbar: FC<SeekbarProps> = ({
 };
 
 export default memo(
-  Seekbar,
-  (p, n) => p.currentTime === n.currentTime && p.duration === n.duration && p.isLoading === n.isLoading
+  Seekbar
+  // (p, n) => p.currentTime === n.currentTime && p.duration === n.duration && p.isLoading === n.isLoading
 );
