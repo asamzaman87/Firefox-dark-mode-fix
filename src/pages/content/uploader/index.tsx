@@ -216,6 +216,23 @@ function Uploader() {
 
     window.localStorage.removeItem("gptr/redirect-to-login");
 
+    await waitForElement("[data-testid='create-new-chat-button']", 5000)
+    .then(btn => (btn as HTMLButtonElement).click())
+    .catch(() => {
+      console.log("create new chat button not found");
+    });
+
+    try {
+      await waitForElement(PROMPT_INPUT_ID, 5000);
+    } catch {
+      toast({
+        description: "To use GPT Reader, swtich to another chat in ChatGPT before clicking on the GPT Reader button again.",
+        style: TOAST_STYLE_CONFIG,
+      });
+      setIsActive(false);
+      return;
+    }
+
     await clickStopButtonIfPresent();
 
     //gpt has a new update, shows speech button by default instead of the send button until the user types in text

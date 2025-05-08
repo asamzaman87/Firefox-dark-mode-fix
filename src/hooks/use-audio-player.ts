@@ -1,9 +1,8 @@
-import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, SECOND_TO_REDUCE_FROM_DURATION, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
-
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
     const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl(isDownload);
@@ -25,6 +24,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
+    const memoryWarnedRef = useRef(false);
 
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
@@ -34,7 +34,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     const sourceBuffer = useRef<SourceBuffer | null>(null);
     const mediaSource = useMemo(() => new MediaSource(), [isBackPressed]);
     const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
-
+    const thresholdsRef = useRef<number[]>([0]);
+    const triggeredThresholdsRef = useRef<Set<number>>(new Set());
+  
     //resetting the media source when the user clicks on the back button or onUnmount
     const endMediaStream = () => {
         if (sourceBuffer.current) {
@@ -101,17 +103,22 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }, [arrayBuffers]);
 
-    //fallback if MediaSource does not support AAC on browsers
+    // fallback if MediaSource does not support AAC on browsers,
+    // but revoke old AAC URLs to free memory in AAC mode
     const playNext = useCallback(
         (index: number) => {
-            seekAudio.src = audioUrls[index];
-            seekAudio.id = (index + 1).toString();
-            seekAudio.playbackRate = playRate;
-            seekAudio.volume = volume;
-            seekAudio.play()
+        if (isTypeAACSupported && seekAudio.src) {
+            URL.revokeObjectURL(seekAudio.src);
+        }
+        seekAudio.src = audioUrls[index];
+        seekAudio.id = (index + 1).toString();
+        seekAudio.playbackRate = playRate;
+        seekAudio.volume = volume;
+        seekAudio.play();
         },
-        [audioUrls, playRate, volume]
+        [audioUrls, playRate, volume, isTypeAACSupported]
     );
+    
 
     //initiating play
     useMemo(() => {
@@ -179,8 +186,21 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.ontimeupdate = () => {
         if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
         if (isScrubbing.current) return;
-        setCurrentPlayTime(seekAudio.currentTime);
-        currentTimeRef.current = seekAudio.currentTime;
+        const current = seekAudio.currentTime;
+        setCurrentPlayTime(current);
+        currentTimeRef.current = current;
+        // Logic for the are you still here pop-up for both firefox and chrome
+        if (thresholdsRef.current[thresholdsRef.current.length - 1] !== playTimeDuration && playTimeDuration !== 0) {
+            thresholdsRef.current.push(playTimeDuration);
+        }
+        const durations = thresholdsRef.current.filter(t => current >= t);
+        if (isPromptingPaused && !isBackPressed && !triggeredThresholdsRef.current.has(durations[durations.length - 1])) {
+            const chunkPlaying = durations.length;
+            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && chunkPlaying < chunks.length && chunkPlaying !== 0 && !isPresenceModalOpen) {
+                triggeredThresholdsRef.current.add(durations[durations.length - 1])
+                setIsPresenceModalOpen(true);
+            }
+        }
     }
 
     seekAudio.onpause = () => {
@@ -263,6 +283,13 @@ const useAudioPlayer = (isDownload: boolean) => {
         setHasCompletePlaying(!!completeAudio);
         resetTimeout();
         endMediaStream();
+        setIsPromptingPaused(false);
+        thresholdsRef.current = [0];
+        triggeredThresholdsRef.current.clear();
+        setArrayBuffers([]);
+        setCurrentIndex(0);
+        setCurrentPlayTime(0);
+        memoryWarnedRef.current = false;
         if (full) {
             seekAudio.src = "";
             resetAudioUrl();
@@ -275,33 +302,6 @@ const useAudioPlayer = (isDownload: boolean) => {
             setIsPresenceModalOpen(false);
         }
     }, [blobs, isBackPressed]);
-
-    //show the presence modal if the audio currently being played is near the end of playback while the isPromptingPaused is true
-    //only works if the audio/aac is supported
-    useMemo(() => {
-        if (isPromptingPaused && !isBackPressed && isTypeAACSupported) {
-            if (currentIndex % CHUNK_TO_PAUSE_ON === 0) {
-                const currentTimeRounded = Math.round(currentPlayTime);
-                const durationRounded = Math.round(playTimeDuration);
-                const stopTime = durationRounded - SECOND_TO_REDUCE_FROM_DURATION; //20 seconds before the end of the audio
-                if (currentTimeRounded >= durationRounded) return; //prevent presence modal opening when the audio is already at the end (skipped by the user)
-                if (currentTimeRounded >= stopTime && !isPresenceModalOpen) {
-                    setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
-                }
-            }
-        }
-    }, [currentPlayTime])
-
-    //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
-    //only works if the audio/aac is not supported
-    useMemo(() => {
-        if (isPromptingPaused && !isTypeAACSupported) {
-            const chunkPlaying = +seekAudio.id;
-            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0) {
-                setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
-            }
-        }
-    }, [isPromptingPaused, currentIndex])
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
     //only works if the audio/aac is not supported
@@ -323,7 +323,8 @@ const useAudioPlayer = (isDownload: boolean) => {
             seekAudio.play();
         }
     }, [seekAudio]);
-
+  
+  
     const pause = useCallback(() => {
         if (seekAudio) {
             seekAudio.pause();
@@ -443,6 +444,27 @@ const useAudioPlayer = (isDownload: boolean) => {
             if (toast15SecRef.current) dismiss(toast15SecRef.current);
         }
     }, [text.trim().length, isDownload]);
+
+    useEffect(() => {
+        // only works in Chrome‐based browsers
+        if (!(performance && (performance as any).memory)) return;
+      
+        const checkMemory = () => {
+          const used = (performance as any).memory.usedJSHeapSize;
+          const threshold = 425 * 1024 * 1024; // 425 MB
+          if (!memoryWarnedRef.current && used > threshold) {
+            toast({
+              description: "Memory usage has exceeded 425 MB. GPT Reader recommends closing this tab and then clicking on the extension icon.",
+              style: TOAST_STYLE_CONFIG,
+            });
+            memoryWarnedRef.current = true;
+          }
+        };
+      
+        // check every 15 seconds
+        const id = setInterval(checkMemory, 15_000);
+        return () => clearInterval(id);
+      }, [toast]);
 
     const showInfoToast = (
         duration: number = 70000,

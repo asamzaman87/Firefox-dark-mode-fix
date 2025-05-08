@@ -1,12 +1,13 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
 import { useToast } from "./use-toast";
 
 const useAudioUrl = (isDownload: boolean) => {
     const { toast } = useToast();
+    const hasRefusal = useRef<boolean>(false);
     const [audioUrls, setAudioUrls] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>("");
@@ -19,7 +20,38 @@ const useAudioUrl = (isDownload: boolean) => {
     const [progress, setProgress] = useState<number>(0);
     const [downloadPreviewText, setDownloadPreviewText] = useState<string>();
     const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
-
+    // Refusal detector ───────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!currentCompletedStream || hasRefusal.current) return;
+    
+        // Grab the latest ChatGPT reply from the DOM
+        let actual = "";
+        const mdEls = Array.from(
+            document.querySelectorAll<HTMLElement>('div[class*="markdown"]')
+        );
+        if (mdEls.length) {
+            actual = mdEls[mdEls.length - 1].innerText;
+        }
+        actual = actual.replace(/\s+/g, " ").trim();
+    
+        // Only trigger error if reply is short (<300 chars) and contains refusal keywords
+        if (
+            actual.length < 150 &&
+            (actual.includes("I cannot") || actual.includes("I can't"))
+        ) {
+            console.warn("[Refusal Detector] Refusal detected—pausing prompt stream.");
+        
+            hasRefusal.current = true;
+            setIsPromptingPaused(true);
+            setWasPromptStopped("PAUSED");
+        }
+    }, [
+        currentCompletedStream,
+        setIsPromptingPaused,
+        setWasPromptStopped,
+        toast,
+    ]);
+  
     useMemo(() => {
         if (blobs.length === 0) {
           setProgress(0);
@@ -170,6 +202,16 @@ const useAudioUrl = (isDownload: boolean) => {
       }, [blobs])
 
     useEffect(() => {
+        if (hasRefusal.current){
+            hasRefusal.current = false;
+            return;
+        }
+        // console.log(
+        //              "[NextChunk] chunks:", chunks.length,
+        //               "completedStreams:", completedStreams.length,
+        //               "current:", currentCompletedStream?.chunkNumber,
+        //              "isPromptingPaused:", isPromptingPaused
+        //            );
         if (completedStreams.length > 0 ) {
             if(!isDownload) setAudioUrls(completedStreams);
             if (

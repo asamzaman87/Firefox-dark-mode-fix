@@ -99,7 +99,7 @@
     "message": "Download Aborted"
   },
   "error_no_start": {
-    "message": "An error has stopped the download from starting, please close the overlay to resolve the issue and try again"
+    "message": "An error has stopped the download from starting, click on the question mark button to the right to resolve"
   },
   "error_stopped_midway": {
     "message": "Download has stopped due to an error, please download the processed audio thus far by clicking the download button below."

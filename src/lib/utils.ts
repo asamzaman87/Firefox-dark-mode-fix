@@ -56,10 +56,10 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
       currentChunk = sentence.trim();
 
       // Determine if the next chunk should reset based on chunkId
-      const isEvery9thChunk = (chunkId % 9) === 0;
+      const isEvery12thChunk = (chunkId % 12) === 0;
 
       // Adjust the target size based on conditions
-      if (isEvery9thChunk) {
+      if (isEvery12thChunk) {
         // Reset to the initial chunk size
         targetSize = initialChunkSize;
       } else {

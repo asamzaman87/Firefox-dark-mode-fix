@@ -75,6 +75,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             resetter();
         }
         setIsBackPressed(true);
+        const newChatBtn = document.querySelector<HTMLButtonElement>(
+            "[data-testid='create-new-chat-button']"
+          );
+          if (newChatBtn) {
+            newChatBtn.click();
+          } else {
+            console.warn("Create New Chat button not found");
+          }
     }
 
     useEffect(() => {
@@ -228,7 +236,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                     </Button>
                 </div>
 
-                <PresenceConfirmationPopup loading={isLoading} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />
+                <PresenceConfirmationPopup loading={false} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />
                 <DownloadOrListen onSubmit={onDownloadOrListenSubmit} open={showDownloadOrListen} onOpenChange={(state) => {
                     if (!state) resetter()
                     setShowDownloadOrListen(state);

@@ -45,14 +45,20 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";
+const CONVERSATION_F_ENDPOINT = "/backend-api/f/conversation";
 const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
 const VOICES_ENDPOINT = "backend-api/settings/voices";
 const { fetch: origFetch } = window;
 
 window.fetch = async (...args) => {
     const response = await origFetch(...args);
-    const { url } = response;
-    const hasConversationEndpoint = url.includes(CONVERSATION_ENDPOINT);
+    // const { url } = response;
+    // console.log("[inject]  → response URL:", url, "status:", response.status);
+    // const hasConversationEndpoint = url.includes(CONVERSATION_ENDPOINT) || url.includes(CONVERSATION_F_ENDPOINT);
+    const { url, headers } = response;
+    const contentType = headers.get("content-type") || "";
+    const isEventStream = contentType.includes("event-stream");
+
     const isSynthesisEndpoint = url.includes(SYNTHESIS_ENDPOINT);
     const isVoicesEndpoint = url.includes(VOICES_ENDPOINT);
 
@@ -85,7 +91,8 @@ window.fetch = async (...args) => {
     }
 
     //read the stream to get the message id and conversation id
-    if (hasConversationEndpoint && args[1].method === 'POST') {
+    //if (hasConversationEndpoint && args[1].method === 'POST') {
+    if (isEventStream && args[1]?.method === "POST") {
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
         if (clonedResponse.status === 429) {

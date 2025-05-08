@@ -63,13 +63,44 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
 
     const handleConvStream = useCallback(async (e: Event) => {
         const { detail: { messageId, conversationId, text, createTime } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string } };
+        // <<< ADDED: detect refusal and bail before fetching audio
+        let actual = "";
+        const mdEls = Array.from(
+            document.querySelectorAll<HTMLElement>('div[class*="markdown"]')
+        );
+        if (mdEls.length) {
+            actual = mdEls[mdEls.length - 1].innerText;
+        }
+        actual = actual.replace(/\s+/g, " ").trim();
+
+        if (
+            actual.length < 150 &&
+            (actual.includes("I cannot") || actual.includes("I can't"))
+        ) {
+            handleError("GPT Reader is having trouble getting the audio, try clicking on the question mark button on the top right corner");
+            return;
+        }
+
         const chunkNumber = extractChunkNumberFromPrompt(text);
         if (chunkNumber) {
             if (token) {
                 try {
                     // prefetching audio
-                    const audioUrl = await fetchAndDecodeAudio(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`, +chunkNumber);
-                    if (audioUrl) await setCompletedStreams(streams => [...streams, audioUrl]);
+                    const audioUrl = await fetchAndDecodeAudio(
+                        `${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`,
+                        +chunkNumber
+                    );
+                    
+                    if (audioUrl) {
+                        // <<< ADDED: insert into the exact index so order is preserved
+                        setCompletedStreams((streams) => {
+                            const ordered = [...streams];
+                            ordered[chunkNumber] = audioUrl;
+                            return ordered;
+                        });
+                    } else {
+                        console.warn(`[Audio Prefetch] Failed to fetch audio for chunk ${chunkNumber}`);
+                    }
                 } catch {
                     if (retryCount.current !== 0) {
                         handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
