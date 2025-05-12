@@ -31,6 +31,10 @@ interface ContentProps {
 const BROWSER = detectBrowser();
 const logo = chrome.runtime.getURL('logo-128.png');
 
+if (window.location.href.startsWith("https://sora.chatgpt")) {
+    throw new Error("GPT Reader won't work on sora page");
+}
+
 const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, isCancelDownloadConfirmation, setIsCancelDownloadConfirmation }) => {
     const { toast } = useToast();
     const [isDownload, setIsDownload] = useState<boolean>(false);

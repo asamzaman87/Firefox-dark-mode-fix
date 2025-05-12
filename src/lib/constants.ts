@@ -26,7 +26,8 @@ export const LISTENERS = {
   "GET_VOICES": "GET_VOICES",
   "STOP_CONVERSATION": "STOP_CONVERSATION",
   "AUDIO_ENDED": "ended",
-  "GET_TOKEN": "GET_TOKEN"
+  "GET_TOKEN": "GET_TOKEN",
+  "GENERAL_ERROR": "GENERAL_ERROR"
 }
 export const MAX_FILE_SIZE = 1024 * 1024 * 24; // 24MB
 export const PROMPT_INPUT_ID = "#prompt-textarea";

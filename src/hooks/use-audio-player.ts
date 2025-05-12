@@ -82,7 +82,7 @@ const useAudioPlayer = (isDownload: boolean) => {
                             currentTimeRef.current - 2
                         );
                         if (nextEvictEnd <= evictedSoFarRef.current) {
-                            await new Promise(res => setTimeout(res, 30_000));
+                            await new Promise(res => setTimeout(res, 20_000));
                             continue;
                         }
                 
@@ -136,7 +136,7 @@ const useAudioPlayer = (isDownload: boolean) => {
                     currentTimeRef.current - 2
                 );
                 if (nextEvictEnd <= evictedSoFarRef.current) {
-                    await new Promise(res => setTimeout(res, 30_000));
+                    await new Promise(res => setTimeout(res, 20_000));
                     continue;
                 }
         

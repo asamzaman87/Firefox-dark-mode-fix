@@ -109,14 +109,16 @@ window.fetch = async (...args) => {
         } 
 
         if (clonedResponse.status === 500) {
-            const maxWaitMs = 10000;
+            const maxWaitMs = 6000;
             const intervalMs = 200;
             const maxTries = maxWaitMs / intervalMs;
             let tries = 0;
     
+            let found = false;
             const retryChecker = setInterval(() => {
                 const retryButton = document.querySelector('[data-testid*="retry"], [data-testid*="regenerate"]');
                 if (retryButton) {
+                    found = true;
                     console.warn("[inject] Found retry/regenerate button, clicking it...");
                     retryButton.click();
                     clearInterval(retryChecker);
@@ -127,7 +129,13 @@ window.fetch = async (...args) => {
             }, intervalMs);
     
             // Return early — next fetch will be intercepted after retry
-            return response;
+            if (found) {
+                return response;
+            }
+            const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
+                detail: "GPT Reader seems to be having an issue, click on the back button in the top left corner and try again.",
+            });
+            window.dispatchEvent(generalErrorEvent);
         }
         
         if (stream && clonedResponse.status === 200) {

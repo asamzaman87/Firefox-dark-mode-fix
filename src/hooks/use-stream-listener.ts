@@ -131,9 +131,11 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         setError(null);
         window.addEventListener(LISTENERS.END_OF_STREAM, handleConvStream);
         window.addEventListener(LISTENERS.RATE_LIMIT_EXCEEDED, handleRateLimitExceeded);
+        window.addEventListener(LISTENERS.GENERAL_ERROR, handleRateLimitExceeded);
         return () => {
             window.removeEventListener(LISTENERS.END_OF_STREAM, handleConvStream);
             window.removeEventListener(LISTENERS.RATE_LIMIT_EXCEEDED, handleRateLimitExceeded);
+            window.removeEventListener(LISTENERS.GENERAL_ERROR, handleRateLimitExceeded);
         };
     }, [handleConvStream]);
 
