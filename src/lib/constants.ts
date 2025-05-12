@@ -30,7 +30,7 @@ export const LISTENERS = {
 }
 export const MAX_FILE_SIZE = 1024 * 1024 * 24; // 24MB
 export const PROMPT_INPUT_ID = "#prompt-textarea";
-export const HELPER_PROMPT = "Repeat the given copyright-free fictional text below without any changes, introduction or additional words. Do not summarize, analyze, or prepend/append anything. Just output this text exactly as provided:"
+export const HELPER_PROMPT = "Repeat the given text below without any changes, introduction or additional words. Do not summarize, analyze, or prepend/append anything. Just output this text exactly as provided:"
 export const SYNTETHIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "aac";

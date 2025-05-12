@@ -17,24 +17,33 @@ export interface PromptProps {
 }
 
 function Uploader() {
-  const waitForElement = (selector: string, timeout = 5000): Promise<Element> => {
+  const waitForElement = (
+    selector: string | string[],
+    timeout = 5000
+  ): Promise<Element> => {
+    const combinedSelector = Array.isArray(selector) ? selector.join(", ") : selector;
+  
     return new Promise((resolve, reject) => {
-      const el = document.querySelector(selector);
+      const el = document.querySelector(combinedSelector);
       if (el) return resolve(el);
+  
       const observer = new MutationObserver(() => {
-        const elFound = document.querySelector(selector);
+        const elFound = document.querySelector(combinedSelector);
         if (elFound) {
           observer.disconnect();
           resolve(elFound);
         }
       });
+  
       observer.observe(document.body, { childList: true, subtree: true });
+  
       setTimeout(() => {
         observer.disconnect();
-        reject(new Error(`Timeout: Element ${selector} not found.`));
+        reject(new Error(`Timeout: Element ${combinedSelector} not found.`));
       }, timeout);
     });
   };
+  
 
   const [prompts, setPrompts] = useState<PromptProps[]>([]);
   const [isActive, setIsActive] = useState<boolean>(false);
@@ -216,7 +225,7 @@ function Uploader() {
 
     window.localStorage.removeItem("gptr/redirect-to-login");
 
-    await waitForElement("[data-testid='create-new-chat-button']", 5000)
+    await waitForElement(["[data-testid='create-new-chat-button']", "[aria-label='New chat']"], 5000)
     .then(btn => (btn as HTMLButtonElement).click())
     .catch(() => {
       console.log("create new chat button not found");

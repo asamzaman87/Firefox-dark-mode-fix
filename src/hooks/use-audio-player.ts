@@ -36,6 +36,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
     const thresholdsRef = useRef<number[]>([0]);
     const triggeredThresholdsRef = useRef<Set<number>>(new Set());
+    const evictedSoFarRef = useRef<number>(0);
   
     //resetting the media source when the user clicks on the back button or onUnmount
     const endMediaStream = () => {
@@ -62,9 +63,40 @@ const useAudioPlayer = (isDownload: boolean) => {
             }
             sourceBuffer.current = mediaSource.addSourceBuffer('audio/aac'); // AAC codec
 
-            sourceBuffer.current.onupdateend = () => {
-                if (arrayBuffers.length > 0 && sourceBuffer.current && !sourceBuffer.current.updating) {
-                    sourceBuffer.current.appendBuffer(arrayBuffers.shift() as ArrayBuffer);
+            // inside mediaSource.onsourceopen → sourceBuffer.current.onupdateend
+            sourceBuffer.current.onupdateend = async () => {
+                if (!sourceBuffer.current || sourceBuffer.current.updating || arrayBuffers.length === 0) return;
+                const buf = arrayBuffers[0] as ArrayBuffer;
+                while (true) {
+                    try {
+                        sourceBuffer.current.appendBuffer(buf);
+                        arrayBuffers.shift();
+                        break;
+                    } catch (err: any) {
+                        if (!err.name?.includes('QuotaExceededError')) {
+                            break;
+                        }
+                
+                        const nextEvictEnd = Math.min(
+                            evictedSoFarRef.current + 60,
+                            currentTimeRef.current - 2
+                        );
+                        if (nextEvictEnd <= evictedSoFarRef.current) {
+                            await new Promise(res => setTimeout(res, 30_000));
+                            continue;
+                        }
+                
+                        sourceBuffer.current.remove(0, nextEvictEnd);
+                        evictedSoFarRef.current = nextEvictEnd;
+        
+                        await new Promise<void>(resolve => {
+                            const onEvict = () => {
+                                sourceBuffer.current!.removeEventListener('updateend', onEvict);
+                                resolve();
+                            };
+                            sourceBuffer.current!.addEventListener('updateend', onEvict);
+                        });
+                    }
                 }
             };
         } catch (error) {
@@ -84,22 +116,48 @@ const useAudioPlayer = (isDownload: boolean) => {
         setArrayBuffers([]);
     }, [blobs]);
 
-    //appending audio to the media source to play it without blocking playback
-    useMemo(() => {
-        if (arrayBuffers.length > 0 && mediaSource.readyState === "open") {
-            if (sourceBuffer.current && !sourceBuffer.current.updating) {
-                try {
-                    sourceBuffer.current.appendBuffer(arrayBuffers.shift() as ArrayBuffer);
-                } catch (error) {
-                    console.error("Error appending buffer:", error);
+    // inside your `useMemo` appendBuffer loop
+    useMemo(async () => {
+        if (!sourceBuffer.current || sourceBuffer.current.updating || mediaSource.readyState !== 'open') return;
+        const buf = arrayBuffers.shift() as ArrayBuffer;
+    
+        while (true) {
+            try {
+                sourceBuffer.current.appendBuffer(buf);
+                arrayBuffers.shift();
+                break;
+            } catch (err: any) {
+                if (!err.name?.includes('QuotaExceededError')) {
+                    break;
                 }
-            }
+        
+                const nextEvictEnd = Math.min(
+                    evictedSoFarRef.current + 60,
+                    currentTimeRef.current - 2
+                );
+                if (nextEvictEnd <= evictedSoFarRef.current) {
+                    await new Promise(res => setTimeout(res, 30_000));
+                    continue;
+                }
+        
+                sourceBuffer.current.remove(0, nextEvictEnd);
+                evictedSoFarRef.current = nextEvictEnd;
 
-            if (!isPlaying && !isPaused) {
-                seekAudio.playbackRate = playRate;
-                seekAudio.volume = volume;
-                seekAudio.play();
+                await new Promise<void>(resolve => {
+                    const onEvict = () => {
+                        sourceBuffer.current!.removeEventListener('updateend', onEvict);
+                        resolve();
+                    };
+                    sourceBuffer.current!.addEventListener('updateend', onEvict);
+                });
             }
+        }
+    
+        // resume playback if not already playing
+        if (!isPlaying && !isPaused) {
+            seekAudio.playbackRate = playRate;
+            seekAudio.volume = volume;
+            seekAudio.play();
         }
     }, [arrayBuffers]);
 
@@ -182,26 +240,38 @@ const useAudioPlayer = (isDownload: boolean) => {
             setPlayTimeDuration(bufferedEnd);
         }
     }
-
+    
     seekAudio.ontimeupdate = () => {
         if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
         if (isScrubbing.current) return;
         const current = seekAudio.currentTime;
+        // i need to also fix the retry button here and judge other urgent issues
         setCurrentPlayTime(current);
         currentTimeRef.current = current;
         // Logic for the are you still here pop-up for both firefox and chrome
-        if (thresholdsRef.current[thresholdsRef.current.length - 1] !== playTimeDuration && playTimeDuration !== 0) {
-            thresholdsRef.current.push(playTimeDuration);
-        }
-        const durations = thresholdsRef.current.filter(t => current >= t);
-        if (isPromptingPaused && !isBackPressed && !triggeredThresholdsRef.current.has(durations[durations.length - 1])) {
-            const chunkPlaying = durations.length;
-            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && chunkPlaying < chunks.length && chunkPlaying !== 0 && !isPresenceModalOpen) {
-                triggeredThresholdsRef.current.add(durations[durations.length - 1])
-                setIsPresenceModalOpen(true);
+        // if (thresholdsRef.current[thresholdsRef.current.length - 1] !== playTimeDuration && playTimeDuration !== 0) {
+        //     thresholdsRef.current.push(playTimeDuration);
+        // }
+        // const durations = thresholdsRef.current.filter(t => current >= t);
+        // if (isPromptingPaused && !isBackPressed && !triggeredThresholdsRef.current.has(durations[durations.length - 1])) {
+        //     const chunkPlaying = durations.length;
+        //     if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && chunkPlaying < chunks.length && chunkPlaying !== 0 && !isPresenceModalOpen) {
+        //         triggeredThresholdsRef.current.add(durations[durations.length - 1])
+        //         setIsPresenceModalOpen(true);
+        //     }
+        // }
+    }
+
+    //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
+    //only works if the audio/aac is not supported
+    useMemo(() => {
+        if (isPromptingPaused && !isTypeAACSupported) {
+            const chunkPlaying = +seekAudio.id;
+            if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0) {
+                setIsPresenceModalOpen(true); //delay 1 sec to allow the audio to play for a sec
             }
         }
-    }
+    }, [isPromptingPaused, currentIndex])
 
     seekAudio.onpause = () => {
         setIsPlaying(false);
@@ -290,6 +360,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         setCurrentIndex(0);
         setCurrentPlayTime(0);
         memoryWarnedRef.current = false;
+        evictedSoFarRef.current = 0;
         if (full) {
             seekAudio.src = "";
             resetAudioUrl();
@@ -348,6 +419,12 @@ const useAudioPlayer = (isDownload: boolean) => {
             play();
         }
     }, [seekAudio, play, reset]);
+
+    // const formatTime = (secs: number) => {
+    //     const m = Math.floor(secs / 60);
+    //     const s = Math.floor(secs % 60);
+    //     return `${m}:${s.toString().padStart(2, "0")}`;
+    //   };
 
     const onScrub = useCallback((time: number) => {
         isScrubbing.current = true;

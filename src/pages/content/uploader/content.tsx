@@ -76,7 +76,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         }
         setIsBackPressed(true);
         const newChatBtn = document.querySelector<HTMLButtonElement>(
-            "[data-testid='create-new-chat-button']"
+            "[data-testid='create-new-chat-button'], [aria-label='New chat']"
           );
           if (newChatBtn) {
             newChatBtn.click();

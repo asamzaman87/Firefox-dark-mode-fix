@@ -156,7 +156,8 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     useMemo(() => {
-        if(!isDownload){
+        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+        if(!isDownload && isFirefox){
             const chunkNumber = currentCompletedStream?.chunkNumber;
             if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
                 setIsPromptingPaused(true);

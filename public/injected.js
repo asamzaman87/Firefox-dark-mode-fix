@@ -45,17 +45,23 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";
-const CONVERSATION_F_ENDPOINT = "/backend-api/f/conversation";
+const CONVERSATION_F_ENDPOINT = "backend-api/f/conversation";
 const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
 const VOICES_ENDPOINT = "backend-api/settings/voices";
+let lastStreamDetail = {
+    messageId: "",
+    conversationId: "",
+    createTime: "",
+    text: ""
+  };  
 const { fetch: origFetch } = window;
 
 window.fetch = async (...args) => {
     const response = await origFetch(...args);
     // const { url } = response;
     // console.log("[inject]  → response URL:", url, "status:", response.status);
-    // const hasConversationEndpoint = url.includes(CONVERSATION_ENDPOINT) || url.includes(CONVERSATION_F_ENDPOINT);
     const { url, headers } = response;
+    const hasConversationEndpoint = url.includes('conversation');
     const contentType = headers.get("content-type") || "";
     const isEventStream = contentType.includes("event-stream");
 
@@ -91,8 +97,8 @@ window.fetch = async (...args) => {
     }
 
     //read the stream to get the message id and conversation id
-    //if (hasConversationEndpoint && args[1].method === 'POST') {
-    if (isEventStream && args[1]?.method === "POST") {
+    if (hasConversationEndpoint && args[1]?.method === 'POST' && isEventStream) {
+    //if (isEventStream && args[1]?.method === "POST") {
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
         if (clonedResponse.status === 429) {
@@ -100,20 +106,58 @@ window.fetch = async (...args) => {
                 detail: "You have exceeded the hourly limit for ChatGPT. You will not be able to generate any more audio for around 1 hour.",
             });
             window.dispatchEvent(rateLimitExceededEvent);
+        } 
+
+        if (clonedResponse.status === 500) {
+            const maxWaitMs = 10000;
+            const intervalMs = 200;
+            const maxTries = maxWaitMs / intervalMs;
+            let tries = 0;
+    
+            const retryChecker = setInterval(() => {
+                const retryButton = document.querySelector('[data-testid*="retry"], [data-testid*="regenerate"]');
+                if (retryButton) {
+                    console.warn("[inject] Found retry/regenerate button, clicking it...");
+                    retryButton.click();
+                    clearInterval(retryChecker);
+                }
+                if (++tries >= maxTries) {
+                    clearInterval(retryChecker);
+                }
+            }, intervalMs);
+    
+            // Return early — next fetch will be intercepted after retry
+            return response;
         }
-        if (stream) {
+        
+        if (stream && clonedResponse.status === 200) {
             const reader = stream.getReader();
 
             loopThroughReaderToExtractMessageId(reader, args)
-                .then((data) => {
-                    // Dispatch custom event after stream reading is complete
-                    const event = new CustomEvent("END_OF_STREAM", {
-                        detail: { ...data } // Custom data if needed
-                    });
-                    window.dispatchEvent(event);
-                })
-                .catch(error => console.error("Error in stream reading:", error));
+            .then(detail => {
+                lastStreamDetail = detail;
+                window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail }));
+            })
+            .catch(err => console.error("stream error:", err));
         }
+        
+        if (clonedResponse.status !== 200) {
+            window.dispatchEvent(new CustomEvent("END_OF_STREAM", {
+                detail: lastStreamDetail
+            }));
+        }
+
+        // loopThroughReaderToExtractMessageId(reader, args)
+        //     .then((data) => {
+        //         // Dispatch custom event after stream reading is complete
+        //         const event = new CustomEvent("END_OF_STREAM", {
+        //             detail: { ...data } // Custom data if needed
+        //         });
+        //         window.dispatchEvent(event);
+        //     })
+        //     .catch(error => console.error("Error in stream reading:", error));
+
+        // on any non-200, fire a synthetic END_OF_STREAM so our chunk-loop resumes
     }
 
     //get all voices
