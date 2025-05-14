@@ -61,7 +61,9 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     }
 
     const onOpenChange = (open: boolean) => {
-        if (detectBrowser() === "firefox" && open) {
+        // const isFirefox = detectBrowser() === "firefox";
+        const isFirefox = true;
+        if (isFirefox && open) {
             return chrome.runtime.sendMessage({ type: "OPEN_FEEDBACK" });
         }
         setOpen(open);

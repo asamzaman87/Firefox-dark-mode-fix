@@ -39,11 +39,42 @@ const Announcements = () => {
   
   const { toast } = useToast();
   
-
+  const FALLBACK_ANNOUNCEMENTS: Announcement[] = [
+    {
+      id: "1",
+      title: "GPT Reader Tip",
+      message: "If you find yourself having issues, then click on the back button, upload your text, and try again.",
+      extension: "your-extension-name",
+      created_on: new Date("2025-05-10"),
+      updated_on: new Date("2025-05-10"),
+    },
+    {
+      id: "2",
+      title: "Welcome to the Extension!",
+      message: "Thanks for installing! Please be sure to leave me feedback if you'd like to request a new feature or fix an issue.",
+      extension: "your-extension-name",
+      created_on: new Date("2025-01-30"),
+      updated_on: new Date("2025-01-30"),
+    },
+  ];
+  
   const getAnnouncements = async () => {
-    await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
+    try {
+      await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
+      if (!announcements.length) {
+        setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
+        setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+        setCount(2);
+      }
+    } catch (err) {
+      // Fallback if the endpoint is unreachable
+      console.log('Failed to get announcements');
+      setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
+      setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+      setCount(2);
+    }
   };
-
+  
   const handleAnnouncementClick = () => {
     chrome.runtime.sendMessage({ type: "ANNOUNCEMENTS_OPENED", count });
     getAnnouncements();
@@ -54,7 +85,7 @@ const Announcements = () => {
     if (count > 0) {
       toast({
         description:
-          "Hey there 👋 ! We've got some fresh announcements. Click the megaphone 📣 icon to check them out!",
+          "Hey there 👋 ! We've got some new announcements for you. Click the megaphone 📣 icon to check them out!",
         style: TOAST_STYLE_CONFIG_INFO,
       });
       if (open) handleAnnouncementClick();
