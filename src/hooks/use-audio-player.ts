@@ -20,11 +20,12 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [playTimeDuration, setPlayTimeDuration] = useState<number>(0);
     const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
     const [partialChunkCompletedPlaying, setPartialChunkCompletedPlaying] = useState<boolean>(false);
-    const [arrayBuffers, setArrayBuffers] = useState<ArrayBuffer[]>([]);
+    // const [arrayBuffers, setArrayBuffers] = useState<ArrayBuffer[]>([]);
     const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
     const memoryWarnedRef = useRef(false);
+    const awaitGuardRef = useRef(false);
 
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
@@ -37,6 +38,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const thresholdsRef = useRef<number[]>([0]);
     const triggeredThresholdsRef = useRef<Set<number>>(new Set());
     const evictedSoFarRef = useRef<number>(0);
+    const [pendingBuffers, setPendingBuffers] = useState<{ chunkNumber: number; buffer: ArrayBuffer }[]>([]);
   
     //resetting the media source when the user clicks on the back button or onUnmount
     const endMediaStream = () => {
@@ -65,12 +67,17 @@ const useAudioPlayer = (isDownload: boolean) => {
 
             // inside mediaSource.onsourceopen → sourceBuffer.current.onupdateend
             sourceBuffer.current.onupdateend = async () => {
-                if (!sourceBuffer.current || sourceBuffer.current.updating || arrayBuffers.length === 0) return;
-                const buf = arrayBuffers[0] as ArrayBuffer;
+                if (!sourceBuffer.current || sourceBuffer.current.updating || pendingBuffers.length === 0) return;
+                // const buf = arrayBuffers[0] as ArrayBuffer;
+                const buf = (pendingBuffers.find(x => x.chunkNumber === currentIndex))?.buffer;
+                if (!buf) {
+                    // not arrived yet → wait
+                    return;
+                }
                 while (true) {
                     try {
                         sourceBuffer.current.appendBuffer(buf);
-                        arrayBuffers.shift();
+                        setPendingBuffers(pbs => pbs.filter(x => x.chunkNumber !== currentIndex));
                         break;
                     } catch (err: any) {
                         if (!err.name?.includes('QuotaExceededError')) {
@@ -79,10 +86,10 @@ const useAudioPlayer = (isDownload: boolean) => {
                 
                         const nextEvictEnd = Math.min(
                             evictedSoFarRef.current + 60,
-                            currentTimeRef.current - 2
+                            currentTimeRef.current - 300
                         );
                         if (nextEvictEnd <= evictedSoFarRef.current) {
-                            await new Promise(res => setTimeout(res, 20_000));
+                            await new Promise(res => setTimeout(res, 10_000));
                             continue;
                         }
                 
@@ -108,23 +115,31 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (blobs.length && !isBackPressed && isTypeAACSupported && !isDownload) {
             const lastElement = blobs.slice(-1).pop();
             if (lastElement) {
-                const buffer = await lastElement.arrayBuffer();
-                setArrayBuffers((arrayBuffers) => arrayBuffers.concat(buffer));
+                const buffer = await lastElement.blob.arrayBuffer();
+                setPendingBuffers(pbs => [
+                    ...pbs,
+                    { chunkNumber: lastElement.chunkNumber, buffer }
+                  ]);
             }
             return
         }
-        setArrayBuffers([]);
+        setPendingBuffers([]);
     }, [blobs]);
 
     // inside your `useMemo` appendBuffer loop
     useMemo(async () => {
         if (!sourceBuffer.current || sourceBuffer.current.updating || mediaSource.readyState !== 'open') return;
-        const buf = arrayBuffers.shift() as ArrayBuffer;
+        // const buf = arrayBuffers.shift() as ArrayBuffer;
+        const buf = (pendingBuffers.find(x => x.chunkNumber === currentIndex))?.buffer;
+        if (!buf) {
+            // not arrived yet → wait
+            return;
+        }
     
         while (true) {
             try {
                 sourceBuffer.current.appendBuffer(buf);
-                arrayBuffers.shift();
+                setPendingBuffers(pbs => pbs.filter(x => x.chunkNumber !== currentIndex));
                 break;
             } catch (err: any) {
                 if (!err.name?.includes('QuotaExceededError')) {
@@ -133,10 +148,10 @@ const useAudioPlayer = (isDownload: boolean) => {
         
                 const nextEvictEnd = Math.min(
                     evictedSoFarRef.current + 60,
-                    currentTimeRef.current - 2
+                    currentTimeRef.current - 300
                 );
                 if (nextEvictEnd <= evictedSoFarRef.current) {
-                    await new Promise(res => setTimeout(res, 20_000));
+                    await new Promise(res => setTimeout(res, 10_000));
                     continue;
                 }
         
@@ -159,7 +174,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             seekAudio.volume = volume;
             seekAudio.play();
         }
-    }, [arrayBuffers]);
+    }, [pendingBuffers]);
 
     // fallback if MediaSource does not support AAC on browsers,
     // but revoke old AAC URLs to free memory in AAC mode
@@ -241,7 +256,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }
     
-    seekAudio.ontimeupdate = () => {
+    seekAudio.ontimeupdate = async () => {
         if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
         if (isScrubbing.current) return;
         const current = seekAudio.currentTime;
@@ -260,6 +275,15 @@ const useAudioPlayer = (isDownload: boolean) => {
         //         setIsPresenceModalOpen(true);
         //     }
         // }
+        if (isTypeAACSupported && isPromptingPaused && ((playTimeDuration - current) < 120) && !isBackPressed && !isPresenceModalOpen && !awaitGuardRef.current) {
+            awaitGuardRef.current = true;
+            let duration = playTimeDuration;
+            await new Promise(resolve => setTimeout(resolve, 20000));
+            if (duration === playTimeDuration) {
+                setIsPresenceModalOpen(true);
+            }
+            awaitGuardRef.current = false;
+        }
     }
 
     //show the presence modal if the audio currently being played is from the chunk that we are pausing the processing on
@@ -356,9 +380,10 @@ const useAudioPlayer = (isDownload: boolean) => {
         setIsPromptingPaused(false);
         thresholdsRef.current = [0];
         triggeredThresholdsRef.current.clear();
-        setArrayBuffers([]);
+        setPendingBuffers([]);
         setCurrentIndex(0);
         setCurrentPlayTime(0);
+        awaitGuardRef.current = false;
         memoryWarnedRef.current = false;
         evictedSoFarRef.current = 0;
         if (full) {

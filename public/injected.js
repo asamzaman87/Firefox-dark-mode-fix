@@ -47,13 +47,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
 const CONVERSATION_ENDPOINT = "backend-api/conversation";
 const CONVERSATION_F_ENDPOINT = "backend-api/f/conversation";
 const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
-const VOICES_ENDPOINT = "backend-api/settings/voices";
-let lastStreamDetail = {
-    messageId: "",
-    conversationId: "",
-    createTime: "",
-    text: ""
-  };  
+const VOICES_ENDPOINT = "backend-api/settings/voices"; 
 const { fetch: origFetch } = window;
 
 window.fetch = async (...args) => {
@@ -98,7 +92,16 @@ window.fetch = async (...args) => {
 
     //read the stream to get the message id and conversation id
     if (hasConversationEndpoint && args[1]?.method === 'POST' && isEventStream) {
-    //if (isEventStream && args[1]?.method === "POST") {
+        let sentChunkNumber = null;
+        if (args[1]?.body) {
+            try {
+                const req = JSON.parse(args[1].body);
+                const firstMsg = req.messages?.[0]?.content?.parts?.[0] || "";
+                const m = firstMsg.match(/^\[(\d+)\]/);
+                sentChunkNumber = m ? Number(m[1]) : null;
+            } catch (_err) {console.log(`An error occured while getting the chunk number in injected.js: ${_err}`)}
+        }
+ 
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
         if (clonedResponse.status === 429) {
@@ -108,64 +111,16 @@ window.fetch = async (...args) => {
             window.dispatchEvent(rateLimitExceededEvent);
         } 
 
-        if (clonedResponse.status === 500) {
-            const maxWaitMs = 6000;
-            const intervalMs = 200;
-            const maxTries = maxWaitMs / intervalMs;
-            let tries = 0;
-    
-            let found = false;
-            const retryChecker = setInterval(() => {
-                const retryButton = document.querySelector('[data-testid*="retry"], [data-testid*="regenerate"]');
-                if (retryButton) {
-                    found = true;
-                    console.warn("[inject] Found retry/regenerate button, clicking it...");
-                    retryButton.click();
-                    clearInterval(retryChecker);
-                }
-                if (++tries >= maxTries) {
-                    clearInterval(retryChecker);
-                }
-            }, intervalMs);
-    
-            // Return early — next fetch will be intercepted after retry
-            if (found) {
-                return response;
-            }
-            const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
-                detail: "GPT Reader seems to be having an issue, click on the back button in the top left corner and try again.",
-            });
-            window.dispatchEvent(generalErrorEvent);
-        }
         
         if (stream && clonedResponse.status === 200) {
             const reader = stream.getReader();
 
             loopThroughReaderToExtractMessageId(reader, args)
             .then(detail => {
-                lastStreamDetail = detail;
-                window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail }));
+                window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail: {...detail, chunkNdx: sentChunkNumber} }));
             })
             .catch(err => console.error("stream error:", err));
         }
-        
-        if (clonedResponse.status !== 200) {
-            window.dispatchEvent(new CustomEvent("END_OF_STREAM", {
-                detail: lastStreamDetail
-            }));
-        }
-
-        // loopThroughReaderToExtractMessageId(reader, args)
-        //     .then((data) => {
-        //         // Dispatch custom event after stream reading is complete
-        //         const event = new CustomEvent("END_OF_STREAM", {
-        //             detail: { ...data } // Custom data if needed
-        //         });
-        //         window.dispatchEvent(event);
-        //     })
-        //     .catch(error => console.error("Error in stream reading:", error));
-
-        // on any non-200, fire a synthetic END_OF_STREAM so our chunk-loop resumes
     }
 
     //get all voices

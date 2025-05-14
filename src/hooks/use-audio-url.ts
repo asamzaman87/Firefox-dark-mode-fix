@@ -59,7 +59,7 @@ const useAudioUrl = (isDownload: boolean) => {
           return;
         }
         if(currentCompletedStream){
-            const text = chunks[+currentCompletedStream?.chunkNumber]?.text ?? "";
+            const text = chunks[+currentCompletedStream?.chunkNdx]?.text ?? "";
             setDownloadPreviewText(t => (t ?? "")  + `${text.replaceAll("\n", " ") ?? ""}`);
         }
         setProgress(((blobs.length ?? 0) / (chunks.length ?? 0)) * 100);
@@ -156,9 +156,8 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     useMemo(() => {
-        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
-        if(!isDownload && isFirefox){
-            const chunkNumber = currentCompletedStream?.chunkNumber;
+        if(!isDownload){
+            const chunkNumber = currentCompletedStream?.chunkNdx;
             if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
                 setIsPromptingPaused(true);
                 setWasPromptStopped("PAUSED");
@@ -171,7 +170,7 @@ const useAudioUrl = (isDownload: boolean) => {
         if (nextChunk && currentCompletedStream) {
             //console.log("RESTART WITH NEXT_CHUNK");
             setIsPromptingPaused(false);
-            setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNumber + 1);
+            setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNdx + 1);
             injectPrompt(nextChunk.text, nextChunk.id);
         }
     };
@@ -179,9 +178,13 @@ const useAudioUrl = (isDownload: boolean) => {
    const downloadCombinedFile = useCallback(async(fileName: string) => {
         try {
           const sanitisedFileName = fileName.split('.').slice(0, -1).join('.');
+          const ordered = blobs
+            .slice()
+            .sort((a, b) => a.chunkNumber - b.chunkNumber)
+            .map(entry => entry.blob);
           // The Blob constructor automatically concatenates the provided blob parts.
-          const combinedBlob = new Blob(blobs, {
-            type: blobs[0]?.type || "audio/aac",
+          const combinedBlob = new Blob(ordered, {
+            type: ordered[0]?.type || "audio/aac",
           });
     
           // Create an object URL for the combined blob
@@ -210,20 +213,21 @@ const useAudioUrl = (isDownload: boolean) => {
         // console.log(
         //              "[NextChunk] chunks:", chunks.length,
         //               "completedStreams:", completedStreams.length,
-        //               "current:", currentCompletedStream?.chunkNumber,
-        //              "isPromptingPaused:", isPromptingPaused
+        //               "current:", currentCompletedStream?.chunkNdx,
+        //              "isPromptingPaused:", isPromptingPaused,
+        //              "completedStreams length:", completedStreams.length
         //            );
         if (completedStreams.length > 0 ) {
             if(!isDownload) setAudioUrls(completedStreams);
             if (
-                currentCompletedStream?.chunkNumber &&
-                +currentCompletedStream.chunkNumber !== chunks.length - 1 && !isPromptingPaused
+                currentCompletedStream?.chunkNdx != null &&
+                +currentCompletedStream.chunkNdx !== chunks.length - 1 && !isPromptingPaused
             ) {
-                const nextChunk = chunks[+currentCompletedStream.chunkNumber + 1];
+                const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
                 if (nextChunk) {
                     //console.log("NEXT_CHUNK");
                     setCurrentChunkBeingPromptedIndex(
-                        +currentCompletedStream.chunkNumber + 1
+                        +currentCompletedStream.chunkNdx + 1
                     );
                     injectPrompt(nextChunk.text, nextChunk.id);
                 }
@@ -231,7 +235,7 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     }, [chunks, completedStreams, currentChunkBeingPromptedIndex, currentCompletedStream, injectPrompt, voices.selected, isPromptingPaused])
 
-    return { downloadPreviewText,downloadCombinedFile,progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNumber && +currentCompletedStream?.chunkNumber === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
+    return { downloadPreviewText,downloadCombinedFile,progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
 
 }
 
