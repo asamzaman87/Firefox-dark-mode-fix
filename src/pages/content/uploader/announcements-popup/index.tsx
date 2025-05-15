@@ -19,7 +19,7 @@ import { TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { AccordionTrigger } from "@radix-ui/react-accordion";
 import { ChevronDownCircleIcon, Megaphone, RefreshCwIcon } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import AnnouncementMessage from "./announcement-message";
 
 interface Announcement {
@@ -36,12 +36,13 @@ const Announcements = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [count, setCount] = useState<number>(0);
   const [open, setOpen] = useState<boolean>(false);
+  const knownFallbackIdsRef = useRef<Set<string>>(new Set());
   
   const { toast } = useToast();
   
   const FALLBACK_ANNOUNCEMENTS: Announcement[] = [
     {
-      id: "1",
+      id: "2",
       title: "GPT Reader Tip",
       message: "If you find yourself having issues, then click on the back button, upload your text, and try again.",
       extension: "your-extension-name",
@@ -49,7 +50,7 @@ const Announcements = () => {
       updated_on: new Date("2025-05-10"),
     },
     {
-      id: "2",
+      id: "1",
       title: "Welcome to the Extension!",
       message: "Thanks for installing! Please be sure to leave me feedback if you'd like to request a new feature or fix an issue.",
       extension: "your-extension-name",
@@ -57,21 +58,48 @@ const Announcements = () => {
       updated_on: new Date("2025-01-30"),
     },
   ];
+
+  const loadKnownFallbackIds = async () => {
+    const result = await chrome.storage.local.get("knownFallbackAnnouncementIds");
+    const storedIds = result.knownFallbackAnnouncementIds ?? [];
+    knownFallbackIdsRef.current = new Set(storedIds);
+  };
+
+  const saveKnownFallbackIds = async () => {
+    await chrome.storage.local.set({
+      knownFallbackAnnouncementIds: Array.from(knownFallbackIdsRef.current),
+    });
+  };
   
   const getAnnouncements = async () => {
     try {
       await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
       if (!announcements.length) {
+        await loadKnownFallbackIds();
+        const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
+          (a) => !knownFallbackIdsRef.current.has(a.id)
+        );
+        // Add new IDs to the ref
+        newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
+        await saveKnownFallbackIds();
+        setCount(newFallbacks.length);
         setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
         setAnnouncements(FALLBACK_ANNOUNCEMENTS);
-        setCount(2);
       }
     } catch (err) {
       // Fallback if the endpoint is unreachable
       console.log('Failed to get announcements');
+      await loadKnownFallbackIds();
+      const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
+        (a) => !knownFallbackIdsRef.current.has(a.id)
+      );
+
+      newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
+      await saveKnownFallbackIds();
+
+      setCount(newFallbacks.length);
       setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
       setAnnouncements(FALLBACK_ANNOUNCEMENTS);
-      setCount(2);
     }
   };
   
