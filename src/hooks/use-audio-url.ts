@@ -67,16 +67,13 @@ const useAudioUrl = (isDownload: boolean) => {
 
       
     const sendPrompt = async () => {
-        //console.log("SEND_PROMPT");
         setIsLoading(true);
         const sendButton: HTMLButtonElement | null = document.querySelector("[data-testid='send-button']");
-        // toast({ description:"It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check on the ChatGPT website for the exact error.", style: TOAST_STYLE_CONFIG });
-        if (!sendButton) return
+        if (!sendButton) return;
         sendButton.click();
     };
 
     const stopPrompt = async () => {
-        //console.log("STOP_PROMPT");
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
         if (stopButton) {
             stopButton.click();
@@ -84,7 +81,6 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const injectPrompt = useCallback((text: string, id: string) => {
-        //console.log("INJECT_PROMPT", id);
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
             textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
@@ -103,7 +99,6 @@ const useAudioUrl = (isDownload: boolean) => {
     }, []);
     
     const splitAndSendPrompt = async (text: string) => {
-        //console.log("SPLIT_AND_SEND_PROMPT");
         setText(text);
         const textWithoutTags = text.replace(/<img[^>]*src\s*=\s*["']\s*data:image\/[a-zA-Z]+;base64,[^"']*["'][^>]*>/gi, ''); //removes image tag if it exist in the prompt
         const chunks: Chunk[] = await splitIntoChunksV2(textWithoutTags, CHUNK_SIZE);
@@ -116,23 +111,16 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const extractText = async (file: File) => {
-        //console.log("EXTRACT_TEXT");
         switch (file.type) {
             case "application/pdf": {
-                // const text = await pdfToText(file);
-                // splitAndSendPrompt(text);
                 return await pdfToText(file);
             }
             case "application/msword":
             case "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-                // const text = await docxToText(file);
-                // splitAndSendPrompt(text);
                 return await docxToText(file);
             }
             case "text/plain":
             case "text/rtf": {
-                // const text = await textPlainToText(file);
-                // splitAndSendPrompt(text);
                 return await textPlainToText(file);
             }
             default:
@@ -168,7 +156,6 @@ const useAudioUrl = (isDownload: boolean) => {
     const reStartChunkProcess = () => {
         const nextChunk = chunks[currentChunkBeingPromptedIndex + 1];
         if (nextChunk && currentCompletedStream) {
-            //console.log("RESTART WITH NEXT_CHUNK");
             setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(+currentCompletedStream.chunkNdx + 1);
             injectPrompt(nextChunk.text, nextChunk.id);
@@ -210,13 +197,6 @@ const useAudioUrl = (isDownload: boolean) => {
             hasRefusal.current = false;
             return;
         }
-        // console.log(
-        //              "[NextChunk] chunks:", chunks.length,
-        //               "completedStreams:", completedStreams.length,
-        //               "current:", currentCompletedStream?.chunkNdx,
-        //              "isPromptingPaused:", isPromptingPaused,
-        //              "completedStreams length:", completedStreams.length
-        //            );
         if (completedStreams.length > 0 ) {
             if(!isDownload) setAudioUrls(completedStreams);
             if (
@@ -225,7 +205,6 @@ const useAudioUrl = (isDownload: boolean) => {
             ) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
                 if (nextChunk) {
-                    //console.log("NEXT_CHUNK");
                     setCurrentChunkBeingPromptedIndex(
                         +currentCompletedStream.chunkNdx + 1
                     );

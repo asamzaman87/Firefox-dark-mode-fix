@@ -9,14 +9,12 @@ import {
 } from "@/lib/constants";
 import { getGPTTabs, switchToActiveTab } from "@/lib/utils";
 
-////console.log("BACKGROUND LOADED");
 chrome.storage.local.clear();
 
 //listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener(async (request, sender) => {
   switch (request.type) {
     case LISTENERS.AUTH_RECEIVED: {
-      ////console.log("BACKGROUND MESSAGE", request);
       chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
       break;
     }
@@ -31,7 +29,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
       break;
     }
     case "NO_AUTH_TRY_AGAIN": {
-      ////console.log("NO_AUTH_TRY_AGAIN");
       const tabId = sender?.tab?.id;
       if (tabId) {
         chrome.tabs.sendMessage(tabId, {
@@ -84,15 +81,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
       handleBannerCountView(count);
       break;
     }
-
-    // case "UPDATE_BADGE_STATE":{
-    //     if(request.state){
-    //         chrome.action.setBadgeBackgroundColor({ color: "#b3f2a5" });
-    //     }else{
-    //         chrome.action.setBadgeBackgroundColor({ color: "#f2aaa5" });
-    //     }
-    //     break;
-    // }
     default:
       break;
   }
@@ -123,12 +111,8 @@ const matchUrlToDomain = (domains: string[], url: string) => {
 //set badge text and color based on state
 const setBadState = (state: boolean) => {
   if (!state) {
-    // chrome.action.setBadgeText({ text: "ON"});
-    // chrome.action.setBadgeTextColor({ color: "#21a108" });
     chrome.action.setIcon({ path: "logo-128.png" });
   } else {
-    // chrome.action.setBadgeText({ text: "OFF" });
-    // chrome.action.setBadgeTextColor({ color: "#9e1109" });
     chrome.action.setIcon({ path: "logo-128-bw.png" });
   }
   return state;

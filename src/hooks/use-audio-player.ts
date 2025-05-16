@@ -49,9 +49,7 @@ const useAudioPlayer = (isDownload: boolean) => {
                 if (!mediaSource || mediaSource.readyState !== "open") return;
                 mediaSource.endOfStream();
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {
-                // console.log("Error closing MediaSource:", error);
-            }
+            } catch (error) {}
         }
     }
 
@@ -226,22 +224,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
-    // useMemo(() => {
-    //         if (blobs.length > 0 && !hasCompletePlaying && !isDownload && !isTypeAACSupported) {
-    //             const combinedBlob = new Blob(blobs, {
-    //                 type: blobs[0]?.type || "audio/aac",
-    //             });
-    //             const combinedUrl = URL.createObjectURL(combinedBlob);
-    //             seekAudio.src = combinedUrl;
-    //             seekAudio.volume = volume;
-    //             seekAudio.playbackRate = playRate;
-    //             seekAudio.currentTime = currentTimeRef.current;
-    //             if((isPlaying || !isPaused || partialChunkCompletedPlaying) || (!isPlaying && !isPaused)) seekAudio.play();
-    //             setPartialChunkCompletedPlaying(false);
-    //             // Create an object URL for the combined blob
-    //         }
-    // }, [blobs]);
-
     seekAudio.onloadedmetadata = () => {
         if (!isTypeAACSupported) {
             setPlayTimeDuration(seekAudio.duration);
@@ -364,7 +346,6 @@ const useAudioPlayer = (isDownload: boolean) => {
     }
 
     const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
-        // console.log("RESETTING");
         if (seekAudio) {
             seekAudio.pause();
             seekAudio.currentTime = 0;
@@ -444,12 +425,6 @@ const useAudioPlayer = (isDownload: boolean) => {
             play();
         }
     }, [seekAudio, play, reset]);
-
-    // const formatTime = (secs: number) => {
-    //     const m = Math.floor(secs / 60);
-    //     const s = Math.floor(secs % 60);
-    //     return `${m}:${s.toString().padStart(2, "0")}`;
-    //   };
 
     const onScrub = useCallback((time: number) => {
         isScrubbing.current = true;

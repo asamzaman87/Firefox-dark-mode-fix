@@ -132,7 +132,6 @@ function Uploader() {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
     if (isRedirectToLogin && isRedirectToLogin === "true" && isAuthenticated) {
-      //console.log("redirecting to login");
       chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
   }, [isAuthenticated, isActive]);
@@ -143,11 +142,6 @@ function Uploader() {
     return sendButton !== null;
   }
 
-  //check if the speech button is present on the dom
-  // const isComposerSpeechButtonPresentOnDom = () => {
-  //   const speechButton: HTMLDivElement | null = document.querySelector("[data-testid='composer-speech-button']");
-  //   return speechButton !== null;
-  // }
 
   const clickStopButtonIfPresent = async (): Promise<void> => {
     const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
@@ -174,16 +168,6 @@ function Uploader() {
 
   const isBadModel = () => {
     const isSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
-    //checking if the user has a last used model stored in local storage
-    // if (userId) {
-    //   const lastUsedModelKey = findMatchLocalStorageKey(userId);
-    //   if (lastUsedModelKey) {
-    //     const lastUsedModel = localStorage.getItem(lastUsedModelKey);
-    //     if (lastUsedModel) {
-    //       return isSupportedModel(lastUsedModel);
-    //     }
-    //   }
-    // }
     // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if (modelSwitcher) {

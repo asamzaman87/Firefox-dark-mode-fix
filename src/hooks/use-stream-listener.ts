@@ -34,7 +34,6 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
         if (response.status !== 200) {
             if (response.status === 429) {
-                ////console.log(response.status);
                 handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.", Infinity);
                 return
             }

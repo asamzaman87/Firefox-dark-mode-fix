@@ -52,8 +52,6 @@ const { fetch: origFetch } = window;
 
 window.fetch = async (...args) => {
     const response = await origFetch(...args);
-    // const { url } = response;
-    // console.log("[inject]  → response URL:", url, "status:", response.status);
     const { url, headers } = response;
     const hasConversationEndpoint = url.includes('conversation');
     const contentType = headers.get("content-type") || "";
@@ -160,7 +158,6 @@ window.addEventListener("GET_TOKEN", () => {
 //get all the listed voices
 window.addEventListener("GET_VOICES", async () => {
     if (window && window?.__reactRouterContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
-        ////console.log("GET_VOICES")
         const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
         const data = await response.json();
         const voicesEvent = new CustomEvent("VOICES", {

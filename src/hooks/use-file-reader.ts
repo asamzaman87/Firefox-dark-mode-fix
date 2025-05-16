@@ -27,7 +27,6 @@ const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
             extractedText += pageText;
         }
     } catch (e: unknown) {
-        //console.log(e)
         hadParsingError = true;
     }
 
