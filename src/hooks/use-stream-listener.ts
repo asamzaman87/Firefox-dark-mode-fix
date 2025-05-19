@@ -48,7 +48,14 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
             handleError("ChatGPT seems to be having issues, please close this overlay for the exact error message.");
         }
         const blob = await response.blob();
-        setBlobs(bs => [...bs, { chunkNumber, blob }]);
+        setBlobs(bs => {
+            const exists = bs.some(b => b.blob.size === blob.size && b.blob.type === blob.type);
+            if (exists) {
+                // Don't append duplicate blob
+                return bs;
+            }
+            return [...bs, { chunkNumber, blob }];
+        });
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;

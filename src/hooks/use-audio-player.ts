@@ -30,6 +30,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
     const currentTimeRef = useRef<number>(0);
+    const bufferNum = useRef<number>(0);
     const isScrubbing = useRef<boolean>(false);
 
     const sourceBuffer = useRef<SourceBuffer | null>(null);
@@ -37,6 +38,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
     const thresholdsRef = useRef<number[]>([0]);
     const triggeredThresholdsRef = useRef<Set<number>>(new Set());
+    const bufferNumList = useRef<Set<number>>(new Set());
     const evictedSoFarRef = useRef<number>(0);
     const [pendingBuffers, setPendingBuffers] = useState<{ chunkNumber: number; buffer: ArrayBuffer }[]>([]);
   
@@ -62,50 +64,8 @@ const useAudioPlayer = (isDownload: boolean) => {
                 return
             }
             sourceBuffer.current = mediaSource.addSourceBuffer('audio/aac'); // AAC codec
-
-            // inside mediaSource.onsourceopen → sourceBuffer.current.onupdateend
-            sourceBuffer.current.onupdateend = async () => {
-                if (!sourceBuffer.current || sourceBuffer.current.updating || pendingBuffers.length === 0) return;
-                // const buf = arrayBuffers[0] as ArrayBuffer;
-                const buf = (pendingBuffers.find(x => x.chunkNumber === currentIndex))?.buffer;
-                if (!buf) {
-                    // not arrived yet → wait
-                    return;
-                }
-                while (true) {
-                    try {
-                        sourceBuffer.current.appendBuffer(buf);
-                        setPendingBuffers(pbs => pbs.filter(x => x.chunkNumber !== currentIndex));
-                        break;
-                    } catch (err: any) {
-                        if (!err.name?.includes('QuotaExceededError')) {
-                            break;
-                        }
-                
-                        const nextEvictEnd = Math.min(
-                            evictedSoFarRef.current + 60,
-                            currentTimeRef.current - 300
-                        );
-                        if (nextEvictEnd <= evictedSoFarRef.current) {
-                            await new Promise(res => setTimeout(res, 10_000));
-                            continue;
-                        }
-                
-                        sourceBuffer.current.remove(0, nextEvictEnd);
-                        evictedSoFarRef.current = nextEvictEnd;
-        
-                        await new Promise<void>(resolve => {
-                            const onEvict = () => {
-                                sourceBuffer.current!.removeEventListener('updateend', onEvict);
-                                resolve();
-                            };
-                            sourceBuffer.current!.addEventListener('updateend', onEvict);
-                        });
-                    }
-                }
-            };
         } catch (error) {
-            console.error("Error adding SourceBuffer:", error);
+            console.error("Error initializing SourceBuffer:", error);
         }
     }
 
@@ -124,55 +84,79 @@ const useAudioPlayer = (isDownload: boolean) => {
         setPendingBuffers([]);
     }, [blobs]);
 
-    // inside your `useMemo` appendBuffer loop
-    useMemo(async () => {
-        if (!sourceBuffer.current || sourceBuffer.current.updating || mediaSource.readyState !== 'open') return;
-        // const buf = arrayBuffers.shift() as ArrayBuffer;
-        const buf = (pendingBuffers.find(x => x.chunkNumber === currentIndex))?.buffer;
-        if (!buf) {
-            // not arrived yet → wait
-            return;
-        }
-    
-        while (true) {
-            try {
-                sourceBuffer.current.appendBuffer(buf);
-                setPendingBuffers(pbs => pbs.filter(x => x.chunkNumber !== currentIndex));
-                break;
-            } catch (err: any) {
-                if (!err.name?.includes('QuotaExceededError')) {
+    async function waitForBuffer(bufferNum: any, pendingBuffers: any[]) {
+        let entry = pendingBuffers.find(x => x.chunkNumber === bufferNum);
+        if (!entry) {
+            while (true) {
+                const targetBuffer = pendingBuffers.find(x => x.chunkNumber === bufferNum);
+                if (targetBuffer) {
+                    entry = targetBuffer;
                     break;
                 }
-        
-                const nextEvictEnd = Math.min(
+                await new Promise(r => setTimeout(r, 5000));
+            }
+        }
+        return entry;
+    }
+    
+    // watch for new buffers → try append (with quota-evict retry)
+    useEffect(() => {
+        if (
+            !sourceBuffer.current ||
+            sourceBuffer.current.updating ||
+            mediaSource.readyState !== 'open' ||
+            bufferNumList.current.has(bufferNum.current) || 
+            bufferNum.current === chunks.length
+        ) {
+            return;
+        }
+        (async () => {
+        if (bufferNumList.current.has(bufferNum.current)) return;
+        bufferNumList.current.add(bufferNum.current);
+        const entry = await waitForBuffer(bufferNum.current, pendingBuffers);
+        const buf = entry.buffer;
+        while (true) {
+            try {
+                sourceBuffer.current!.appendBuffer(buf);
+                setPendingBuffers(pbs =>
+                    pbs.filter(x => x.chunkNumber !== bufferNum.current)
+                );
+                bufferNum.current += 1;
+                break;
+            } catch (err: any) {
+                if (!err.name?.includes("QuotaExceededError")) {
+                    console.error("[APPEND] unexpected error", err);
+                    return;
+                }
+                const nextEvict = Math.min(
                     evictedSoFarRef.current + 60,
                     currentTimeRef.current - 300
                 );
-                if (nextEvictEnd <= evictedSoFarRef.current) {
-                    await new Promise(res => setTimeout(res, 10_000));
+                if (nextEvict <= evictedSoFarRef.current) {
+                    await new Promise(r => setTimeout(r, 10_000));
                     continue;
                 }
-        
-                sourceBuffer.current.remove(0, nextEvictEnd);
-                evictedSoFarRef.current = nextEvictEnd;
-
+                sourceBuffer.current!.remove(0, nextEvict);
+                evictedSoFarRef.current = nextEvict;
                 await new Promise<void>(resolve => {
                     const onEvict = () => {
-                        sourceBuffer.current!.removeEventListener('updateend', onEvict);
-                        resolve();
+                    sourceBuffer.current!
+                        .removeEventListener("updateend", onEvict);
+                    resolve();
                     };
-                    sourceBuffer.current!.addEventListener('updateend', onEvict);
+                    sourceBuffer.current!.addEventListener("updateend", onEvict);
                 });
             }
         }
     
-        // resume playback if not already playing
         if (!isPlaying && !isPaused) {
             seekAudio.playbackRate = playRate;
             seekAudio.volume = volume;
             seekAudio.play();
         }
+        })();
     }, [pendingBuffers]);
+  
 
     // fallback if MediaSource does not support AAC on browsers,
     // but revoke old AAC URLs to free memory in AAC mode
@@ -233,7 +217,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.onprogress = () => {
         if (seekAudio.buffered.length > 0 && isTypeAACSupported) {
             const bufferedEnd = seekAudio.buffered.end(seekAudio.buffered.length - 1);
-            setCurrentIndex(c => c + 1); //stores the current index of the audio that has been processed and appended to the SourceBuffer
+            setCurrentIndex(bufferNum.current); //stores the current index of the audio that has been processed and appended to the SourceBuffer
             setPlayTimeDuration(bufferedEnd);
         }
     }
@@ -362,11 +346,12 @@ const useAudioPlayer = (isDownload: boolean) => {
         thresholdsRef.current = [0];
         triggeredThresholdsRef.current.clear();
         setPendingBuffers([]);
-        setCurrentIndex(0);
         setCurrentPlayTime(0);
         awaitGuardRef.current = false;
         memoryWarnedRef.current = false;
         evictedSoFarRef.current = 0;
+        bufferNum.current = 0;
+        bufferNumList.current.clear();
         if (full) {
             seekAudio.src = "";
             resetAudioUrl();
