@@ -83,21 +83,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
         setPendingBuffers([]);
     }, [blobs]);
-
-    async function waitForBuffer(bufferNum: any, pendingBuffers: any[]) {
-        let entry = pendingBuffers.find(x => x.chunkNumber === bufferNum);
-        if (!entry) {
-            while (true) {
-                const targetBuffer = pendingBuffers.find(x => x.chunkNumber === bufferNum);
-                if (targetBuffer) {
-                    entry = targetBuffer;
-                    break;
-                }
-                await new Promise(r => setTimeout(r, 5000));
-            }
-        }
-        return entry;
-    }
     
     // watch for new buffers → try append (with quota-evict retry)
     useEffect(() => {
@@ -111,22 +96,44 @@ const useAudioPlayer = (isDownload: boolean) => {
             return;
         }
         (async () => {
-        if (bufferNumList.current.has(bufferNum.current)) return;
-        bufferNumList.current.add(bufferNum.current);
-        const entry = await waitForBuffer(bufferNum.current, pendingBuffers);
-        const buf = entry.buffer;
         while (true) {
+            if (bufferNumList.current.has(bufferNum.current) || bufferNum.current === chunks.length) break;
+            bufferNumList.current.add(bufferNum.current);
+            const entry = pendingBuffers.find(x => x.chunkNumber === bufferNum.current);
+            if (!entry) {
+                bufferNumList.current.delete(bufferNum.current);
+                break;
+            } 
+            const buf = entry.buffer;
             try {
+                while (sourceBuffer.current!.updating) {
+                    await new Promise<void>((resolve) => {
+                      const onEnd = () => {
+                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                        resolve();
+                      };
+                      sourceBuffer.current!.addEventListener("updateend", onEnd);
+                    });
+                  }
                 sourceBuffer.current!.appendBuffer(buf);
                 setPendingBuffers(pbs =>
                     pbs.filter(x => x.chunkNumber !== bufferNum.current)
                 );
                 bufferNum.current += 1;
-                break;
+                while (sourceBuffer.current!.updating) {
+                    await new Promise<void>((resolve) => {
+                      const onEnd = () => {
+                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                        resolve();
+                      };
+                      sourceBuffer.current!.addEventListener("updateend", onEnd);
+                    });
+                  }
             } catch (err: any) {
+                bufferNumList.current.delete(bufferNum.current);
                 if (!err.name?.includes("QuotaExceededError")) {
                     console.error("[APPEND] unexpected error", err);
-                    return;
+                    break;
                 }
                 const nextEvict = Math.min(
                     evictedSoFarRef.current + 60,
@@ -138,14 +145,15 @@ const useAudioPlayer = (isDownload: boolean) => {
                 }
                 sourceBuffer.current!.remove(0, nextEvict);
                 evictedSoFarRef.current = nextEvict;
-                await new Promise<void>(resolve => {
-                    const onEvict = () => {
-                    sourceBuffer.current!
-                        .removeEventListener("updateend", onEvict);
-                    resolve();
-                    };
-                    sourceBuffer.current!.addEventListener("updateend", onEvict);
-                });
+                while (sourceBuffer.current!.updating) {
+                    await new Promise<void>((resolve) => {
+                      const onEnd = () => {
+                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                        resolve();
+                      };
+                      sourceBuffer.current!.addEventListener("updateend", onEnd);
+                    });
+                  }
             }
         }
     
@@ -217,7 +225,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.onprogress = () => {
         if (seekAudio.buffered.length > 0 && isTypeAACSupported) {
             const bufferedEnd = seekAudio.buffered.end(seekAudio.buffered.length - 1);
-            setCurrentIndex(bufferNum.current); //stores the current index of the audio that has been processed and appended to the SourceBuffer
+            setCurrentIndex(c => c + 1); //stores the current index of the audio that has been processed and appended to the SourceBuffer
             setPlayTimeDuration(bufferedEnd);
         }
     }
@@ -241,7 +249,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         //         setIsPresenceModalOpen(true);
         //     }
         // }
-        if (isTypeAACSupported && isPromptingPaused && ((playTimeDuration - current) < 120) && !isBackPressed && !isPresenceModalOpen && !awaitGuardRef.current) {
+        if (isTypeAACSupported && isPromptingPaused && ((playTimeDuration - current) < 200) && !isBackPressed && !isPresenceModalOpen && !awaitGuardRef.current) {
             awaitGuardRef.current = true;
             let duration = playTimeDuration;
             await new Promise(resolve => setTimeout(resolve, 20000));
