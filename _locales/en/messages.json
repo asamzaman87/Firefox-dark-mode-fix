@@ -3,7 +3,7 @@
     "message": "GPT Reader: Free AI Text to Speech with ChatGPT Voices"
   },
   "extensionDescription": {
-    "message": "Bring ChatGPT’s natural AI voices to your text or document—instantly read aloud or download high-quality speech for free"
+    "message": "Bring natural AI voices from ChatGPT to your text—instantly read aloud or download high-quality speech for free"
   },
   "play_voice": {
     "message": "Play Voice"
@@ -39,7 +39,7 @@
     "message": "Download"
   },
   "download_note": {
-    "message": "Subject to be behind a paywall in the future"
+    "message": ""
   },
   "listen": {
     "message": "Listen"
@@ -237,7 +237,7 @@
     "message": "Thank you for your valuable feedback!"
   },
   "five_stars": {
-    "message": "Your feedback is much appreciated and we remain committed to continually refine our service! Please consider helping us by leaving a five star review on the chrome web store!"
+    "message": "If you're enjoying GPT Reader, we'd love your feedback on the Chrome Web Store."
   },
   "store_redirect": {
     "message": "Take me to the store"

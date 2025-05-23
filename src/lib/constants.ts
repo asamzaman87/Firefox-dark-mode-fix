@@ -39,8 +39,8 @@ export const CHUNK_SIZE = 500;
 export const TOAST_STYLE_CONFIG = { backgroundColor: "darkred", color: "#fff", border: "1px solid #b30000" }
 export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#fff", border: "1px solid #001aff" }
 export const PLAY_RATE_STEP = 0.25;
-export const DOMAINS = ["chat.com", "chatgpt.com"];
-export const MATCH_URLS = ["https://*.chatgpt.com/*", "https://*.chat.com/*", "https://auth.openai.com/*", "https://*.chat.openai.com/*"];
+export const DOMAINS = ["chatgpt.com"];
+export const MATCH_URLS = ["https://chatgpt.com/*"];
 export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feedback";
 export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
 export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
@@ -63,5 +63,6 @@ export const MALE_VOICES = ["orbit", "breeze", "cove", "ember", "fathom"];
 export const REVIEWS_CHROME = "https://chromewebstore.google.com/detail/gpt-reader-free-ai-text-t/aeggkceabpfajnglgaeadofdmeboimml/reviews";
 export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/gpt-reader";
 // export const BACKEND_URI = "http://localhost:3000/api" //for local testing
+// GPT Reader uses its own backend to get live announcements as well as to store user feedback
 export const BACKEND_URI = "https://www.readeon.com/api"
 export const BANNER_POLLING_TIME_INTERVAL = 10000;

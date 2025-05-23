@@ -58,7 +58,7 @@ export default function Popup(): JSX.Element {
   const isCurrentTabGpt = async () => {
     const activeTab = await getActiveTab();
     if (!activeTab) return;
-    return activeTab.url?.includes("chat.com") || activeTab.url?.includes("chatgpt.com");
+    return activeTab.url?.includes("chatgpt.com");
   }
 
   useEffect(() => {

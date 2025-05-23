@@ -208,6 +208,7 @@ const handleGetBannerPolling = async () => {
   if (activeTab[0].id) {
     const tabId = activeTab[0].id;
     try {
+      // Used to fetch user announcements
       const banner = await fetch(
         `${BACKEND_URI}/gpt-reader/banner`
       );
@@ -225,6 +226,7 @@ const handleGetBannerCount = async()=>{
   if (activeTab[0].id) {
     const tabId = activeTab[0].id;
     const date = await chrome.storage.sync.get("countLastViewedOn");
+    // Get the count for notification purposes
     try {
       const banner = await fetch(
         `${BACKEND_URI}/gpt-reader/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
@@ -241,6 +243,7 @@ const handleBannerCountView = async (count: number) =>{
   await chrome.storage.sync.set({ bannerCount: count, countLastViewedOn: new Date().toISOString() });
 }
 
+// We poll to make sure that announcements are always up to date
 const startPolling = async () => {
   const stored = await chrome.storage.sync.get("pollingInterval");
   const interval = stored.pollingInterval;

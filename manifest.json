@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "1.1.7",
+  "version": "1.2.0",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -16,20 +16,13 @@
     "128": "logo-128.png"
   },
   "permissions": [
-    "activeTab",
     "tabs",
     "storage"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*",
-        "https://*.chat.com/*",
-        "https://chat.com/*",
-        "*://*.chatgpt.com/*",
-        "*://*.chat.com/*",
-        "https://*.chat.openai.com/*"
+        "https://chatgpt.com/*"
       ],
       "js": [
         "src/pages/content/index.tsx"
@@ -45,20 +38,12 @@
     {
       "resources": [
         "contentStyle.css",
-        "icon-128.png",
-        "icon-32.png",
         "logo-128.png",
         "pdf.worker.js",
         "injected.js"
       ],
       "matches": [
-        "https://chatgpt.com/*",
-        "https://*.chatgpt.com/*",
-        "https://*.chat.com/*",
-        "https://chat.com/*",
-        "*://*.chatgpt.com/*",
-        "*://*.chat.com/*",
-        "https://*.chat.openai.com/*"
+        "https://chatgpt.com/*"
       ]
     }
   ]

@@ -50,6 +50,7 @@ const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
 const VOICES_ENDPOINT = "backend-api/settings/voices"; 
 const { fetch: origFetch } = window;
 
+// Fetches the necessary information from specific endpoints for text to speech purposes
 window.fetch = async (...args) => {
     const response = await origFetch(...args);
     const { url, headers } = response;

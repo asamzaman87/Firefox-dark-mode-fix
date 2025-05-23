@@ -31,7 +31,6 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const onSubmit: FeedbackFormProps["onSubmit"] = async (values) => {
         setLoading(true)
         const browser = detectBrowser();
-        //ToDo: to handle in popup https://developer.chrome.com/docs/extensions/reference/manifest/key after deployment
         await fetch(FEEDBACK_ENDPOINT, {
             method: "POST",
             headers: {
