@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -94,14 +93,14 @@ const Announcements = () => {
         setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
         setAnnouncements(FALLBACK_ANNOUNCEMENTS);
       }
-    } catch (err) {
-      // Fallback if the endpoint is unreachable
-      console.log('Failed to get announcements');
+    } catch (error) {
+      console.error("Failed to fetch announcements from API", error);
+
+      // Fallback mechanism
       await loadKnownFallbackIds();
       const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
         (a) => !knownFallbackIdsRef.current.has(a.id)
       );
-
       newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
       await saveKnownFallbackIds();
 
@@ -137,8 +136,9 @@ const Announcements = () => {
       switch (message.type) {
         case "GET_BANNER": {
           const newAnnouncements = message.payload as Announcement[];
+          // If API returns data
           setSelectedAcc(newAnnouncements.map((item) => item.id));
-          setAnnouncements(message.payload as Announcement[]);
+          setAnnouncements(newAnnouncements);
           return;
         }
         case "GET_BANNER_COUNT": {
