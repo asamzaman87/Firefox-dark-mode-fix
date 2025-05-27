@@ -1,5 +1,4 @@
 import { AUDIO_FORMAT, LISTENERS, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
-import { extractChunkNumberFromPrompt } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
@@ -49,7 +48,7 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         }
         const blob = await response.blob();
         setBlobs(bs => {
-            const exists = bs.some(b => b.blob.size === blob.size && b.blob.type === blob.type);
+            const exists = bs.some(b => b.chunkNumber === chunkNumber);
             if (exists) {
                 // Don't append duplicate blob
                 return bs;
