@@ -401,7 +401,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         const isLastChunk = getChunkAtTime(currentPlayTime) === chunks.length;
         setHasCompletePlaying(false);
         setPartialChunkCompletedPlaying(false);
-        if (hasTimeCompleted && isLastChunk) return setHasCompletePlaying(true);
+        if (hasTimeCompleted && isLastChunk && !fallbackAudioRef.current) return setHasCompletePlaying(true);
         if (hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
     }, [currentPlayTime, playTimeDuration])
 
@@ -464,6 +464,36 @@ const useAudioPlayer = (isDownload: boolean) => {
     }
 
     const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
+        // delete the old ChatGPT conversation if we have one
+        const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+        if (storedChatId) {
+            // ask the page to send us back its accessToken
+            window.dispatchEvent(new Event("GET_TOKEN"));
+
+            // once we get it, do the PATCH
+            const deleteHandler = (e: Event) => {
+                const ce = e as CustomEvent<{ accessToken: string }>;
+                const token = ce.detail.accessToken;
+                if (token) {
+                    fetch(
+                        `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ is_visible: false }),
+                        }
+                    ).catch(console.error);
+                }
+                // clean up
+                window.removeEventListener("AUTH_RECEIVED", deleteHandler);
+            };
+
+            window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
+        }
+
         if (seekAudio) {
             seekAudio.pause();
             seekAudio.currentTime = 0;

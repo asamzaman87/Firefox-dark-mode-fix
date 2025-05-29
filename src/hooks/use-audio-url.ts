@@ -110,7 +110,16 @@ const useAudioUrl = (isDownload: boolean) => {
     const injectPrompt = useCallback((text: string, id: string) => {
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
-            textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
+            textarea.focus();
+            // 2) build the raw text version (execCommand works better with plain text)
+            const raw = `[${id}] ${HELPER_PROMPT}\n\n${text}`;
+            // 3) try the non-deprecated insertText
+            document.execCommand("selectAll", false, undefined);
+            const didInsert = document.execCommand("insertText", false, raw);
+            // 4) fallback to HTML if that didn’t take
+            if (!didInsert) {
+                textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
+            }
             localStorage.setItem("gptr/is-first-audio-loading", String(id == "0"));
             sendPrompt();
         } else {

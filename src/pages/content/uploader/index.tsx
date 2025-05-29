@@ -9,9 +9,10 @@ import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
+import useVoice from "../../../hooks/use-voice";
 export interface PromptProps {
   text: string | undefined
 }
@@ -68,14 +69,29 @@ function Uploader() {
   //removes draft conversations from local storage on page unload (prevents causing content not loaded error)
   useEffect(() => {
     const handleUnload = (event: BeforeUnloadEvent) => {
-      localStorage.removeItem("oai/apps/conversationDrafts");
-      event.preventDefault();
+      const raw = localStorage.getItem("oai/apps/conversationDrafts");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          const hasDrafts = Array.isArray(parsed.drafts) && parsed.drafts.length > 0;
+  
+          if (hasDrafts) {
+            localStorage.removeItem("oai/apps/conversationDrafts");
+          }
+        } catch (err) {
+          console.warn("[GPT Reader] Failed to parse conversationDrafts:", err);
+          // fallback: remove corrupted data
+          localStorage.removeItem("oai/apps/conversationDrafts");
+        }
+      }
     };
+  
     window.addEventListener("beforeunload", handleUnload);
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
     };
   }, []);
+  
 
 
   useEffect(() => {
@@ -159,8 +175,12 @@ function Uploader() {
   const addTextToInputAndOpen = (text: string) => {
     const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
     if (textarea) {
-      textarea.innerHTML = `<p>${text}</p>`;
       textarea.focus();
+      document.execCommand("selectAll", false, undefined);
+      const didInsert = document.execCommand("insertText", false, text);
+      if (!didInsert) {
+        textarea.innerHTML = `<p>${text}</p>`;
+      }
     } else {
       console.log('Having trouble finding the textarea');
     }
@@ -175,6 +195,67 @@ function Uploader() {
     }
     return false
   };
+
+  // ─── extract the entire sequence into one reusable function ───
+  const triggerPromptFlow = useCallback(async () => {
+    await waitForElement(["[data-testid='create-new-chat-button']", "[aria-label='New chat']"], 5000)
+    .then(btn => (btn as HTMLButtonElement).click())
+    .catch(() => {
+      console.log("create new chat button not found");
+    });
+    
+    try {
+      await waitForElement(PROMPT_INPUT_ID, 5000);
+    } catch {
+      toast({
+        description:
+          "To use GPT Reader, switch to another chat in ChatGPT before clicking on the GPT Reader button again.",
+        style: TOAST_STYLE_CONFIG,
+      });
+      setIsActive(false);
+      return;
+    }
+
+    await clickStopButtonIfPresent();
+
+    // GPT now shows the speech button until you type
+    addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
+
+    if (!isSendButtonPresentOnDom()) {
+      try {
+        await waitForElement("[data-testid='send-button']", 5000);
+      } catch {
+        setIsActive(false);
+        toast({
+          description: chrome.i18n.getMessage("chat_error"),
+          style: TOAST_STYLE_CONFIG,
+        });
+        return;
+      }
+    }
+
+    // clear out any leftover speech-mode UI
+    addTextToInputAndOpen("");
+
+    if (isBadModel()) {
+      toast({
+        description:
+          "GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model may be too slow.",
+        duration: 5000,
+        style: TOAST_STYLE_CONFIG,
+      });
+    }
+
+    setIsActive(true);
+  }, [
+    waitForElement,
+    clickStopButtonIfPresent,
+    addTextToInputAndOpen,
+    isSendButtonPresentOnDom,
+    isBadModel,
+    toast,
+    setIsActive,
+  ]);
 
   const onOpenChange = async (open: boolean) => {
     if (!open) {
@@ -209,49 +290,29 @@ function Uploader() {
 
     window.localStorage.removeItem("gptr/redirect-to-login");
 
-    await waitForElement(["[data-testid='create-new-chat-button']", "[aria-label='New chat']"], 5000)
-    .then(btn => (btn as HTMLButtonElement).click())
-    .catch(() => {
-      console.log("create new chat button not found");
-    });
-
-    try {
-      await waitForElement(PROMPT_INPUT_ID, 5000);
-    } catch {
-      toast({
-        description: "To use GPT Reader, swtich to another chat in ChatGPT before clicking on the GPT Reader button again.",
-        style: TOAST_STYLE_CONFIG,
-      });
-      setIsActive(false);
-      return;
-    }
-
-    await clickStopButtonIfPresent();
-
-    //gpt has a new update, shows speech button by default instead of the send button until the user types in text
-    addTextToInputAndOpen(chrome.i18n.getMessage("gpt_reader"));
-
-    // If the send button is missing, wait until it appears
-    if (!isSendButtonPresentOnDom()) {
-      try {
-        await waitForElement("[data-testid='send-button']", 5000);
-      } catch (error) {
-        setIsActive(false);
-        toast({
-          description: chrome.i18n.getMessage("chat_error"),
-          style: TOAST_STYLE_CONFIG,
-        });
-        return;
-      }
-    }
-    // to avoid the content not loaded issue
-    addTextToInputAndOpen("");
-    //check if the user has selected a slow model
+    const hasReloaded = window.localStorage.getItem("gptr/reloadDone") === "true";
+    
     if (isBadModel()) {
-      toast({ description: "GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model maybe too slow.", duration: 5000, style: TOAST_STYLE_CONFIG });
+      document.cookie = "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "oai-last-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.localStorage.setItem("gptr/reloadDone", "true");
+      window.location.href = `${window.location.origin}/?model=auto`;
+      return; 
     }
-    setIsActive(true);
+
+    await triggerPromptFlow();
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const reloaded = window.localStorage.getItem("gptr/reloadDone") === "true";
+    if (reloaded) {
+      (async () => {
+        await onOpenChange(true);
+        window.localStorage.removeItem("gptr/reloadDone");
+      })();
+    }
+  }, [isAuthenticated]); 
 
   const handleConfirm = (state: boolean) => {
     if (!state) return onOpenChange(false);

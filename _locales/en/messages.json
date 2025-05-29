@@ -99,7 +99,7 @@
     "message": "Download Aborted"
   },
   "error_no_start": {
-    "message": "An error has stopped the download from starting, click on the question mark button to the right to resolve"
+    "message": "An error has stopped the download from starting, click on the back button and upload text again to resolve"
   },
   "error_stopped_midway": {
     "message": "Download has stopped due to an error, please download the processed audio thus far by clicking the download button below."
@@ -138,7 +138,7 @@
     "message": "You seem to be offline! Please check your network connection and try again!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader seems to be taking longer than usual. Please check for an error by closing the overlay. It is recommended to use the GPT-4 models for the best results. You can change models by closing the overlay and clicking on the top left drop down model button."
+    "message": "GPT Reader seems to be taking longer than usual. Please click the back button and try uploading your text again."
   },
   "voice_selector_description": {
     "message": "Choose from a variety of ChatGPT's enhanced voice options. Please note that the voice selection must be made prior to uploading your text."
@@ -162,7 +162,7 @@
     "message": "Failed to upload $1"
   },
   "chatgpt_issue": {
-    "message": "ChatGPT seems to be having issues, please check the ChatGPT website for the exact issue."
+    "message": "ChatGPT seems to be having issues, click on the back button and try uploading your text again."
   },
   "unsupported_file_type": {
     "message": "Unsupported file type"
@@ -186,7 +186,7 @@
     "message": "There is an on-going conversation or you have exceeded the hourly limit. Please wait a few minutes and try again later!"
   },
   "chat_error": {
-    "message": "It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please check the ChatGPT website for the exact issue."
+    "message": "It seems that ChatGPT might be either displaying an error, generating a prompt, or you've reached your hourly limit. Please click on the back button and try uploading your text again."
   },
   "gpt_reader_logo": {
     "message": "GPT Reader Logo"

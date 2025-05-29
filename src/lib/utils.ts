@@ -137,7 +137,7 @@ export const getGPTTabs = async () => {
 export const switchToActiveTab = async () => {
   const activeTab = await getGPTTabs();
   if (!activeTab?.length || !activeTab[0].id) {
-    const tab = await chrome.tabs.create({ url: "https://chatgpt.com" });
+    const tab = await chrome.tabs.create({ url: "https://chatgpt.com/?model=auto" });
     if(tab.id){
         await chrome.tabs.update(tab.id, { active: true });
         return tab.id +"::new_tab";
