@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { CHUNK_SIZE, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE } from "./constants";
+import { BACKEND_URI, CHUNK_SIZE, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOKEN_TTL_MS } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -179,6 +179,7 @@ export function observeElement(toObserve: string, cb?: (s: boolean) => void): vo
     // Check if the element exists in the DOM
     const isPresent: boolean = !!document.querySelector(toObserve);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     cb && cb(isPresent);
   
   };
@@ -216,3 +217,51 @@ export const formatSeconds = (s: number): string => {
 
   return h === 0 ? `${mm}:${ss}` : `${hh}:${mm}:${ss}`;
 };
+
+export async function getToken(): Promise<string> {
+  const { jwtToken, jwtTokenExpiry } = await chrome.storage.local.get([
+    "jwtToken",
+    "jwtTokenExpiry",
+  ]);
+
+  const now = Date.now();
+
+  // Return cached token if still valid
+  if (jwtToken && jwtTokenExpiry && now < jwtTokenExpiry - REFRESH_MARGIN_MS) {
+    return jwtToken;
+  }
+
+  // Fetch new token from backend
+  const res = await fetch(`${BACKEND_URI}/auth/token`, { method: "POST" });
+
+  if (!res.ok) {
+    console.error("Token fetch failed", await res.text());
+    throw new Error("Failed to get token");
+  }
+
+  const { token } = await res.json();
+
+  // Store token and expiry
+  await chrome.storage.local.set({
+    jwtToken: token,
+    jwtTokenExpiry: now + TOKEN_TTL_MS,
+  });
+
+  return token;
+}
+
+export async function secureFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const token = await getToken();
+
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}

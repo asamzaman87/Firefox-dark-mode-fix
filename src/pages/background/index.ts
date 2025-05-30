@@ -7,7 +7,7 @@ import {
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
-import { getGPTTabs, switchToActiveTab } from "@/lib/utils";
+import { getGPTTabs, secureFetch, switchToActiveTab } from "@/lib/utils";
 
 chrome.storage.local.clear();
 
@@ -109,6 +109,7 @@ const matchUrlToDomain = (domains: string[], url: string) => {
 };
 
 //set badge text and color based on state
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const setBadState = (state: boolean) => {
   if (!state) {
     chrome.action.setIcon({ path: "logo-128.png" });
@@ -209,7 +210,7 @@ const handleGetBannerPolling = async () => {
     const tabId = activeTab[0].id;
     try {
       // Used to fetch user announcements
-      const banner = await fetch(
+      const banner = await secureFetch(
         `${BACKEND_URI}/gpt-reader/banner`
       );
       const {data} = await banner.json();
@@ -228,7 +229,7 @@ const handleGetBannerCount = async()=>{
     const date = await chrome.storage.sync.get("countLastViewedOn");
     // Get the count for notification purposes
     try {
-      const banner = await fetch(
+      const banner = await secureFetch(
         `${BACKEND_URI}/gpt-reader/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
       );
       const {count} = await banner.json();
