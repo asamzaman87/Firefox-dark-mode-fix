@@ -110,13 +110,11 @@ const useAudioUrl = (isDownload: boolean) => {
     const injectPrompt = useCallback((text: string, id: string) => {
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
-            textarea.focus();
-            // 2) build the raw text version (execCommand works better with plain text)
+            // 1) build the raw text version (execCommand works better with plain text)
             const raw = `[${id}] ${HELPER_PROMPT}\n\n${text}`;
-            // 3) try the non-deprecated insertText
-            document.execCommand("selectAll", false, undefined);
+            // 2) try the non-deprecated insertText
             const didInsert = document.execCommand("insertText", false, raw);
-            // 4) fallback to HTML if that didn’t take
+            // 3) fallback to HTML if that didn’t take
             if (!didInsert) {
                 textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}</p><p></p><p>${text}</p>`;
             }

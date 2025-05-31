@@ -486,6 +486,12 @@ const useAudioPlayer = (isDownload: boolean) => {
                             body: JSON.stringify({ is_visible: false }),
                         }
                     ).catch(console.error);
+                    const newChatBtn = document.querySelector<HTMLButtonElement>(
+                      "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                    );
+                    if (newChatBtn) {
+                      newChatBtn.click();
+                    }
                 }
                 // clean up
                 window.removeEventListener("AUTH_RECEIVED", deleteHandler);

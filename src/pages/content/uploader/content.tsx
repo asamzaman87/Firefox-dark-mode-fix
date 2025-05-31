@@ -75,14 +75,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             resetter();
         }
         setIsBackPressed(true);
-        const newChatBtn = document.querySelector<HTMLButtonElement>(
-            "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-          );
-          if (newChatBtn) {
-            newChatBtn.click();
-          } else {
-            console.warn("Create New Chat button not found");
-          }
     }
 
     useEffect(() => {
