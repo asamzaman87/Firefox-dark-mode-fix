@@ -463,7 +463,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }
 
-    const reset = useCallback((full: boolean = false, completeAudio?: boolean) => {
+    const reset = useCallback((full: boolean = false, completeAudio?: boolean, isBackPressed: boolean = false) => {
         // delete the old ChatGPT conversation if we have one
         const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
         if (storedChatId) {
@@ -471,11 +471,11 @@ const useAudioPlayer = (isDownload: boolean) => {
             window.dispatchEvent(new Event("GET_TOKEN"));
 
             // once we get it, do the PATCH
-            const deleteHandler = (e: Event) => {
+            const deleteHandler = async (e: Event) => {
                 const ce = e as CustomEvent<{ accessToken: string }>;
                 const token = ce.detail.accessToken;
                 if (token) {
-                    fetch(
+                    await fetch(
                         `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
                         {
                             method: "PATCH",
@@ -491,6 +491,9 @@ const useAudioPlayer = (isDownload: boolean) => {
                     );
                     if (newChatBtn) {
                       newChatBtn.click();
+                    }
+                    if (!isBackPressed) {
+                        window.location.href = "https://chatgpt.com";
                     }
                 }
                 // clean up
@@ -540,7 +543,6 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     useMemo(() => {
         if (blobs.length && isBackPressed) {
-            reset(true);
             setIsPresenceModalOpen(false);
         }
     }, [blobs, isBackPressed]);
