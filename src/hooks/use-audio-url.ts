@@ -7,11 +7,9 @@ import { useToast } from "./use-toast";
 
 const useAudioUrl = (isDownload: boolean) => {
     const { toast } = useToast();
-    const hasRefusal = useRef<boolean>(false);
     const [audioUrls, setAudioUrls] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>("");
-    const [chunks, setChunks] = useState<Chunk[]>([]);
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
     const [is9ThChunk, setIs9thChunk] = useState<boolean>(false);
     const [isPromptingPaused, setIsPromptingPaused] = useState<boolean>(false);
@@ -21,59 +19,10 @@ const useAudioUrl = (isDownload: boolean) => {
     const [downloadPreviewText, setDownloadPreviewText] = useState<string>();
     const promptPausedRef = useRef(isPromptingPaused);
     const nextChunkRef = useRef<number>(0);
+    const [chunks, setChunks] = useState<Chunk[]>([]);
+    const chunkRef = useRef<Chunk[]>([]);
     const chunkNumList = useRef<Set<number>>(new Set());
-    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading);
-    const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
-    // Refusal detector ───────────────────────────────────────────────────────
-    useEffect(() => {
-        if (!currentCompletedStream || hasRefusal.current) return;
     
-        // Grab the latest ChatGPT reply from the DOM
-        let actual = "";
-        const mdEls = Array.from(
-            document.querySelectorAll<HTMLElement>('div[class*="markdown"]')
-        );
-        if (mdEls.length) {
-            actual = mdEls[mdEls.length - 1].innerText;
-        }
-        actual = actual.replace(/\s+/g, " ").trim();
-    
-        // Only trigger error if reply is short (<300 chars) and contains refusal keywords
-        if (
-            actual.length < 150 &&
-            (actual.includes("I cannot") || actual.includes("I can't"))
-        ) {
-            console.warn("[Refusal Detector] Refusal detected—pausing prompt stream.");
-        
-            hasRefusal.current = true;
-            setIsPromptingPaused(true);
-            setWasPromptStopped("PAUSED");
-        }
-    }, [
-        currentCompletedStream,
-        setIsPromptingPaused,
-        setWasPromptStopped,
-        toast,
-    ]);
-
-    useEffect(() => {
-        promptPausedRef.current = isPromptingPaused;
-    }, [isPromptingPaused]);
-
-  
-    useMemo(() => {
-        if (blobs.length === 0) {
-          setProgress(0);
-          setDownloadPreviewText(undefined);
-          return;
-        }
-        if(currentCompletedStream){
-            const text = chunks[+currentCompletedStream?.chunkNdx]?.text ?? "";
-            setDownloadPreviewText(t => (t ?? "")  + `${text.replaceAll("\n", " ") ?? ""}`);
-        }
-        setProgress(((blobs.length ?? 0) / (chunks.length ?? 0)) * 100);
-      }, [chunks, blobs,currentCompletedStream]);
-
     const sendPrompt = () => {
         setIsLoading(true);
     
@@ -129,7 +78,7 @@ const useAudioUrl = (isDownload: boolean) => {
             })
         }
     }, []);
-    
+
     const splitAndSendPrompt = async (text: string) => {
         setText(text);
         const textWithoutTags = text.replace(/<img[^>]*src\s*=\s*["']\s*data:image\/[a-zA-Z]+;base64,[^"']*["'][^>]*>/gi, ''); //removes image tag if it exist in the prompt
@@ -137,6 +86,7 @@ const useAudioUrl = (isDownload: boolean) => {
         if (chunks.length > 0) {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
             setChunks(chunks);
+            chunkRef.current = chunks;
             injectPrompt(chunks[0].text, chunks[0].id);
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
@@ -144,6 +94,27 @@ const useAudioUrl = (isDownload: boolean) => {
         return
     };
 
+    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt, currentChunkBeingPromptedIndex, promptPausedRef); 
+    const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
+
+    useEffect(() => {
+        promptPausedRef.current = isPromptingPaused;
+    }, [isPromptingPaused]);
+
+  
+    useMemo(() => {
+        if (blobs.length === 0) {
+          setProgress(0);
+          setDownloadPreviewText(undefined);
+          return;
+        }
+        if(currentCompletedStream){
+            const text = chunks[+currentCompletedStream?.chunkNdx]?.text ?? "";
+            setDownloadPreviewText(t => (t ?? "")  + `${text.replaceAll("\n", " ") ?? ""}`);
+        }
+        setProgress(((blobs.length ?? 0) / (chunks.length ?? 0)) * 100);
+      }, [chunks, blobs,currentCompletedStream]);
+    
     const extractText = async (file: File) => {
         switch (file.type) {
             case "application/pdf": {
@@ -177,6 +148,7 @@ const useAudioUrl = (isDownload: boolean) => {
         nextChunkRef.current = 0;
         chunkNumList.current.clear();
         currentStreamChunkNdxRef.current = 0;
+        chunkRef.current = [];
         if(isDownload){
             setDownloadPreviewText(undefined);
         }
@@ -245,11 +217,6 @@ const useAudioUrl = (isDownload: boolean) => {
 
     useEffect(() => {
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
-
-        if (hasRefusal.current){
-            hasRefusal.current = false;
-            return;
-        }
 
         if (promptPausedRef.current) return;
 

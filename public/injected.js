@@ -35,9 +35,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             if (done) return { messageId, conversationId, createTime, text };// Exit loop when reading is complete
         }
     } catch (error) {
-        if (error.name === 'AbortError') {
-            console.warn('Stream was aborted');
-        } else {
+        if (error.name !== 'AbortError') {
             console.error('An error occurred while reading the stream:', error);
         }
     }
@@ -105,10 +103,17 @@ window.fetch = async (...args) => {
         const stream = clonedResponse.body; // Use the body of the cloned response
         if (clonedResponse.status === 429) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
-                detail: "You have exceeded the hourly limit for ChatGPT. You will not be able to generate any more audio for around 1 hour.",
+                detail: "You have exceeded the hourly limit for ChatGPT. Please wait a few minutes and try again.",
             });
             window.dispatchEvent(rateLimitExceededEvent);
         } 
+
+        if (clonedResponse.status !== 200 && clonedResponse.status !== 429) {
+            const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
+                detail: "GPT Reader is experiencing issues. Please try again later.",
+            });
+            window.dispatchEvent(generalErrorEvent);
+        }
 
         
         if (stream && clonedResponse.status === 200) {

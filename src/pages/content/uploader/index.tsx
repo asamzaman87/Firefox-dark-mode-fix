@@ -289,8 +289,6 @@ function Uploader() {
     }
 
     window.localStorage.removeItem("gptr/redirect-to-login");
-
-    const hasReloaded = window.localStorage.getItem("gptr/reloadDone") === "true";
     
     if (isBadModel()) {
       document.cookie = "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -312,7 +310,31 @@ function Uploader() {
         window.localStorage.removeItem("gptr/reloadDone");
       })();
     }
-  }, [isAuthenticated]); 
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isActive) {
+      return; // do nothing when overlay is closed
+    }
+  
+    const intervalId = setInterval(() => {
+      const retryBtn = document.querySelector<HTMLButtonElement>(
+        '[data-testid*="retry"], [data-testid*="regenerate"]'
+      );
+      if (retryBtn) {
+        console.log("Found retry button—clicking it now.");
+        toast({ description: 'ChatGPT seems to have reached its hourly limit, GPT Reader is trying again...', style: TOAST_STYLE_CONFIG });
+        retryBtn.click();
+      }
+    }, 15_000);
+  
+    // Cleanup: stop polling as soon as `isActive` flips false or component unmounts
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isActive]);
+  
+        
 
   const handleConfirm = (state: boolean) => {
     if (!state) return onOpenChange(false);

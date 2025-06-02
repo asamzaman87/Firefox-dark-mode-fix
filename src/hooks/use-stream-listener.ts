@@ -3,8 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
-
-const useStreamListener = (setIsLoading: (state: boolean) => void) => {
+import { Chunk } from "@/lib/utils";
+const MAX_RETRIES = 2; 
+const useStreamListener = (
+    setIsLoading: (state: boolean) => void,
+    nextChunkRef: React.MutableRefObject<number>,                      
+    chunkRef: React.MutableRefObject<Chunk[]>,                            
+    injectPrompt: (text: string, id: string) => void,
+    currentChunkBeingPromptedIndex: number,
+    promptPausedRef: React.MutableRefObject<boolean>,               
+  ) => {
     const { toast } = useToast();
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNdx: number } | null>(null);
@@ -14,7 +22,8 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
     const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
     const [blobs, setBlobs] = useState<{ chunkNumber: number; blob: Blob }[]>([]);
 
-    const retryCount = useRef<number>(0);
+    const retryCounts = useRef<Record<number, number>>({});
+    const lastRegularRetryChunk = useRef<number | null>(null);
 
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -28,23 +37,126 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         return
     }
 
+    const retryFlow = useCallback(
+        async () => {
+          const idx = nextChunkRef.current - 1;
+          if (idx < 0 || idx >= chunkRef.current.length) {
+            console.log("Retry failed: invalid chunk index");
+            return;
+          }
+          retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
+      
+          let storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+          // If not found, wait up to 5 seconds (poll every 500ms) for the URL to include it:
+          if (!storedChatId) {
+            for (let i = 0; i < 10; i++) {
+                await new Promise((res) => setTimeout(res, 500));
+                storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+                if (storedChatId) {
+                    break;
+                }
+            }
+            if (!storedChatId) {
+                console.warn(
+                    "Could not detect conversation ID in URL after waiting. Skipping deletion."
+                );
+            }
+          }
+      
+          // If found, delete the conversation 
+          if (storedChatId) {
+            // We’ll turn the AUTH_RECEIVED + PATCH flow into a promise we can await
+            await new Promise<void>((resolve) => {
+              const newChatBtn = document.querySelector<HTMLButtonElement>(
+                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                );
+              if (newChatBtn) newChatBtn.click();
+              // 1) ask for the token
+              window.dispatchEvent(new Event("GET_TOKEN"));
+      
+              // 2) when AUTH_RECEIVED comes in, do the PATCH and then resolve()
+              const deleteHandler = async (e: Event) => {
+                const ce = e as CustomEvent<{ accessToken: string }>;
+                const token = ce.detail.accessToken;
+                if (token) {
+                  try {
+                    await fetch(
+                      `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+                      {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ is_visible: false }),
+                      }
+                    );
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }
+                window.removeEventListener("AUTH_RECEIVED", deleteHandler);
+                resolve(); // notify that delete+new‐chat click are complete
+              };
+      
+              window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
+            });
+          }
+      
+          // Now we know the delete (and “New Chat” click) has finished
+          const { text, id } = chunkRef.current[idx];
+          injectPrompt(text, id);
+        },
+        [chunkRef, injectPrompt, nextChunkRef]
+      );
+
+      useEffect(() => {
+        // Only start the “60 s retry check” when there are chunks to process
+        if (nextChunkRef.current !== chunkRef.current.length && chunkRef.current.length > 0 && !promptPausedRef.current) {
+          // Capture the current “next chunk index” at the moment this effect runs
+          const initialNext = nextChunkRef.current;
+      
+          // Schedule a one‐time check 60 s later
+          const timeoutId = setTimeout(async () => {
+            // If nextChunkRef still hasn’t moved beyond initialNext, trigger retryFlow()
+            if (nextChunkRef.current === initialNext) {
+              console.log(
+                `No progress in 60 s (still at chunk ${initialNext}). Calling retryFlow().`
+              );
+              await retryFlow();
+            }
+          }, 60_000);
+      
+          return () => {
+            clearTimeout(timeoutId);
+          };
+        }
+      
+        // If nextChunkRef === chunkRef.length (i.e. all chunks finished), do nothing
+        return;
+    }, [currentChunkBeingPromptedIndex]);
+      
+
     const fetchAndDecodeAudio = useCallback(async (url: string, chunkNumber: number) => {
         setIsFetching(true);
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
+        if (response.status !== 200) {
+            if (lastRegularRetryChunk.current !== chunkNumber) {
+                lastRegularRetryChunk.current = chunkNumber;
+                return retry(url, chunkNumber);
+            }
+            if ((retryCounts.current[chunkNumber] ?? 0) < MAX_RETRIES) {
+                await retryFlow();
+                return;
+            }
+        }
         if (response.status !== 200) {
             if (response.status === 429) {
                 handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.", Infinity);
                 return
             }
-            if (response.status === 403 || response.status === 404 || response.status === 503) {
-                if (retryCount.current !== 0) {
-                    handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
-                    return
-                }
-                //retry fetching audio if 403 or 404 is returned
-                return retry(url, chunkNumber);
-            }
-            handleError("ChatGPT seems to be having issues, please close this overlay for the exact error message.");
+            handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+            return;
         }
         const blob = await response.blob();
         setBlobs(bs => {
@@ -58,13 +170,12 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;
-    }, [token, blobs])
+    }, [token, blobs, retryFlow])
 
     //retry fetching audio
     const retry = useCallback(async (url: string, chunkNumber: number): Promise<string | undefined> => {
-        retryCount.current++
         return await fetchAndDecodeAudio(url, chunkNumber);
-    }, [retryCount, token])
+    }, [token])
 
     const handleConvStream = useCallback(async (e: Event) => {
         const { detail: { messageId, conversationId, text, createTime, chunkNdx } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number } };
@@ -82,7 +193,11 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
             actual.length < 150 &&
             (actual.includes("I cannot") || actual.includes("I can't"))
         ) {
-            handleError("GPT Reader is having trouble getting the audio, try clicking on the question mark button on the top right corner");
+            if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
+                await retryFlow();
+                return;
+            }
+            handleError("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
             return;
         }
 
@@ -96,7 +211,6 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
                     );
                     
                     if (audioUrl) {
-                        // <<< ADDED: insert into the exact index so order is preserved
                         setCompletedStreams((streams) => {
                             const ordered = [...streams];
                             ordered[chunkNdx] = audioUrl;
@@ -106,31 +220,33 @@ const useStreamListener = (setIsLoading: (state: boolean) => void) => {
                         console.warn(`[Audio Prefetch] Failed to fetch audio for chunk ${chunkNdx}`);
                     }
                 } catch {
-                    if (retryCount.current !== 0) {
-                        handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
-                        return;
-                    }
-                    await retry(`${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`, +chunkNdx)
+                    handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                    return;
                 }
             }
-            // setCompletedStreams(streams => [...streams, { messageId, conversationId, createTime, text, chunkNumber }]);
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx })
         }
         setIsLoading(false);
-    }, [setIsLoading, token, voices.selected]);
+    }, [retryCounts, retryFlow, fetchAndDecodeAudio, setCompletedStreams, setCurrentCompletedStream, handleError, setIsLoading, voices.selected, token]);
 
-    const handleRateLimitExceeded = useCallback((e: Event) => {
+    const handleRateLimitExceeded = useCallback(async (e: Event) => {
         const { detail } = e as Event & { detail: string };
+        if ((retryCounts.current[nextChunkRef.current - 1] ?? 0) < MAX_RETRIES) {
+            await retryFlow();
+            return;
+        }
         toast({ description: detail, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
-    }, [setIsLoading]);
+    }, [nextChunkRef, retryCounts, retryFlow, toast, setIsLoading]);
 
     const reset = () => {
         setCompletedStreams([]);
         setCurrentCompletedStream(null);
         setBlobs([]);
+        retryCounts.current = {};
+        lastRegularRetryChunk.current = null;
     }
-
+    
     useEffect(() => {
         setError(null);
         window.addEventListener(LISTENERS.END_OF_STREAM, handleConvStream);
