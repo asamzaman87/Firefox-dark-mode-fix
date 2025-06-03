@@ -109,34 +109,7 @@ const useStreamListener = (
         },
         [chunkRef, injectPrompt, nextChunkRef]
       );
-
-      useEffect(() => {
-        // Only start the “60 s retry check” when there are chunks to process
-        if (nextChunkRef.current !== chunkRef.current.length && chunkRef.current.length > 0 && !promptPausedRef.current) {
-          // Capture the current “next chunk index” at the moment this effect runs
-          const initialNext = nextChunkRef.current;
       
-          // Schedule a one‐time check 60 s later
-          const timeoutId = setTimeout(async () => {
-            // If nextChunkRef still hasn’t moved beyond initialNext, trigger retryFlow()
-            if (nextChunkRef.current === initialNext) {
-              console.log(
-                `No progress in 60 s (still at chunk ${initialNext}). Calling retryFlow().`
-              );
-              await retryFlow();
-            }
-          }, 60_000);
-      
-          return () => {
-            clearTimeout(timeoutId);
-          };
-        }
-      
-        // If nextChunkRef === chunkRef.length (i.e. all chunks finished), do nothing
-        return;
-    }, [currentChunkBeingPromptedIndex]);
-      
-
     const fetchAndDecodeAudio = useCallback(async (url: string, chunkNumber: number) => {
         setIsFetching(true);
         const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
@@ -210,6 +183,10 @@ const useStreamListener = (
                         +chunkNdx
                     );
                     
+                    if (!audioUrl) {
+                      return;
+                    }
+
                     if (audioUrl) {
                         setCompletedStreams((streams) => {
                             const ordered = [...streams];

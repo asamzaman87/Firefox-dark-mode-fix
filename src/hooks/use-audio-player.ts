@@ -162,8 +162,8 @@ const useAudioPlayer = (isDownload: boolean) => {
                     play();
                 }
                 bufferNum.current += 1;
-                if (bufferNum.current % CHUNK_TO_PAUSE_ON === 0) {
-                    setIsPromptingPaused(true);
+                if (bufferNum.current % CHUNK_TO_PAUSE_ON === 0 && bufferNum.current < chunks.length && !isPromptingPaused) { 
+                  setIsPromptingPaused(true);
                 }
                 // ─── RECORD FOR FALLBACK ────────────────────────────
                 historyBuffersRef.current.push(buf);
@@ -263,7 +263,7 @@ const useAudioPlayer = (isDownload: boolean) => {
       
         // 8) on each tick, first try to jump back to MSE if it’s caught up;
         //    otherwise, if our history grew, rebuild the blob in place
-        a.ontimeupdate = () => {
+        a.ontimeupdate = async () => {
           if (!fallbackAudioRef.current) return;
           const t = a.currentTime;
           setCurrentPlayTime(t);
@@ -274,8 +274,8 @@ const useAudioPlayer = (isDownload: boolean) => {
           for (let i = 0; i < buf.length; i++) {
             if (t >= buf.start(i) && t <= buf.end(i)) {
                 // MSE can now serve this time → switch back
-                if (isPromptingPaused && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) {
-                    reStartChunkProcess();
+                if (!sourceBuffer.current!.updating && isPromptingPaused && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) {  
+                  reStartChunkProcess();
                 }
 
                 // tear down the fallback instance so it can’t accidentally play again
@@ -373,12 +373,15 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.ontimeupdate = async () => {
       let paused = false;
       if (isTypeAACSupported) {
-        const latestChunk = bufferNum.current;
-        if (!isPromptingPaused && latestChunk % CHUNK_TO_PAUSE_ON === 0 && !pauseChunksRef.current.has(latestChunk) && latestChunk !== 0) {
+        if (!sourceBuffer.current!.updating &&!isPromptingPaused && bufferNum.current % CHUNK_TO_PAUSE_ON === 0 && !pauseChunksRef.current.has(bufferNum.current) && bufferNum.current !== 0 && bufferNum.current < chunks.length) {
             paused = true;
             setIsPromptingPaused(true);
         } 
-        if ((isPromptingPaused || paused) && latestChunk !== 0 && (latestChunk % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(latestChunk)))) reStartChunkProcess();
+        if ((isPromptingPaused || paused) && bufferNum.current !== 0 && !sourceBuffer.current!.updating) {
+          if ((bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) {
+            reStartChunkProcess();
+          }
+        } 
       }
       if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
       if (isScrubbing.current) return;
@@ -634,7 +637,7 @@ const useAudioPlayer = (isDownload: boolean) => {
       
 
     // ─── SCRUB / SEEK handler (hybrid MSE + blob-fallback) ─────────────────
-    const onScrub = useCallback((percent: number) => {
+    const onScrub = useCallback(async (percent: number) => {
         isScrubbing.current = true;
         const seekTime = (percent * playTimeDuration) / 100;
 
@@ -650,7 +653,9 @@ const useAudioPlayer = (isDownload: boolean) => {
         
         if (inBuffer) {
             // still in MSE buffer → normal HTMLMediaElement seek
-            if (isPromptingPaused && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) reStartChunkProcess();
+            if (isPromptingPaused && !sourceBuffer.current!.updating && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) {
+              reStartChunkProcess();
+            } 
             if (fallbackAudioRef.current) {
                 fallbackAudioRef.current.pause();
                 URL.revokeObjectURL(fallbackAudioRef.current.src);
@@ -699,7 +704,9 @@ const useAudioPlayer = (isDownload: boolean) => {
       
         if (inMse) {
           // ── it’s in MSE: tear down any blob fallback and jump into the main player
-          if (isPromptingPaused && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) reStartChunkProcess();
+          if (!sourceBuffer.current!.updating && isPromptingPaused && bufferNum.current !== 0 && (bufferNum.current % CHUNK_TO_PAUSE_ON !== 0 || (!isPresenceModalOpen && pauseChunksRef.current.has(bufferNum.current)))) {
+            reStartChunkProcess();
+          }
           if (fallbackAudioRef.current) {
             fallbackAudioRef.current.pause();
             URL.revokeObjectURL(fallbackAudioRef.current.src);

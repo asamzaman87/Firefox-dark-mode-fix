@@ -237,8 +237,11 @@ const useAudioUrl = (isDownload: boolean) => {
             setAudioUrls(completedStreams);
             const chunkNumber = currentCompletedStream?.chunkNdx;
             if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
-                setIsPromptingPaused(true);
-                setWasPromptStopped("PAUSED");
+                const isFirefox = /firefox/i.test(navigator.userAgent);
+                if (isFirefox) {
+                    setIsPromptingPaused(true);
+                    setWasPromptStopped("PAUSED");
+                }
                 return;
             }
         }
