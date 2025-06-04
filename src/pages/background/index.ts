@@ -211,12 +211,13 @@ const handleGetBannerPolling = async () => {
     try {
       // Used to fetch user announcements
       const banner = await secureFetch(
-        `${BACKEND_URI}/gpt-reader/banner`
+        `${BACKEND_URI}/gpt-reader/v2/banner`
       );
       const {data} = await banner.json();
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER", payload: data });
     } catch (error) {
       console.log(error);
+      chrome.tabs.sendMessage(tabId, { type: "GET_BANNER", payload: [] });
     }
   }
 };
@@ -230,7 +231,7 @@ const handleGetBannerCount = async()=>{
     // Get the count for notification purposes
     try {
       const banner = await secureFetch(
-        `${BACKEND_URI}/gpt-reader/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
+        `${BACKEND_URI}/gpt-reader/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
       );
       const {count} = await banner.json();
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER_COUNT", payload: count });

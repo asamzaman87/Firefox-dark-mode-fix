@@ -65,6 +65,6 @@ export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/g
 // export const BACKEND_URI = "http://localhost:3000/api" //for local testing
 // GPT Reader uses its own backend to get live announcements as well as to store user feedback
 export const BACKEND_URI = "https://www.readeon.com/api"
-export const BANNER_POLLING_TIME_INTERVAL = 3600000;
+export const BANNER_POLLING_TIME_INTERVAL = 20000;
 export const TOKEN_TTL_MS = 5 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;

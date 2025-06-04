@@ -10,7 +10,7 @@ import {
 import useConfetti from "@/hooks/use-confetti";
 import { useToast } from "@/hooks/use-toast";
 import { FEEDBACK_ENDPOINT, REVIEWS_CHROME, REVIEWS_FIREFOX, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { detectBrowser } from "@/lib/utils";
+import { detectBrowser, secureFetch } from "@/lib/utils";
 import { DialogProps, } from "@radix-ui/react-dialog";
 import { Heart, MessageSquareHeartIcon } from "lucide-react";
 import { FC, useState } from "react";
@@ -31,12 +31,8 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const onSubmit: FeedbackFormProps["onSubmit"] = async (values) => {
         setLoading(true)
         const browser = detectBrowser();
-        await fetch(FEEDBACK_ENDPOINT, {
+        await secureFetch(FEEDBACK_ENDPOINT, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${window.localStorage.getItem("gptr/token")}`,
-            },
             body: JSON.stringify({
                 feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
                 browser,
@@ -60,8 +56,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     }
 
     const onOpenChange = (open: boolean) => {
-        // const isFirefox = detectBrowser() === "firefox";
-        const isFirefox = true;
+        const isFirefox = detectBrowser() === "firefox";
         if (isFirefox && open) {
             return chrome.runtime.sendMessage({ type: "OPEN_FEEDBACK" });
         }

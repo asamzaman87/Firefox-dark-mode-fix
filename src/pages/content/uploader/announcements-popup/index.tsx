@@ -81,21 +81,8 @@ const Announcements = () => {
   const getAnnouncements = async () => {
     try {
       await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
-      if (!announcements.length) {
-        await loadKnownFallbackIds();
-        const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
-          (a) => !knownFallbackIdsRef.current.has(a.id)
-        );
-        // Add new IDs to the ref
-        newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
-        await saveKnownFallbackIds();
-        setCount(newFallbacks.length);
-        setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
-        setAnnouncements(FALLBACK_ANNOUNCEMENTS);
-      }
     } catch (error) {
       console.error("Failed to fetch announcements from API", error);
-
       // Fallback mechanism
       await loadKnownFallbackIds();
       const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
@@ -129,16 +116,28 @@ const Announcements = () => {
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleListener = (message: {
+    const handleListener = async(message: {
       type: string;
       payload: Announcement[] | number;
     }) => {
       switch (message.type) {
         case "GET_BANNER": {
           const newAnnouncements = message.payload as Announcement[];
-          // If API returns data
-          setSelectedAcc(newAnnouncements.map((item) => item.id));
-          setAnnouncements(newAnnouncements);
+          if (newAnnouncements.length) {
+            setSelectedAcc(newAnnouncements.map((item) => item.id));
+            setAnnouncements(newAnnouncements);
+          } else {
+            // Fallback only if API response is empty
+            await loadKnownFallbackIds();
+            const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
+              (a) => !knownFallbackIdsRef.current.has(a.id)
+            );
+            newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
+            await saveKnownFallbackIds();
+            setCount(newFallbacks.length);
+            setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
+            setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+          }
           return;
         }
         case "GET_BANNER_COUNT": {
