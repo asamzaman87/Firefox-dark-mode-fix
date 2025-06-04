@@ -21,7 +21,6 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [playTimeDuration, setPlayTimeDuration] = useState<number>(0);
     const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
     const [partialChunkCompletedPlaying, setPartialChunkCompletedPlaying] = useState<boolean>(false);
-    // const [arrayBuffers, setArrayBuffers] = useState<ArrayBuffer[]>([]);
     const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
@@ -69,6 +68,8 @@ const useAudioPlayer = (isDownload: boolean) => {
     const playRateRef = useRef(playRate);
     const volumeRef   = useRef(volume);
     const pauseChunksRef = useRef<Set<number>>(new Set());
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const gainNodeRef  = useRef<GainNode | null>(null);
   
     //resetting the media source when the user clicks on the back button or onUnmount
     const endMediaStream = () => {
@@ -82,6 +83,41 @@ const useAudioPlayer = (isDownload: boolean) => {
             } catch (error) {}
         }
     }
+
+    // Volume gain code for seekAudio
+    useEffect(() => {
+      // 1) Create an AudioContext if none exists
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const audioCtx = audioCtxRef.current!;
+    
+      // 2) Disconnect any existing GainNode
+      if (gainNodeRef.current) {
+        gainNodeRef.current.disconnect();
+        gainNodeRef.current = null;
+      }
+    
+      // 3) Wrap `seekAudio` in a MediaElementSource → GainNode → destination
+      let sourceNode: MediaElementAudioSourceNode;
+      try {
+        sourceNode = audioCtx.createMediaElementSource(seekAudio);
+      } catch {
+        return;
+      }
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.value = 1.0; // unity by default
+      sourceNode.connect(gainNode).connect(audioCtx.destination);
+      gainNodeRef.current = gainNode;
+    
+      // 4) Cleanup on unmount or when seekAudio changes
+      return () => {
+        if (gainNodeRef.current) {
+          gainNodeRef.current.disconnect();
+          gainNodeRef.current = null;
+        }
+      };
+    }, [seekAudio]);
 
     mediaSource.onsourceopen = () => {
         if (!mediaSource || mediaSource.readyState !== "open") return;
@@ -260,6 +296,28 @@ const useAudioPlayer = (isDownload: boolean) => {
         a.currentTime = startTime;
         a.playbackRate = playRateRef.current;
         a.volume       = volumeRef.current;
+
+        // Volume gain code
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new AudioContext();
+        }
+        const audioCtx = audioCtxRef.current!;
+        
+        try {
+          const fallbackSource = audioCtx.createMediaElementSource(a);
+          if (gainNodeRef.current) {
+            // If we already have a GainNode, route fallback through it
+            fallbackSource.connect(gainNodeRef.current);
+          } else {
+            // Otherwise create a new GainNode and connect
+            const newGain = audioCtx.createGain();
+            newGain.gain.value = 1.0;
+            fallbackSource.connect(newGain).connect(audioCtx.destination);
+            gainNodeRef.current = newGain;
+          }
+        } catch {
+          // If createMediaElementSource fails (e.g. playback state), ignore
+        }
       
         // 8) on each tick, first try to jump back to MSE if it’s caught up;
         //    otherwise, if our history grew, rebuild the blob in place
@@ -373,7 +431,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.ontimeupdate = async () => {
       let paused = false;
       if (isTypeAACSupported) {
-        if (!sourceBuffer.current!.updating &&!isPromptingPaused && bufferNum.current % CHUNK_TO_PAUSE_ON === 0 && !pauseChunksRef.current.has(bufferNum.current) && bufferNum.current !== 0 && bufferNum.current < chunks.length) {
+        if (!sourceBuffer.current!.updating && !isPromptingPaused && bufferNum.current % CHUNK_TO_PAUSE_ON === 0 && !pauseChunksRef.current.has(bufferNum.current) && bufferNum.current !== 0 && bufferNum.current < chunks.length) {
             paused = true;
             setIsPromptingPaused(true);
         } 
@@ -506,9 +564,22 @@ const useAudioPlayer = (isDownload: boolean) => {
             window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
         }
 
+        if (gainNodeRef.current) {
+          gainNodeRef.current.disconnect();
+          gainNodeRef.current = null;
+        }
+        if (audioCtxRef.current) {
+          audioCtxRef.current.close();   
+          audioCtxRef.current = null;
+        }
         if (seekAudio) {
             seekAudio.pause();
             seekAudio.currentTime = 0;
+            seekAudio.ontimeupdate = null;
+            seekAudio.onplay = null;
+            seekAudio.onpause = null;
+            seekAudio.onended = null;
+            seekAudio.onloadedmetadata = null;
         }
         if (fallbackAudioRef.current) {
             fallbackAudioRef.current.pause();
@@ -774,18 +845,29 @@ const useAudioPlayer = (isDownload: boolean) => {
         currentTimeRef.current = desired;
       }, [seekAudio, playFallback]);
       
-      
-      
-
-    const handleVolumeChange = useCallback((volume: number, mute?: boolean) => {
+      const handleVolumeChange = useCallback((vol: number, mute?: boolean) => {
+        // 1) Apply hard mute on the raw <audio> elements
         seekAudio.muted = !!mute;
-        seekAudio.volume = volume;
         if (fallbackAudioRef.current) {
-            fallbackAudioRef.current.volume = volume;
-            fallbackAudioRef.current.muted = !!mute;
+          fallbackAudioRef.current.muted = !!mute;
         }
-        setVolume(volume);
-    }, [seekAudio])
+      
+        // 2) If we have a GainNode, drive its gain above 1.0 → louder
+        const gainNode = gainNodeRef.current;
+        if (gainNode) {
+          // Example: slider [0.0–1.0] → gain [0.0–2.0]
+          gainNode.gain.value = vol * 1.5;
+        } else {
+          // Fallback: use plain HTMLAudioElement volume
+          seekAudio.volume = vol;
+          if (fallbackAudioRef.current) {
+            fallbackAudioRef.current.volume = vol;
+          }
+        }
+      
+        // 3) Update React state
+        setVolume(vol);
+      }, [seekAudio]);
 
     //handler to toggle rate change from the play button
     const handlePlayRateChange = useCallback((reset?: boolean, rate?: number) => {
@@ -818,14 +900,9 @@ const useAudioPlayer = (isDownload: boolean) => {
         playRateRef.current = playRate;
     }, [seekAudio, playRate]);
 
-    // whenever our `volume` state changes, push it into both players
     useEffect(() => {
-        seekAudio.volume = volume;      // or however you track mute
-        if (fallbackAudioRef.current) {
-            fallbackAudioRef.current.volume = volume;
-        }
         volumeRef.current = volume;
-    }, [volume, seekAudio]);
+    }, [volume]);
 
     const checkForLoadingAfterNSeconds = () => {
         const isActive = localStorage.getItem("gptr/active") === "true";

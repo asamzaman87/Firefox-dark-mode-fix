@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
@@ -22,6 +22,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
     const chunkNumList = useRef<Set<number>>(new Set());
+    let activeSendObserver: MutationObserver | null = null;
     
     const sendPrompt = () => {
         setIsLoading(true);
@@ -32,20 +33,33 @@ const useAudioUrl = (isDownload: boolean) => {
             return;
         }
     
+        // Prevent multiple observers
+        if (activeSendObserver) {
+            activeSendObserver.disconnect();
+            activeSendObserver = null;
+        }
+
         const observer = new MutationObserver((mutations, obs) => {
             const btn = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
             if (btn && !btn.disabled) {
                 btn.click();
                 obs.disconnect();
+                activeSendObserver = null;
                 clearTimeout(timeout);
             }
         });
     
         observer.observe(document.body, { childList: true, subtree: true });
+        activeSendObserver = observer;
     
         const timeout = setTimeout(() => {
             observer.disconnect();
+            activeSendObserver = null;
             console.error("[sendPrompt] Send button not found after 35 seconds.");
+            toast({
+                description: `GPT Reader is having trouble, please refresh your page and try again`,
+                style: TOAST_STYLE_CONFIG
+            })
         }, 35000);
     };
     
@@ -70,7 +84,7 @@ const useAudioUrl = (isDownload: boolean) => {
             localStorage.setItem("gptr/is-first-audio-loading", String(id == "0"));
             sendPrompt();
         } else {
-            const errorMessage = chrome.i18n.getMessage('chatgpt_issue');
+            const errorMessage = `GPT Reader is having trouble, please refresh your page and try again`;
             window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
             toast({
                 description: errorMessage,
@@ -112,8 +126,15 @@ const useAudioUrl = (isDownload: boolean) => {
             const text = chunks[+currentCompletedStream?.chunkNdx]?.text ?? "";
             setDownloadPreviewText(t => (t ?? "")  + `${text.replaceAll("\n", " ") ?? ""}`);
         }
-        setProgress(((blobs.length ?? 0) / (chunks.length ?? 0)) * 100);
-      }, [chunks, blobs,currentCompletedStream]);
+        const totalChars = chunks.reduce((sum, chunk) => sum + chunk.text.length, 0);
+        const charsSoFar = chunks
+            .slice(0, blobs.length)
+            .reduce((sum, chunk) => sum + chunk.text.length, 0);
+        setProgress((charsSoFar / totalChars) * 100);
+        if (blobs.length === chunks.length && !isDownload) {
+            toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
+        }
+      }, [chunks, blobs, currentCompletedStream, isDownload]);
     
     const extractText = async (file: File) => {
         switch (file.type) {
@@ -149,6 +170,10 @@ const useAudioUrl = (isDownload: boolean) => {
         chunkNumList.current.clear();
         currentStreamChunkNdxRef.current = 0;
         chunkRef.current = [];
+        if (activeSendObserver) {
+            activeSendObserver.disconnect();
+            activeSendObserver = null;
+        }
         if(isDownload){
             setDownloadPreviewText(undefined);
         }

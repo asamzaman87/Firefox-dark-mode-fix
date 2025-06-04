@@ -66,23 +66,44 @@ function Uploader() {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
 
-  //removes draft conversations from local storage on page unload (prevents causing content not loaded error)
   useEffect(() => {
     const handleUnload = (event: BeforeUnloadEvent) => {
-      const raw = localStorage.getItem("oai/apps/conversationDrafts");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          const hasDrafts = Array.isArray(parsed.drafts) && parsed.drafts.length > 0;
-  
-          if (hasDrafts) {
-            localStorage.removeItem("oai/apps/conversationDrafts");
-          }
-        } catch (err) {
-          console.warn("[GPT Reader] Failed to parse conversationDrafts:", err);
-          // fallback: remove corrupted data
-          localStorage.removeItem("oai/apps/conversationDrafts");
-        }
+      if (!isActive || !isAuthenticated) return;
+      const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+      if (storedChatId) {
+          event.preventDefault();
+          localStorage.setItem("gptr/pendingDelete", storedChatId);
+          // ask the page to send us back its accessToken
+          window.dispatchEvent(new Event("GET_TOKEN"));
+
+          // once we get it, do the PATCH
+          const deleteHandler = (e: Event) => {
+              const ce = e as CustomEvent<{ accessToken: string }>;
+              const token = ce.detail.accessToken;
+              if (token) {
+                  fetch(
+                      `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+                      {
+                          method: "PATCH",
+                          headers: {
+                              "Content-Type": "application/json",
+                              "Authorization": `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ is_visible: false }),
+                      }
+                  ).catch(console.error);
+                  const newChatBtn = document.querySelector<HTMLButtonElement>(
+                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                  );
+                  if (newChatBtn) {
+                    newChatBtn.click();
+                  }
+              }
+              // clean up
+              window.removeEventListener("AUTH_RECEIVED", deleteHandler);
+          };
+
+          window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
       }
     };
   
@@ -90,10 +111,44 @@ function Uploader() {
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
     };
-  }, []);
+  }, [isActive, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const storedChatId = localStorage.getItem("gptr/pendingDelete");
+    if (storedChatId) {
+      // ask the page to send us back its accessToken
+      window.dispatchEvent(new Event("GET_TOKEN"));
+
+      // once we get it, do the PATCH
+      const deleteHandler = async (e: Event) => {
+          const ce = e as CustomEvent<{ accessToken: string }>;
+          const token = ce.detail.accessToken;
+          if (token) {
+              await fetch(
+                  `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+                  {
+                      method: "PATCH",
+                      headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ is_visible: false }),
+                  }
+              ).catch(console.error);
+              localStorage.removeItem("gptr/pendingDelete");
+              if (window.location.href.startsWith("https://chatgpt.com/c/") || window.location.href.startsWith("https://chatgpt.com/g/") || window.location.href === "https://chatgpt.com/") {
+                window.location.reload();
+              }
+          }
+          // clean up
+          window.removeEventListener("AUTH_RECEIVED", deleteHandler);
+      };
+
+      window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
+  }
+  }, [isAuthenticated]);
   
-
-
   useEffect(() => {
     if (!document.getElementById("gpt-reader-injected")) {
       const s = document.createElement('script');
