@@ -85,6 +85,56 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
   return chunks;
 }
 
+/**
+ * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
+ * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
+ * “GET_TOKEN” → responding with an “AUTH_RECEIVED” CustomEvent that carries { accessToken }.
+ */
+export async function deleteChatAndCreateNew(createChat: boolean = true, chatId?: string): Promise<void> {
+  let storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+  if (chatId) {
+    storedChatId = chatId
+  }
+  if (!storedChatId) return;
+
+  return new Promise<void>((resolve) => {
+    const handleAuth = async (e: Event) => {
+      const ce = e as CustomEvent<{ accessToken: string }>;
+      const token = ce.detail.accessToken;
+      if (token) {
+        try {
+          await fetch(
+            `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({ is_visible: false }),
+            }
+          );
+          if (createChat) {
+            // Once deleted, click “New Chat”
+            const newChatBtn = document.querySelector<HTMLButtonElement>(
+              "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+            );
+            if (newChatBtn) newChatBtn.click();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      window.removeEventListener("AUTH_RECEIVED", handleAuth);
+      resolve();
+    };
+
+    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
+    window.dispatchEvent(new Event("GET_TOKEN"));
+  });
+}
+
+
 export function splitIntoChunksV1(text: string, chunkSize: number = DOWLOAD_CHUNK_SIZE): Chunk[] {
   const sentences = text.match(/(?:[^.!?•]+[.!?•]+[\])'"`’”]*|[^.!?•]+(?:$))/g) || []; //matches sentences based on the delimiters
   let currentChunk = "";

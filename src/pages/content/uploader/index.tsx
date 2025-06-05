@@ -8,11 +8,10 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
-import useVoice from "../../../hooks/use-voice";
 export interface PromptProps {
   text: string | undefined
 }
@@ -59,6 +58,8 @@ function Uploader() {
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
+  const wasActive = useRef<boolean>(false);
+  const isOpening = useRef<boolean>(false);
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
   // sending the auth status to the background script
@@ -66,44 +67,90 @@ function Uploader() {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
   }, [isAuthenticated]);
 
+ // ─── ALWAYS hide any ChatGPT “conversation-fetch-error-toast” ───
+ useEffect(() => {
+
+  const HIDE_SELECTOR = "[data-testid*='conversation-fetch-error']";
+
+  // Helper: given any node that just got inserted, see if it (or its children)
+  // matches our “fetch-error” selector—then hide/remove its closest “.toast-root”.
+  const hideErrorToast = (node: Element) => {
+    if (!(node instanceof HTMLElement)) return;
+
+    // 1) If this node itself has data-testid containing "conversation-fetch-error"…
+    if (node.matches(HIDE_SELECTOR)) {
+      const toastRoot = node.closest(".toast-root") as HTMLElement | null;
+      if (toastRoot) {
+        toastRoot.style.display = "none";
+      } else {
+        // fallback: just hide the node directly
+        node.style.display = "none";
+      }
+      return;
+    }
+
+    // 2) Otherwise, if any child inside this node matches our selector…
+    const child = node.querySelector(HIDE_SELECTOR) as HTMLElement | null;
+    if (child) {
+      const toastRoot = child.closest(".toast-root") as HTMLElement | null;
+      if (toastRoot) {
+        toastRoot.style.display = "none";
+      } else {
+        child.style.display = "none";
+      }
+    }
+  };
+
+  // Set up a MutationObserver on <body> to catch all future insertions
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const addedNode of Array.from(m.addedNodes)) {
+        hideErrorToast(addedNode as Element);
+      }
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Do an initial pass (in case the toast is already on screen right now)
+  document.querySelectorAll(HIDE_SELECTOR).forEach((el) => {
+    const node = el as HTMLElement;
+    const toastRoot = node.closest(".toast-root") as HTMLElement | null;
+    if (toastRoot) {
+      toastRoot.style.display = "none";
+    } else {
+      node.style.display = "none";
+    }
+  });
+
+  // Cleanup on unmount
+  return () => {
+    observer.disconnect();
+  };
+  }, []);
+
+  // unload chat deletion
   useEffect(() => {
+    if (!isAuthenticated) return;
+    if (isActive) {
+      wasActive.current = true;
+    }
+    if (!isActive && wasActive.current) {
+      (async () => {
+        await deleteChatAndCreateNew();
+        window.location.reload();
+      })();
+    }
     const handleUnload = (event: BeforeUnloadEvent) => {
       if (!isActive || !isAuthenticated) return;
       const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
       if (storedChatId) {
           event.preventDefault();
           localStorage.setItem("gptr/pendingDelete", storedChatId);
-          // ask the page to send us back its accessToken
-          window.dispatchEvent(new Event("GET_TOKEN"));
-
-          // once we get it, do the PATCH
-          const deleteHandler = (e: Event) => {
-              const ce = e as CustomEvent<{ accessToken: string }>;
-              const token = ce.detail.accessToken;
-              if (token) {
-                  fetch(
-                      `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
-                      {
-                          method: "PATCH",
-                          headers: {
-                              "Content-Type": "application/json",
-                              "Authorization": `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ is_visible: false }),
-                      }
-                  ).catch(console.error);
-                  const newChatBtn = document.querySelector<HTMLButtonElement>(
-                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                  );
-                  if (newChatBtn) {
-                    newChatBtn.click();
-                  }
-              }
-              // clean up
-              window.removeEventListener("AUTH_RECEIVED", deleteHandler);
-          };
-
-          window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
+          deleteChatAndCreateNew(false);
       }
     };
   
@@ -113,40 +160,22 @@ function Uploader() {
     };
   }, [isActive, isAuthenticated]);
 
+  // Makes sure that chat history is updated after unload delete
   useEffect(() => {
     if (!isAuthenticated) return;
     const storedChatId = localStorage.getItem("gptr/pendingDelete");
     if (storedChatId) {
-      // ask the page to send us back its accessToken
-      window.dispatchEvent(new Event("GET_TOKEN"));
-
-      // once we get it, do the PATCH
-      const deleteHandler = async (e: Event) => {
-          const ce = e as CustomEvent<{ accessToken: string }>;
-          const token = ce.detail.accessToken;
-          if (token) {
-              await fetch(
-                  `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
-                  {
-                      method: "PATCH",
-                      headers: {
-                          "Content-Type": "application/json",
-                          "Authorization": `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({ is_visible: false }),
-                  }
-              ).catch(console.error);
-              localStorage.removeItem("gptr/pendingDelete");
-              if (window.location.href.startsWith("https://chatgpt.com/c/") || window.location.href.startsWith("https://chatgpt.com/g/") || window.location.href === "https://chatgpt.com/") {
-                window.location.reload();
-              }
-          }
-          // clean up
-          window.removeEventListener("AUTH_RECEIVED", deleteHandler);
-      };
-
-      window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
-  }
+      ;(async () => {
+        await deleteChatAndCreateNew(false, storedChatId);
+        localStorage.removeItem("gptr/pendingDelete");
+        if (
+          window.location.href.startsWith("https://chatgpt.com") &&
+          !isOpening.current
+        ) {
+            window.location.reload();
+        }
+      })();
+    }
   }, [isAuthenticated]);
   
   useEffect(() => {
@@ -177,7 +206,6 @@ function Uploader() {
       })
 
     }
-
     chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
 
     //checking if user has already confirmed the extension
@@ -323,6 +351,7 @@ function Uploader() {
       setIsActive(false);
       return
     }
+    isOpening.current = true;
     const aoc = window.localStorage.getItem("gptr/aoc");
     //return if overlay is already active.
     if (open && aoc && +aoc > 0) {

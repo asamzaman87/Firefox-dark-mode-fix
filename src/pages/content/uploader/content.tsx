@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
@@ -66,6 +66,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const onBackClick = () => {
         if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
+        // delete the old ChatGPT conversation if we have one
+        deleteChatAndCreateNew();
         //if is playing, wait for 500ms before resetting to avoid further chunk from being sent (May not work with 2g-3g networks)
         if (isPlaying) {
             setTimeout(() => {

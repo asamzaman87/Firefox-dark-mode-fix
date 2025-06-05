@@ -131,7 +131,7 @@ const useAudioUrl = (isDownload: boolean) => {
             .slice(0, blobs.length)
             .reduce((sum, chunk) => sum + chunk.text.length, 0);
         setProgress((charsSoFar / totalChars) * 100);
-        if (blobs.length === chunks.length && !isDownload) {
+        if (blobs.length === chunks.length && !isDownload && blobs.length > 0) {
             toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
         }
       }, [chunks, blobs, currentCompletedStream, isDownload]);
@@ -203,7 +203,7 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     };
 
-   const downloadCombinedFile = useCallback(async(fileName: string) => {
+    const downloadCombinedFile = useCallback(async(fileName: string) => {
         try {
           const sanitisedFileName = fileName.split('.').slice(0, -1).join('.');
           const seen = new Set<number>();
@@ -240,6 +240,7 @@ const useAudioUrl = (isDownload: boolean) => {
         }
       }, [blobs])
 
+      
     useEffect(() => {
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
 
@@ -289,7 +290,7 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     }, [currentCompletedStream])
 
-    return { downloadPreviewText,downloadCombinedFile,progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
+    return { downloadPreviewText, downloadCombinedFile, progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
 
 }
 

@@ -525,45 +525,6 @@ const useAudioPlayer = (isDownload: boolean) => {
     }
 
     const reset = useCallback((full: boolean = false, completeAudio?: boolean, isBackPressed: boolean = false) => {
-        // delete the old ChatGPT conversation if we have one
-        const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
-        if (storedChatId) {
-            // ask the page to send us back its accessToken
-            window.dispatchEvent(new Event("GET_TOKEN"));
-
-            // once we get it, do the PATCH
-            const deleteHandler = async (e: Event) => {
-                const ce = e as CustomEvent<{ accessToken: string }>;
-                const token = ce.detail.accessToken;
-                if (token) {
-                    await fetch(
-                        `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
-                        {
-                            method: "PATCH",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${token}`,
-                            },
-                            body: JSON.stringify({ is_visible: false }),
-                        }
-                    ).catch(console.error);
-                    const newChatBtn = document.querySelector<HTMLButtonElement>(
-                      "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                    );
-                    if (newChatBtn) {
-                      newChatBtn.click();
-                    }
-                    if (!isBackPressed) {
-                        window.location.href = "https://chatgpt.com";
-                    }
-                }
-                // clean up
-                window.removeEventListener("AUTH_RECEIVED", deleteHandler);
-            };
-
-            window.addEventListener("AUTH_RECEIVED", deleteHandler, { once: true });
-        }
-
         if (gainNodeRef.current) {
           gainNodeRef.current.disconnect();
           gainNodeRef.current = null;
