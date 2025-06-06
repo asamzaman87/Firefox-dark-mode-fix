@@ -123,7 +123,7 @@ const Announcements = () => {
       switch (message.type) {
         case "GET_BANNER": {
           const newAnnouncements = message.payload as Announcement[];
-          if (newAnnouncements.length) {
+          if (newAnnouncements && newAnnouncements.length) {
             setSelectedAcc(newAnnouncements.map((item) => item.id));
             setAnnouncements(newAnnouncements);
           } else {
