@@ -30,3 +30,15 @@ const render = (state: boolean) => {
 
 //observes the shadow root of the extension and renders the component if it is not present
 observeElement("div#__gpt-reader-shadow", render);
+
+// ensure an immediate first‐pass render
+render(false);
+
+// polling fallback (tries every 500ms until it sees your container)
+const __gptReaderPoll = setInterval(() => {
+  if (!document.querySelector('#__gpt-reader-shadow')) {
+    render(false);
+  } else {
+    clearInterval(__gptReaderPoll);
+  }
+}, 500);
