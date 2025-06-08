@@ -219,7 +219,7 @@ const useAudioUrl = (isDownload: boolean) => {
 
           // The Blob constructor automatically concatenates the provided blob parts.
           const combinedBlob = new Blob(ordered, {
-            type: ordered[0]?.type || "audio/aac",
+            type: ordered[0]?.type || "audio/mpeg",
           });
     
           // Create an object URL for the combined blob
@@ -228,7 +228,7 @@ const useAudioUrl = (isDownload: boolean) => {
           // Create a temporary download link and trigger a click to start download
           const downloadLink = document.createElement("a");
           downloadLink.href = combinedUrl;
-          downloadLink.download = `${sanitisedFileName}.aac`;
+          downloadLink.download = `${sanitisedFileName}.mp3`;
           document.body.appendChild(downloadLink);
           downloadLink.click();
     

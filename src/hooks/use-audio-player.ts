@@ -123,11 +123,11 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (!mediaSource || mediaSource.readyState !== "open") return;
 
         try {
-            if (!MediaSource.isTypeSupported('audio/aac')) {
+            if (!MediaSource.isTypeSupported('audio/mpeg')) {
                 setIsTypeAACSupported(false);
                 return
             }
-            sourceBuffer.current = mediaSource.addSourceBuffer('audio/aac'); // AAC codec
+            sourceBuffer.current = mediaSource.addSourceBuffer('audio/mpeg'); // AAC codec
         } catch (error) {
             console.error("Error initializing SourceBuffer:", error);
         }
@@ -283,7 +283,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         originalHistoryLengthRef.current = historyBuffersRef.current.length;
       
         // 5) build a blob URL from our history
-        const blob = new Blob(historyBuffersRef.current, { type: "audio/aac" });
+        const blob = new Blob(historyBuffersRef.current, { type: "audio/mpeg" });
         const url = URL.createObjectURL(blob);
       
         // 6) revoke any previous fallback URL
@@ -352,7 +352,7 @@ const useAudioPlayer = (isDownload: boolean) => {
           // rebuild the blob under the hood so it “grows”
           if (historyBuffersRef.current.length > originalHistoryLengthRef.current) {
             const oldUrl = a.src;
-            const newBlob = new Blob(historyBuffersRef.current, { type: "audio/aac" });
+            const newBlob = new Blob(historyBuffersRef.current, { type: "audio/mpeg" });
             const newUrl = URL.createObjectURL(newBlob);
             a.src = newUrl;
             a.currentTime = t;
@@ -583,7 +583,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [blobs, isBackPressed]);
 
     //adjust loading state when presence modal is open and stream is processing after clicking on yes
-    //only works if the audio/aac is not supported
+    //only works if MSE does not take mp3
     useMemo(() => {
         //if user clicks on yes from presence modal and the audio was paused from the last chunk, 
         //set isStreamLoading to true to indicate buffering
@@ -598,6 +598,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [isPromptingPaused, wasPromptStopped, audioUrls])
 
     const play = useCallback(() => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
         isPausedRef.current = false;
         setIsPlaying(true);
         setIsPaused(false);

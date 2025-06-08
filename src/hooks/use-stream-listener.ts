@@ -1,4 +1,4 @@
-import { AUDIO_FORMAT, LISTENERS, SYNTETHIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
+import { AUDIO_FORMAT, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
@@ -174,12 +174,12 @@ const useStreamListener = (
             return;
         }
 
-        if (chunkNdx !== null && chunkNdx >= 0) {
+        if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             if (token) {
                 try {
                     // prefetching audio
                     const audioUrl = await fetchAndDecodeAudio(
-                        `${SYNTETHIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`,
+                        `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`,
                         +chunkNdx
                     );
                     
