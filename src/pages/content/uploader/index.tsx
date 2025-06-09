@@ -12,6 +12,7 @@ import { cn, deleteChatAndCreateNew } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
+import PinTutorialPopUp from "./pin-tutorial-popup";
 export interface PromptProps {
   text: string | undefined
 }
@@ -51,6 +52,7 @@ function Uploader() {
   // const [openTries, setOpenTries] = useState<number>(0);
   const [minimised, setMinimised] = useState<boolean>(true);
   const [confirmed, setConfirmed] = useState<boolean>(false);
+  const [showPinTutorial, setShowPinTutorial] = useState<boolean>(false);
   const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
@@ -210,7 +212,11 @@ function Uploader() {
 
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");
+    const isPinTutorialAcknowledged = window.localStorage.getItem(
+      "gptr/pinTutorialAcknowledged"
+    );
     setConfirmed(cnf === "true");
+    setShowPinTutorial(isPinTutorialAcknowledged !== "true");
   }, []);
 
   //toddo: refactor as this might exceed space
@@ -423,7 +429,8 @@ function Uploader() {
   const handleConfirm = (state: boolean) => {
     if (!state) return onOpenChange(false);
     window.localStorage.setItem("gptr/confirmation", String(state));
-    setConfirmed(state)
+    setConfirmed(state);
+    setShowPinTutorial(true);
   }
 
   useMemo(() => {
@@ -493,6 +500,7 @@ function Uploader() {
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
           {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}
+          { confirmed && showPinTutorial && <PinTutorialPopUp open={showPinTutorial} onOpenChange={setShowPinTutorial}/>}
         </DialogContent>
       </Dialog>
       <Toaster />

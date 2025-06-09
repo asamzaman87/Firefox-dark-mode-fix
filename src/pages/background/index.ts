@@ -7,7 +7,7 @@ import {
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
-import { getGPTTabs, secureFetch, switchToActiveTab } from "@/lib/utils";
+import { detectBrowser, getGPTTabs, secureFetch, switchToActiveTab } from "@/lib/utils";
 
 chrome.storage.local.clear();
 
@@ -165,13 +165,18 @@ chrome.runtime.onInstalled.addListener(async () => {
     const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created
     chrome.storage.local.set({ origin: true });
     await chrome.tabs.reload(id); //reload tab to update the content
+  } else {
+    await showNotificationFallback("install");
   }
 });
 
 // click on extension icon to switch to gpt
 chrome.action.onClicked.addListener(async () => {
   const tabId = await switchToActiveTab();
-  if (!tabId) return;
+  if (!tabId) {
+    await showNotificationFallback("icon_click");
+    return;
+  }
 
   chrome.storage.local.set({ origin: true });
 
@@ -202,6 +207,81 @@ chrome.action.onClicked.addListener(async () => {
     payload: "ORIGIN_VERIFIED",
   });
 });
+
+
+const showNotificationFallback = async (source: string) => {
+  try {
+    const LOGO = chrome.runtime.getURL("logo-128.png");
+    const notificationId = `chatgpt-extension-${source}-${Date.now()}`;
+    console.log({ LOGO, notificationId });
+
+    // Detect if we're running in Firefox
+    const isFirefox = detectBrowser() === "firefox";
+
+    // Create notification options based on browser capabilities
+    const notificationOptions = {
+      type: "basic" as const,
+      iconUrl: LOGO,
+      title: "GPT Reader",
+      message: "Click here to open ChatGPT and use the extension.",
+      priority: 2,
+      // Only add buttons for Chrome/Chromium browsers
+      ...(isFirefox
+        ? {}
+        : {
+            requireInteraction: true,
+            buttons: [{ title: "Open ChatGPT" }, { title: "Dismiss" }],
+          }),
+    };
+
+    await chrome.notifications.create(
+      notificationId,
+      notificationOptions,
+      function () {
+        if (chrome.runtime.lastError) {
+          console.log("Notification error:", chrome.runtime.lastError);
+        }
+      }
+    );
+    // Handle notification clicks (works in both browsers)
+    chrome.notifications.onClicked.addListener(async(clickedNotificationId) => {
+      if (clickedNotificationId === notificationId) {
+        // Open ChatGPT in a new tab
+        await switchToActiveTab();
+        chrome.notifications.clear(clickedNotificationId);
+      }
+    });
+
+    // Handle button clicks (Chrome only)
+    if (!isFirefox) {
+      chrome.notifications.onButtonClicked.addListener(
+        async (clickedNotificationId, buttonIndex) => {
+          if (clickedNotificationId === notificationId) {
+            if (buttonIndex === 0) {
+              await switchToActiveTab();
+            }
+            chrome.notifications.clear(clickedNotificationId);
+          }
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Failed to show notification:", error);
+
+    // Fallback to the most basic notification possible
+    try {
+      await chrome.notifications.create({
+        type: "basic",
+        iconUrl: "logo-128.png",
+        title: "ChatGPT Extension",
+        message:
+          "Please manually navigate to chat.openai.com to use this extension.",
+      });
+    } catch (fallbackError) {
+      console.error("Basic notification also failed:", fallbackError);
+    }
+  }
+};
 
 const handleGetBannerPolling = async () => {
   const activeTab = await getGPTTabs();
