@@ -412,8 +412,22 @@ function Uploader() {
         '[data-testid*="retry"], [data-testid*="regenerate"]'
       );
       if (retryBtn) {
+        // Compute minutes until next UTC hour
+        const now = new Date();
+        const nextHourUtc = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          now.getUTCHours() + 1,  // next UTC hour
+          0, 0, 0
+        ));
+        const msUntilNextHour = nextHourUtc.getTime() - now.getTime();
+        const minutesLeft = Math.ceil(msUntilNextHour / 60_000);
         console.log("Found retry button—clicking it now.");
-        toast({ description: 'ChatGPT seems to have reached its hourly limit, GPT Reader is trying again...', style: TOAST_STYLE_CONFIG });
+        toast({
+          description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
+          style: TOAST_STYLE_CONFIG
+        });
         retryBtn.click();
       }
     }, 15_000);
