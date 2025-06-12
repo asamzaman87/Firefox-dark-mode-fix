@@ -35,6 +35,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
             method: "POST",
             body: JSON.stringify({
                 feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
+                email: values.email || null,
                 browser,
                 extension: "GPT-Reader",
             }),

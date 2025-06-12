@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import { FC } from "react";
 import {
   Dialog,
@@ -18,8 +17,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../../../components/ui/carousel";
+import { detectBrowser } from "../../../lib/utils";
 
-type PinTutorialProps = DialogProps;
+interface PinTutorialProps extends DialogProps {
+  onClose: (value: boolean) => void;
+}
 
 type TutorialStep = {
   title: string;
@@ -30,40 +32,43 @@ type TutorialStep = {
 
 const PinTutorialPopUp: FC<PinTutorialProps> = ({
   open,
-  onOpenChange,
+  onClose,
   ...props
 }) => {
   const LOGO = chrome.runtime.getURL("logo-128.png");
-  const tutorial = chrome.runtime.getURL("pin-step-3.png");
-  const extensionName = "GPT Reader";
+  const CHROME_PIN = chrome.runtime.getURL("chrome-pin.png");
+  const FIREFOX_PIN = chrome.runtime.getURL("firefox-pin.png");
+  const guideExtImage = chrome.runtime.getURL("extension-guide.png");
+  const isFirefox = detectBrowser() === "firefox";
 
   const tutorialSteps: TutorialStep[] = [
     {
-      title: "1. Click the Extensions Icon",
-      description:
-        "Look for the puzzle piece icon in your browser toolbar and click it.",
-      imageUrl: tutorial,
-      altText:
-        "Browser toolbar with the extensions (puzzle piece) icon highlighted.",
+      title:
+        "For quick access to GPT Reader, we recommend pinning the extension",
+      description: isFirefox
+        ? "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader extension and click on the settings icon and then select the pin option"
+        : "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader extension and click on the pin icon next to it",
+      imageUrl: isFirefox ? FIREFOX_PIN : CHROME_PIN,
+      altText: "Pin Extension Image",
     },
     {
-      title: `2. Find "${extensionName} and Click the Pin Icon"`,
-      description: `In the dropdown menu, find "${extensionName}" in your list of installed extensions and Click the Pin Icon`,
-      imageUrl: tutorial,
-      altText: `Extensions dropdown menu showing a list of extensions, with "${extensionName}" visible.`,
-    },
-    {
-      title: "3. Extension Pinned!",
-      description: `The "${extensionName}" icon will now appear directly on your browser toolbar for easy access.`,
-      imageUrl: tutorial,
-      altText: `Browser toolbar showing the "${extensionName}" icon successfully pinned.`,
+      title: "Here is information on the extension icons",
+      description: "",
+      imageUrl: guideExtImage,
+      altText: "Guide Image for extension",
     },
   ];
 
   const handlePinTutorialAcknowledged = (open: boolean) => {
     window.localStorage.setItem("gptr/pinTutorialAcknowledged", String(open));
-    onOpenChange?.(false);
+    onClose?.(false);
   };
+
+  const onOpenChange = (open: boolean) => {
+    if(!open) {
+      handlePinTutorialAcknowledged(!open);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} {...props}>
@@ -71,8 +76,8 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        closeButton={false}
-        className="bg-gray-50 dark:bg-gray-800 border-none md:min-w-1/2 rounded-2xl"
+        // closeButton={false}
+        className="bg-gray-50 dark:bg-gray-800 border-none w-[95vw] max-w-[95vw] sm:w-[95vw] sm:max-w-[620px] md:w-[80vw] md:max-w-[750px] lg:w-[60vw] lg:max-w-[800px] xl:max-w-[900px] rounded-2xl"
       >
         <DialogHeader className={"sr-only"}>
           <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
@@ -84,11 +89,7 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
         <div className="w-full flex flex-col gap-6 justify-center items-center">
           <section className="flex flex-col justify-center items-center gap-4 text-justify">
             <img src={LOGO} alt="GPT Reader Logo" className="size-12" />
-            <h1 className="text-xl font-medium">Pin GPT Reader Extension</h1>
-            <p className="dark:text-gray-200 text-gray-600 leading-loose">
-              Follow these steps to pin our extension to your browser toolbar
-              for quick and easy access.
-            </p>
+            <h1 className="text-xl font-medium">Important Information</h1>
             <Carousel className="w-full">
               <CarouselContent>
                 {tutorialSteps.map((step, index) => (
@@ -97,7 +98,9 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
                     className="flex flex-col items-center text-center"
                   >
                     <div className="flex flex-col gap-4">
-                      <p className="text-lg font-medium">{step.title}</p>
+                      <p className="text-lg dark:text-gray-200 text-gray-600 leading-loose">
+                        {step.title}
+                      </p>
                       <div className="rounded-md overflow-hidden border border-muted aspect-[16/10] w-full max-w-lg mx-auto">
                         <img
                           src={step.imageUrl}
@@ -105,25 +108,28 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {step.description}
-                      </p>
+                      {step.description ? (
+                        <p className="text-sm text-muted-foreground">
+                          {step.description}
+                        </p>
+                      ) : null}
                     </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="ml-2 sm:ml-8 dark:hover:bg-gray-600" />
-              <CarouselNext className="mr-2 sm:mr-8 dark:hover:bg-gray-600" />
+              <CarouselPrevious className="ml-8 dark:hover:bg-gray-600" />
+              <CarouselNext className="mr-8 dark:hover:bg-gray-600" />
             </Carousel>
           </section>
 
           <footer className="flex items-end justify-center gap-4">
             <Button
               variant={"ghost"}
+              size={"lg"}
               className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
               onClick={() => handlePinTutorialAcknowledged(true)}
             >
-              Got it!
+              Okay
             </Button>
           </footer>
         </div>

@@ -149,7 +149,7 @@ const Announcements = () => {
       }
     };
     chrome.runtime.onMessage.addListener(handleListener);
-    getAnnouncements();
+    setTimeout(() => getAnnouncements(), 500);
 
     return () => {
       chrome.runtime.onMessage.removeListener(handleListener);

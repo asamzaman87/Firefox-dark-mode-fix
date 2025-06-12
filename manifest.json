@@ -32,6 +32,15 @@
         "contentStyle.css"
       ],
       "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://auth.openai.com/*"
+      ],
+      "js": [
+        "src/pages/content/loginMessage.tsx"
+      ],
+      "run_at": "document_end"
     }
   ],
   "devtools_page": "src/pages/devtools/index.html",
@@ -40,13 +49,17 @@
       "resources": [
         "contentStyle.css",
         "logo-128.png",
-        "pin-step-3.png",
+        "chrome-pin.png",
+        "firefox-pin.png",
+        "extension-guide.png",
         "pdf.worker.js",
         "injected.js"
       ],
-      "matches": [
-        "https://chatgpt.com/*"
-      ]
+      "matches": ["https://chatgpt.com/*"]
+    },
+    {
+      "resources": ["logo-128.png"],
+      "matches": ["https://auth.openai.com/*"]
     }
   ]
 }

@@ -167,7 +167,7 @@ function Uploader() {
     if (!isAuthenticated) return;
     const storedChatId = localStorage.getItem("gptr/pendingDelete");
     if (storedChatId) {
-      ;(async () => {
+      (async () => {
         await deleteChatAndCreateNew(false, storedChatId);
         localStorage.removeItem("gptr/pendingDelete");
         if (
@@ -373,6 +373,9 @@ function Uploader() {
     if (!isAuthenticated) {
       const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
       if (loginBtn) {
+        // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
+        chrome.storage.local.set({ fromExtensionRedirect: true });
+
         window.localStorage.setItem("gptr/redirect-to-login", "true");
         chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
         loginBtn?.click();
@@ -392,6 +395,9 @@ function Uploader() {
       window.location.href = `${window.location.origin}/?model=auto`;
       return; 
     }
+
+    // * Call banner count API event to the background script
+    chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
 
     await triggerPromptFlow();
   };
@@ -519,7 +525,7 @@ function Uploader() {
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
           {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}
-          { confirmed && showPinTutorial && <PinTutorialPopUp open={showPinTutorial} onOpenChange={setShowPinTutorial}/>}
+          { confirmed && showPinTutorial && <PinTutorialPopUp open={showPinTutorial} onClose={setShowPinTutorial}/>}
         </DialogContent>
       </Dialog>
       <Toaster />

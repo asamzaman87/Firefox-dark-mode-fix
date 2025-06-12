@@ -1,6 +1,5 @@
 import {
   BACKEND_URI,
-  BANNER_POLLING_TIME_INTERVAL,
   DOMAINS,
   FEEDBACK_GOOGLE_FORM,
   LISTENERS,
@@ -74,6 +73,10 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
     }
     case "GET_ANNOUNCEMENTS": {
       handleGetBannerPolling();
+      break;
+    }
+    case "BANNER_COUNT_API_EVENT": {
+      handleGetBannerCount();
       break;
     }
     case "ANNOUNCEMENTS_OPENED": {
@@ -324,20 +327,5 @@ const handleGetBannerCount = async()=>{
 const handleBannerCountView = async (count: number) =>{
   await chrome.storage.sync.set({ bannerCount: count, countLastViewedOn: new Date().toISOString() });
 }
-
-// We poll to make sure that announcements are always up to date
-const startPolling = async () => {
-  const stored = await chrome.storage.sync.get("pollingInterval");
-  const interval = stored.pollingInterval;
-  if (interval) {
-    clearInterval(interval);
-  }
-  const intervalId = setInterval(handleGetBannerCount, BANNER_POLLING_TIME_INTERVAL); 
-  chrome.storage.sync.set({ pollingInterval: intervalId });
-  
-};
-
-
-startPolling();
 
 chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM);

@@ -12,6 +12,7 @@ import { z } from "zod";
 
 const formSchema = z.object({
     rating: z.number().min(1, { message: "What would you rate this extension?" }),
+    email: z.string().optional(),
     comments: z.string().optional()
 })
 
@@ -26,6 +27,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
         resolver: zodResolver(formSchema),
         defaultValues: {
             comments: "",
+            email: "",
             rating: 0,
         },
     })
@@ -54,6 +56,17 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                         </FormItem>
                     )}
                 />
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem className="w-full">
+                            <FormControl>
+                                <Input className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded focus:border-gray-200 dark:focus:border-gray-700 outline-none"  placeholder={"Enter your email"} type="email"  {...field} />     
+                            </FormControl>
+                            <FormMessage className="text-red-600" />
+                        </FormItem>
+                    )} />
                 <FormField
                     control={form.control}
                     name="comments"
