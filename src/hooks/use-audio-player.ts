@@ -851,7 +851,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         // 2) Drive the Web-Audio gain if present
         const gainNode = gainNodeRef.current;
         if (gainNode) {
-          console.log('gainnode gaining');
           gainNode.gain.value = vol * 1.5;
           // make sure the context is running
           if (audioCtxRef.current?.state === 'suspended') {

@@ -182,7 +182,7 @@ const useStreamListener = (
     const handleConvStream = useCallback(async (e: Event) => {
         const { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string } };
         let actual = (assistant ?? "").replace(/\s+/g, " ").trim();
-        console.log('This is the actual message: ', actual);
+        // console.log('This is the actual message: ', actual);
 
         if (
             actual.length < 150 &&
@@ -202,7 +202,7 @@ const useStreamListener = (
             const expected = chunkRef.current[chunkNdx].text
                 .replace(/\s+/g, " ")
                 .trim();
-            console.log('This is the expected message: ', expected);
+            // console.log('This is the expected message: ', expected);
             const expectedLen = expected.length;
             const actualLen = actual.length;
             // allow a 10% char tolerance
