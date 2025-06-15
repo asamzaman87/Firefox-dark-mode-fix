@@ -3,6 +3,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let conversationId = "";
     let createTime = ""
     let text = "";
+    let assistant = "";
     try {
         const jsonArgs = JSON.parse(args[1]?.body);
         const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
@@ -13,6 +14,40 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const decoder = new TextDecoder("utf-8");
             const textDecoded = decoder.decode(value);
 
+            // —— new: pull out SSE “delta” patches for the assistant’s text
+            for (const line of textDecoded.split(/\r?\n/)) {
+                if (line.startsWith("data: ")) {
+                  try {
+                    const data = JSON.parse(line.slice(6));
+                    // 1) straight append deltas
+                    if (data.p === "/message/content/parts/0" && data.o === "append") {
+                      assistant += data.v;
+                    }
+                    // 2) patch operations
+                    else if (data.o === "patch" && Array.isArray(data.v)) {
+                      for (const op of data.v) {
+                        if (op.p === "/message/content/parts/0") {
+                          assistant += op.v;
+                        }
+                      }
+                    }
+                    // 3) some “bulk” deltas come as bare strings
+                    else if (typeof data.v === "string") {
+                      assistant += data.v;
+                    }
+                    // 4) fallback to full parts array — but only for assistant messages
+                    else if (
+                      data.v?.message?.content?.parts &&
+                      data.v.message.author?.role === "assistant"
+                    ) {
+                      assistant = data.v.message.content.parts[0] || assistant;
+                    }
+                  } catch {
+                    /* ignore non-JSON or other events */
+                  }
+                }
+              }
+  
             const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
             const createTimeMatch = textDecoded.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
             const conversationIdMatch = textDecoded.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
@@ -32,14 +67,14 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 window.dispatchEvent(messageIdEvent);
             }
 
-            if (done) return { messageId, conversationId, createTime, text };// Exit loop when reading is complete
+            if (done) return { messageId, conversationId, createTime, text, assistant };// Exit loop when reading is complete
         }
     } catch (error) {
         if (error.name !== 'AbortError') {
             console.error('An error occurred while reading the stream:', error);
         }
     }
-    return { messageId, conversationId, createTime, text };
+    return { messageId, conversationId, createTime, text, assistant };
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";

@@ -76,7 +76,7 @@ export const HELPER_PROMPT_3 = `What does the text below the markers <<< say? Ma
 
 <<<
 `;
-export const HELPER_PROMPTS = [HELPER_PROMPT_3, EXTREME_HELPER_PROMPT, HELPER_PROMPT_2, HELPER_PROMPT];
+export const HELPER_PROMPTS = [HELPER_PROMPT, HELPER_PROMPT_3, HELPER_PROMPT_2, EXTREME_HELPER_PROMPT];
 export const SYNTHESIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "mp3";

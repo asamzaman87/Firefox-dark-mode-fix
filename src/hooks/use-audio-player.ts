@@ -293,6 +293,16 @@ const useAudioPlayer = (isDownload: boolean) => {
       
         // 7) create the fallback <audio>
         const a = new Audio(url);
+        a.onplay = () => {
+          if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume().catch(() => {});
+          }
+        };
+        a.onpause = () => {
+          if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume().catch(() => {});
+          }
+        };
         a.currentTime = startTime;
         a.playbackRate = playRateRef.current;
         a.volume       = volumeRef.current;
@@ -376,6 +386,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     // but revoke old AAC URLs to free memory in AAC mode
     const playNext = useCallback(
         (index: number) => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
         if (isTypeAACSupported && seekAudio.src) {
             URL.revokeObjectURL(seekAudio.src);
         }
@@ -388,7 +401,18 @@ const useAudioPlayer = (isDownload: boolean) => {
         [audioUrls, playRate, volume, isTypeAACSupported]
     );
     
-
+    useEffect(() => {
+      const onVis = () => {
+        if (document.visibilityState === 'visible'
+            && audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(()=>{});
+        }
+      };
+      document.addEventListener('visibilitychange', onVis);
+      return () => document.removeEventListener('visibilitychange', onVis);
+    }, []);
+    
+    
     //initiating play
     useMemo(() => {
         if (isTypeAACSupported) return;
@@ -468,6 +492,9 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //handles onplay event to set isPlaying and isPaused states
     seekAudio.onplay = () => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
+        }
         if (!isTypeAACSupported) {
             setHasCompletePlaying(false);
             setIsPaused(false);
@@ -476,6 +503,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     };
 
     seekAudio.onpause = () => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
+        }
         if (!isTypeAACSupported) {
             setIsPaused(true);
             setIsPlaying(false);
@@ -599,7 +629,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     const play = useCallback(() => {
         if (audioCtxRef.current?.state === 'suspended') {
-          audioCtxRef.current.resume();
+          audioCtxRef.current.resume().catch(() => {});
         }
         isPausedRef.current = false;
         setIsPlaying(true);
@@ -810,25 +840,24 @@ const useAudioPlayer = (isDownload: boolean) => {
       }, [seekAudio, playFallback]);
       
       const handleVolumeChange = useCallback((vol: number, mute?: boolean) => {
-        // 1) Apply hard mute on the raw <audio> elements
-        seekAudio.muted = !!mute;
+        // 1) Always un-mute & set the element volume
+        seekAudio.muted = false;
+        seekAudio.volume = vol;
         if (fallbackAudioRef.current) {
-          fallbackAudioRef.current.muted = !!mute;
+          fallbackAudioRef.current.muted = false;
+          fallbackAudioRef.current.volume = vol;
         }
-      
-        // 2) If we have a GainNode, drive its gain above 1.0 → louder
+
+        // 2) Drive the Web-Audio gain if present
         const gainNode = gainNodeRef.current;
         if (gainNode) {
-          // Example: slider [0.0–1.0] → gain [0.0–2.0]
+          console.log('gainnode gaining');
           gainNode.gain.value = vol * 1.5;
-        } else {
-          // Fallback: use plain HTMLAudioElement volume
-          seekAudio.volume = vol;
-          if (fallbackAudioRef.current) {
-            fallbackAudioRef.current.volume = vol;
+          // make sure the context is running
+          if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume();
           }
         }
-      
         // 3) Update React state
         setVolume(vol);
       }, [seekAudio]);

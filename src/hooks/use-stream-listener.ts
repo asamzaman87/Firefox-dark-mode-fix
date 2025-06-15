@@ -4,7 +4,7 @@ import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
 import { Chunk } from "@/lib/utils";
-const MAX_RETRIES = 5; 
+const MAX_RETRIES = 4; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
@@ -114,7 +114,34 @@ const useStreamListener = (
       
     const fetchAndDecodeAudio = useCallback(async (url: string, chunkNumber: number) => {
         setIsFetching(true);
-        const response = await fetch(url, { headers: { "authorization": `Bearer ${token}` } });
+        // ——— ensure we have a valid token ———
+        let authToken = token;
+        if (!authToken) {
+            // ask the page for it…
+            window.dispatchEvent(new Event("GET_TOKEN"));
+
+            // …and wait up to 15 s for AUTH_RECEIVED
+            authToken = await Promise.race<string | null>([
+                new Promise((resolve) => {
+                    const handler = (e: Event) => {
+                        const ce = e as CustomEvent<{ accessToken: string }>;
+                        window.removeEventListener("AUTH_RECEIVED", handler);
+                        resolve(ce.detail.accessToken);
+                    };
+                    window.addEventListener("AUTH_RECEIVED", handler, { once: true });
+                }),
+                new Promise<null>((_, reject) =>
+                    setTimeout(() => reject(new Error("Token request timed out")), 15000)
+                ),
+            ]).catch(() => {
+                handleError("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
+                return null;
+            });
+
+            if (!authToken) return;
+        }
+
+        const response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
         if (response.status !== 200) {
             if (lastRegularRetryChunk.current !== chunkNumber) {
                 lastRegularRetryChunk.current = chunkNumber;
@@ -153,20 +180,9 @@ const useStreamListener = (
     }, [token])
 
     const handleConvStream = useCallback(async (e: Event) => {
-        const { detail: { messageId, conversationId, text, createTime, chunkNdx } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number } };
-        // <<< ADDED: detect refusal and bail before fetching audio
-        let actual = "";
-        // locate the specific assistant turn by its test-id
-        const turnNumber = msgNum.current * 2 + 2;
-        const turnEl = document.querySelector<HTMLElement>(
-            `[data-testid="conversation-turn-${turnNumber}"]`
-        );
-        if (turnEl) {
-            actual = turnEl.innerText.replace(/^ChatGPT said:\s*/, "");
-        }
-
-        actual = actual.replace(/\s+/g, " ").trim();
-        // console.log('This is the actual message: ', actual);
+        const { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string } };
+        let actual = (assistant ?? "").replace(/\s+/g, " ").trim();
+        console.log('This is the actual message: ', actual);
 
         if (
             actual.length < 150 &&
@@ -181,12 +197,12 @@ const useStreamListener = (
         }
 
         // ——— size‐mismatch detection ———
-        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
+        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0) {
             // normalize whitespace and grab the “expected” chunk text
             const expected = chunkRef.current[chunkNdx].text
                 .replace(/\s+/g, " ")
                 .trim();
-            // console.log('This is the expected message: ', expected);
+            console.log('This is the expected message: ', expected);
             const expectedLen = expected.length;
             const actualLen = actual.length;
             // allow a 10% char tolerance
@@ -199,9 +215,8 @@ const useStreamListener = (
                 }
                 // otherwise show an error
                 handleError(
-                    `ChaGPT is having issues with reading your text. Please try again in a few minutes and let us know if the issue persists through the feedback icon.`
+                    `ChaGPT maybe having issues with reading your text. Please let us know if you notice any issues through the feedback icon.`
                 );
-                return;
             }
         }
           
