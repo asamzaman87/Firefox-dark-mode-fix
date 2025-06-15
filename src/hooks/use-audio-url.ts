@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPT, HELPER_PROMPT_2, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
@@ -70,16 +70,20 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     };
 
-    const injectPrompt = useCallback((text: string, id: string) => {
+    const injectPrompt = useCallback((text: string, id: string, ndx: number = 0) => {
+        if (ndx >= HELPER_PROMPTS.length) {
+            ndx = ndx % HELPER_PROMPTS.length;
+        }
+        const hp = HELPER_PROMPTS[ndx];
         const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
         if (textarea) {
             // 1) build the raw text version (execCommand works better with plain text)
-            const raw = `[${id}] ${HELPER_PROMPT}${text}`;
+            const raw = `[${id}] ${hp}${text}`;
             // 2) try the non-deprecated insertText
             const didInsert = document.execCommand("insertText", false, raw);
             // 3) fallback to HTML if that didn’t take
             if (!didInsert) {
-                textarea.innerHTML = `<p>[${id}] ${HELPER_PROMPT}${text}</p>`;
+                textarea.innerHTML = `<p>[${id}] ${hp}${text}</p>`;
             }
             localStorage.setItem("gptr/is-first-audio-loading", String(id == "0"));
             sendPrompt();
@@ -101,7 +105,7 @@ const useAudioUrl = (isDownload: boolean) => {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
             setChunks(chunks);
             chunkRef.current = chunks;
-            injectPrompt(chunks[0].text, chunks[0].id);
+            injectPrompt(chunks[0].text, chunks[0].id, 3);
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
         }

@@ -1,17 +1,15 @@
-import { AUDIO_FORMAT, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
+import { AUDIO_FORMAT, EXTREME_HELPER_PROMPT, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
 import { Chunk } from "@/lib/utils";
-const MAX_RETRIES = 3; 
+const MAX_RETRIES = 5; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
     chunkRef: React.MutableRefObject<Chunk[]>,                            
-    injectPrompt: (text: string, id: string) => void,
-    currentChunkBeingPromptedIndex: number,
-    promptPausedRef: React.MutableRefObject<boolean>,               
+    injectPrompt: (text: string, id: string, ndx: number) => void,            
   ) => {
     const { toast } = useToast();
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
@@ -24,6 +22,7 @@ const useStreamListener = (
 
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<number | null>(null);
+    const msgNum = useRef<number>(0);
 
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -70,7 +69,10 @@ const useStreamListener = (
               const newChatBtn = document.querySelector<HTMLButtonElement>(
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                 );
-              if (newChatBtn) newChatBtn.click();
+              if (newChatBtn){
+                msgNum.current = 0;
+                newChatBtn.click();
+              } 
               // 1) ask for the token
               window.dispatchEvent(new Event("GET_TOKEN"));
       
@@ -105,7 +107,7 @@ const useStreamListener = (
       
           // Now we know the delete (and “New Chat” click) has finished
           const { text, id } = chunkRef.current[idx];
-          injectPrompt(text, id);
+          injectPrompt(text, id, retryCounts.current[idx] - 1);
         },
         [chunkRef, injectPrompt, nextChunkRef]
       );
@@ -154,13 +156,17 @@ const useStreamListener = (
         const { detail: { messageId, conversationId, text, createTime, chunkNdx } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number } };
         // <<< ADDED: detect refusal and bail before fetching audio
         let actual = "";
-        const mdEls = Array.from(
-            document.querySelectorAll<HTMLElement>('div[class*="markdown"]')
+        // locate the specific assistant turn by its test-id
+        const turnNumber = msgNum.current * 2 + 2;
+        const turnEl = document.querySelector<HTMLElement>(
+            `[data-testid="conversation-turn-${turnNumber}"]`
         );
-        if (mdEls.length) {
-            actual = mdEls[mdEls.length - 1].innerText;
+        if (turnEl) {
+            actual = turnEl.innerText.replace(/^ChatGPT said:\s*/, "");
         }
+
         actual = actual.replace(/\s+/g, " ").trim();
+        // console.log('This is the actual message: ', actual);
 
         if (
             actual.length < 150 &&
@@ -175,15 +181,16 @@ const useStreamListener = (
         }
 
         // ——— size‐mismatch detection ———
-        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0) {
+        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // normalize whitespace and grab the “expected” chunk text
             const expected = chunkRef.current[chunkNdx].text
                 .replace(/\s+/g, " ")
                 .trim();
+            // console.log('This is the expected message: ', expected);
             const expectedLen = expected.length;
             const actualLen = actual.length;
-            // allow a 100% char tolerance -- for the repeating issue
-            const threshold = expectedLen;
+            // allow a 10% char tolerance
+            const threshold = (expectedLen * 0.10);
             if (Math.abs(actualLen - expectedLen) > threshold) {
                 // retry if we haven’t hit MAX_RETRIES yet
                 if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
@@ -226,6 +233,7 @@ const useStreamListener = (
                     return;
                 }
             }
+            msgNum.current += 1;
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx })
         }
         setIsLoading(false);
@@ -247,6 +255,7 @@ const useStreamListener = (
         setBlobs([]);
         retryCounts.current = {};
         lastRegularRetryChunk.current = null;
+        msgNum.current = 0;
     }
     
     useEffect(() => {

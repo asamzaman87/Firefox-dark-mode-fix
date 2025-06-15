@@ -321,7 +321,7 @@ function Uploader() {
       } catch {
         setIsActive(false);
         toast({
-          description: chrome.i18n.getMessage("chat_error"),
+          description: "GPT Reader is having trouble opening. Try deleting whats in the input field and try again.",
           style: TOAST_STYLE_CONFIG,
         });
         return;
