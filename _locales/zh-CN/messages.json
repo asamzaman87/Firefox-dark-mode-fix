@@ -60,7 +60,7 @@
     "message": "加载预览"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT高级用户请使用GPT-4o mini以加速下载。关闭扩展界面后可切换模型。"
+    "message": "ChatGPT高级用户请使用GPT-4o以加速下载。关闭扩展界面后可切换模型。"
   },
   "cancel": {
     "message": "取消"

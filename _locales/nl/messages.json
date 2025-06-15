@@ -60,7 +60,7 @@
     "message": "Voorbeeld laden"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium-gebruikers, kies GPT-4o mini voor sneller downloaden. Sluit de overlay om van model te wisselen."
+    "message": "ChatGPT premium-gebruikers, kies GPT-4o voor sneller downloaden. Sluit de overlay om van model te wisselen."
   },
   "cancel": {
     "message": "Annuleren"

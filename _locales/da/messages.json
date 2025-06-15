@@ -60,7 +60,7 @@
     "message": "Indlæser forhåndsvisning"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium-brugere, vælg GPT-4o mini for hurtigere download. Luk vinduet for at skifte model."
+    "message": "ChatGPT premium-brugere, vælg GPT-4o for hurtigere download. Luk vinduet for at skifte model."
   },
   "cancel": {
     "message": "Annullér"

@@ -60,7 +60,7 @@
     "message": "A carregar pré-visualização"
   },
   "gpt4_download_note": {
-    "message": "Utilizadores premium do ChatGPT, usem GPT-4o mini para maior rapidez. Feche a janela para mudar o modelo."
+    "message": "Utilizadores premium do ChatGPT, usem GPT-4o para maior rapidez. Feche a janela para mudar o modelo."
   },
   "cancel": {
     "message": "Cancelar"

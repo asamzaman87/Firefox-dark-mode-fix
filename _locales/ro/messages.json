@@ -60,7 +60,7 @@
     "message": "Se încarcă previzualizarea"
   },
   "gpt4_download_note": {
-    "message": "Utilizatori premium ChatGPT, folosiți GPT-4o mini pentru descărcări mai rapide. Închide fereastra pentru a schimba modelul."
+    "message": "Utilizatori premium ChatGPT, folosiți GPT-4o pentru descărcări mai rapide. Închide fereastra pentru a schimba modelul."
   },
   "cancel": {
     "message": "Anulează"

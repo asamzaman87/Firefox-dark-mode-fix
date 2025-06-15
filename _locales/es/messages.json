@@ -60,7 +60,7 @@
     "message": "Cargando"
   },
   "gpt4_download_note": {
-    "message": "Usuarios premium de ChatGPT, asegúrense de usar GPT-4o mini para descargas rápidas y eviten modelos lentos. Cierra la superposición para cambiar de modelo."
+    "message": "Usuarios premium de ChatGPT, asegúrense de usar GPT-4o para descargas rápidas y eviten modelos lentos. Cierra la superposición para cambiar de modelo."
   },
   "cancel": {
     "message": "Anula"

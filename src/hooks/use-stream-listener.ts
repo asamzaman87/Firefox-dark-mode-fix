@@ -4,7 +4,7 @@ import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
 import { Chunk } from "@/lib/utils";
-const MAX_RETRIES = 2; 
+const MAX_RETRIES = 3; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
@@ -173,6 +173,31 @@ const useStreamListener = (
             handleError("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
             return;
         }
+
+        // ——— size‐mismatch detection ———
+        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0) {
+            // normalize whitespace and grab the “expected” chunk text
+            const expected = chunkRef.current[chunkNdx].text
+                .replace(/\s+/g, " ")
+                .trim();
+            const expectedLen = expected.length;
+            const actualLen = actual.length;
+            // allow a 100% char tolerance -- for the repeating issue
+            const threshold = expectedLen;
+            if (Math.abs(actualLen - expectedLen) > threshold) {
+                // retry if we haven’t hit MAX_RETRIES yet
+                if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
+                    await retryFlow();
+                    return;
+                }
+                // otherwise show an error
+                handleError(
+                    `ChaGPT is having issues with reading your text. Please try again in a few minutes and let us know if the issue persists through the feedback icon.`
+                );
+                return;
+            }
+        }
+          
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             if (token) {

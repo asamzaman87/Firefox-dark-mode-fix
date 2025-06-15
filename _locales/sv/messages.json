@@ -60,7 +60,7 @@
     "message": "Laddar förhandsvisning"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium-användare, välj GPT-4o mini för snabbare nedladdning. Stäng fönstret för att byta modell."
+    "message": "ChatGPT premium-användare, välj GPT-4o för snabbare nedladdning. Stäng fönstret för att byta modell."
   },
   "cancel": {
     "message": "Avbryt"

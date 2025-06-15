@@ -60,7 +60,7 @@
     "message": "미리보기 로드 중"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT 프리미엄 유저라면 GPT-4o mini를 사용해 다운로드 속도를 높일 수 있습니다. 모델 변경은 창을 닫고 진행하세요."
+    "message": "ChatGPT 프리미엄 유저라면 GPT-4o를 사용해 다운로드 속도를 높일 수 있습니다. 모델 변경은 창을 닫고 진행하세요."
   },
   "cancel": {
     "message": "취소"

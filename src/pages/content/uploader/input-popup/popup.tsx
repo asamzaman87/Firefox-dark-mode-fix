@@ -44,7 +44,7 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                     <DialogTitle className="text-center">{chrome.i18n.getMessage('type_or_paste_text')}</DialogTitle>
                     <DialogDescription className="sr-only">{chrome.i18n.getMessage('type_or_paste_text_v2')}</DialogDescription>
                 </DialogHeader>
-                <InputForm disabled={false} onSubmit={onSubmit} />
+                <InputForm disabled={disabled} onSubmit={onSubmit} />
             </DialogContent>
         </Dialog>
     )

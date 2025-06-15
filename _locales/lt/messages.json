@@ -60,7 +60,7 @@
     "message": "Įkeliama peržiūra"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium vartotojai, pasirinkite GPT-4o mini, kad paspartintumėte atsisiuntimą. Uždarykite langą norėdami pakeisti modelį."
+    "message": "ChatGPT premium vartotojai, pasirinkite GPT-4o, kad paspartintumėte atsisiuntimą. Uždarykite langą norėdami pakeisti modelį."
   },
   "cancel": {
     "message": "Atšaukti"

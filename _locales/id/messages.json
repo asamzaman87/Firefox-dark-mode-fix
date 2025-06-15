@@ -60,7 +60,7 @@
     "message": "Memuat Pratinjau"
   },
   "gpt4_download_note": {
-    "message": "Bagi pengguna ChatGPT premium, pilih GPT-4o mini untuk unduhan lebih cepat. Tutup jendela untuk ganti model."
+    "message": "Bagi pengguna ChatGPT premium, pilih GPT-4o untuk unduhan lebih cepat. Tutup jendela untuk ganti model."
   },
   "cancel": {
     "message": "Batal"

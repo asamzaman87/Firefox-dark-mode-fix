@@ -60,7 +60,7 @@
     "message": "Önizleme Yükleniyor"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium kullanıcıları, hızlı indirme için GPT-4o mini seçin. Modeli değiştirmek için pencereyi kapatın."
+    "message": "ChatGPT premium kullanıcıları, hızlı indirme için GPT-4o seçin. Modeli değiştirmek için pencereyi kapatın."
   },
   "cancel": {
     "message": "İptal"

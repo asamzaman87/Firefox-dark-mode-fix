@@ -60,7 +60,7 @@
     "message": "Carregant vista prèvia"
   },
   "gpt4_download_note": {
-    "message": "Usuaris premium de ChatGPT, trieu GPT-4o mini per a més velocitat. Tanqueu la finestra per canviar de model."
+    "message": "Usuaris premium de ChatGPT, trieu GPT-4o per a més velocitat. Tanqueu la finestra per canviar de model."
   },
   "cancel": {
     "message": "Cancel·la"

@@ -60,7 +60,7 @@
     "message": "Ładowanie podglądu"
   },
   "gpt4_download_note": {
-    "message": "Użytkownicy ChatGPT premium, wybierz GPT-4o mini dla szybszego pobierania. Zamknij okno, aby zmienić model."
+    "message": "Użytkownicy ChatGPT premium, wybierz GPT-4o dla szybszego pobierania. Zamknij okno, aby zmienić model."
   },
   "cancel": {
     "message": "Anuluj"

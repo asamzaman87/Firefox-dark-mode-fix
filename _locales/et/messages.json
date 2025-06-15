@@ -60,7 +60,7 @@
     "message": "Eelvaate laadimine"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium-kasutajatele: valige GPT-4o mini kiiremaks allalaadimiseks. Mudeli vahetamiseks sulgege aken."
+    "message": "ChatGPT premium-kasutajatele: valige GPT-4o kiiremaks allalaadimiseks. Mudeli vahetamiseks sulgege aken."
   },
   "cancel": {
     "message": "Tühista"

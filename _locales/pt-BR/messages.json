@@ -60,7 +60,7 @@
     "message": "Carregando prévia"
   },
   "gpt4_download_note": {
-    "message": "Usuários premium ChatGPT, use GPT-4o mini para downloads rápidos. Feche a janela para mudar o modelo."
+    "message": "Usuários premium ChatGPT, use GPT-4o para downloads rápidos. Feche a janela para mudar o modelo."
   },
   "cancel": {
     "message": "Cancelar"

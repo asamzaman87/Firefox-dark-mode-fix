@@ -60,7 +60,7 @@
     "message": "Esikatselua ladataan"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT Premium -käyttäjät, valitkaa GPT-4o mini nopeampaan lataukseen. Sulje ikkuna vaihtaaksesi mallia."
+    "message": "ChatGPT Premium -käyttäjät, valitkaa GPT-4o nopeampaan lataukseen. Sulje ikkuna vaihtaaksesi mallia."
   },
   "cancel": {
     "message": "Peruuta"

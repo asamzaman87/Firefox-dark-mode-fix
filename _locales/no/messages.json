@@ -60,7 +60,7 @@
     "message": "Laster forhåndsvisning"
   },
   "gpt4_download_note": {
-    "message": "ChatGPT premium-brukere bør velge GPT-4o mini for raskere nedlasting. Lukk vinduet for å bytte modell."
+    "message": "ChatGPT premium-brukere bør velge GPT-4o for raskere nedlasting. Lukk vinduet for å bytte modell."
   },
   "cancel": {
     "message": "Avbryt"
