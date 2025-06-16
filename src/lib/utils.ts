@@ -210,6 +210,29 @@ export const detectBrowser = () => {
     return 'unknown';
   }
 };
+export function monitorStopButton() {
+  let visibleSince: number | null = null;
+  const intervalId = window.setInterval(() => {
+    const btn = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+    if (btn) {
+      // first time seeing it?
+      if (visibleSince === null) {
+        visibleSince = Date.now();
+      }
+      // held for 4s?
+      else if (Date.now() - visibleSince >= 4000) {
+        btn.click();
+        window.dispatchEvent(new Event("STOP_STREAM_LOOP"));
+        clearInterval(intervalId);
+      }
+    } 
+    // button disappeared after it had appeared → stop polling
+    else if (visibleSince !== null) {
+      clearInterval(intervalId);
+    }
+    // else: button still not shown, keep polling
+  }, 500);
+}
 
 //generate array of number from a specified range (min and max)
 export const generateRange = (min: number = MIN_SLIDER_VALUE, max: number = MAX_SLIDER_VALUE, step: number = STEP_SLIDER_VALUE) => {

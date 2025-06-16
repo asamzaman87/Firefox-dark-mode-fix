@@ -262,7 +262,10 @@ function Uploader() {
 
   //add speech found text to the input and open the popup
   const addTextToInputAndOpen = (text: string) => {
-    const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
+    let textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
+    if (!textarea) {
+      textarea = document.querySelector("textarea.text-token-text-primary") as HTMLTextAreaElement;
+    }
     if (textarea) {
       textarea.focus();
       document.execCommand("selectAll", false, undefined);
@@ -280,11 +283,11 @@ function Uploader() {
     // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if (modelSwitcher) {
-      // const name = modelSwitcher.innerText;
-      // // never flag models containing "mini"
-      // if (name.toLowerCase().includes("mini")) {
-      //   return false;
-      // }
+      const name = modelSwitcher.innerText;
+      // never flag models containing "mini"
+      if (name.toLowerCase().includes("mini")) {
+        return false;
+      }
       return isSupportedModel(modelSwitcher.innerHTML);
     }
     return false
@@ -299,7 +302,7 @@ function Uploader() {
     });
     
     try {
-      await waitForElement(PROMPT_INPUT_ID, 5000);
+      await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 5000);
     } catch {
       toast({
         description:
@@ -321,7 +324,7 @@ function Uploader() {
       } catch {
         setIsActive(false);
         toast({
-          description: "GPT Reader is having trouble opening. Try deleting whats in the input field and try again.",
+          description: "GPT Reader is having trouble opening. Try deleting whats in the input field, refresh your page, and try again.",
           style: TOAST_STYLE_CONFIG,
         });
         return;
@@ -434,14 +437,13 @@ function Uploader() {
         ));
         const msUntilNextHour = nextHourUtc.getTime() - now.getTime();
         const minutesLeft = Math.ceil(msUntilNextHour / 60_000);
-        console.log("Found retry button—clicking it now.");
         toast({
           description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
           style: TOAST_STYLE_CONFIG
         });
         retryBtn.click();
       }
-    }, 15_000);
+    }, 60_000);
   
     // Cleanup: stop polling as soon as `isActive` flips false or component unmounts
     return () => {

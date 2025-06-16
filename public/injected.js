@@ -1,3 +1,11 @@
+// a global flag
+let shouldAbortStream = false;
+
+// listen for our custom stop event
+window.addEventListener("STOP_STREAM_LOOP", () => {
+  shouldAbortStream = true;
+});
+
 const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let messageId = "";
     let conversationId = "";
@@ -10,6 +18,11 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         text = jsonArgs?.messages?.[0]?.content?.parts[0];
         // eslint-disable-next-line no-constant-condition
         while (true) {
+            if (shouldAbortStream) {
+                console.log("Aborting stream in injected.js");
+                shouldAbortStream = false;
+                return { messageId, conversationId, createTime, text, assistant };
+            }
             const { done, value } = await reader.read();
             const decoder = new TextDecoder("utf-8");
             const textDecoded = decoder.decode(value);
@@ -32,7 +45,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                       }
                     }
                     // 3) some “bulk” deltas come as bare strings
-                    else if (typeof data.v === "string") {
+                    else if (typeof data.v === "string" && data.p !== "/message/status") {
                       assistant += data.v;
                     }
                     // 4) fallback to full parts array — but only for assistant messages

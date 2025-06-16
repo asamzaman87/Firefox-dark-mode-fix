@@ -1,9 +1,9 @@
-import { AUDIO_FORMAT, EXTREME_HELPER_PROMPT, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, VOICE } from "@/lib/constants";
+import { AUDIO_FORMAT, GPT_BREAKER, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk } from "@/lib/utils";
+import { Chunk, monitorStopButton } from "@/lib/utils";
 const MAX_RETRIES = 4; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
@@ -22,8 +22,9 @@ const useStreamListener = (
 
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<number | null>(null);
-    const msgNum = useRef<number>(0);
-
+    const breakGPT = useRef<boolean>(true);
+    const promptNdx = useRef<number>(0);
+    
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
     }
@@ -43,7 +44,9 @@ const useStreamListener = (
             console.log("Retry failed: invalid chunk index");
             return;
           }
-          retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
+          if (!breakGPT.current) {
+            retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
+          }
       
           let storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
           // If not found, wait up to 5 seconds (poll every 500ms) for the URL to include it:
@@ -63,14 +66,13 @@ const useStreamListener = (
           }
       
           // If found, delete the conversation 
-          if (storedChatId) {
+          if (storedChatId && breakGPT.current) {
             // We’ll turn the AUTH_RECEIVED + PATCH flow into a promise we can await
             await new Promise<void>((resolve) => {
               const newChatBtn = document.querySelector<HTMLButtonElement>(
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                 );
               if (newChatBtn){
-                msgNum.current = 0;
                 newChatBtn.click();
               } 
               // 1) ask for the token
@@ -106,8 +108,13 @@ const useStreamListener = (
           }
       
           // Now we know the delete (and “New Chat” click) has finished
-          const { text, id } = chunkRef.current[idx];
-          injectPrompt(text, id, retryCounts.current[idx] - 1);
+          let { text, id } = chunkRef.current[idx];
+          if (breakGPT.current) {
+            text = GPT_BREAKER;
+            promptNdx.current += 1;
+            monitorStopButton();
+          }
+          injectPrompt(text, id, promptNdx.current);
         },
         [chunkRef, injectPrompt, nextChunkRef]
       );
@@ -184,6 +191,20 @@ const useStreamListener = (
         let actual = (assistant ?? "").replace(/\s+/g, " ").trim();
         // console.log('This is the actual message: ', actual);
 
+        if (breakGPT.current) {
+            // console.log('breakGPT test');
+            if (actual === GPT_BREAKER) {
+                breakGPT.current = false;
+                toast({ description: `GPT Reader has configured ChatGPT! Your audio will start playing in around 10 seconds...`, style: TOAST_STYLE_CONFIG_INFO });
+                // console.log('breakGPT test passed');
+            } else {
+                toast({ description: `GPT Reader is configuring ChatGPT, please wait around one minute...`, style: TOAST_STYLE_CONFIG_INFO });
+            }
+            await retryFlow();
+            return;
+        }
+
+        // ——— copyright/inapproprateness detection ———
         if (
             actual.length < 150 &&
             (actual.includes("I cannot") || actual.includes("I can't"))
@@ -197,7 +218,7 @@ const useStreamListener = (
         }
 
         // ——— size‐mismatch detection ———
-        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0) {
+        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0 && !breakGPT.current) {
             // normalize whitespace and grab the “expected” chunk text
             const expected = chunkRef.current[chunkNdx].text
                 .replace(/\s+/g, " ")
@@ -210,6 +231,7 @@ const useStreamListener = (
             if (Math.abs(actualLen - expectedLen) > threshold) {
                 // retry if we haven’t hit MAX_RETRIES yet
                 if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
+                    breakGPT.current = true;
                     await retryFlow();
                     return;
                 }
@@ -217,10 +239,10 @@ const useStreamListener = (
                 handleError(
                     `ChaGPT maybe having issues with reading your text. Please let us know if you notice any issues through the feedback icon.`
                 );
+                // breakGPT ascertains that we never get this error in the first place, may change in the future depending on how the returned assistant works...
             }
         }
-          
-
+        
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             if (token) {
                 try {
@@ -248,7 +270,6 @@ const useStreamListener = (
                     return;
                 }
             }
-            msgNum.current += 1;
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx })
         }
         setIsLoading(false);
@@ -270,7 +291,8 @@ const useStreamListener = (
         setBlobs([]);
         retryCounts.current = {};
         lastRegularRetryChunk.current = null;
-        msgNum.current = 0;
+        breakGPT.current = true;
+        promptNdx.current = 0;
     }
     
     useEffect(() => {
@@ -285,7 +307,7 @@ const useStreamListener = (
         };
     }, [handleConvStream]);
 
-    return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading, blobs }
+    return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading, blobs, promptNdx }
 
 }
 

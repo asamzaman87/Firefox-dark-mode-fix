@@ -68,7 +68,7 @@ Taking into account the above task, here is the text that I want you to repeat:
 
 <<<
 `;
-export const HELPER_PROMPT_2 = `Can you give me the punctuation correct version of the text below the markers <<<? Make sure to not omit any text and only output what i requested. Do not include any introductory phrases in your response such as "Here is the corrected text:" nor any followup questions. 
+export const HELPER_PROMPT_2 = `Can you give me the punctuation correct version of the text below the <<< markers? Make sure to not omit any text and only output what i requested. Do not include any introductory phrases in your response such as "Here is the corrected text:" nor any followup questions. 
 
 <<<
 `;
@@ -76,7 +76,8 @@ export const HELPER_PROMPT_3 = `What does the text below the markers <<< say? Ma
 
 <<<
 `;
-export const HELPER_PROMPTS = [HELPER_PROMPT, HELPER_PROMPT_3, HELPER_PROMPT_2, EXTREME_HELPER_PROMPT];
+export const HELPER_PROMPTS = [HELPER_PROMPT, HELPER_PROMPT_3, EXTREME_HELPER_PROMPT, HELPER_PROMPT_2];
+export const GPT_BREAKER = `Sparks popped from broken light fixtures overhead,`;
 export const SYNTHESIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "mp3";
@@ -96,8 +97,8 @@ export const STEP_SLIDER_VALUE = 0.1;
 export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
 export const MODELS_TO_WARN = ["o1", "o2", "o3", "o4", "o5", "o6", "o7"];
 export const CHUNK_TO_PAUSE_ON = 12; //end of chunk
-export const LOADING_TIMEOUT = 35000;
-export const LOADING_TIMEOUT_FOR_DOWNLOAD = 40000;
+export const LOADING_TIMEOUT = 60000;
+export const LOADING_TIMEOUT_FOR_DOWNLOAD = 60000;
 export const DOWLOAD_CHUNK_SIZE = 4000;
 export const MIN_VOLUME_VALUE = 0;
 export const MAX_VOLUME_VALUE = 99;

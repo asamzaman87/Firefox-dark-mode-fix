@@ -1,5 +1,5 @@
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { Chunk, splitIntoChunksV2 } from "@/lib/utils";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, GPT_BREAKER, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { Chunk, monitorStopButton, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -75,7 +75,10 @@ const useAudioUrl = (isDownload: boolean) => {
             ndx = ndx % HELPER_PROMPTS.length;
         }
         const hp = HELPER_PROMPTS[ndx];
-        const textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
+        let textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
+        if (!textarea) {
+            textarea = document.querySelector("textarea.text-token-text-primary") as HTMLTextAreaElement;
+        }
         if (textarea) {
             // 1) build the raw text version (execCommand works better with plain text)
             const raw = `[${id}] ${hp}${text}`;
@@ -105,14 +108,15 @@ const useAudioUrl = (isDownload: boolean) => {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
             setChunks(chunks);
             chunkRef.current = chunks;
-            injectPrompt(chunks[0].text, chunks[0].id, 3);
+            injectPrompt(GPT_BREAKER, chunks[0].id, 0);
+            monitorStopButton();
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
         }
         return
     };
 
-    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt, currentChunkBeingPromptedIndex, promptPausedRef); 
+    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt); 
     const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
 
     useEffect(() => {
@@ -193,7 +197,7 @@ const useAudioUrl = (isDownload: boolean) => {
                 setCurrentChunkBeingPromptedIndex(
                     nextChunkRef.current-1
                 );
-                injectPrompt(chunk.text, chunk.id);
+                injectPrompt(chunk.text, chunk.id, promptNdx.current);
             }
             return;
         }
@@ -202,7 +206,7 @@ const useAudioUrl = (isDownload: boolean) => {
             chunkNumList.current.add(nextChunkRef.current);
             setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(nextChunkRef.current);
-            injectPrompt(nextChunk.text, nextChunk.id);
+            injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
             nextChunkRef.current += 1;
         }
     };
@@ -258,7 +262,7 @@ const useAudioUrl = (isDownload: boolean) => {
                 setCurrentChunkBeingPromptedIndex(
                     nextChunkRef.current-1
                 );
-                injectPrompt(chunk.text, chunk.id);
+                injectPrompt(chunk.text, chunk.id, promptNdx.current);
             }
             return;
         }
@@ -287,7 +291,7 @@ const useAudioUrl = (isDownload: boolean) => {
                     setCurrentChunkBeingPromptedIndex(
                         +currentCompletedStream.chunkNdx + 1
                     );
-                    injectPrompt(nextChunk.text, nextChunk.id);
+                    injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
                     nextChunkRef.current += 1;
                 }
             }
