@@ -71,6 +71,9 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const injectPrompt = useCallback((text: string, id: string, ndx: number = 0) => {
+        window.dispatchEvent(new CustomEvent("SET_CHUNK_INFO", {
+            detail: { chunkLength: text.replace(/\s+/g, " ").trim().length }
+        }));
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;
         }
@@ -108,8 +111,8 @@ const useAudioUrl = (isDownload: boolean) => {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
             setChunks(chunks);
             chunkRef.current = chunks;
-            injectPrompt(GPT_BREAKER, chunks[0].id, 0);
-            monitorStopButton();
+            injectPrompt(chunks[0].text, chunks[0].id, 0);
+            // monitorStopButton();
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
         }

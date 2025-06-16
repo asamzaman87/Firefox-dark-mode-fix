@@ -69,9 +69,13 @@ const useStreamListener = (
           if (storedChatId && breakGPT.current) {
             // We’ll turn the AUTH_RECEIVED + PATCH flow into a promise we can await
             await new Promise<void>((resolve) => {
+              const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+              if (stopButton) {
+                stopButton.click();
+              } 
               const newChatBtn = document.querySelector<HTMLButtonElement>(
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                );
+              );
               if (newChatBtn){
                 newChatBtn.click();
               } 
@@ -110,10 +114,10 @@ const useStreamListener = (
           // Now we know the delete (and “New Chat” click) has finished
           let { text, id } = chunkRef.current[idx];
           if (breakGPT.current) {
-            text = GPT_BREAKER;
             promptNdx.current += 1;
-            monitorStopButton();
+            // monitorStopButton();
           }
+          toast({ description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`, style: TOAST_STYLE_CONFIG_INFO, duration: 4000 });
           injectPrompt(text, id, promptNdx.current);
         },
         [chunkRef, injectPrompt, nextChunkRef]
@@ -189,19 +193,21 @@ const useStreamListener = (
     const handleConvStream = useCallback(async (e: Event) => {
         const { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string } };
         let actual = (assistant ?? "").replace(/\s+/g, " ").trim();
+        const expected = chunkRef.current[chunkNdx].text
+                .replace(/\s+/g, " ")
+                .trim();
         // console.log('This is the actual message: ', actual);
+        // console.log('This is the expected message: ', expected);
 
         if (breakGPT.current) {
             // console.log('breakGPT test');
-            if (actual === GPT_BREAKER) {
+            if (actual === expected) {
                 breakGPT.current = false;
-                toast({ description: `GPT Reader has configured ChatGPT! Your audio will start playing in around 10 seconds...`, style: TOAST_STYLE_CONFIG_INFO });
                 // console.log('breakGPT test passed');
             } else {
-                toast({ description: `GPT Reader is configuring ChatGPT, please wait around one minute...`, style: TOAST_STYLE_CONFIG_INFO });
+                await retryFlow();
+                return;
             }
-            await retryFlow();
-            return;
         }
 
         // ——— copyright/inapproprateness detection ———
@@ -220,15 +226,11 @@ const useStreamListener = (
         // ——— size‐mismatch detection ———
         if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0 && !breakGPT.current) {
             // normalize whitespace and grab the “expected” chunk text
-            const expected = chunkRef.current[chunkNdx].text
-                .replace(/\s+/g, " ")
-                .trim();
-            // console.log('This is the expected message: ', expected);
             const expectedLen = expected.length;
             const actualLen = actual.length;
             // allow a 10% char tolerance
             const threshold = (expectedLen * 0.10);
-            if (Math.abs(actualLen - expectedLen) > threshold) {
+            if (Math.abs(actualLen - expectedLen) >= threshold) {
                 // retry if we haven’t hit MAX_RETRIES yet
                 if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
                     breakGPT.current = true;
@@ -305,7 +307,7 @@ const useStreamListener = (
             window.removeEventListener(LISTENERS.RATE_LIMIT_EXCEEDED, handleRateLimitExceeded);
             window.removeEventListener(LISTENERS.GENERAL_ERROR, handleRateLimitExceeded);
         };
-    }, [handleConvStream]);
+    }, [handleConvStream, handleRateLimitExceeded]);
 
     return { isFetching, completedStreams, currentCompletedStream, reset, error, voices, setVoices, isVoiceLoading, blobs, promptNdx }
 

@@ -1,11 +1,23 @@
+const isFirefox = typeof InstallTrigger !== 'undefined'
+  || /firefox/i.test(navigator.userAgent);
+
 // a global flag
 let shouldAbortStream = false;
 
-// listen for our custom stop event
-window.addEventListener("STOP_STREAM_LOOP", () => {
-  shouldAbortStream = true;
-});
+// a place to hold the last‐seen chunk length
+let pendingChunkLength = null;
 
+if (!isFirefox) {
+    // whenever SET_CHUNK_INFO fires, stash it
+    window.addEventListener("SET_CHUNK_INFO", e => {
+        pendingChunkLength = e.detail.chunkLength;
+    });
+    // listen for our custom stop event
+    window.addEventListener("STOP_STREAM_LOOP", () => {
+        shouldAbortStream = true;
+    });
+}
+  
 const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let messageId = "";
     let conversationId = "";
@@ -17,13 +29,38 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
         text = jsonArgs?.messages?.[0]?.content?.parts[0];
         // eslint-disable-next-line no-constant-condition
+        // → wait for the hook to tell us this chunk’s expected length
+        // → get the chunk length (use the stashed one if it already arrived)
+        let chunkLength;
+        if (pendingChunkLength !== null) {
+            chunkLength = pendingChunkLength;
+            pendingChunkLength = null;
+        } else {
+            // firefox fallback
+            const markerPos = text.lastIndexOf("<<<");
+            const raw = markerPos >= 0
+                ? text.slice(markerPos + 3)
+                : text;
+            chunkLength = raw.replace(/\s+/g, " ").trim().length;
+        }
+  
+        const threshold = chunkLength * 1.1;
+        let lastProgress = Date.now();
+        let prevVal = '';
+  
         while (true) {
+            const { done, value } = await reader.read();
+            // if we haven’t received any new assistant text in 10 s, trigger abort
+            if (Date.now() - lastProgress > 10_000 && !done) {
+                console.log("No stream progress for 10s—aborting");
+                shouldAbortStream = true;
+            }
+  
             if (shouldAbortStream) {
-                console.log("Aborting stream in injected.js");
                 shouldAbortStream = false;
                 return { messageId, conversationId, createTime, text, assistant };
             }
-            const { done, value } = await reader.read();
+            
             const decoder = new TextDecoder("utf-8");
             const textDecoded = decoder.decode(value);
 
@@ -60,6 +97,15 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                   }
                 }
               }
+            
+            if (value !== prevVal) {
+                lastProgress = Date.now();
+            }
+  
+            // → once we’ve grown by ≥10%, notify the hook
+            if (assistant.replace(/\s+/g, " ").trim().length >= threshold) {
+                return { messageId, conversationId, createTime, text, assistant };
+            }
   
             const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
             const createTimeMatch = textDecoded.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
@@ -79,7 +125,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 const messageIdEvent = new CustomEvent("RECEIVED_MESSAGE_ID", { detail: { messageId, createTime, text: prompt } });
                 window.dispatchEvent(messageIdEvent);
             }
-
+            prevVal = value;
             if (done) return { messageId, conversationId, createTime, text, assistant };// Exit loop when reading is complete
         }
     } catch (error) {

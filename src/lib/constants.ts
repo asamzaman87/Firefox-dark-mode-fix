@@ -77,11 +77,11 @@ export const HELPER_PROMPT_3 = `What does the text below the markers <<< say? Ma
 <<<
 `;
 export const HELPER_PROMPTS = [HELPER_PROMPT, HELPER_PROMPT_3, EXTREME_HELPER_PROMPT, HELPER_PROMPT_2];
-export const GPT_BREAKER = `Sparks popped from broken light fixtures overhead,`;
+export const GPT_BREAKER = `Royal Road Log In The Villainess Takes What She Wants by DrivenEntity 18. Alice's Mysterious Friend The rest of the school day had gone on without further incident. In all honesty, Catherine started to wish that something would go wrong just to break up the monotony.`;
 export const SYNTHESIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "mp3";
-export const CHUNK_SIZE = 400;
+export const CHUNK_SIZE = 200;
 export const TOAST_STYLE_CONFIG = { backgroundColor: "darkred", color: "#fff", border: "1px solid #b30000" }
 export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#fff", border: "1px solid #001aff" }
 export const PLAY_RATE_STEP = 0.25;
@@ -96,7 +96,7 @@ export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
 export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
 export const MODELS_TO_WARN = ["o1", "o2", "o3", "o4", "o5", "o6", "o7"];
-export const CHUNK_TO_PAUSE_ON = 12; //end of chunk
+export const CHUNK_TO_PAUSE_ON = 18; //end of chunk
 export const LOADING_TIMEOUT = 60000;
 export const LOADING_TIMEOUT_FOR_DOWNLOAD = 60000;
 export const DOWLOAD_CHUNK_SIZE = 4000;

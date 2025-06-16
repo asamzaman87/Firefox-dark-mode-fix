@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { BACKEND_URI, CHUNK_SIZE, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOKEN_TTL_MS } from "./constants";
+import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOKEN_TTL_MS } from "./constants";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -56,15 +56,15 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
       currentChunk = sentence.trim();
 
       // Determine if the next chunk should reset based on chunkId
-      const isEvery12thChunk = (chunkId % 12) === 0;
+      const isEveryNthChunk = (chunkId % CHUNK_TO_PAUSE_ON) === 0;
 
       // Adjust the target size based on conditions
-      if (isEvery12thChunk) {
+      if (isEveryNthChunk) {
         // Reset to the initial chunk size
         targetSize = initialChunkSize;
       } else {
-        // Increase the target size by 50%, ensuring it does not exceed maxChunkSize
-        targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
+        // Increase the target size by 25%, ensuring it does not exceed maxChunkSize
+        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
       }
     } else {
       // Accumulate the sentence into the current chunk

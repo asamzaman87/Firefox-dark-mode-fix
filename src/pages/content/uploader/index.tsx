@@ -72,7 +72,9 @@ function Uploader() {
  // ─── ALWAYS hide any ChatGPT “conversation-fetch-error-toast” ───
  useEffect(() => {
 
-  const HIDE_SELECTOR = "[data-testid*='conversation-fetch-error']";
+  const HIDE_SELECTOR =
+  "[data-testid*='conversation-fetch-error'], " +
+  ".border-token-border-default.bg-token-main-surface-primary";
 
   // Helper: given any node that just got inserted, see if it (or its children)
   // matches our “fetch-error” selector—then hide/remove its closest “.toast-root”.
@@ -283,11 +285,11 @@ function Uploader() {
     // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if (modelSwitcher) {
-      const name = modelSwitcher.innerText;
-      // never flag models containing "mini"
-      if (name.toLowerCase().includes("mini")) {
-        return false;
-      }
+      // const name = modelSwitcher.innerText;
+      // // never flag models containing "mini"
+      // if (name.toLowerCase().includes("mini")) {
+      //   return false;
+      // }
       return isSupportedModel(modelSwitcher.innerHTML);
     }
     return false
