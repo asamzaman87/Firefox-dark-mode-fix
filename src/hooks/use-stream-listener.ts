@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk, monitorStopButton } from "@/lib/utils";
+import { Chunk, monitorStopButton, normalizeAlphaNumeric } from "@/lib/utils";
 const MAX_RETRIES = 4; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
@@ -117,7 +117,7 @@ const useStreamListener = (
             promptNdx.current += 1;
             // monitorStopButton();
           }
-          toast({ description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`, style: TOAST_STYLE_CONFIG_INFO, duration: 4000 });
+          toast({ description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`, style: TOAST_STYLE_CONFIG_INFO, duration: 10000 });
           injectPrompt(text, id, promptNdx.current);
         },
         [chunkRef, injectPrompt, nextChunkRef]
@@ -196,12 +196,14 @@ const useStreamListener = (
         const expected = chunkRef.current[chunkNdx].text
                 .replace(/\s+/g, " ")
                 .trim();
-        // console.log('This is the actual message: ', actual);
-        // console.log('This is the expected message: ', expected);
+        const comparisonActual = normalizeAlphaNumeric(actual);
+        const comparisonExpected = normalizeAlphaNumeric(expected);
+        // console.log('This is the actual message: ', comparisonActual);
+        // console.log('This is the expected message: ', comparisonExpected);
 
         if (breakGPT.current) {
             // console.log('breakGPT test');
-            if (actual === expected) {
+            if (comparisonActual === comparisonExpected) {
                 breakGPT.current = false;
                 // console.log('breakGPT test passed');
             } else {
@@ -226,8 +228,8 @@ const useStreamListener = (
         // ——— size‐mismatch detection ———
         if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0 && !breakGPT.current) {
             // normalize whitespace and grab the “expected” chunk text
-            const expectedLen = expected.length;
-            const actualLen = actual.length;
+            const expectedLen = comparisonExpected.length;
+            const actualLen = comparisonActual.length;
             // allow a 10% char tolerance
             const threshold = (expectedLen * 0.10);
             if (Math.abs(actualLen - expectedLen) >= threshold) {

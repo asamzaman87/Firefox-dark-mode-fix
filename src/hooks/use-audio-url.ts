@@ -1,5 +1,5 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, GPT_BREAKER, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { Chunk, monitorStopButton, splitIntoChunksV2 } from "@/lib/utils";
+import { Chunk, monitorStopButton, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -72,7 +72,7 @@ const useAudioUrl = (isDownload: boolean) => {
 
     const injectPrompt = useCallback((text: string, id: string, ndx: number = 0) => {
         window.dispatchEvent(new CustomEvent("SET_CHUNK_INFO", {
-            detail: { chunkLength: text.replace(/\s+/g, " ").trim().length }
+            detail: { chunkLength: normalizeAlphaNumeric(text).length }
         }));
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;

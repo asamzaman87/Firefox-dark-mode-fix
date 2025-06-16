@@ -17,6 +17,11 @@ if (!isFirefox) {
         shouldAbortStream = true;
     });
 }
+
+function normalizeAlphaNumeric(str) {
+  // This will keep all Unicode letters and digits
+  return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
+}
   
 const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let messageId = "";
@@ -41,7 +46,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const raw = markerPos >= 0
                 ? text.slice(markerPos + 3)
                 : text;
-            chunkLength = raw.replace(/\s+/g, " ").trim().length;
+            chunkLength = normalizeAlphaNumeric(raw).length;
         }
   
         const threshold = chunkLength * 1.1;
@@ -103,7 +108,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             }
   
             // → once we’ve grown by ≥10%, notify the hook
-            if (assistant.replace(/\s+/g, " ").trim().length >= threshold) {
+            if (normalizeAlphaNumeric(assistant).length >= threshold) {
                 return { messageId, conversationId, createTime, text, assistant };
             }
   

@@ -84,7 +84,10 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
 
   return chunks;
 }
-
+export function normalizeAlphaNumeric(str: string) {
+  // This will keep all Unicode letters and digits
+  return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
+}
 /**
  * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
  * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
