@@ -5,12 +5,14 @@ const isFirefox = typeof InstallTrigger !== 'undefined'
 let shouldAbortStream = false;
 
 // a place to hold the last‐seen chunk length
-let pendingChunkLength = null;
+let chunkText = null;
+
+let sentChunkNumber = null;
 
 if (!isFirefox) {
     // whenever SET_CHUNK_INFO fires, stash it
     window.addEventListener("SET_CHUNK_INFO", e => {
-        pendingChunkLength = e.detail.chunkLength;
+        chunkText = e.detail.chunkText;
     });
     // listen for our custom stop event
     window.addEventListener("STOP_STREAM_LOOP", () => {
@@ -29,6 +31,8 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let createTime = ""
     let text = "";
     let assistant = "";
+    let done = false;
+    let stopConvo = false;
     try {
         const jsonArgs = JSON.parse(args[1]?.body);
         const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
@@ -36,34 +40,41 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         // eslint-disable-next-line no-constant-condition
         // → wait for the hook to tell us this chunk’s expected length
         // → get the chunk length (use the stashed one if it already arrived)
-        let chunkLength;
-        if (pendingChunkLength !== null) {
-            chunkLength = pendingChunkLength;
-            pendingChunkLength = null;
+        let target;
+        let chunkLength = null;
+        if (chunkText !== null) {
+            chunkLength = chunkText.length;
+            target = chunkText;
         } else {
             // firefox fallback
+            if (sentChunkNumber === null || !text.includes("<<<") || !text.includes(`[${sentChunkNumber}]`)) {
+                return;
+            }
             const markerPos = text.lastIndexOf("<<<");
             const raw = markerPos >= 0
                 ? text.slice(markerPos + 3)
                 : text;
-            chunkLength = normalizeAlphaNumeric(raw).length;
+            target = normalizeAlphaNumeric(raw);
+            chunkLength = target.length;
         }
   
-        const threshold = chunkLength * 1.1;
+        const threshold = chunkLength;
         let lastProgress = Date.now();
         let prevVal = '';
   
         while (true) {
-            const { done, value } = await reader.read();
+            const readResult = await reader.read();
+            done = readResult.done;
+            const value = readResult.value;
             // if we haven’t received any new assistant text in 10 s, trigger abort
-            if (Date.now() - lastProgress > 10_000 && !done) {
-                console.log("No stream progress for 10s—aborting");
+            if (Date.now() - lastProgress > 3_000 && !done) {
+                console.log("No stream progress for 3s—aborting");
                 shouldAbortStream = true;
             }
   
             if (shouldAbortStream) {
                 shouldAbortStream = false;
-                return { messageId, conversationId, createTime, text, assistant };
+                return { messageId, conversationId, createTime, text, assistant, stopConvo };
             }
             
             const decoder = new TextDecoder("utf-8");
@@ -87,7 +98,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                       }
                     }
                     // 3) some “bulk” deltas come as bare strings
-                    else if (typeof data.v === "string" && data.p !== "/message/status") {
+                    else if (typeof data.v === "string" && data.p !== "/message/status" && data.p !== "/message/metadata/message_locale") {
                       assistant += data.v;
                     }
                     // 4) fallback to full parts array — but only for assistant messages
@@ -107,14 +118,11 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 lastProgress = Date.now();
             }
   
-            // → once we’ve grown by ≥10%, notify the hook
-            if (normalizeAlphaNumeric(assistant).length >= threshold) {
-                return { messageId, conversationId, createTime, text, assistant };
-            }
-  
             const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
             const createTimeMatch = textDecoded.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
-            const conversationIdMatch = textDecoded.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex  
+            const conversationIdMatch = textDecoded.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex 
+            const normAssistant = normalizeAlphaNumeric(assistant);
+
             //extracting the message id from the response 
             if (messageIdMatch?.length) {
                 //if there are multiple message ids, take the last one 
@@ -131,14 +139,36 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 window.dispatchEvent(messageIdEvent);
             }
             prevVal = value;
-            if (done) return { messageId, conversationId, createTime, text, assistant };// Exit loop when reading is complete
+            // → once we’ve passed the threshold, notify the hook
+            if (((normalizeAlphaNumeric(assistant).length >= threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
+                // immediately tell the server to stop sending more SSE
+                return { messageId, conversationId, createTime, text, assistant, stopConvo };
+                // if (conversationId) {
+                //     // reuse the original auth header if there was one in the request args
+                //     const authHeader = args[1]?.headers?.Authorization;
+                //     origFetch("https://chatgpt.com/backend-api/stop_conversation", {
+                //         method: "POST",
+                //         headers: {
+                //             "Content-Type": "application/json",
+                //             ...(authHeader ? { Authorization: authHeader } : {}),
+                //         },
+                //         body: JSON.stringify({ conversation_id: conversationId }),
+                //     }).catch((e) => console.warn("stop_conversation failed", e));
+                //     stopConvo = true;
+                //     return { messageId, conversationId, createTime, text, assistant, stopConvo };
+                // }
+            }
+            // or if the stream is done
+            if (done) {
+                return { messageId, conversationId, createTime, text, assistant, stopConvo }; // Exit loop when reading is complete
+            }
         }
     } catch (error) {
         if (error.name !== 'AbortError') {
             console.error('An error occurred while reading the stream:', error);
         }
     }
-    return { messageId, conversationId, createTime, text, assistant };
+    return { messageId, conversationId, createTime, text, assistant, stopConvo };
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";
@@ -187,27 +217,37 @@ window.fetch = async (...args) => {
     }
 
     //read the stream to get the message id and conversation id
-    if (hasConversationEndpoint && args[1]?.method === 'POST' && isEventStream) {
-        let sentChunkNumber = null;
+    if (hasConversationEndpoint && args[1]?.method === 'POST') {
         if (args[1]?.body) {
             try {
                 const req = JSON.parse(args[1].body);
                 const firstMsg = req.messages?.[0]?.content?.parts?.[0] || "";
                 const m = firstMsg.match(/^\[(\d+)\]/);
                 sentChunkNumber = m ? Number(m[1]) : null;
-            } catch (_err) {console.log(`An error occured while getting the chunk number in injected.js: ${_err}`)}
+            } catch (_err) {
+                if (url.endsWith('/f/conversation')) {
+                    // dispatch a general error if we can't even parse the request
+                    window.dispatchEvent(
+                        new CustomEvent("GENERAL_ERROR", {
+                            detail: "GPT Reader encountered an internal error. Please try again later.",
+                        })
+                    );
+                }
+                console.error("Chunk-number parse failed:", _err);
+            }
         }
  
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
-        if (clonedResponse.status === 429) {
+        // I am being specific with the endpoint for the error, since 404 and other errors will not have a content type of event-stream
+        if (clonedResponse.status === 429 && url.endsWith('/f/conversation')) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
                 detail: "You have exceeded the hourly limit for ChatGPT. Please wait a few minutes and try again.",
             });
             window.dispatchEvent(rateLimitExceededEvent);
         } 
 
-        if (clonedResponse.status !== 200 && clonedResponse.status !== 429) {
+        if (clonedResponse.status !== 200 && clonedResponse.status !== 429 && url.endsWith('/f/conversation')) {
             const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
                 detail: "GPT Reader is experiencing issues. Please try again later.",
             });
@@ -215,9 +255,8 @@ window.fetch = async (...args) => {
         }
 
         
-        if (stream && clonedResponse.status === 200) {
+        if (stream && clonedResponse.status === 200 && isEventStream) {
             const reader = stream.getReader();
-
             loopThroughReaderToExtractMessageId(reader, args)
             .then(detail => {
                 window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail: {...detail, chunkNdx: sentChunkNumber} }));

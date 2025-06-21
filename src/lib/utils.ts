@@ -4,6 +4,38 @@ import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENE
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
+/**
+ * Wait until `container` has no mutations for `inactivityMs` ms.
+ * Only watches child-list and text changes *within* this node.
+ */
+export function waitForStability(
+  container: HTMLElement,
+  inactivityMs: number = 100
+): Promise<void> {
+  return new Promise((resolve) => {
+    let timer: number;
+    const obs = new MutationObserver(() => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        obs.disconnect();
+        resolve();
+      }, inactivityMs);
+    });
+
+    obs.observe(container, {
+      childList: true,
+      subtree: true,        // still confined to container
+      characterData: true,  // catch text-node updates
+    });
+
+    // in case it’s already stable
+    timer = window.setTimeout(() => {
+      obs.disconnect();
+      resolve();
+    }, inactivityMs);
+  });
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -26,6 +58,16 @@ export function formatBytes(
     }`
 }
 
+export const waitForPrepareChat = (): Promise<{ event: string; data: any }[]> =>
+  new Promise(resolve => {
+  const handler = (e: CustomEvent) => {
+      console.log('PREPARE_RECEIVED in utils');
+      window.removeEventListener("PREPARE_RECEIVED", handler as any);
+      resolve(e.detail);
+  };
+  window.addEventListener("PREPARE_RECEIVED", handler as any);
+});
+
 //split text to small chunks
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
   // Split the text into sentences based on common delimiters
@@ -36,7 +78,7 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
 
   const initialChunkSize = chunkSize; // Initial chunk size in characters
   let targetSize = initialChunkSize;   // Current target chunk size
-  const maxChunkSize = 4000;           // Maximum chunk size in characters
+  const maxChunkSize = 6000;           // Maximum chunk size in characters
 
   const chunks = sentences.reduce((chunks, sentence, i, arr) => {
     // Calculate the potential new chunk if the current sentence is added
@@ -63,8 +105,8 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
         // Reset to the initial chunk size
         targetSize = initialChunkSize;
       } else {
-        // Increase the target size by 25%, ensuring it does not exceed maxChunkSize
-        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
+        // Increase the target size by 50%, ensuring it does not exceed maxChunkSize
+        targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
       }
     } else {
       // Accumulate the sentence into the current chunk
@@ -341,3 +383,36 @@ export async function secureFetch(
     },
   });
 }
+
+export const waitForElement = (
+    selector: string | string[],
+    timeout = 5000
+  ): Promise<Element> => {
+    const combinedSelector = Array.isArray(selector) ? selector.join(", ") : selector;
+    // const startTime = performance.now();
+    return new Promise((resolve, reject) => {
+      const el = document.querySelector(combinedSelector);
+      if (el) {
+        // const elapsed = performance.now() - startTime;
+        // console.log(`Element found immediately after ${elapsed.toFixed(2)} ms`);
+        return resolve(el);
+      }
+  
+      const observer = new MutationObserver(() => {
+        const elFound = document.querySelector(combinedSelector);
+        if (elFound) {
+          observer.disconnect();
+          // const elapsed = performance.now() - startTime;
+          // console.log(`Element found after ${elapsed.toFixed(2)} ms`);
+          resolve(elFound);
+        }
+      });
+  
+      observer.observe(document.body, { childList: true, subtree: true });
+  
+      setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`Timeout: Element ${combinedSelector} not found.`));
+      }, timeout);
+    });
+  };

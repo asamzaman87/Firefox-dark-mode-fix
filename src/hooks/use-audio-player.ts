@@ -32,6 +32,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const bufferNum = useRef<number>(0);
     const isScrubbing = useRef<boolean>(false);
     const isPausedRef = useRef<boolean>(false); 
+    const isAtEnd = useRef<boolean>(false); 
 
     const sourceBuffer = useRef<SourceBuffer | null>(null);
     const mediaSource = useMemo(() => new MediaSource(), [isBackPressed]);
@@ -414,7 +415,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     
     
     //initiating play
-    useMemo(() => {
+    useEffect(() => {
         if (isTypeAACSupported) return;
         if (audioUrls.length === 1 && !isDownload) {
             playNext(0);
@@ -434,12 +435,12 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }, [audioUrls]);
 
-    useMemo(() => {
+    useEffect(() => {
         if (isTypeAACSupported) return;
         if (isLoading && isStreamLoading) {
             setAudioUrlsBeforeStop(audioUrls.length);
         }
-        if (!isLoading && isStreamLoading && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex + 1)) {
+        if (((!isLoading && isStreamLoading) || isAtEnd.current) && audioUrlsBeforeStop < audioUrls.length && (audioUrls.length > currentIndex + 1)) {
             setCurrentIndex(currentIndex + 1);
             playNext(currentIndex + 1);
             setIsStreamLoading(false);
@@ -496,6 +497,7 @@ const useAudioPlayer = (isDownload: boolean) => {
           audioCtxRef.current.resume().catch(() => {});
         }
         if (!isTypeAACSupported) {
+            isAtEnd.current = false;
             setHasCompletePlaying(false);
             setIsPaused(false);
             setIsPlaying(true);
@@ -537,6 +539,8 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (audioUrls.length > nextIndexToPlay) {
             setCurrentIndex(nextIndexToPlay);
             playNext(nextIndexToPlay);
+        } else {
+          isAtEnd.current = true;
         }
 
         if (isLoading && !isPlaying && (audioUrls.length === nextIndexToPlay || audioUrls.length < nextIndexToPlay)) {
@@ -600,6 +604,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         isPausedRef.current = false;
         chunkBoundariesRef.current = [];
         pauseChunksRef.current.clear();
+        isAtEnd.current = false;
         if (full) {
             seekAudio.src = "";
             resetAudioUrl();

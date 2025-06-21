@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk, monitorStopButton, normalizeAlphaNumeric } from "@/lib/utils";
-const MAX_RETRIES = 4; 
+import { Chunk, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
+const MAX_RETRIES = 3; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
@@ -22,7 +22,6 @@ const useStreamListener = (
 
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<number | null>(null);
-    const breakGPT = useRef<boolean>(true);
     const promptNdx = useRef<number>(0);
     
     const setVoices = (voice: string) => {
@@ -44,9 +43,8 @@ const useStreamListener = (
             console.log("Retry failed: invalid chunk index");
             return;
           }
-          if (!breakGPT.current) {
-            retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
-          }
+          
+          retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
       
           let storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
           // If not found, wait up to 5 seconds (poll every 500ms) for the URL to include it:
@@ -66,13 +64,9 @@ const useStreamListener = (
           }
       
           // If found, delete the conversation 
-          if (storedChatId && breakGPT.current) {
+          if (storedChatId) {
             // We’ll turn the AUTH_RECEIVED + PATCH flow into a promise we can await
-            await new Promise<void>((resolve) => {
-              const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-              if (stopButton) {
-                stopButton.click();
-              } 
+            await new Promise<void>(async (resolve) => {
               const newChatBtn = document.querySelector<HTMLButtonElement>(
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
               );
@@ -113,10 +107,7 @@ const useStreamListener = (
       
           // Now we know the delete (and “New Chat” click) has finished
           let { text, id } = chunkRef.current[idx];
-          if (breakGPT.current) {
-            promptNdx.current += 1;
-            // monitorStopButton();
-          }
+          promptNdx.current += 1;
           toast({ description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`, style: TOAST_STYLE_CONFIG_INFO, duration: 10000 });
           injectPrompt(text, id, promptNdx.current);
         },
@@ -151,12 +142,38 @@ const useStreamListener = (
 
             if (!authToken) return;
         }
-
-        const response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
+        let response: Response | undefined;
+        try {
+            response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
+        } catch {
+            const start = Date.now();
+            while (Date.now() - start < 1500) {
+                await new Promise((r) => setTimeout(r, 300));
+                response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
+                if (response.status === 200) {
+                    break
+                }
+            }
+            if (!response) {
+                throw new Error("Failed to fetch audio after retries");
+            }
+        }
+        
+        if (response.status === 404) {
+            const start = Date.now();
+            while (Date.now() - start < 1500) {
+                await new Promise((r) => setTimeout(r, 300));
+                response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
+                if (response.status === 200) {
+                    break
+                }
+            }
+        }
         if (response.status !== 200) {
-            if (lastRegularRetryChunk.current !== chunkNumber) {
+            if (lastRegularRetryChunk.current !== chunkNumber && response.status !== 404) {
                 lastRegularRetryChunk.current = chunkNumber;
-                return retry(url, chunkNumber);
+                await new Promise((res) => setTimeout(res, 500));
+                return await retry(url, chunkNumber);
             }
             if ((retryCounts.current[chunkNumber] ?? 0) < MAX_RETRIES) {
                 await retryFlow();
@@ -183,7 +200,7 @@ const useStreamListener = (
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;
-    }, [token, blobs, retryFlow])
+    }, [token, retryFlow])
 
     //retry fetching audio
     const retry = useCallback(async (url: string, chunkNumber: number): Promise<string | undefined> => {
@@ -191,31 +208,61 @@ const useStreamListener = (
     }, [token])
 
     const handleConvStream = useCallback(async (e: Event) => {
-        const { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string } };
-        let actual = (assistant ?? "").replace(/\s+/g, " ").trim();
-        const expected = chunkRef.current[chunkNdx].text
-                .replace(/\s+/g, " ")
-                .trim();
-        const comparisonActual = normalizeAlphaNumeric(actual);
-        const comparisonExpected = normalizeAlphaNumeric(expected);
-        // console.log('This is the actual message: ', comparisonActual);
-        // console.log('This is the expected message: ', comparisonExpected);
-
-        if (breakGPT.current) {
-            // console.log('breakGPT test');
-            if (comparisonActual === comparisonExpected) {
-                breakGPT.current = false;
-                // console.log('breakGPT test passed');
-            } else {
+        let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean } };
+        if (!stopConvo) {
+            const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+            if (stopButton) {
+                stopButton.click();
+            }
+        } 
+        // wait for the speech button in chrome and send in firefox after stopping
+        try {
+            await Promise.race([
+                waitForElement("[data-testid='composer-speech-button']", 3000),
+                waitForElement("[data-testid='send-button']", 3000),
+            ]);
+        } catch {
+            console.warn("No resume button appeared within 3s; retrying if not the last chunk");
+            if (chunkNdx < chunkRef.current.length - 1) {
                 await retryFlow();
                 return;
             }
         }
+        
+        // make sure we have the right message id
+        const lastAssistantMessage = Array.from(
+        document.querySelectorAll<HTMLDivElement>('div.text-message[data-message-author-role="assistant"]')).pop();
+        const lastMessageId = lastAssistantMessage?.getAttribute('data-message-id');
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (lastMessageId && lastMessageId !== messageId && uuidRe.test(lastMessageId)) {
+            console.warn(
+                "Got the wrong message id. Falling back to DOM id:",
+                messageId,
+                "→",
+                lastMessageId
+            );
+            messageId = lastMessageId;
+        }
+        // make sure we have the right conversation id
+        let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
+        let urlConvId = convMatch?.[1] ?? "";
+        if (urlConvId && urlConvId !== conversationId && uuidRe.test(urlConvId)) {
+            console.warn("Got the wrong conversation id. Falling back to id in url");
+            conversationId = urlConvId;
+        }
+        // define needed consts
+        const expected = chunkRef.current[chunkNdx].text;
+        const actual = assistant ? assistant : expected;
+        const comparisonActual = normalizeAlphaNumeric(actual);
+        const comparisonExpected = normalizeAlphaNumeric(expected);
+        // console.log('This is the actual message: ', comparisonActual);
+        // console.log('This is the expected message: ', comparisonExpected);
+        
 
         // ——— copyright/inapproprateness detection ———
         if (
-            actual.length < 150 &&
-            (actual.includes("I cannot") || actual.includes("I can't"))
+            actual.length < 80 &&
+            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
         ) {
             if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
                 await retryFlow();
@@ -224,28 +271,13 @@ const useStreamListener = (
             handleError("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
             return;
         }
-
-        // ——— size‐mismatch detection ———
-        if (chunkNdx >= 0 && chunkNdx < chunkRef.current.length && actual.length > 0 && !breakGPT.current) {
-            // normalize whitespace and grab the “expected” chunk text
-            const expectedLen = comparisonExpected.length;
-            const actualLen = comparisonActual.length;
-            // allow a 10% char tolerance
-            const threshold = (expectedLen * 0.10);
-            if (Math.abs(actualLen - expectedLen) >= threshold) {
-                // retry if we haven’t hit MAX_RETRIES yet
-                if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
-                    breakGPT.current = true;
-                    await retryFlow();
-                    return;
-                }
-                // otherwise show an error
-                handleError(
-                    `ChaGPT maybe having issues with reading your text. Please let us know if you notice any issues through the feedback icon.`
-                );
-                // breakGPT ascertains that we never get this error in the first place, may change in the future depending on how the returned assistant works...
-            }
-        }
+        
+        
+        if (comparisonActual !== comparisonExpected) {
+            await retryFlow();
+            return;
+        } 
+        
         
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             if (token) {
@@ -295,7 +327,6 @@ const useStreamListener = (
         setBlobs([]);
         retryCounts.current = {};
         lastRegularRetryChunk.current = null;
-        breakGPT.current = true;
         promptNdx.current = 0;
     }
     

@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -18,34 +18,6 @@ export interface PromptProps {
 }
 
 function Uploader() {
-  const waitForElement = (
-    selector: string | string[],
-    timeout = 5000
-  ): Promise<Element> => {
-    const combinedSelector = Array.isArray(selector) ? selector.join(", ") : selector;
-  
-    return new Promise((resolve, reject) => {
-      const el = document.querySelector(combinedSelector);
-      if (el) return resolve(el);
-  
-      const observer = new MutationObserver(() => {
-        const elFound = document.querySelector(combinedSelector);
-        if (elFound) {
-          observer.disconnect();
-          resolve(elFound);
-        }
-      });
-  
-      observer.observe(document.body, { childList: true, subtree: true });
-  
-      setTimeout(() => {
-        observer.disconnect();
-        reject(new Error(`Timeout: Element ${combinedSelector} not found.`));
-      }, timeout);
-    });
-  };
-  
-
   const [prompts, setPrompts] = useState<PromptProps[]>([]);
   const [isActive, setIsActive] = useState<boolean>(false);
   const activateButton = useRef<HTMLButtonElement>(null);
@@ -275,6 +247,10 @@ function Uploader() {
       if (!didInsert) {
         textarea.innerHTML = `<p>${text}</p>`;
       }
+      
+      // Dispatch an input event so ChatGPT picks up the change
+      const inputEvt = new InputEvent('input', { bubbles: true });
+      textarea.dispatchEvent(inputEvt);
     } else {
       console.log('Having trouble finding the textarea');
     }
@@ -302,7 +278,7 @@ function Uploader() {
     .catch(() => {
       console.log("create new chat button not found");
     });
-    
+
     try {
       await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 5000);
     } catch {
@@ -326,9 +302,10 @@ function Uploader() {
       } catch {
         setIsActive(false);
         toast({
-          description: "GPT Reader is having trouble opening. Try deleting whats in the input field, refresh your page, and try again.",
+          description: "GPT Reader is having trouble opening. Refresh your page, and try again.",
           style: TOAST_STYLE_CONFIG,
         });
+        addTextToInputAndOpen("");
         return;
       }
     }

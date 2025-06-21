@@ -1,5 +1,5 @@
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, GPT_BREAKER, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { Chunk, monitorStopButton, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { Chunk, detectBrowser, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -70,30 +70,66 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     };
 
-    const injectPrompt = useCallback((text: string, id: string, ndx: number = 0) => {
+    const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+        // Dispatch chunk info for audio sync
+        const reducedText = normalizeAlphaNumeric(text);
         window.dispatchEvent(new CustomEvent("SET_CHUNK_INFO", {
-            detail: { chunkLength: normalizeAlphaNumeric(text).length }
+            detail: { chunkText: reducedText }
         }));
+
+        // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;
         }
         const hp = HELPER_PROMPTS[ndx];
-        let textarea = document.querySelector(PROMPT_INPUT_ID) as HTMLTextAreaElement;
-        if (!textarea) {
-            textarea = document.querySelector("textarea.text-token-text-primary") as HTMLTextAreaElement;
+
+        // Find the ChatGPT input element
+        let editor = document.querySelector(PROMPT_INPUT_ID) as HTMLElement;
+        if (!editor) {
+            editor = document.querySelector("textarea.text-token-text-primary") as HTMLElement;
         }
-        if (textarea) {
-            // 1) build the raw text version (execCommand works better with plain text)
-            const raw = `[${id}] ${hp}${text}`;
-            // 2) try the non-deprecated insertText
-            const didInsert = document.execCommand("insertText", false, raw);
-            // 3) fallback to HTML if that didn’t take
-            if (!didInsert) {
-                textarea.innerHTML = `<p>[${id}] ${hp}${text}</p>`;
+
+        if (editor) {
+            // Build the raw text and HTML blocks
+            // instead of going to the next line i'd like to add a dot on the same line but after 10 spaces each and i want that repeated 300 times
+            const isFirefox = detectBrowser() === "firefox";
+            let raw = '';
+            let garbage = '';
+            
+            if (reducedText.length > 200) {
+                if (isFirefox) {
+                    garbage = "\n.\n."
+                } else {
+                    garbage = "\n.\n.".repeat(100);
+                }
             }
-            localStorage.setItem("gptr/is-first-audio-loading", String(id == "0"));
-            sendPrompt();
+            raw = `[${id}] ${hp}${text}${garbage}`;
+            
+            if (!isFirefox) {
+                // Chrome/WebKit: fire a synthetic paste
+                const dt = new DataTransfer();
+                dt.setData("text/plain", raw);
+                const pasteEvt = new ClipboardEvent("paste", {
+                    clipboardData: dt,
+                    bubbles: true,
+                    cancelable: true,
+                });
+                editor.dispatchEvent(pasteEvt);
+            } else {
+                editor.innerHTML = `<p>${raw}</p>`;
+            }
+            
+            // Dispatch an input event so ChatGPT picks up the change
+            editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
+
+            // Mark first audio load
+            localStorage.setItem("gptr/is-first-audio-loading", String(id === "0"));
+            // Send the prompt from the input content
+            setTimeout(() => {
+                sendPrompt();
+            }, 50);
         } else {
+            // Fallback error
             const errorMessage = `GPT Reader is having trouble, please refresh your page and try again`;
             window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
             toast({
