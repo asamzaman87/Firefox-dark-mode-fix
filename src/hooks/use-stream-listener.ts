@@ -188,7 +188,16 @@ const useStreamListener = (
             handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
             return;
         }
-        const blob = await response.blob();
+        let blob: Blob;
+        try {
+            blob = await response.blob();
+        } catch (err) {
+            console.warn(`Audio blob read failed for chunk ${chunkNumber}, retrying…`, err);
+            // simple back‐off
+            await new Promise((r) => setTimeout(r, 300));
+            // use your existing retry helper
+            return await retry(url, chunkNumber);
+        }
         setBlobs(bs => {
             const exists = bs.some(b => b.chunkNumber === chunkNumber);
             if (exists) {
@@ -230,19 +239,29 @@ const useStreamListener = (
         }
         
         // make sure we have the right message id
-        const lastAssistantMessage = Array.from(
-        document.querySelectorAll<HTMLDivElement>('div.text-message[data-message-author-role="assistant"]')).pop();
-        const lastMessageId = lastAssistantMessage?.getAttribute('data-message-id');
         const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (lastMessageId && lastMessageId !== messageId && uuidRe.test(lastMessageId)) {
+        const turnNumber = (chunkNdx + 1) * 2;  // chunk 0 → turn 2, chunk 1 → turn 4, etc.
+        const turnElement = document.querySelector<HTMLElement>(
+            `[data-testid="conversation-turn-${turnNumber}"]`
+        );
+        let domMessageId: string | null | undefined;
+        if (turnElement) {
+            const asm = turnElement.querySelector<HTMLDivElement>(
+                '[data-message-author-role="assistant"]'
+            );
+            domMessageId = asm?.getAttribute('data-message-id');
+        } else {
+            console.warn("Couldn't find DOM message id");
+        }
+        if (domMessageId && domMessageId !== messageId && uuidRe.test(domMessageId)) {
             console.warn(
                 "Got the wrong message id. Falling back to DOM id:",
                 messageId,
                 "→",
-                lastMessageId
+                domMessageId
             );
-            messageId = lastMessageId;
-        }
+            messageId = domMessageId;
+        } 
         // make sure we have the right conversation id
         let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
         let urlConvId = convMatch?.[1] ?? "";
@@ -259,7 +278,7 @@ const useStreamListener = (
         // console.log('This is the expected message: ', comparisonExpected);
         
 
-        // ——— copyright/inapproprateness detection ———
+        // ——— copyright/inappropriateness detection ———
         if (
             actual.length < 80 &&
             (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
@@ -288,6 +307,7 @@ const useStreamListener = (
                         +chunkNdx
                     );
                     
+                    // ignore as null returns would be from retries
                     if (!audioUrl) {
                       return;
                     }

@@ -185,7 +185,6 @@ window.fetch = async (...args) => {
     const contentType = headers.get("content-type") || "";
     const isEventStream = contentType.includes("event-stream");
 
-    const isSynthesisEndpoint = url.includes(SYNTHESIS_ENDPOINT);
     const isVoicesEndpoint = url.includes(VOICES_ENDPOINT);
 
     //getting the access token
@@ -273,16 +272,6 @@ window.fetch = async (...args) => {
             detail: voices,
         });
         window.dispatchEvent(voicesEvent);
-    }
-
-    if (isSynthesisEndpoint) {
-        const clonedResponse = response.clone(); // Clone the response
-        if (clonedResponse.status === 404) {
-            const rateLimitExceededEvent = new CustomEvent('ERROR', {
-                detail: "Message Not Found. Please refresh the page and try again.",
-            });
-            window.dispatchEvent(rateLimitExceededEvent);
-        }
     }
 
     return response;

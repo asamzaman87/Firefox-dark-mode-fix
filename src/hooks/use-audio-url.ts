@@ -92,32 +92,30 @@ const useAudioUrl = (isDownload: boolean) => {
         if (editor) {
             // Build the raw text and HTML blocks
             // instead of going to the next line i'd like to add a dot on the same line but after 10 spaces each and i want that repeated 300 times
-            const isFirefox = detectBrowser() === "firefox";
-            let raw = '';
-            let garbage = '';
+            // const isFirefox = detectBrowser() === "firefox";
+            // let raw = '';
+            // let garbage = '';
             
-            if (reducedText.length > 200) {
-                if (isFirefox) {
-                    garbage = "\n.\n."
-                } else {
-                    garbage = "\n.\n.".repeat(100);
-                }
-            }
-            raw = `[${id}] ${hp}${text}${garbage}`;
+            // if (reducedText.length > 1000000) {
+            //     if (isFirefox) {
+            //         garbage = "\n.\n."
+            //     } else {
+            //         garbage = "\n.\n.".repeat(100);
+            //     }
+            // }
+            const raw = `[${id}] ${hp}${text}`;
             
-            if (!isFirefox) {
-                // Chrome/WebKit: fire a synthetic paste
-                const dt = new DataTransfer();
-                dt.setData("text/plain", raw);
-                const pasteEvt = new ClipboardEvent("paste", {
-                    clipboardData: dt,
-                    bubbles: true,
-                    cancelable: true,
-                });
-                editor.dispatchEvent(pasteEvt);
-            } else {
-                editor.innerHTML = `<p>${raw}</p>`;
-            }
+            // // Chrome/WebKit: fire a synthetic paste
+            // const dt = new DataTransfer();
+            // dt.setData("text/plain", raw);
+            // const pasteEvt = new ClipboardEvent("paste", {
+            //     clipboardData: dt,
+            //     bubbles: true,
+            //     cancelable: true,
+            // });
+            // editor.dispatchEvent(pasteEvt);
+          
+            editor.innerHTML = `<p>${raw}</p>`;
             
             // Dispatch an input event so ChatGPT picks up the change
             editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
