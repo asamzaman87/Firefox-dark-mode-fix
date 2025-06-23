@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Free AI Text to Speech with ChatGPT Voices"
+    "message": "GPT Reader: Free AI Text to Speech with ChatGPT Voices | ChatGPT TTS"
   },
   "extensionDescription": {
-    "message": "Bring natural AI voices from ChatGPT to your text—instantly read aloud or download high-quality speech for free"
+    "message": "Bring natural AI voices from ChatGPT to your text with text to speech (tts)—read aloud or download high-quality audio for free"
   },
   "play_voice": {
     "message": "Play Voice"
