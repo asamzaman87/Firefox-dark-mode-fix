@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Loader2Icon, PauseIcon, PlayIcon, RotateCwIcon } from "lucide-react";
-import { FC, useCallback, useMemo } from "react";
+import { Loader2Icon, Maximize2, Minus, PauseIcon, PlayIcon, RotateCwIcon } from "lucide-react";
+import { FC, useCallback, useMemo, useState } from "react";
 import { FastForwardIcon, RewindIcon } from "./icons";
 import PlayRateSlider from "./play-rate-slider";
 import Seekbar from "./seekbar";
@@ -52,6 +52,7 @@ const Player: FC<PlayerBackupProps> = ({
   handleVolumeChange,
   handlePlayRateChange,
 }) => {
+  const [minimized, setMinimized] = useState<boolean>(false);
   //show loader if not all chunks have completed playing, loading is in progress, current time is 0 and duration is 0 and playback is not ended
   const showLoader = useMemo(
     () =>
@@ -78,6 +79,45 @@ const Player: FC<PlayerBackupProps> = ({
     if (isPaused && !playbackEnded) play();
   },[replay, pause, play, isPlaying, isPaused, playbackEnded, setPlaybackEnded]);
 
+  if (minimized) {
+    return (
+      <div className="fixed bottom-4 left-4 z-50 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-2xl py-3 px-4 shadow">
+        <div className="w-full flex items-center gap-2">
+          <Button
+            onClick={handlePlayPause}
+            size={"icon"}
+            variant="ghost"
+            className="hover:scale-115 active:scale-105 size-10  transition-all [&_svg]:size-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+          >
+            {!showLoader && isPaused && !playbackEnded && (
+              <>
+                <PlayIcon />
+                <span className="sr-only">Play</span>
+              </>
+            )}
+            {!showLoader && isPlaying && !playbackEnded && (
+              <>
+                <PauseIcon />
+                <span className="sr-only">Pause</span>
+              </>
+            )}
+            {showLoader && <Loader2Icon className="animate-spin size-6" />}
+            {!showLoader && playbackEnded && <RotateCwIcon />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMinimized(false)}
+            aria-label="Maximize player"
+            className="hover:scale-115 active:scale-105 size-10  transition-all rounded-full"
+          >
+            <Maximize2 className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -87,20 +127,49 @@ const Player: FC<PlayerBackupProps> = ({
     >
       <div
         className={cn(
-          "mx-auto size-max flex flex-col justify-evenly items-center gap-0.5 p-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow", 
-          {"rounded-full": !areSeekControlsAvailable},
-          {"rounded-xl": areSeekControlsAvailable}
+          "mx-auto size-max flex flex-col justify-evenly items-center gap-0.5 p-2.5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow rounded-xl relative",
+          {"pt-5 px-7.5 pb-2.5": !areSeekControlsAvailable},
+          {"p-2.5": areSeekControlsAvailable},
         )}
       >
         {areSeekControlsAvailable && (
-          <Seekbar
-            isLoading={isLoading}
-            onScrub={onScrub}
-            currentTime={currentTime}
-            duration={duration}
-          />
+          <div className="w-full flex justify-between gap-2">
+            <Seekbar
+              isLoading={isLoading}
+              onScrub={onScrub}
+              currentTime={currentTime}
+              duration={duration}
+            />
+            <div className="relative -top-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMinimized(true)}
+                aria-label="Minimize player"
+                className="size-7 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+              >
+                <Minus className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
         )}
-        <div className={cn("flex w-full justify-center items-center", { "gap-2": areSeekControlsAvailable, "gap-4": !areSeekControlsAvailable })}>
+        {!areSeekControlsAvailable && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMinimized(true)}
+              aria-label="Minimize player"
+              className="absolute right-1 top-1 w-6 h-5 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+            >
+              <Minus className="h-5 w-5" />
+            </Button>
+          )}
+        <div
+          className={cn("flex w-full justify-center items-center", {
+            "gap-2": areSeekControlsAvailable,
+            "gap-4": !areSeekControlsAvailable,
+          })}
+        >
           <VolumeSlider
             volume={volume}
             setVolume={(volume) => handleVolumeChange(volume)}
