@@ -54,7 +54,11 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const raw = markerPos >= 0
                 ? text.slice(markerPos + 3)
                 : text;
-            target = normalizeAlphaNumeric(raw);
+            // strip any HTML and get exactly what would be rendered as text
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = `<p>${raw}</p>`;
+            const rendered = wrapper.innerText || "";
+            target = normalizeAlphaNumeric(rendered);
             chunkLength = target.length;
         }
   
@@ -74,7 +78,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
   
             if (shouldAbortStream) {
                 shouldAbortStream = false;
-                return { messageId, conversationId, createTime, text, assistant, stopConvo };
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
             }
             
             const decoder = new TextDecoder("utf-8");
@@ -142,7 +146,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             // → once we’ve passed the threshold, notify the hook
             if (((normalizeAlphaNumeric(assistant).length >= threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
                 // immediately tell the server to stop sending more SSE
-                return { messageId, conversationId, createTime, text, assistant, stopConvo };
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
                 // if (conversationId) {
                 //     // reuse the original auth header if there was one in the request args
                 //     const authHeader = args[1]?.headers?.Authorization;
@@ -160,7 +164,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             }
             // or if the stream is done
             if (done) {
-                return { messageId, conversationId, createTime, text, assistant, stopConvo }; // Exit loop when reading is complete
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target }; // Exit loop when reading is complete
             }
         }
     } catch (error) {
@@ -168,7 +172,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             console.error('An error occurred while reading the stream:', error);
         }
     }
-    return { messageId, conversationId, createTime, text, assistant, stopConvo };
+    return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";

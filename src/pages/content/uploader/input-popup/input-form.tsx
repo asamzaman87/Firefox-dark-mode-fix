@@ -33,7 +33,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
-        if (disabled) return toast({ description: chrome.i18n.getMessage('please_wait_previous'), style: TOAST_STYLE_CONFIG });
+        if (false) return toast({ description: chrome.i18n.getMessage('please_wait_previous'), style: TOAST_STYLE_CONFIG });
         onSubmit(values);
     }
 
@@ -65,7 +65,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={disabled} type="submit" variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                    <Button disabled={false} type="submit" variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
                         <Send /> {chrome.i18n.getMessage('submit')}
                     </Button>
                 </DialogFooter>

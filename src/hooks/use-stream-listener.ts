@@ -198,14 +198,21 @@ const useStreamListener = (
             // use your existing retry helper
             return await retry(url, chunkNumber);
         }
+        // only append if this chunk is exactly the next one in sequence
+        let added = false;
         setBlobs(bs => {
-            const exists = bs.some(b => b.chunkNumber === chunkNumber);
-            if (exists) {
-                // Don't append duplicate blob
+            const expected = bs.length; 
+            if (chunkNumber !== expected) {
+                console.warn(
+                    `[Audio Prefetch] Out‐of‐order chunk ${chunkNumber}, expected ${expected}. Ignoring.`
+                );
                 return bs;
             }
+            added = true;
             return [...bs, { chunkNumber, blob }];
         });
+        // if it wasn't sequential, give up and don't hand back a URL
+        if (!added) return;
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;
@@ -217,7 +224,7 @@ const useStreamListener = (
     }, [token])
 
     const handleConvStream = useCallback(async (e: Event) => {
-        let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean } };
+        let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo, target } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean, target: string } };
         if (!stopConvo) {
             const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
             if (stopButton) {
@@ -270,10 +277,9 @@ const useStreamListener = (
             conversationId = urlConvId;
         }
         // define needed consts
-        const expected = chunkRef.current[chunkNdx].text;
-        const actual = assistant ? assistant : expected;
+        const actual = assistant ? assistant : target;
         const comparisonActual = normalizeAlphaNumeric(actual);
-        const comparisonExpected = normalizeAlphaNumeric(expected);
+        const comparisonExpected = target;
         // console.log('This is the actual message: ', comparisonActual);
         // console.log('This is the expected message: ', comparisonExpected);
         

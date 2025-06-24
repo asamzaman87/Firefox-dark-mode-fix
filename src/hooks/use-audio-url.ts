@@ -71,17 +71,23 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
-        // Dispatch chunk info for audio sync
-        const reducedText = normalizeAlphaNumeric(text);
-        window.dispatchEvent(new CustomEvent("SET_CHUNK_INFO", {
-            detail: { chunkText: reducedText }
-        }));
-
         // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;
         }
         const hp = HELPER_PROMPTS[ndx];
+        // Build the raw text that will go into the editor
+        const raw = `[${id}] ${hp}${text}`;
+
+        // the textContent that ends up in the editor
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = `<p>${text}</p>`;
+        const chunkTextForComparison = normalizeAlphaNumeric(wrapper.innerText || "");
+
+        // Dispatch chunk info for audio sync
+        window.dispatchEvent(new CustomEvent("SET_CHUNK_INFO", {
+            detail: { chunkText: chunkTextForComparison }
+        }));
 
         // Find the ChatGPT input element
         let editor = document.querySelector(PROMPT_INPUT_ID) as HTMLElement;
@@ -103,7 +109,6 @@ const useAudioUrl = (isDownload: boolean) => {
             //         garbage = "\n.\n.".repeat(100);
             //     }
             // }
-            const raw = `[${id}] ${hp}${text}`;
             
             // // Chrome/WebKit: fire a synthetic paste
             // const dt = new DataTransfer();

@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -64,19 +64,22 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         resetDownloader();
     }
 
-    const onBackClick = () => {
+    const onBackClick = async () => {
         if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
         // delete the old ChatGPT conversation if we have one
-        deleteChatAndCreateNew();
+        toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
+        await new Promise(resolve => setTimeout(resolve, 400));
+        localStorage.setItem("gptr/reloadDone", "true");
+        window.location.reload();
         //if is playing, wait for 500ms before resetting to avoid further chunk from being sent (May not work with 2g-3g networks)
-        if (isPlaying) {
-            setTimeout(() => {
-                resetter(true);
-            }, 500)
-        } else {
-            resetter(true);
-        }
-        setIsBackPressed(true);
+        // if (isPlaying) {
+        //     setTimeout(() => {
+        //         resetter(true);
+        //     }, 500)
+        // } else {
+        //     resetter(true);
+        // }
+        // setIsBackPressed(true);
     }
 
     useEffect(() => {
