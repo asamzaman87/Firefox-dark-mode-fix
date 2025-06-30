@@ -343,6 +343,8 @@ function Uploader() {
       }
       setIsActive(false);
       return
+    } else {
+      localStorage.setItem("gptr/download", "false");
     }
     isOpening.current = true;
     const aoc = window.localStorage.getItem("gptr/aoc");

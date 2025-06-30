@@ -155,13 +155,16 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         onOverlayOpenChange(false);
     },[onOverlayOpenChange, resetter]);
 
-    const onDownloadCancel = useCallback(() => {
-        resetter();
-        if (isCancelDownloadConfirmation) {
-            setIsCancelDownloadConfirmation(false);
-            onOverlayOpenChange(false); //Close overlay if download cancellled from close button
+    const onDownloadCancel = useCallback(async () => {
+        if (!isCancelDownloadConfirmation) {
+            toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
+            await new Promise(resolve => setTimeout(resolve, 400));
+            localStorage.setItem("gptr/reloadDone", "true");
+            window.location.reload();
+        } else {
+            localStorage.setItem("gptr/reloadDone", "false");
+            window.location.reload();
         }
-        setShowDownloadCancelConfirmation(false);
     }, [resetter, setShowDownloadCancelConfirmation])
 
     const onContinueDownload = useCallback((state: boolean) => {
