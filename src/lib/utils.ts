@@ -130,48 +130,62 @@ export function normalizeAlphaNumeric(str: string) {
   // This will keep all Unicode letters and digits
   return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
 }
+
+export function reload() {
+  // tell the background to reload the active tab
+  window.location.href = "https://chatgpt.com";
+  window.location.href = window.location.href;
+}
 /**
  * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
  * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
  * “GET_TOKEN” → responding with an “AUTH_RECEIVED” CustomEvent that carries { accessToken }.
  */
-export async function deleteChatAndCreateNew(createChat: boolean = true, chatId?: string): Promise<void> {
-  let storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+export async function deleteChatAndCreateNew(
+  createChat: boolean = true,
+  chatId?: string
+): Promise<Response | void> {
+  let storedChatId =
+    window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
   if (chatId) {
-    storedChatId = chatId
+    storedChatId = chatId;
   }
   if (!storedChatId) return;
 
-  return new Promise<void>((resolve) => {
+  return new Promise<Response | void>((resolve) => {
     const handleAuth = async (e: Event) => {
-      const ce = e as CustomEvent<{ accessToken: string }>;
-      const token = ce.detail.accessToken;
-      if (token) {
-        try {
-          await fetch(
-            `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-              },
-              body: JSON.stringify({ is_visible: false }),
-            }
-          );
-          if (createChat) {
-            // Once deleted, click “New Chat”
-            const newChatBtn = document.querySelector<HTMLButtonElement>(
-              "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-            );
-            if (newChatBtn) newChatBtn.click();
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }
       window.removeEventListener("AUTH_RECEIVED", handleAuth);
-      resolve();
+      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
+      if (!token) {
+        return resolve();
+      }
+
+      try {
+        const response = await fetch(
+          `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({ is_visible: false }),
+          }
+        );
+
+        // only open a new chat if the delete succeeded
+        if (createChat) {
+          const newChatBtn = document.querySelector<HTMLButtonElement>(
+            "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+          );
+          newChatBtn?.click();
+        }
+
+        resolve(response);
+      } catch (err) {
+        console.error("Failed to delete chat:", err);
+        resolve();
+      }
     };
 
     window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });

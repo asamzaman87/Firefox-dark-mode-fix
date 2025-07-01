@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, removeAllListeners } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, reload, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
@@ -70,7 +70,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
         await new Promise(resolve => setTimeout(resolve, 400));
         localStorage.setItem("gptr/reloadDone", "true");
-        window.location.reload();
+        window.location.href = window.location.href;
         //if is playing, wait for 500ms before resetting to avoid further chunk from being sent (May not work with 2g-3g networks)
         // if (isPlaying) {
         //     setTimeout(() => {
@@ -157,13 +157,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const onDownloadCancel = useCallback(async () => {
         if (!isCancelDownloadConfirmation) {
-            toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
+            toast({ description: 'GPT Reader Alert: Clicking on the cancel button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
             await new Promise(resolve => setTimeout(resolve, 400));
             localStorage.setItem("gptr/reloadDone", "true");
-            window.location.reload();
+            window.location.href = window.location.href;
         } else {
             localStorage.setItem("gptr/reloadDone", "false");
-            window.location.reload();
+            window.location.href = window.location.href;
         }
     }, [resetter, setShowDownloadCancelConfirmation])
 

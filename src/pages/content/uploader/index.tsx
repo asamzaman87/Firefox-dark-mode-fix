@@ -116,8 +116,10 @@ function Uploader() {
     }
     if (!isActive && wasActive.current) {
       (async () => {
-        await deleteChatAndCreateNew();
-        window.location.reload();
+        const res = await deleteChatAndCreateNew();
+        if (res?.ok) {
+          window.location.href = window.location.href;
+        }
       })();
     }
     const handleUnload = (event: BeforeUnloadEvent) => {
@@ -142,13 +144,12 @@ function Uploader() {
     const storedChatId = localStorage.getItem("gptr/pendingDelete");
     if (storedChatId) {
       (async () => {
-        await deleteChatAndCreateNew(false, storedChatId);
+        const res = await deleteChatAndCreateNew(false, storedChatId);
         localStorage.removeItem("gptr/pendingDelete");
         if (
-          window.location.href.startsWith("https://chatgpt.com") &&
-          !isOpening.current
+          res?.ok && window.location.href.startsWith("https://chatgpt.com") && !isOpening.current
         ) {
-            window.location.reload();
+            window.location.href = window.location.href;
         }
       })();
     }
