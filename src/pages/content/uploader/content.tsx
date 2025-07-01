@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, reload, removeAllListeners } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { PromptProps } from ".";
