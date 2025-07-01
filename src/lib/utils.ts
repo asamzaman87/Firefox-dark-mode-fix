@@ -131,11 +131,6 @@ export function normalizeAlphaNumeric(str: string) {
   return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
 }
 
-export function reload() {
-  // tell the background to reload the active tab
-  window.location.href = "https://chatgpt.com";
-  window.location.href = window.location.href;
-}
 /**
  * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
  * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
@@ -173,7 +168,6 @@ export async function deleteChatAndCreateNew(
           }
         );
 
-        // only open a new chat if the delete succeeded
         if (createChat) {
           const newChatBtn = document.querySelector<HTMLButtonElement>(
             "[data-testid='create-new-chat-button'], [aria-label='New chat']"
