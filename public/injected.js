@@ -228,7 +228,7 @@ window.fetch = async (...args) => {
                 const m = firstMsg.match(/^\[(\d+)\]/);
                 sentChunkNumber = m ? Number(m[1]) : null;
             } catch (_err) {
-                if (url.endsWith('/f/conversation')) {
+                if (url.endsWith('/conversation')) {
                     // dispatch a general error if we can't even parse the request
                     window.dispatchEvent(
                         new CustomEvent("GENERAL_ERROR", {
@@ -243,14 +243,14 @@ window.fetch = async (...args) => {
         const clonedResponse = response.clone(); // Clone the response
         const stream = clonedResponse.body; // Use the body of the cloned response
         // I am being specific with the endpoint for the error, since 404 and other errors will not have a content type of event-stream
-        if (clonedResponse.status === 429 && url.endsWith('/f/conversation')) {
+        if (clonedResponse.status === 429 && url.endsWith('/conversation')) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
                 detail: "You have exceeded the hourly limit for ChatGPT. Please wait a few minutes and try again.",
             });
             window.dispatchEvent(rateLimitExceededEvent);
         } 
 
-        if (clonedResponse.status !== 200 && clonedResponse.status !== 429 && url.endsWith('/f/conversation')) {
+        if (clonedResponse.status !== 200 && clonedResponse.status !== 429 && url.endsWith('/conversation')) {
             const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
                 detail: "GPT Reader is experiencing issues. Please try again later.",
             });
