@@ -23,7 +23,7 @@ const VolumeSlider:FC<VolumeSliderProps> = ({disabled, volume, setVolume}) => {
   }, [volume])
 
   return (
-    <Popover>
+    <Popover modal>
       <PopoverTrigger asChild>
         <Button variant="ghost" disabled={disabled} size={"icon"} className="hover:scale-115 active:scale-105 transition-all rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
            {volume === 0 && <VolumeOffIcon/>}

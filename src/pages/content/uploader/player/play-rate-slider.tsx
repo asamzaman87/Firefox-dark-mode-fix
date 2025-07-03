@@ -18,7 +18,7 @@ interface PlayRateSliderProps{
 
 const PlayRateSlider:FC<PlayRateSliderProps> = ({disabled, playRate, setPlayRate}) => {
   return (
-    <Popover>
+    <Popover modal>
       <PopoverTrigger asChild>
       <Button variant="ghost" disabled={disabled} size={"icon"} className="hover:scale-115 active:scale-105 transition-all rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">{playRate}x</Button>
       </PopoverTrigger>

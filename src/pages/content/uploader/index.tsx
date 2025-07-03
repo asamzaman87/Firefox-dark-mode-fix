@@ -35,6 +35,7 @@ function Uploader() {
   const wasActive = useRef<boolean>(false);
   const isOpening = useRef<boolean>(false);
   const LOGO = chrome.runtime.getURL('logo-128.png');
+  const autoOpen = useRef<boolean>(false);
 
   // sending the auth status to the background script
   useMemo(() => {
@@ -381,9 +382,13 @@ function Uploader() {
       return; 
     }
 
-    // * Call banner count API event to the background script
-    chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
-
+    if (!autoOpen.current) {
+      // * Call banner count API event to the background script
+      chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
+    } else {
+      autoOpen.current = false;
+    }
+    
     await triggerPromptFlow();
   };
 
@@ -392,6 +397,7 @@ function Uploader() {
     const reloaded = window.localStorage.getItem("gptr/reloadDone") === "true";
     if (reloaded) {
       (async () => {
+        autoOpen.current = true;
         await onOpenChange(true);
         window.localStorage.removeItem("gptr/reloadDone");
       })();
