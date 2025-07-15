@@ -23,6 +23,7 @@ const useStreamListener = (
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<number | null>(null);
     const promptNdx = useRef<number>(0);
+    const chunkNdxRef = useRef<number>(0);
     
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -71,6 +72,7 @@ const useStreamListener = (
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
               );
               if (newChatBtn){
+                chunkNdxRef.current = 0;
                 newChatBtn.click();
               } 
               // 1) ask for the token
@@ -247,7 +249,8 @@ const useStreamListener = (
         
         // make sure we have the right message id
         const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const turnNumber = (chunkNdx + 1) * 2;  // chunk 0 → turn 2, chunk 1 → turn 4, etc.
+        const turnNumber = (chunkNdxRef.current + 1) * 2;  // chunk 0 → turn 2, chunk 1 → turn 4, etc.
+        chunkNdxRef.current += 1;
         const turnElement = document.querySelector<HTMLElement>(
             `[data-testid="conversation-turn-${turnNumber}"]`
         );
@@ -272,6 +275,9 @@ const useStreamListener = (
         // make sure we have the right conversation id
         let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
         let urlConvId = convMatch?.[1] ?? "";
+        if (!urlConvId) {
+            console.warn("Couldn't find conversation id in url");
+        }
         if (urlConvId && urlConvId !== conversationId && uuidRe.test(urlConvId)) {
             console.warn("Got the wrong conversation id. Falling back to id in url");
             conversationId = urlConvId;
@@ -354,6 +360,7 @@ const useStreamListener = (
         retryCounts.current = {};
         lastRegularRetryChunk.current = null;
         promptNdx.current = 0;
+        chunkNdxRef.current = 0;
     }
     
     useEffect(() => {
