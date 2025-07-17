@@ -475,7 +475,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
       const chunkPlaying = isTypeAACSupported ? (getChunkAtTime(current)) : +seekAudio.id;
       // Logic for the are you still here pop-up for both firefox and chrome
-      if ((isPromptingPaused || paused) && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying !== 0) {
+      if ((isPromptingPaused || paused) && chunkPlaying === blobsLength.current && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying)) {
           pauseChunksRef.current.add(chunkPlaying);
           setIsPresenceModalOpen(true);
       }
