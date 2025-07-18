@@ -282,37 +282,70 @@ window.fetch = async (...args) => {
 };
 
 window.addEventListener("GET_TOKEN", () => {
-    if (window && window?.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken) {
-        const accessToken = window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken;
-        const userId = window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.user.id;
-        const authEvent = new CustomEvent("AUTH_RECEIVED", {
-            detail: { accessToken, userId },
-        });
-        window.dispatchEvent(authEvent);
-    }
-})
+  const session = window.__reactRouterContext
+    ?.state
+    ?.loaderData
+    ?.root
+    ?.clientBootstrap
+    ?.session;
+  if (!session?.accessToken) {
+    console.warn("No access token found");
+    return;
+  }
 
-//get all the listed voices
+  const { accessToken, user } = session;
+  window.dispatchEvent(new CustomEvent("AUTH_RECEIVED", {
+    detail: {
+      accessToken,
+      userId: user?.id
+    }
+  }));
+});
+
 window.addEventListener("GET_VOICES", async () => {
-    if (window && window?.__reactRouterContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
-        const response = await fetch("https://chatgpt.com/backend-api/settings/voices", { headers: { "authorization": `Bearer ${window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
-        const data = await response.json();
-        const voicesEvent = new CustomEvent("VOICES", {
-            detail: data,
-        });
-        window.dispatchEvent(voicesEvent);
-    }
-})
+  const session = window.__reactRouterContext
+    ?.state
+    ?.loaderData
+    ?.root
+    ?.clientBootstrap
+    ?.session;
+  if (!session?.accessToken) {
+    console.warn("No access token found");
+    return;
+  }
 
-//stop conversation
+  const res  = await fetch(
+    "https://chatgpt.com/backend-api/settings/voices",
+    { headers: { "Authorization": `Bearer ${session.accessToken}` } }
+  );
+  const data = await res.json();
+  window.dispatchEvent(new CustomEvent("VOICES", { detail: data }));
+});
+
 window.addEventListener("STOP_CONVERSATION", async (e) => {
-    if (window && window?.__reactRouterContext?.state?.loaderData?.root?.clientBootstrap?.session?.accessToken) {
-        const { conversation_id } = e.detail;
-        const response = await fetch("https://chatgpt.com/backend-api/stop_conversation", { method: "POST", body: JSON.stringify({ conversation_id }), headers: { "authorization": `Bearer ${window.__reactRouterContext?.state.loaderData.root.clientBootstrap.session.accessToken}` } });
-        const data = await response.json();
-        const conversationStoppedEvent = new CustomEvent("CONVERSATION_STOPPED", {
-            detail: data,
-        });
-        window.dispatchEvent(conversationStoppedEvent);
+  const session = window.__reactRouterContext
+    ?.state
+    ?.loaderData
+    ?.root
+    ?.clientBootstrap
+    ?.session;
+  if (!session?.accessToken) {
+    console.warn("No access token found");
+    return;
+  }
+
+  const { conversation_id } = e.detail;
+  const res = await fetch(
+    "https://chatgpt.com/backend-api/stop_conversation",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${session.accessToken}`
+      },
+      body: JSON.stringify({ conversation_id })
     }
-})
+  );
+  const data = await res.json();
+  window.dispatchEvent(new CustomEvent("CONVERSATION_STOPPED", { detail: data }));
+});

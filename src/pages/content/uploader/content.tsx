@@ -146,7 +146,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     //handles the yes button click to resume the player
     const handleYes = useCallback(() => {
-        reStartChunkProcess()
+        reStartChunkProcess(true);
     }, [reStartChunkProcess]);
 
     //resets the player on click of presence confirmation popup no button

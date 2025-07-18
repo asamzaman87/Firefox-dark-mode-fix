@@ -17,7 +17,6 @@ const useAudioUrl = (isDownload: boolean) => {
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const [progress, setProgress] = useState<number>(0);
     const [downloadPreviewText, setDownloadPreviewText] = useState<string>();
-    const promptPausedRef = useRef(isPromptingPaused);
     const nextChunkRef = useRef<number>(0);
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
@@ -161,10 +160,6 @@ const useAudioUrl = (isDownload: boolean) => {
     const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt); 
     const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
 
-    useEffect(() => {
-        promptPausedRef.current = isPromptingPaused;
-    }, [isPromptingPaused]);
-
   
     useMemo(() => {
         if (blobs.length === 0) {
@@ -215,7 +210,6 @@ const useAudioUrl = (isDownload: boolean) => {
         resetStreamListener();
         setProgress(0);
         setIsPromptingPaused(false);
-        promptPausedRef.current = false;
         nextChunkRef.current = 0;
         chunkNumList.current.clear();
         currentStreamChunkNdxRef.current = 0;
@@ -229,7 +223,10 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     }
 
-    const reStartChunkProcess = () => {
+    const reStartChunkProcess = (click: boolean = false) => {
+        if (!click && nextChunkRef.current && nextChunkRef.current > 0 && nextChunkRef.current < chunks.length && (nextChunkRef.current) % CHUNK_TO_PAUSE_ON === 0) {
+            return;
+        }
         if (currentStreamChunkNdxRef.current != (nextChunkRef.current - 1)) {
             if (chunkNumList.current.has(nextChunkRef.current-1)) return;
             const chunk = chunks[nextChunkRef.current-1];
@@ -294,8 +291,6 @@ const useAudioUrl = (isDownload: boolean) => {
     useEffect(() => {
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
 
-        if (promptPausedRef.current) return;
-
         if (currentCompletedStream?.chunkNdx != (nextChunkRef.current - 1)) {
             if (chunkNumList.current.has(nextChunkRef.current-1)) return;
             const chunk = chunks[nextChunkRef.current-1];
@@ -311,16 +306,10 @@ const useAudioUrl = (isDownload: boolean) => {
 
         if (!isDownload) {
             setAudioUrls(completedStreams);
-            const chunkNumber = currentCompletedStream?.chunkNdx;
-            if (chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber + 1) % CHUNK_TO_PAUSE_ON) === 0)) {
-                const isFirefox = /firefox/i.test(navigator.userAgent);
-                if (isFirefox) {
-                    setIsPromptingPaused(true);
-                    setWasPromptStopped("PAUSED");
-                }
-                return;
-            }
         }
+
+        if (isPromptingPaused) return;
+       
 
         if (completedStreams.length > 0 ) {
             if (
@@ -328,6 +317,12 @@ const useAudioUrl = (isDownload: boolean) => {
                 +currentCompletedStream.chunkNdx !== chunks.length - 1
             ) {
                 const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
+                const chunkNumber = currentCompletedStream?.chunkNdx + 1;
+                if (!isDownload && chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber) % CHUNK_TO_PAUSE_ON) === 0)) {
+                    setIsPromptingPaused(true);
+                    setWasPromptStopped("PAUSED");
+                    return;
+                }
                 if (nextChunk && !chunkNumList.current.has(+currentCompletedStream.chunkNdx + 1)) {
                     chunkNumList.current.add(+currentCompletedStream.chunkNdx + 1);
                     setCurrentChunkBeingPromptedIndex(
@@ -338,7 +333,7 @@ const useAudioUrl = (isDownload: boolean) => {
                 }
             }
         }
-    }, [currentCompletedStream])
+    }, [currentCompletedStream, isPromptingPaused])
 
     return { downloadPreviewText, downloadCombinedFile, progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused }
 
