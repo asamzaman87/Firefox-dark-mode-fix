@@ -460,10 +460,10 @@ const useAudioPlayer = (isDownload: boolean) => {
 
       const chunkPlaying = isTypeAACSupported ? (getChunkAtTime(current)) : +seekAudio.id;
       const targetLength = isTypeAACSupported ? blobsLength.current : audioUrls.length;
-      // console.log(!fallbackAudioRef.current, isPromptingPaused, chunkPlaying === targetLength, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying));
-      // console.log('chunkPlaying', chunkPlaying, 'targetLength', targetLength);
       // Logic for the are you still here pop-up for both firefox and chrome
-      if (!fallbackAudioRef.current && isPromptingPaused && (chunkPlaying === targetLength || chunkPlaying % CHUNK_TO_PAUSE_ON === 0) && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
+      // console.log(!fallbackAudioRef.current, chunkPlaying % CHUNK_TO_PAUSE_ON === 0, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
+      if (!fallbackAudioRef.current && chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
+          // console.log('chunkPlaying', chunkPlaying, 'targetLength', targetLength);
           pauseChunksRef.current.add(chunkPlaying);
           setIsPresenceModalOpen(true);
       }
