@@ -25,6 +25,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
     const memoryWarnedRef = useRef(false);
+    const seenRef = useRef<Set<number>>(new Set());
+    const isPromptingPausedRef = useRef(isPromptingPaused);
+    useEffect(() => { isPromptingPausedRef.current = isPromptingPaused }, [isPromptingPaused]);
 
     const toast15SecRef = useRef<string | null>(null);
     const infoToastIdRef = useRef<string | null>(null);
@@ -44,6 +47,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const fallbackAudioRef  = useRef<HTMLAudioElement | null>(null); 
     // at top of useAudioPlayer
     const chunkBoundariesRef = useRef<Array<{chunkNumber: number; endTime: number}>>([]);
+    const pendingRef = useRef<Array<{chunkNumber: number; buffer: ArrayBuffer}>>([]);
     /** Returns the 1-based chunk index containing time t */
     const getChunkAtTime = (t: number): number => {
         const bounds = chunkBoundariesRef.current;
@@ -66,13 +70,22 @@ const useAudioPlayer = (isDownload: boolean) => {
     const bufferNumList = useRef<Set<number>>(new Set());
     const evictedSoFarRef = useRef<number>(0);
     const originalHistoryLengthRef = useRef<number>(0);
-    const [pendingBuffers, setPendingBuffers] = useState<{ chunkNumber: number; buffer: ArrayBuffer }[]>([]);
     const playRateRef = useRef(playRate);
     const volumeRef   = useRef(volume);
     const pauseChunksRef = useRef<Set<number>>(new Set());
     const audioCtxRef = useRef<AudioContext | null>(null);
     const gainNodeRef  = useRef<GainNode | null>(null);
-  
+
+    const isPlayingRef   = useRef(isPlaying);
+
+    useEffect(() => {
+      isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
+    useEffect(() => {
+      isPausedRef.current = isPaused;
+    }, [isPaused]);
+      
     //resetting the media source when the user clicks on the back button or onUnmount
     const endMediaStream = () => {
         if (sourceBuffer.current) {
@@ -135,130 +148,136 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
     }
 
-    useMemo(async () => {
-        if (blobs.length && !isBackPressed && isTypeAACSupported && !isDownload) {
-            blobsLength.current = blobs.length;
-            const lastElement = blobs.slice(-1).pop();
-            if (lastElement) {
-                const buffer = await lastElement.blob.arrayBuffer();
-                setPendingBuffers(pbs => {
-                    if (pbs.some(entry => entry.chunkNumber === lastElement.chunkNumber)) {
-                      return pbs;
-                    }
-                    return [...pbs, { chunkNumber: lastElement.chunkNumber, buffer }];
-                  });
-            }
-            return;
+    // Enqueue every new blob
+    useEffect(() => {
+      blobsLength.current = blobs.length;
+      if (!(blobs.length && !isBackPressed && isTypeAACSupported && !isDownload)) {
+        seenRef.current.clear();
+        pendingRef.current = [];
+        return;
+      }
+
+      let alive = true;
+      (async () => {
+        for (const b of blobs) {
+          if (seenRef.current.has(b.chunkNumber)) continue;
+          seenRef.current.add(b.chunkNumber);
+          const buffer = await b.blob.arrayBuffer();
+          if (!alive) break;
+          pendingRef.current.push({ chunkNumber: b.chunkNumber, buffer });
         }
-        setPendingBuffers([]);
-    }, [blobs]);
-    
+      })();
+
+      return () => { alive = false; };
+    }, [blobs, isBackPressed, isTypeAACSupported, isDownload]);
+
     // watch for new buffers → try append (with quota-evict retry)
     useEffect(() => {
-        if (
-            !sourceBuffer.current
-        ) {
-            return;
-        }
+        if (!chunks.length || isPresenceModalOpen) return;
+        let cancelled = false;
         (async () => {
-        while (bufferNum.current != blobsLength.current) {
-            while (mediaSource.readyState !== 'open') {
-              await new Promise(r => setTimeout(r, 50));
-            }
-            if (bufferNumList.current.has(bufferNum.current) || bufferNum.current === chunks.length) break;
-            bufferNumList.current.add(bufferNum.current);
-            const entry = pendingBuffers.find(x => x.chunkNumber === bufferNum.current);
-            if (!entry) {
-                bufferNumList.current.delete(bufferNum.current);
-                break;
-            } 
-            const buf = entry.buffer;
-            try {
-                while (sourceBuffer.current!.updating) {
-                    await new Promise<void>((resolve) => {
-                      const onEnd = () => {
-                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
-                        resolve();
-                      };
-                      sourceBuffer.current!.addEventListener("updateend", onEnd);
-                    });
-                }
-                sourceBuffer.current!.appendBuffer(buf);
-                setPendingBuffers(pbs =>
-                    pbs.filter(x => x.chunkNumber !== bufferNum.current)
-                );
-                while (sourceBuffer.current!.updating) {
-                    await new Promise<void>((resolve) => {
-                      const onEnd = () => {
-                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
-                        resolve();
-                      };
-                      sourceBuffer.current!.addEventListener("updateend", onEnd);
-                    });
-                }
-                if (!historyBuffersRef.current.length) {
-                    play();
-                }
-                bufferNum.current += 1;
-                // ─── RECORD FOR FALLBACK ────────────────────────────
-                historyBuffersRef.current.push(buf);
-                if (historyBuffersRef.current.length > MAX_HISTORY) {
-                    historyBuffersRef.current.shift();
-                }
-                // *** decode the raw ArrayBuffer to get exact duration ***
-                const audioCtx = new AudioContext();
-                const decoded = await audioCtx.decodeAudioData(buf.slice(0));
-                const dur = decoded.duration;
-                audioCtx.close();
+          while (!cancelled) {
+              while (mediaSource.readyState !== 'open' || !sourceBuffer.current) {
+                await new Promise(r => setTimeout(r, 50));
+              }
+              if (bufferNumList.current.has(bufferNum.current) || bufferNum.current === chunks.length) break;
+              bufferNumList.current.add(bufferNum.current);
+              const entry = pendingRef.current.find(x => x.chunkNumber === bufferNum.current);
+              if (!entry) {
+                  bufferNumList.current.delete(bufferNum.current);
+                  await new Promise(r => setTimeout(r, 100));
+                  continue;
+              } 
+              const buf = entry.buffer;
+              try {
+                  while (sourceBuffer.current!.updating) {
+                      await new Promise<void>((resolve) => {
+                        const onEnd = () => {
+                          sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                          resolve();
+                        };
+                        sourceBuffer.current!.addEventListener("updateend", onEnd);
+                      });
+                  }
+                  sourceBuffer.current!.appendBuffer(buf);
+                  pendingRef.current = pendingRef.current.filter(x => x.chunkNumber !== bufferNum.current);
+                  while (sourceBuffer.current!.updating) {
+                      await new Promise<void>((resolve) => {
+                        const onEnd = () => {
+                          sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                          resolve();
+                        };
+                        sourceBuffer.current!.addEventListener("updateend", onEnd);
+                      });
+                  }
+                  if (!historyBuffersRef.current.length) {
+                      play();
+                  }
+                  bufferNum.current += 1;
+                  // ─── RECORD FOR FALLBACK ────────────────────────────
+                  historyBuffersRef.current.push(buf);
+                  if (historyBuffersRef.current.length > MAX_HISTORY) {
+                      historyBuffersRef.current.shift();
+                  }
+                  // *** decode the raw ArrayBuffer to get exact duration ***
+                  const audioCtx = new AudioContext();
+                  const decoded = await audioCtx.decodeAudioData(buf.slice(0));
+                  const dur = decoded.duration;
+                  audioCtx.close();
 
-                // compute cumulative end time:
-                const prevEnd = chunkBoundariesRef.current.length
-                ? chunkBoundariesRef.current[chunkBoundariesRef.current.length - 1].endTime
-                : 0;
-                const newEnd = prevEnd + dur;
+                  // compute cumulative end time:
+                  const prevEnd = chunkBoundariesRef.current.length
+                  ? chunkBoundariesRef.current[chunkBoundariesRef.current.length - 1].endTime
+                  : 0;
+                  const newEnd = prevEnd + dur;
 
-                // record it:
-                chunkBoundariesRef.current.push({
-                    chunkNumber: entry.chunkNumber,
-                    endTime: newEnd,
-                });
+                  // record it:
+                  chunkBoundariesRef.current.push({
+                      chunkNumber: entry.chunkNumber,
+                      endTime: newEnd,
+                  });
 
-                // now you can set total duration:
-                setPlayTimeDuration(newEnd);
-            } catch (err: any) {
-                bufferNumList.current.delete(bufferNum.current);
-                if (!err.name?.includes("QuotaExceededError")) {
-                    console.error("[APPEND] unexpected error", err);
+                  // now you can set total duration:
+                  setPlayTimeDuration(newEnd);
+                  if (bufferNum.current % CHUNK_TO_PAUSE_ON === 0) {
                     break;
-                }
-                const nextEvict = Math.min(
-                    evictedSoFarRef.current + 60,
-                    currentTimeRef.current - 30
-                );
-                if (nextEvict <= evictedSoFarRef.current) {
-                    await new Promise(r => setTimeout(r, 1_000));
-                    continue;
-                }
-                
-                sourceBuffer.current!.remove(0, nextEvict);
-                evictedSoFarRef.current = nextEvict;
-                while (sourceBuffer.current!.updating) {
-                    await new Promise<void>((resolve) => {
-                      const onEnd = () => {
-                        sourceBuffer.current!.removeEventListener("updateend", onEnd);
-                        resolve();
-                      };
-                      sourceBuffer.current!.addEventListener("updateend", onEnd);
-                    });
-                }
-            }
-        }
-    
-        if (!isPlaying && !isPaused) {
+                  }
+              } catch (err: any) {
+                  bufferNumList.current.delete(bufferNum.current);
+                  if (!err.name?.includes("QuotaExceededError")) {
+                      console.error("[APPEND] unexpected error", err);
+                      break;
+                  }
+                  const nextEvict = Math.min(
+                      evictedSoFarRef.current + 60,
+                      currentTimeRef.current - 30
+                  );
+                  if (nextEvict <= evictedSoFarRef.current) {
+                      await new Promise(r => setTimeout(r, 1_000));
+                      continue;
+                  }
+                  
+                  sourceBuffer.current!.remove(0, nextEvict);
+                  evictedSoFarRef.current = nextEvict;
+                  while (sourceBuffer.current!.updating) {
+                      await new Promise<void>((resolve) => {
+                        const onEnd = () => {
+                          sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                          resolve();
+                        };
+                        sourceBuffer.current!.addEventListener("updateend", onEnd);
+                      });
+                  }
+              }
+          }
+      
+          if (!cancelled && !isPlayingRef.current && !isPausedRef.current) {
             play();
-        }
+          }
         })();
-    }, [pendingBuffers]);
+
+        return () => { cancelled = true; };
+    }, [chunks, isPresenceModalOpen]);
 
       const playFallback = async (startTime: number) => {
         setIsPromptingPaused(true);
@@ -461,8 +480,8 @@ const useAudioPlayer = (isDownload: boolean) => {
       const chunkPlaying = isTypeAACSupported ? (getChunkAtTime(current)) : +seekAudio.id;
       const targetLength = isTypeAACSupported ? blobsLength.current : audioUrls.length;
       // Logic for the are you still here pop-up for both firefox and chrome
-      // console.log(!fallbackAudioRef.current, chunkPlaying % CHUNK_TO_PAUSE_ON === 0, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
-      if (!fallbackAudioRef.current && chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
+      // console.log(!fallbackAudioRef.current, chunkPlaying % CHUNK_TO_PAUSE_ON === 0, isPromptingPaused, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
+      if (!fallbackAudioRef.current && chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && isPromptingPausedRef.current && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
           // console.log('chunkPlaying', chunkPlaying, 'targetLength', targetLength);
           pauseChunksRef.current.add(chunkPlaying);
           setIsPresenceModalOpen(true);
@@ -581,7 +600,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         setIsPromptingPaused(false);
         thresholdsRef.current = [0];
         triggeredThresholdsRef.current.clear();
-        setPendingBuffers([]);
+        pendingRef.current = [];
         setCurrentPlayTime(0);
         memoryWarnedRef.current = false;
         evictedSoFarRef.current = 0;
@@ -595,6 +614,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         pauseChunksRef.current.clear();
         isAtEnd.current = false;
         blobsLength.current = 0;
+        seenRef.current.clear();
         if (full) {
             seekAudio.src = "";
             resetAudioUrl();
