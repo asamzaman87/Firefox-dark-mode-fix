@@ -221,6 +221,9 @@ const useAudioPlayer = (isDownload: boolean) => {
                   }
                   // *** decode the raw ArrayBuffer to get exact duration ***
                   const audioCtx = new AudioContext();
+                  if (audioCtx.state === "suspended") {
+                      await audioCtx.resume();
+                  }
                   const decoded = await audioCtx.decodeAudioData(buf.slice(0));
                   const dur = decoded.duration;
                   audioCtx.close();
@@ -350,6 +353,9 @@ const useAudioPlayer = (isDownload: boolean) => {
         // 8) on each tick, first try to jump back to MSE if it’s caught up;
         //    otherwise, if our history grew, rebuild the blob in place
         a.ontimeupdate = async () => {
+          if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume().catch(() => {});
+          }
           if (!fallbackAudioRef.current) return;
           const t = a.currentTime;
           setCurrentPlayTime(t);
@@ -473,6 +479,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     seekAudio.ontimeupdate = async () => {
       if (!isTypeAACSupported) setPartialChunkCompletedPlaying(false);
       if (isScrubbing.current) return;
+      if (audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
       const current = seekAudio.currentTime;
       setCurrentPlayTime(current);
       currentTimeRef.current = current;
