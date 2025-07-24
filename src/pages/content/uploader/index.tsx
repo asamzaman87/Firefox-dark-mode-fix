@@ -72,8 +72,6 @@ function Uploader() {
       const toastRoot = child.closest(".toast-root") as HTMLElement | null;
       if (toastRoot) {
         toastRoot.style.display = "none";
-      } else {
-        child.style.display = "none";
       }
     }
   };
