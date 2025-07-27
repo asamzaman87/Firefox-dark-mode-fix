@@ -379,6 +379,8 @@ function Uploader() {
       window.location.href = `${window.location.origin}/?model=auto`;
       return; 
     }
+    
+    await triggerPromptFlow();
 
     if (!autoOpen.current) {
       // * Call banner count API event to the background script
@@ -386,8 +388,6 @@ function Uploader() {
     } else {
       autoOpen.current = false;
     }
-    
-    await triggerPromptFlow();
   };
 
   useEffect(() => {

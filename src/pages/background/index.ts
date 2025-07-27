@@ -319,7 +319,7 @@ const handleGetBannerCount = async()=>{
       const {count} = await banner.json();
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER_COUNT", payload: count });
     } catch (error) {
-      console.log(error);
+      console.log('Error while getting announcements count:', error);
     }
   }
 }

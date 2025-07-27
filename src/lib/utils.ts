@@ -358,7 +358,13 @@ export async function getToken(): Promise<string> {
   }
 
   // Fetch new token from backend
-  const res = await fetch(`${BACKEND_URI}/auth/token`, { method: "POST" });
+  const res = await fetch(`${BACKEND_URI}/auth/token`, {
+    method: "POST",
+    headers: {
+      "x-from-extension": "true"
+    }
+  });
+
 
   if (!res.ok) {
     console.error("Token fetch failed", await res.text());
@@ -388,6 +394,7 @@ export async function secureFetch(
       ...options.headers,
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+      "x-from-extension": "true",
     },
   });
 }
