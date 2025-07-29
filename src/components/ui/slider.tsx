@@ -10,15 +10,15 @@ const Slider = React.forwardRef<
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex w-full touch-none select-none items-center",
+      "gpt:relative gpt:flex gpt:w-full gpt:touch-none gpt:select-none gpt:items-center",
       className
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full  bg-black/20! dark:bg-white/20 cursor-pointer">
-      <SliderPrimitive.Range className="absolute h-full bg-black dark:bg-white" />
+    <SliderPrimitive.Track className="gpt:relative gpt:h-1 gpt:w-full gpt:grow gpt:overflow-hidden gpt:rounded-full gpt:bg-black/20! dark:bg-white/20 gpt:cursor-pointer">
+      <SliderPrimitive.Range className="gpt:absolute gpt:h-full gpt:bg-black dark:bg-white" />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block hover:cursor-grab hover:scale-110 active:scale-100 active:cursor-grabbing size-2 rounded-full border dark:border-white/50 border-black/50 dark:bg-white bg-black shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb className="gpt:block hover:gpt:cursor-grab hover:gpt:scale-110 active:gpt:scale-100 active:gpt:cursor-grabbing gpt:size-2 gpt:rounded-full gpt:border dark:border-white/50 gpt:border-black/50 dark:bg-white gpt:bg-black gpt:shadow gpt:transition-colors focus-visible:gpt:outline-none focus-visible:gpt:ring-1 focus-visible:gpt:ring-ring disabled:gpt:pointer-events-none disabled:gpt:opacity-50" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

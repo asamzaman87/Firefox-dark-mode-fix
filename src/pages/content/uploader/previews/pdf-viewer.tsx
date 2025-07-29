@@ -49,35 +49,35 @@ const PdfViewer: FC<PdfViewerProps> = ({ file }) => {
 
 
     return (
-        <div className='flex flex-row justify-center items-center gap-2 size-full'>
+        <div className='gpt:flex gpt:flex-row gpt:justify-center gpt:items-center gpt:gap-2 gpt:size-full'>
             <Button
-                className="hover:scale-115 active:scale-105 transition-all [&_svg]:size-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                className="hover:gpt:scale-115 active:gpt:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
                 variant={"ghost"}
                 size={"icon"}
                 disabled={pageNumber <= 1}
                 onClick={previousPage}
             >
-                <span className="sr-only">Previous</span>
+                <span className="gpt:sr-only">Previous</span>
                 <ChevronLeft />
             </Button>
 
-            <div className="flex flex-col gap-2 relative overflow-y-auto max-h-full">
-                <span className="z-10 fixed bottom-2 right-32 px-4 py-2 text-sm font-medium text-muted-foreground text-center mx-auto rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shadow">
+            <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:relative gpt:overflow-y-auto gpt:max-h-full">
+                <span className="gpt:z-10 gpt:fixed gpt:bottom-2 gpt:right-32 gpt:px-4 gpt:py-2 gpt:text-sm gpt:font-medium gpt:text-muted-foreground gpt:text-center gpt:mx-auto gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow">
                     Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
                 </span>
                 <Document file={samplePDF} onLoadSuccess={onDocumentLoadSuccess}>
-                    <Page className={"mb-32! mx-0.5! mt-0.5! rounded! drop-shadow! [&>canvas]:rounded!"}  pageNumber={pageNumber} loading={<div className="h-[628.5px] w-[393.4786px] flex items-center justify-center"><Loader2Icon className='size-6 animate-spin' /></div>} />
+                    <Page className={"gpt:mb-32! gpt:mx-0.5! gpt:mt-0.5! gpt:rounded! gpt:drop-shadow! gpt:[&>canvas]:rounded!"}  pageNumber={pageNumber} loading={<div className="gpt:h-[628.5px] gpt:w-[393.4786px] gpt:flex gpt:items-center gpt:justify-center"><Loader2Icon className='gpt:size-6 gpt:animate-spin' /></div>} />
                 </Document>
             </div>
 
             <Button
-                className="hover:scale-115 active:scale-105 transition-all [&_svg]:size-6 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
+                className="hover:gpt:scale-115 active:gpt:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
                 variant={"ghost"}
                 size={"icon"}
                 disabled={pageNumber >= numPages}
                 onClick={nextPage}
             >
-                <span className="sr-only">Next</span>
+                <span className="gpt:sr-only">Next</span>
                 <ChevronRight />
             </Button>
         </div>

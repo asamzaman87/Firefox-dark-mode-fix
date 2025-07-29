@@ -7,16 +7,16 @@ import { cn } from "@/lib/utils"
 
 const ratingVariants = {
   default: {
-    star: "text-foreground hover:scale-115 active:scale-105 transition-all",
-    emptyStar: "text-muted-foreground hover:scale-115 active:scale-105 transition-all",
+    star: "gpt:text-foreground gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
+    emptyStar: "gpt:text-muted-foreground gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
   },
   destructive: {
-    star: "text-red-500 hover:scale-115 active:scale-105 transition-all",
-    emptyStar: "text-red-200 hover:scale-115 active:scale-105 transition-all",
+    star: "gpt:text-red-500 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
+    emptyStar: "gpt:text-red-200 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
   },
   yellow: {
-    star: "text-yellow-500 hover:scale-115 active:scale-105 transition-all",
-    emptyStar: "text-yellow-200 hover:scale-115 active:scale-105 transition-all",
+    star: "gpt:text-yellow-500 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
+    emptyStar: "gpt:text-yellow-200 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all",
   },
 }
 
@@ -59,15 +59,15 @@ const Ratings = ({ ...props }: RatingsProps) => {
     ) : null
 
   return (
-    <div className={cn("flex items-center gap-2")} {...props}>
+    <div className={cn("gpt:flex gpt:items-center gpt:gap-2")} {...props}>
       {[...Array(fullStars)].map((_, i) =>
         React.cloneElement(Icon, {
           key: i,
           size,
           className: cn(
-            fill ? "fill-current" : "fill-transparent",
+            fill ? "gpt:fill-current" : "gpt:fill-transparent",
             ratingVariants[variant].star,
-            asInput ? "cursor-pointer" : ""
+            asInput ? "gpt:cursor-pointer" : ""
           ),
           role: props.asInput && "input",
           onClick: () => onValueChange && onValueChange(i + 1),
@@ -80,7 +80,7 @@ const Ratings = ({ ...props }: RatingsProps) => {
           size,
           className: cn(
             ratingVariants[variant].emptyStar,
-            asInput ? "cursor-pointer" : ""
+            asInput ? "gpt:cursor-pointer" : ""
           ),
           role: props.asInput && "input",
           onClick: () =>
@@ -109,11 +109,11 @@ const PartialStar = ({ ...props }: PartialStarProps) => {
     <div
       role={asInput ? "input" : undefined}
       onClick={() => onValueChange && onValueChange()}
-      className={cn("relative inline-block", asInput && "cursor-pointer")}
+      className={cn("gpt:relative gpt:inline-block", asInput && "gpt:cursor-pointer")}
     >
       {React.cloneElement(Icon, {
         size,
-        className: cn("fill-transparent", className),
+        className: cn("gpt:fill-transparent", className),
       })}
       <div
         style={{
@@ -125,7 +125,7 @@ const PartialStar = ({ ...props }: PartialStarProps) => {
       >
         {React.cloneElement(Icon, {
           size,
-          className: cn("fill-current", className),
+          className: cn("gpt:fill-current", className),
         })}
       </div>
     </div>

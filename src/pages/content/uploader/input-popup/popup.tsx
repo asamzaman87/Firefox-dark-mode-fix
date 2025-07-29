@@ -10,24 +10,36 @@ import { DialogProps, } from "@radix-ui/react-dialog";
 import { Type } from "lucide-react";
 import { FC } from "react";
 import InputForm, { InputFormProps } from "./input-form";
+import { usePremiumModal } from "../../../../context/premium-modal";
 
 type InputPopupProps = DialogProps & { onSubmit: InputFormProps["onSubmit"]; disabled?: boolean };
 
 const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
+    const {isTriggered, setOpen} = usePremiumModal();
+
+    const triggerPremium = (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>
+    ) => {
+      if (isTriggered) {
+        setOpen(true);
+        e.preventDefault();
+      }
+    };
+
     return (
         <Dialog {...props}>
             <DialogTrigger asChild disabled={disabled}>
-                <div className={cn("group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-gray-500 dark:hover:border-gray-200 hover:border-gray-700 px-5 py-2.5 text-center transition hover:bg-gray-200 dark:hover:bg-gray-700",
-                    "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",)}>
-                    <div className="flex flex-col items-center justify-center gap-4 sm:px-5 cursor-pointer">
-                        <div className="rounded-full border border-gray-500 border-dashed flex items-center justify-center size-20">
+                <div onClick={triggerPremium} className={cn("gpt:group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 gpt:dark:hover:border-gray-200 gpt:hover:border-gray-700 gpt:px-5 gpt:py-2.5 gpt:text-center gpt:transition gpt:hover:bg-gray-200 dark:hover:bg-gray-700",
+                    "gpt:ring-offset-background gpt:focus-visible:outline-none gpt:focus-visible:ring-2 gpt:focus-visible:ring-ring gpt:focus-visible:ring-offset-2",)}>
+                    <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 sm:px-5 gpt:cursor-pointer">
+                        <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:flex gpt:items-center gpt:justify-center gpt:size-20">
                             <Type
-                                className="size-7"
+                                className="gpt:size-7"
                                 aria-hidden="true"
                             />
                         </div>
-                        <div className="flex flex-col items-end justify-center gap-px">
-                            <p className="font-medium text-center">
+                        <div className="gpt:flex gpt:flex-col gpt:items-end gpt:justify-center gpt:gap-px">
+                            <p className="gpt:font-medium gpt:text-center">
                                 {chrome.i18n.getMessage('type_or_paste_text')}
                             </p>
                         </div>
@@ -38,11 +50,11 @@ const InputPopup: FC<InputPopupProps> = ({ disabled, onSubmit, ...props }) => {
                 onInteractOutside={(e) => {
                     e.preventDefault(); //prevents mask click close
                 }}
-                className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
+                className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw]"
             >
                 <DialogHeader>
-                    <DialogTitle className="text-center">{chrome.i18n.getMessage('type_or_paste_text')}</DialogTitle>
-                    <DialogDescription className="sr-only">{chrome.i18n.getMessage('type_or_paste_text_v2')}</DialogDescription>
+                    <DialogTitle className="gpt:text-center">{chrome.i18n.getMessage('type_or_paste_text')}</DialogTitle>
+                    <DialogDescription className="gpt:sr-only">{chrome.i18n.getMessage('type_or_paste_text_v2')}</DialogDescription>
                 </DialogHeader>
                 <InputForm disabled={disabled} onSubmit={onSubmit} />
             </DialogContent>

@@ -4,14 +4,14 @@ import '@pages/newtab/Newtab.css';
 
 export default function Newtab(): JSX.Element {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+    <div className="gpt:App">
+      <header className="gpt:App-header">
+        <img src={logo} className="gpt:App-logo" alt="logo" />
         <p>
           Edit <code>src/pages/newtab/Newtab.tsx</code> and save to reload.
         </p>
         <a
-          className="App-link"
+          className="gpt:App-link"
           href="https://reactjs.org"
           target="_blank"
           rel="noopener noreferrer"

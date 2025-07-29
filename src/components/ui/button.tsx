@@ -5,25 +5,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "hover:cursor:pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "hover:cursor:gpt:pointer gpt:inline-flex gpt:items-center gpt:justify-center gpt:gap-2 gpt:whitespace-nowrap gpt:rounded-md gpt:text-sm gpt:font-medium gpt:ring-offset-background gpt:transition-colors focus-visible:gpt:outline-none focus-visible:gpt:ring-2 focus-visible:gpt:ring-ring focus-visible:gpt:ring-offset-2 gpt:disabled:pointer-events-none gpt:disabled:opacity-50 gpt:[&_svg]:pointer-events-none gpt:[&_svg]:size-4 gpt:[&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground",
+        default: "gpt:bg-primary gpt:text-primary-foreground",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "gpt:bg-destructive gpt:text-destructive-foreground hover:gpt:bg-destructive/90",
         outline:
-          "border border-input bg-background text-primary hover:bg-gray-100 hover:text-gray-700 dark:hover:text-gray-100",
+          "gpt:border gpt:border-input gpt:bg-background gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 dark:hover:text-gray-100",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "text-primary hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-100",
-        link: "text-primary underline-offset-4 hover:underline",
+          "gpt:bg-secondary gpt:text-secondary-foreground hover:gpt:bg-secondary/80",
+        ghost: "gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+        link: "gpt:text-primary gpt:underline-offset-4 hover:gpt:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "gpt:h-10 gpt:px-4 gpt:py-2",
+        sm: "gpt:h-9 gpt:rounded-md gpt:px-3",
+        lg: "gpt:h-11 gpt:rounded-md gpt:px-8",
+        icon: "gpt:h-10 gpt:w-10",
       },
     },
     defaultVariants: {

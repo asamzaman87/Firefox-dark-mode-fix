@@ -29,22 +29,22 @@ const PresenceConfirmationPopup: FC<PresenceConfirmationPopupProps> = ({ open, s
         onInteractOutside={(e) => {
           e.preventDefault(); //prevents mask click close
         }}
-        className="bg-gray-100 dark:bg-gray-800 border-none"
+        className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none"
       >
         <DialogHeader>
-          <DialogTitle className="text-center">
+          <DialogTitle className="gpt:text-center">
             {chrome.i18n.getMessage("presence_confirmation_title")}
           </DialogTitle>
-          <DialogDescription className="sr-only">
+          <DialogDescription className="gpt:sr-only">
             {chrome.i18n.getMessage("presence_confirmation_description")}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center justify-center gap-4 p-4">
-          <div className="flex gap-4 justify-center">
-            <Button disabled={loading} variant="ghost" size="sm" className="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all" onClick={onYes}>
-              {loading && <LoaderCircleIcon className="size-6 animate-spin" />} {chrome.i18n.getMessage("presence_confirmation_yes")}
+        <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:p-4">
+          <div className="gpt:flex gpt:gap-4 gpt:justify-center">
+            <Button disabled={loading} variant="ghost" size="sm" className="gpt:w-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all" onClick={onYes}>
+              {loading && <LoaderCircleIcon className="gpt:size-6 gpt:animate-spin" />} {chrome.i18n.getMessage("presence_confirmation_yes")}
             </Button>
-            <Button disabled={loading} size="sm" onClick={onNo} variant={"ghost"} className="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+            <Button disabled={loading} size="sm" onClick={onNo} variant={"ghost"} className="gpt:w-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
               {chrome.i18n.getMessage("presence_confirmation_no")}
             </Button>
           </div>

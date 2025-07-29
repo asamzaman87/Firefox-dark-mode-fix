@@ -38,21 +38,21 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
 
     return (
         <Form {...form}>
-            <form className="w-full space-y-6 [&_label]:text-lg [&_button]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
-                <div className="w-full space-y-2">
-                    <h1 className="text-xl">{chrome.i18n.getMessage("we_appreciate_feedback")}</h1>
-                    <p className="text-gray-500 text-sm">{chrome.i18n.getMessage("feedback_prompt")}</p>
+            <form className="gpt:w-full gpt:space-y-6 [&_label]:text-lg [&_button]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
+                <div className="gpt:w-full gpt:space-y-2">
+                    <h1 className="gpt:text-xl">{chrome.i18n.getMessage("we_appreciate_feedback")}</h1>
+                    <p className="gpt:text-gray-500 gpt:text-sm">{chrome.i18n.getMessage("feedback_prompt")}</p>
                 </div>
                 <FormField
                     control={form.control}
                     name="rating"
                     render={({ field }) => (
-                        <FormItem className="w-full flex flex-col justify-center items-center">
+                        <FormItem className="gpt:w-full gpt:flex gpt:flex-col gpt:justify-center gpt:items-center">
                             <Ratings size={40} variant="destructive" Icon={<Heart />} asInput value={field.value} onValueChange={field.onChange} />
-                            <FormControl className="sr-only">
-                                <Input className="rounded-lg" {...field} />
+                            <FormControl className="gpt:sr-only">
+                                <Input className="gpt:rounded-lg" {...field} />
                             </FormControl>
-                            <FormMessage className="text-red-600" />
+                            <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )}
                 />
@@ -60,26 +60,26 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                        <FormItem className="w-full">
+                        <FormItem className="gpt:w-full">
                             <FormControl>
-                                <Input className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded focus:border-gray-200 dark:focus:border-gray-700 outline-none"  placeholder={"Enter your email"} type="email"  {...field} />     
+                            <Input className="gpt:border gpt:border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gpt:rounded gpt:focus:border-gray-200 dark:focus:border-gray-700 gpt:outline-none gpt:focus-visible:ring-offset-2"  placeholder={"Enter your email"} type="email"  {...field} />     
                             </FormControl>
-                            <FormMessage className="text-red-600" />
+                            <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )} />
                 <FormField
                     control={form.control}
                     name="comments"
                     render={({ field }) => (
-                        <FormItem className="w-full">
+                        <FormItem className="gpt:w-full">
                             <FormControl>
-                                <Textarea className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 resize-none rounded min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 outline-none"  placeholder={chrome.i18n.getMessage("feedback_question")}  {...field} />     
+                            <Textarea className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] gpt:focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none"  placeholder={chrome.i18n.getMessage("feedback_question")}  {...field} />     
                             </FormControl>
-                            <FormMessage className="text-red-600" />
+                            <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"}  className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">{loading ? <Loader2Icon className="animate-spin size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
+                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"}  className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">{loading ? <Loader2Icon className="gpt:animate-spin gpt:size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
                 </DialogFooter>
             </form>
         </Form>

@@ -69,14 +69,14 @@ export default function Popup(): JSX.Element {
   const logo = chrome.runtime.getURL('logo-128.png');
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 h-screen w-screen p">
-      {/* <div className={"absolute top-4 left-4 size-max"}>
+    <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:h-screen gpt:w-screen gpt:p">
+      {/* <div className={gpt:"absolute gpt:top-4 gpt:left-4 gpt:size-max"}>
         <FeedbackPopup />
       </div> */}
-      <div className="inline-flex flex-col justify-center items-center gap-2 font-medium text-lg"><img src={logo} alt="GPT Reader Logo" className="size-10" />GPT Reader</div>
-      {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="text-xl rounded-lg bg-black text-white">{isActive ? "Active" : "Activate"}</Button>}
-      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="text-xl rounded-lg bg-black text-white">Login to use GPT Reader</Button>}
-      {!isValidUrl && <Button onClick={switchToActiveTab} className="text-xl rounded-lg bg-black text-white">Click here to go to ChatGPT</Button>}
+      <div className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2 gpt:font-medium gpt:text-lg"><img src={logo} alt="GPT Reader Logo" className="gpt:size-10" />GPT Reader</div>
+      {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">{isActive ? "Active" : "Activate"}</Button>}
+      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Login to use GPT Reader</Button>}
+      {!isValidUrl && <Button onClick={switchToActiveTab} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Click here to go to ChatGPT</Button>}
     </div>
   );
 }

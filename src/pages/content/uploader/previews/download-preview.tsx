@@ -63,10 +63,10 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
   }, [setDownloadCancelConfirmation, setIsConfirmationOpen, hasError, onCancel]);
 
   return (
-    <div className="flex flex-col items-center justify-center size-full gap-4">
-      <div className="text-center">
+    <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:size-full gpt:gap-4">
+      <div className="gpt:text-center">
         {!hasError && (
-          <h1 className="text-xl font-bold">
+          <h1 className="gpt:text-xl gpt:font-bold">
             {progress >= 0 &&
               progress < 100 &&
               `${chrome.i18n.getMessage("downloading_status")} (${progress.toFixed(0)}%)`}
@@ -75,20 +75,20 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         )}
 
         {hasError && (
-          <h1 className="text-xl font-bold text-red-600">
+          <h1 className="gpt:text-xl gpt:font-bold gpt:text-red-600">
             {`${chrome.i18n.getMessage("download_aborted")} (${progress.toFixed(0)}%)`}
           </h1>
         )}
 
         {!hasError && (
-          <p className="text-sm text-gray-700 dark:text-gray-400">
+          <p className="gpt:text-sm gpt:text-gray-700 dark:text-gray-400">
             {progress === 100
               ? `${chrome.i18n.getMessage("full_download_note")}`
               : `${chrome.i18n.getMessage("please_wait_file_downloading")}`}
           </p>
         )}
         {hasError && (
-          <p className="text-red-500 text-wrap max-w-lg text-center">
+          <p className="gpt:text-red-500 gpt:text-wrap gpt:max-w-lg gpt:text-center">
             {progress === 0 &&
               chrome.i18n.getMessage("error_no_start")}
             {progress > 0 &&
@@ -98,19 +98,19 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
       </div>
 
       {/** PREVIEW */}
-      <div className="relative size-full overflow-y-auto">
+      <div className="gpt:relative gpt:size-full gpt:overflow-y-auto">
         <span
           className={cn(
-            "z-[1] rounded-full text-sm px-4 py-2 text-white dark:text-black bg-gray-800 dark:bg-gray-100 absolute top-4 right-1/2 translate-x-1/2 -translate-y-2 size-max inline-flex justify-center items-center gap-2",
-            { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
+            "gpt:z-[1] gpt:rounded-full gpt:text-sm gpt:px-4 gpt:py-2 gpt:text-white dark:text-black gpt:bg-gray-800 dark:bg-gray-100 gpt:absolute gpt:top-4 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-2 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
+            { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": text.trim()?.length > 0 }
           )}
         >
-          <Loader2 className="animate-spin" /> {chrome.i18n.getMessage("loading_preview")}
+          <Loader2 className="gpt:animate-spin" /> {chrome.i18n.getMessage("loading_preview")}
         </span>
         <span
           className={cn(
-            "max-w-lg rounded-md z-[1] text-wrap text-center text-sm font-medium p-4 text-white dark:text-black bg-gray-800 dark:bg-gray-100 absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-12 size-max inline-flex justify-center items-center gap-2",
-            { "opacity-0 ease-in-out transition-all": text.trim()?.length > 0 }
+            "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:text-center gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white dark:text-black gpt:bg-gray-800 dark:bg-gray-100 gpt:absolute gpt:top-1/2 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-12 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
+            { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": text.trim()?.length > 0 }
           )}
         >
           {chrome.i18n.getMessage("gpt4_download_note")}
@@ -118,18 +118,18 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         <DocumentViewer content={text} />
       </div>
 
-      <div className="w-full sm:px-[15%] flex flex-col gap-4">
+      <div className="gpt:w-full gpt:sm:px-[15%] gpt:flex gpt:flex-col gpt:gap-4">
         {/** PROGRESS BAR */}
-        <div className="w-full">
+        <div className="gpt:w-full">
           <Progress
-            className="w-full h-2 rounded-sm"
+            className="gpt:w-full gpt:h-2 gpt:rounded-sm"
             value={progress}
             max={100}
           />
         </div>
 
         {/** BUTTON CONTROLS */}
-        <div className="flex justify-center gap-4 flex-col sm:flex-row">
+        <div className="gpt:flex gpt:justify-center gpt:gap-4 gpt:flex-col gpt:sm:flex-row">
           {onCancel && progress < 100 && (
             <Popover
               onOpenChange={toggleConfirmation}
@@ -138,40 +138,40 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                  className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                 >
                   <X />
                   {chrome.i18n.getMessage("cancel")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="relative p-4 w-max flex flex-col gap-8 justify-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <header className="flex flex-col gap-2">
-                  <h4 className="text-lg font-medium leading-none text-wrap">
+              <PopoverContent className="gpt:relative gpt:p-4 gpt:w-max gpt:flex gpt:flex-col gpt:gap-8 gpt:justify-center gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                <header className="gpt:flex gpt:flex-col gpt:gap-2">
+                  <h4 className="gpt:text-lg gpt:font-medium gpt:leading-none gpt:text-wrap">
                     {chrome.i18n.getMessage("cancel_download_confirmation_title")}
                   </h4>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 sr-only">
+                  <p className="gpt:text-sm gpt:font-medium gpt:text-gray-600 dark:text-gray-400 gpt:sr-only">
                     {chrome.i18n.getMessage("cancel_download_confirmation_sr")}
                   </p>
                 </header>
-                <div className="flex gap-4 w-full justify-center flex-wrap">
+                <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
                   <Button
                     variant="ghost"
-                    className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                    className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                     onClick={() => toggleConfirmation(false)}
                   >
                     {chrome.i18n.getMessage("continue_download")}
                   </Button>
                   <Button
                     variant="ghost"
-                    className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                    className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                     onClick={onCancel}
                   >
                     {chrome.i18n.getMessage("cancel_download")}
                   </Button>
                 </div>
-                {/* <Button onClick={() => setIsConfirmationOpen(false)} variant="ghost" size="icon" className="cursor-pointer absolute right-2 top-2 hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                {/* <Button onClick={() => setIsConfirmationOpen(false)} variant="ghost" size="icon" className="gpt:cursor-pointer gpt:absolute gpt:right-2 gpt:top-2 hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 gpt:transition-all">
                   <X />
-                  <span className="sr-only">Close</span>
+                  <span className="gpt:sr-only">Close</span>
                 </Button> */}
               </PopoverContent>
             </Popover>
@@ -179,7 +179,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
           {progress > 0 && (
             <Button
               variant="ghost"
-              className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+              className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
               onClick={onDownload}
             >
               <DownloadCloud /> {chrome.i18n.getMessage("download")}
@@ -187,7 +187,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
           )}
         </div>
         {progress > 0 && (
-          <p className="text-center font-medium text-gray-800 dark:text-gray-200">
+          <p className="gpt:text-center gpt:font-medium gpt:text-gray-800 dark:text-gray-200">
             {chrome.i18n.getMessage("note_partial_audio")}
           </p>
         )}

@@ -20,7 +20,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "gpt:fixed gpt:inset-0 gpt:z-50 gpt:bg-black/80 data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0",
       className
     )}
     {...props}
@@ -41,17 +41,17 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-none",
+        "gpt:fixed gpt:left-[50%] gpt:top-[50%] gpt:z-50 gpt:grid gpt:w-full gpt:max-w-lg gpt:translate-x-[-50%] gpt:translate-y-[-50%] gpt:gap-4 gpt:border gpt:bg-background gpt:p-6 gpt:shadow-lg gpt:duration-200 data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0 data-[state=closed]:gpt:gpt:zoom-out-95 data-[state=open]:gpt:gpt:zoom-in-95 data-[state=closed]:gpt:gpt:slide-out-to-left-1/2 data-[state=closed]:gpt:gpt:slide-out-to-top-[48%] data-[state=open]:gpt:gpt:slide-in-from-left-1/2 data-[state=open]:gpt:gpt:slide-in-from-top-[48%] gpt:rounded-none",
         className
       )}
       {...props}
     >
       {children}
       {closeButton &&
-        <DialogPrimitive.Close className="cursor-pointer absolute right-4 top-4">
-          <Button variant="ghost" size="icon" className="hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+        <DialogPrimitive.Close className="gpt:cursor-pointer gpt:absolute gpt:right-4 gpt:top-4">
+          <Button variant="ghost" size="icon" className="gpt:hover:scale-115 gpt:active:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
             <X />
-            <span className="sr-only">{chrome.i18n.getMessage("close")}</span>
+            <span className="gpt:sr-only">{chrome.i18n.getMessage("close")}</span>
           </Button>
         </DialogPrimitive.Close>
       }
@@ -66,7 +66,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "gpt:flex gpt:flex-col gpt:space-y-1.5 gpt:text-center sm:gpt:gpt:text-left",
       className
     )}
     {...props}
@@ -80,7 +80,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "gpt:flex gpt:flex-col-reverse sm:gpt:gpt:flex-row sm:gpt:gpt:justify-end sm:gpt:gpt:space-x-2",
       className
     )}
     {...props}
@@ -95,7 +95,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "gpt:text-lg gpt:font-semibold gpt:leading-none gpt:tracking-tight",
       className
     )}
     {...props}
@@ -109,7 +109,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("gpt:text-sm gpt:text-muted-foreground", className)}
     {...props}
   />
 ))

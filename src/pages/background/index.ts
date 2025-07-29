@@ -6,12 +6,12 @@ import {
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
-import { detectBrowser, getGPTTabs, secureFetch, switchToActiveTab } from "@/lib/utils";
+import { cancelSubscription, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, handleCheckUserSubscription, secureFetch, switchToActiveTab } from "@/lib/utils";
 
 chrome.storage.local.clear();
 
 //listen for messages from popup and content scripts
-chrome.runtime.onMessage.addListener(async (request, sender) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.type) {
     case LISTENERS.AUTH_RECEIVED: {
       chrome.storage.local.set({ isAuthenticated: request.isAuthenticated });
@@ -39,16 +39,18 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
     }
     //verify if triggered from valid origin (onClick on onInstalled event)
     case "VERIFY_ORIGIN": {
-      const tabId = sender?.tab?.id;
-      if (tabId) {
-        const { origin } = (await chrome.storage.local.get("origin")) ?? {};
-        if (origin) {
-          chrome.tabs.sendMessage(tabId, {
-            type: "OPEN_POPUP",
-            payload: "ORIGIN_VERIFIED",
-          });
+      (async () => {
+        const tabId = sender?.tab?.id;
+        if (tabId) {
+          const { origin } = (await chrome.storage.local.get("origin")) ?? {};
+          if (origin) {
+            chrome.tabs.sendMessage(tabId, {
+              type: "OPEN_POPUP",
+              payload: "ORIGIN_VERIFIED",
+            });
+          }
         }
-      }
+      })();
       break;
     }
     case "SET_ORIGIN": {
@@ -82,6 +84,43 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
     case "ANNOUNCEMENTS_OPENED": {
       const count = request.count;
       handleBannerCountView(count);
+      break;
+    }
+    case "CHECK_SUBSCRIPTION": {
+      (async () => {
+        const result = await handleCheckUserSubscription();
+        sendResponse(result);
+      })();
+      return true;
+    }
+    case "GET_PRODUCTS_PRICES": {
+      (async () => {
+        const product = await fetchStripeProducts();
+        sendResponse(product);
+      })();
+      return true;
+    }
+    case "CREATE_CHECKOUT_SESSION": {
+      const payload = request.payload;
+      (async () => {
+        const session = await createCheckoutSession(payload);
+        sendResponse(session);
+      })();
+      return true;
+    }
+    case "CANCEL_SUBSCRIPTION": {
+      const subscriptionId = request?.payload?.subscriptionId;
+      (async () => {
+        const res = await cancelSubscription(subscriptionId);
+        sendResponse(res);
+      })();
+      return true;
+    }
+    case "SIGNOUT_RECEIVED": {
+      (async () => {
+        await chrome.storage.local.clear();
+        await chrome.storage.sync.clear();
+      })();
       break;
     }
     default:
@@ -216,8 +255,6 @@ const showNotificationFallback = async (source: string) => {
   try {
     const LOGO = chrome.runtime.getURL("logo-128.png");
     const notificationId = `chatgpt-extension-${source}-${Date.now()}`;
-    console.log({ LOGO, notificationId });
-
     // Detect if we're running in Firefox
     const isFirefox = detectBrowser() === "firefox";
 
@@ -232,9 +269,9 @@ const showNotificationFallback = async (source: string) => {
       ...(isFirefox
         ? {}
         : {
-            requireInteraction: true,
-            buttons: [{ title: "Open ChatGPT" }, { title: "Dismiss" }],
-          }),
+          requireInteraction: true,
+          buttons: [{ title: "Open ChatGPT" }, { title: "Dismiss" }],
+        }),
     };
 
     await chrome.notifications.create(
@@ -247,7 +284,7 @@ const showNotificationFallback = async (source: string) => {
       }
     );
     // Handle notification clicks (works in both browsers)
-    chrome.notifications.onClicked.addListener(async(clickedNotificationId) => {
+    chrome.notifications.onClicked.addListener(async (clickedNotificationId) => {
       if (clickedNotificationId === notificationId) {
         // Open ChatGPT in a new tab
         await switchToActiveTab();
@@ -296,7 +333,7 @@ const handleGetBannerPolling = async () => {
       const banner = await secureFetch(
         `${BACKEND_URI}/gpt-reader/v2/banner`
       );
-      const {data} = await banner.json();
+      const { data } = banner;
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER", payload: data });
     } catch (error) {
       console.log(error);
@@ -305,7 +342,7 @@ const handleGetBannerPolling = async () => {
   }
 };
 
-const handleGetBannerCount = async()=>{
+const handleGetBannerCount = async () => {
   const activeTab = await getGPTTabs();
   if (!activeTab?.length || !activeTab[0].id) return;
   if (activeTab[0].id) {
@@ -316,7 +353,7 @@ const handleGetBannerCount = async()=>{
       const banner = await secureFetch(
         `${BACKEND_URI}/gpt-reader/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
       );
-      const {count} = await banner.json();
+      const { count } = banner;
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER_COUNT", payload: count });
     } catch (error) {
       console.log('Error while getting announcements count:', error);
@@ -324,7 +361,7 @@ const handleGetBannerCount = async()=>{
   }
 }
 
-const handleBannerCountView = async (count: number) =>{
+const handleBannerCountView = async (count: number) => {
   await chrome.storage.sync.set({ bannerCount: count, countLastViewedOn: new Date().toISOString() });
 }
 

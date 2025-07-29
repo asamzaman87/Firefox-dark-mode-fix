@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOKEN_TTL_MS } from "./constants";
+import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -60,13 +62,13 @@ export function formatBytes(
 
 export const waitForPrepareChat = (): Promise<{ event: string; data: any }[]> =>
   new Promise(resolve => {
-  const handler = (e: CustomEvent) => {
+    const handler = (e: CustomEvent) => {
       console.log('PREPARE_RECEIVED in utils');
       window.removeEventListener("PREPARE_RECEIVED", handler as any);
       resolve(e.detail);
-  };
-  window.addEventListener("PREPARE_RECEIVED", handler as any);
-});
+    };
+    window.addEventListener("PREPARE_RECEIVED", handler as any);
+  });
 
 //split text to small chunks
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
@@ -195,7 +197,7 @@ export function splitIntoChunksV1(text: string, chunkSize: number = DOWLOAD_CHUN
 
   return sentences.reduce((chunks, sentence, i, arr) => {
     const isCurrentChunkSizeGreaterThanOrEqualChunkSize = (currentChunk + sentence).length >= chunkSize;
-    const isEnd = i === arr.length-1
+    const isEnd = i === arr.length - 1
     if (isCurrentChunkSizeGreaterThanOrEqualChunkSize) {
       chunks.push({ id: `${chunkId++}`, text: currentChunk.trim(), completed: false });
       currentChunk = sentence.trim();
@@ -241,11 +243,11 @@ export const switchToActiveTab = async () => {
   const activeTab = await getGPTTabs();
   if (!activeTab?.length || !activeTab[0].id) {
     const tab = await chrome.tabs.create({ url: "https://chatgpt.com/?model=auto" });
-    if(tab.id){
-        await chrome.tabs.update(tab.id, { active: true });
-        return tab.id +"::new_tab";
+    if (tab.id) {
+      await chrome.tabs.update(tab.id, { active: true });
+      return tab.id + "::new_tab";
     }
-    return 
+    return
   }
   await chrome.tabs.update(activeTab[0].id, { active: true });
   return activeTab[0].id;
@@ -278,7 +280,7 @@ export function monitorStopButton() {
         window.dispatchEvent(new Event("STOP_STREAM_LOOP"));
         clearInterval(intervalId);
       }
-    } 
+    }
     // button disappeared after it had appeared → stop polling
     else if (visibleSince !== null) {
       clearInterval(intervalId);
@@ -307,7 +309,6 @@ export function observeElement(toObserve: string, cb?: (s: boolean) => void): vo
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     cb && cb(isPresent);
-  
   };
 
   // Create the observer
@@ -350,6 +351,16 @@ export async function getToken(): Promise<string> {
     "jwtTokenExpiry",
   ]);
 
+  const storageData = await new Promise<FetchUserType>((resolve, reject) => {
+    chrome.storage.sync.get(["email", "name", "openaiId"], (result) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      resolve(result as FetchUserType);
+    });
+  });
+  const { email, name, openaiId } = storageData;
+
   const now = Date.now();
 
   // Return cached token if still valid
@@ -361,10 +372,11 @@ export async function getToken(): Promise<string> {
   const res = await fetch(`${BACKEND_URI}/auth/token`, {
     method: "POST",
     headers: {
-      "x-from-extension": "true"
-    }
+      "x-from-extension": "true",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, name, openaiId })
   });
-
 
   if (!res.ok) {
     console.error("Token fetch failed", await res.text());
@@ -385,49 +397,190 @@ export async function getToken(): Promise<string> {
 export async function secureFetch(
   url: string,
   options: RequestInit = {}
-): Promise<Response> {
-  const token = await getToken();
+): Promise<any> {
+  const ignoreKeys = ["gpt-feedback", "banner"];
+  const neglact = ignoreKeys.some(key => url.includes(key));
 
-  return fetch(url, {
+  const token = await getToken();
+  const hashAccessToken = await getStoredValue<string>("hashAccessToken");
+  const res = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
       Authorization: `Bearer ${token}`,
+      ...( !neglact && {"Hat-Token": hashAccessToken}),
       "Content-Type": "application/json",
       "x-from-extension": "true",
     },
   });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.message || `Error ${res.status}`);
+  }
+  return data;
 }
 
 export const waitForElement = (
-    selector: string | string[],
-    timeout = 5000
-  ): Promise<Element> => {
-    const combinedSelector = Array.isArray(selector) ? selector.join(", ") : selector;
-    // const startTime = performance.now();
-    return new Promise((resolve, reject) => {
-      const el = document.querySelector(combinedSelector);
-      if (el) {
-        // const elapsed = performance.now() - startTime;
-        // console.log(`Element found immediately after ${elapsed.toFixed(2)} ms`);
-        return resolve(el);
-      }
-  
-      const observer = new MutationObserver(() => {
-        const elFound = document.querySelector(combinedSelector);
-        if (elFound) {
-          observer.disconnect();
-          // const elapsed = performance.now() - startTime;
-          // console.log(`Element found after ${elapsed.toFixed(2)} ms`);
-          resolve(elFound);
-        }
-      });
-  
-      observer.observe(document.body, { childList: true, subtree: true });
-  
-      setTimeout(() => {
+  selector: string | string[],
+  timeout = 5000
+): Promise<Element> => {
+  const combinedSelector = Array.isArray(selector) ? selector.join(", ") : selector;
+  // const startTime = performance.now();
+  return new Promise((resolve, reject) => {
+    const el = document.querySelector(combinedSelector);
+    if (el) {
+      // const elapsed = performance.now() - startTime;
+      // console.log(`Element found immediately after ${elapsed.toFixed(2)} ms`);
+      return resolve(el);
+    }
+
+    const observer = new MutationObserver(() => {
+      const elFound = document.querySelector(combinedSelector);
+      if (elFound) {
         observer.disconnect();
-        reject(new Error(`Timeout: Element ${combinedSelector} not found.`));
-      }, timeout);
+        // const elapsed = performance.now() - startTime;
+        // console.log(`Element found after ${elapsed.toFixed(2)} ms`);
+        resolve(elFound);
+      }
     });
-  };
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`Timeout: Element ${combinedSelector} not found.`));
+    }, timeout);
+  });
+};
+
+export interface UserType {
+  email: string;
+  name: string;
+  id: string;
+  iat: number;
+  idp: string;
+  image: string;
+  intercom_hash: string;
+  mfa: boolean;
+  picture: string;
+}
+
+export async function getStoredValue<T = string>(
+  key: string,
+  storageType: 'sync' | 'local' = 'sync'
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const storage = chrome.storage[storageType];
+    if (!storage) {
+      reject(new Error(`Invalid storage type: ${storageType}`));
+      return;
+    }
+
+    storage.get(key, (res) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(res[key]);
+      }
+    });
+  });
+}
+
+
+
+export const handleCheckUserSubscription = async () => {
+  try {
+    const openaiId = await getStoredValue<string>("openaiId");
+    const accessToken = await getStoredValue<string>("accessToken");
+
+    if (!openaiId || !accessToken) {
+      chrome.storage.local.set({ hasSubscription: false });
+      return false;
+    }
+
+    const data: {
+      hasSubscription: boolean;
+      subscriptionId: string;
+      isSubscriptionCancelled: boolean;
+      currentPeriodEnd: number;
+    } = await secureFetch(
+      `${BACKEND_URI}/gpt-reader/check-subscription?openaiId=${openaiId}`
+    );
+    chrome.storage.local.set({
+      hasSubscription: data?.hasSubscription || false,
+      subscriptionId: data.subscriptionId,
+      isSubscriptionCancelled: data.isSubscriptionCancelled || false,
+      currentPeriodEnd: data.currentPeriodEnd,
+    });
+    return data.hasSubscription || false;
+  } catch (err) {
+    console.error("Error checking subscription:", err);
+    //! HIGHLY CRITICAL CASE: ✅ Fallback to true if Vercel/API is down
+    chrome.storage.local.set({
+      hasSubscription: true,
+      subscriptionId: null,
+      isSubscriptionCancelled: false,
+      currentPeriodEnd: null,
+    });
+    return true;
+  }
+};
+
+export const fetchStripeProducts = async () => {
+  try {
+    const products = await secureFetch(
+      `${BACKEND_URI}/gpt-reader/products-list`
+    );
+    return products[0] || [];
+  } catch (error) {
+    console.log("Error fetching products:", error);
+    throw error;
+  }
+};
+
+export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
+  try {
+    const data = await secureFetch(
+      `${BACKEND_URI}/gpt-reader/create-checkout-session`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+    return data?.session ?? null;
+  } catch (error) {
+    console.log("Error creating checkout session:", error);
+    throw error;
+  }
+};
+
+export const cancelSubscription = async (subscriptionId: string) => {
+  try {
+    const res = await secureFetch(
+      `${BACKEND_URI}/gpt-reader/cancel-subscription?subscriptionId=${subscriptionId}`,
+      { method: "DELETE" }
+    );
+    return res;
+  } catch (error) {
+    console.log("Error canceling subscription:", error);
+    throw error;
+  }
+};
+
+export const createHash = async (token: string) => {
+  const msgBuffer = new TextEncoder().encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+};
+
+export function formatPriceFromStripePrice(price?: Product["prices"]): string {
+  if (!price) return "USD $0/month";
+  const amountInDollars = (price.unit_amount / 100).toFixed(2);
+  const currency = price.currency.toUpperCase();
+  const interval = price.recurring?.interval ?? '';
+  return `${currency} $${amountInDollars}${interval ? `/${interval}` : ''}`;
+}

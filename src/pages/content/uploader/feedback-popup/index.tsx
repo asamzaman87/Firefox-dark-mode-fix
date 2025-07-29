@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import useConfetti from "@/hooks/use-confetti";
 import { useToast } from "@/hooks/use-toast";
-import { FEEDBACK_ENDPOINT, REVIEWS_CHROME, REVIEWS_FIREFOX, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { BACKEND_URI, REVIEWS_CHROME, REVIEWS_FIREFOX, TOAST_STYLE_CONFIG } from "@/lib/constants";
 import { detectBrowser, secureFetch } from "@/lib/utils";
 import { DialogProps, } from "@radix-ui/react-dialog";
 import { Heart, MessageSquareHeartIcon } from "lucide-react";
@@ -31,7 +31,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const onSubmit: FeedbackFormProps["onSubmit"] = async (values) => {
         setLoading(true)
         const browser = detectBrowser();
-        await secureFetch(FEEDBACK_ENDPOINT, {
+        await secureFetch(`${BACKEND_URI}/feedbacks/gpt-feedback`, {
             method: "POST",
             body: JSON.stringify({
                 feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
@@ -51,6 +51,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
             const error = e as Error
             toast({ description: error.message, style: TOAST_STYLE_CONFIG });
             chrome.runtime.sendMessage({ type: "OPEN_FEEDBACK" });
+            setOpen(false);
         }).finally(() => {
             setLoading(false);
         });
@@ -77,7 +78,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     return (
         <Dialog open={open} onOpenChange={onOpenChange} {...props}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                <Button variant="ghost" size="icon" className="hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
                     <MessageSquareHeartIcon />
                 </Button>
             </DialogTrigger>
@@ -85,23 +86,23 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
                 onInteractOutside={(e) => {
                     e.preventDefault(); //prevents mask click close
                 }}
-                className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw]"
+                className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw]"
             >
-                <DialogHeader className="sr-only">
+                <DialogHeader className="gpt:sr-only">
                     <DialogTitle>{chrome.i18n.getMessage("feedback")}</DialogTitle>
-                    <DialogDescription className="sr-only">{chrome.i18n.getMessage("type_or_paste_text_v2")}</DialogDescription>
+                    <DialogDescription className="gpt:sr-only">{chrome.i18n.getMessage("type_or_paste_text_v2")}</DialogDescription>
                 </DialogHeader>
                 {isRating5Stars ?
-                <div className="flex flex-col items-center justify-center gap-4 w-full">
-                    <div className="flex flex-col items-center justify-center gap-2 w-full">
-                        <Heart className="size-20 animate-heartbeat fill-red-700 stroke-red-700" />
-                        <p className="text-center font-medium">{chrome.i18n.getMessage("feedback_thanks")}</p>
-                        <p className="text-center text-gray-500 dark:text-gray-400 text-wrap">
+                <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:w-full">
+                    <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-2 gpt:w-full">
+                        <Heart className="gpt:size-20 gpt:animate-heartbeat gpt:fill-red-700 gpt:stroke-red-700" />
+                        <p className="gpt:text-center gpt:font-medium">{chrome.i18n.getMessage("feedback_thanks")}</p>
+                        <p className="gpt:text-center gpt:text-gray-500 dark:text-gray-400 gpt:text-wrap">
                             {chrome.i18n.getMessage("five_stars")}
                         </p>
                     </div>
-                        <DialogFooter className="w-full items-center justify-center flex-wrap">
-                            <Button onClick={onStoreRedirection} variant="outline" className="cursor-pointer border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                        <DialogFooter className="gpt:w-full gpt:items-center gpt:justify-center gpt:flex-wrap">
+                            <Button onClick={onStoreRedirection} variant="outline" className="gpt:cursor-pointer gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
                                 {chrome.i18n.getMessage("store_redirect")}
                             </Button>
                         </DialogFooter>

@@ -13,8 +13,8 @@ const DocumentViewer: FC<DocumentViewerProps> = ({ content }) => {
     }, [content])
 
     return (
-        <div className="text-[23px] size-full overflow-y-auto max-h-full text-justify [&_p]:my-4 [&_p]:leading-loose sm:px-[15%]">
-            <div ref={divRef} className="p-10 mb-32 bg-white dark:bg-black min-h-full h-max rounded drop-shadow">
+        <div className="gpt:text-[23px] gpt:size-full gpt:overflow-y-auto gpt:max-h-full gpt:text-justify gpt:[&_p]:my-4 gpt:[&_p]:leading-loose gpt:sm:px-[15%]">
+            <div ref={divRef} className="gpt:p-10 gpt:mb-32 gpt:bg-white dark:bg-black gpt:min-h-full gpt:h-max gpt:rounded gpt:drop-shadow">
 
             </div>
         </div>

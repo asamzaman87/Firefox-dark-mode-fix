@@ -22,9 +22,9 @@ export function ThemeToggle() {
     }
 
     return (
-        <Button variant="ghost" size="icon" onClick={toggleTheme} className="hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
             {theme !== "light" ? <Moon /> : <Sun />}
-            <span className="sr-only">Toggle theme</span>
+            <span className="gpt:sr-only">Toggle theme</span>
         </Button>
     )
 }

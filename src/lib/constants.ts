@@ -87,7 +87,6 @@ export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#f
 export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chatgpt.com"];
 export const MATCH_URLS = ["https://chatgpt.com/*"];
-export const FEEDBACK_ENDPOINT = "https://www.readeon.com/api/feedbacks/gpt-feedback";
 export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
 export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
 export const YOUTUBE_FAQ_VIDEO = "https://youtu.be/zhiRjPAtOHI";
@@ -112,5 +111,7 @@ export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/g
 // GPT Reader uses its own backend to get live announcements as well as to store user feedback
 export const BACKEND_URI = "https://www.readeon.com/api"
 export const BANNER_POLLING_TIME_INTERVAL = 20000;
-export const TOKEN_TTL_MS = 5 * 60 * 1000;
+export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;
+
+export const PRO_VOICES = ["cove", "breeze", "maple", "glimmer", "orbit"];

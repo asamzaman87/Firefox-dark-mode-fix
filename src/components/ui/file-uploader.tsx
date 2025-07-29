@@ -1,7 +1,7 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, formatBytes } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
 import * as React from "react";
 import Dropzone, {
@@ -10,6 +10,7 @@ import Dropzone, {
 } from "react-dropzone";
 import { toast as sonner } from "sonner";
 import FileTypeIconList from "./file-type-icon-list";
+import { usePremiumModal } from "../../context/premium-modal";
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Value of the uploader.
@@ -102,6 +103,7 @@ export function FileUploader(props: FileUploaderProps) {
   } = props;
 
   const { toast } = useToast();
+  const {isTriggered, setOpen} = usePremiumModal();
 
   const [files, setFiles] = useControllableState({
     prop: valueProp,
@@ -110,6 +112,12 @@ export function FileUploader(props: FileUploaderProps) {
 
   const onDrop = React.useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      
+      //* trigger this when premium voice is selected
+      if (isTriggered) {
+        setOpen(true);
+        return;
+      }
 
       if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
         toast({ description: chrome.i18n.getMessage("cannot_upload_one_file"), style: TOAST_STYLE_CONFIG });
@@ -156,7 +164,7 @@ export function FileUploader(props: FileUploaderProps) {
       }
     },
 
-    [files, maxFileCount, multiple, onUpload, setFiles]
+    [files, maxFileCount, multiple, onUpload, setFiles, isTriggered]
   );
 
   // function onRemove(index: number) {
@@ -180,8 +188,16 @@ export function FileUploader(props: FileUploaderProps) {
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFileCount;
 
+  const triggerPremium = (open: () => void) => {
+    if(isTriggered) {
+      setOpen(true);
+      return;
+    }
+    open();
+  };
+
   return (
-    <div className="relative flex flex-col gap-6 overflow-hidden size-full">
+    <div className="gpt:relative gpt:flex gpt:flex-col gpt:gap-6 gpt:overflow-hidden gpt:size-full">
       <Dropzone
         onDrop={onDrop}
         accept={accept}
@@ -190,45 +206,46 @@ export function FileUploader(props: FileUploaderProps) {
         multiple={maxFileCount > 1 || multiple}
         disabled={isDisabled}
       >
-        {({ getRootProps, getInputProps, isDragActive }) => (
+        {({ getRootProps, getInputProps, isDragActive, open }) => (
           <div
             {...getRootProps()}
+            onClick={() => triggerPremium(open)}
             className={cn(
-              "group relative grid size-full cursor-pointer place-items-center rounded-2xl border-2 border-dashed border-gray-500 hover:border-gray-700 dark:hover:border-gray-200 px-5 py-2.5 text-center transition hover:bg-gray-200 dark:hover:bg-gray-700 bg-opacity-15",
-              "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isDragActive && "border-green-300 bg-green-100",
-              isDisabled && "pointer-events-none opacity-60",
+              "group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 hover:border-gray-700 dark:hover:border-gray-200 gpt:px-5 gpt:py-2.5 gpt:text-center gpt:transition hover:bg-gray-200 dark:hover:bg-gray-700 gpt:bg-opacity-15",
+              "gpt:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              isDragActive && "gpt:border-green-300 gpt:bg-green-100",
+              isDisabled && "gpt:pointer-events-none gpt:opacity-60",
               className
             )}
             {...dropzoneProps}
           >
             <input {...getInputProps()} />
             {isDragActive ? (
-              <div className="flex flex-col items-center justify-center gap-4 sm:px-5">
-                <div className="rounded-full border border-gray-500 border-dashed p-3">
+              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 sm:gpt:px-5">
+                <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
                   <UploadIcon
-                    className="size-7"
+                    className="gpt:size-7"
                     aria-hidden="true"
                   />
                 </div>
-                <p className="font-medium">
+                <p className="gpt:font-medium">
                   {chrome.i18n.getMessage('drop_file_here')}
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-4 sm:px-5">
-                {/* <div className="rounded-full border border-gray-500 border-dashed p-3">
+              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 sm:gpt:px-5">
+                {/* <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
                   <UploadIcon
-                    className="size-7"
+                    className="gpt:size-7"
                     aria-hidden="true"
                   />
                 </div> */}
                 <FileTypeIconList fileTypes={Object.keys(accept).filter(type => type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document")} />
-                <div className="flex flex-col gap-px">
-                  <p className="font-medium">
+                <div className="gpt:flex gpt:flex-col gpt:gap-px">
+                  <p className="gpt:font-medium">
                     {chrome.i18n.getMessage('drag_and_drop_files')}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="gpt:text-sm gpt:text-gray-500">
                     {chrome.i18n.getMessage('upload_limit')}
                   </p>
                 </div>
@@ -238,8 +255,8 @@ export function FileUploader(props: FileUploaderProps) {
         )}
       </Dropzone>
       {/* {files?.length ? (
-        <ScrollArea className="h-fit w-full px-3">
-          <div className="flex max-h-48 flex-col gap-4">
+        <ScrollArea className="gpt:h-fit gpt:w-full gpt:px-3">
+          <div className="gpt:flex gpt:max-h-48 gpt:flex-col gpt:gap-4">
             {files?.map((file, index) => (
               <FileCard
                 key={index}
@@ -263,31 +280,31 @@ export function FileUploader(props: FileUploaderProps) {
 
 // function FileCard({ file, progress, onRemove }: FileCardProps) {
 //   return (
-//     <div className="relative flex items-center gap-2.5">
-//       <div className="flex flex-1 gap-2.5">
+//     <div className="gpt:relative gpt:flex gpt:items-center gpt:gap-2.5">
+//       <div className="gpt:flex gpt:flex-1 gpt:gap-2.5">
 //         {isFileWithPreview(file) ? <FilePreview file={file} /> : null}
-//         <div className="flex w-full flex-col gap-2">
-//           <div className="flex flex-col gap-px">
-//             <p className="line-clamp-1 text-sm font-medium text-foreground/80">
+//         <div className="gpt:flex gpt:w-full gpt:flex-col gpt:gap-2">
+//           <div className="gpt:flex gpt:flex-col gpt:gap-px">
+//             <p className="gpt:line-clamp-1 gpt:text-sm gpt:font-medium gpt:text-foreground/80">
 //               {file.name}
 //             </p>
-//             <p className="text-xs text-muted-foreground">
+//             <p className="gpt:text-xs gpt:text-muted-foreground">
 //               {formatBytes(file.size)}
 //             </p>
 //           </div>
 //           {progress ? <Progress value={progress} /> : null}
 //         </div>
 //       </div>
-//       <div className="flex items-center gap-2">
+//       <div className="gpt:flex gpt:items-center gpt:gap-2">
 //         <Button
 //           type="button"
 //           variant="ghost"
 //           size="icon"
-//           className="size-7"
+//           className="gpt:size-7"
 //           onClick={onRemove}
 //         >
-//           <X className="h-4 w-4" />
-//           <span className="sr-only">Remove file</span>
+//           <X className="gpt:h-4 gpt:w-4" />
+//           <span className="gpt:sr-only">Remove file</span>
 //         </Button>
 //       </div>
 //     </div>
@@ -311,14 +328,14 @@ function isFileWithPreview(file: File): file is File & { preview: string } {
 //         width={48}
 //         height={48}
 //         loading="lazy"
-//         className="aspect-square shrink-0 rounded-md object-cover"
+//         className="gpt:aspect-square gpt:shrink-0 gpt:rounded-md gpt:object-cover"
 //       />
 //     );
 //   }
 
 //   return (
 //     <FileTextIcon
-//       className="size-10 text-muted-foreground"
+//       className="gpt:size-10 gpt:text-muted-foreground"
 //       aria-hidden="true"
 //     />
 //   );

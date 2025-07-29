@@ -164,12 +164,12 @@ const Announcements = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="relative hover:scale-115 active:scale-105  rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+          className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
           onClick={handleAnnouncementClick}
         >
-          <Megaphone className="-rotate-12" />
+          <Megaphone className="gpt:-rotate-12" />
           {count > 0 ? (
-            <Badge className="text-white bg-red-600 dark:bg-red-500 absolute -top-1.5 left-1/2 rounded-full flex items-center justify-center">
+            <Badge className="gpt:text-white gpt:bg-red-600 dark:bg-red-500 gpt:absolute gpt:-top-1.5 gpt:left-1/2 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center">
               {count}
             </Badge>
           ) : null}
@@ -179,29 +179,29 @@ const Announcements = () => {
         onInteractOutside={(e) => {
           e.preventDefault(); //prevents mask click close
         }}
-        className="bg-gray-100 dark:bg-gray-800 border-none min-w-[50dvw] max-h-[80dvh] w-screen overflow-hidden gap-4"
+        className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw] gpt:max-h-[80dvh] gpt:w-screen gpt:overflow-hidden gpt:gap-4"
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2">
+          <DialogTitle className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
             Announcements
             <Button
               variant="ghost"
               size="icon"
               onClick={getAnnouncements}
-              className="font-medium hover:scale-115 active:scale-105 active:rotate-180 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+              className="gpt:font-medium hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-180 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
             >
               <RefreshCwIcon />
             </Button>
           </DialogTitle>
-          <DialogDescription className="sr-only">
+          <DialogDescription className="gpt:sr-only">
             Annoucement of new features and updates
           </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[50dvh] min-h-[50dvh] overflow-y-auto p-px">
+        <div className="gpt:max-h-[50dvh] gpt:min-h-[50dvh] gpt:overflow-y-auto gpt:p-px">
           {announcements?.length ? (
             <Accordion
               type="multiple"
-              className="size-full"
+              className="gpt:size-full"
               onValueChange={setSelectedAcc}
               value={selectedAcc}
             >
@@ -209,37 +209,37 @@ const Announcements = () => {
                 <AccordionItem
                   value={item.id}
                   key={item.id}
-                  className="p-2 border mb-2"
+                  className="gpt:p-2 gpt:border gpt:mb-2"
                 >
-                  <AccordionTrigger className="flex justify-between items-center w-full py-2">
-                    <span className="inline-flex items-center flex-col gap-2">
-                      <span className="w-full text-justify font-semibold max-w-[70dvw] truncate" title={item.title}>
+                  <AccordionTrigger className="gpt:flex gpt:justify-between gpt:items-center gpt:w-full gpt:py-2">
+                    <span className="gpt:inline-flex gpt:items-center gpt:flex-col gpt:gap-2">
+                      <span className="gpt:w-full gpt:text-justify gpt:font-semibold gpt:max-w-[70dvw] gpt:truncate" title={item.title}>
                           {item.title}
                         </span>
-                      <span className="text-gray-600 dark:text-gray-500 font-medium text-sm w-full text-start">
+                      <span className="gpt:text-gray-600 dark:text-gray-500 gpt:font-medium gpt:text-sm gpt:w-full gpt:text-start">
                         {new Date(item.created_on).toLocaleDateString()}
                       </span>
                     </span>
                     <span>
                       <ChevronDownCircleIcon
-                        className={cn("size-5", {
-                          "rotate-180": selectedAcc.includes(item.id),
+                        className={cn("gpt:size-5", {
+                          "gpt:rotate-180": selectedAcc.includes(item.id),
                         })}
                       />
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="font-medium leading-relaxed [&_a]:text-blue-600 [&_a]:underline">
+                  <AccordionContent className="gpt:font-medium gpt:leading-relaxed [&_a]:text-blue-600 [&_a]:underline">
                     <AnnouncementMessage message={item.message} />
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
           ) : (
-            <div className="size-full flex flex-col items-center justify-center gap-2 text-center">
+            <div className="gpt:size-full gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-2 gpt:text-center">
               <span>
-                <Megaphone className="size-16 text-gray-600 -rotate-12" />
+                <Megaphone className="gpt:size-16 gpt:text-gray-600 gpt:-rotate-12" />
               </span>
-              <p className="text-gray-600 text-sm">No announcements found</p>
+              <p className="gpt:text-gray-600 gpt:text-sm">No announcements found</p>
             </div>
           )}
         </div>

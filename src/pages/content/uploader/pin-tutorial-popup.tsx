@@ -77,39 +77,39 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
           e.preventDefault();
         }}
         // closeButton={false}
-        className="bg-gray-50 dark:bg-gray-800 border-none w-[95vw] max-w-[95vw] sm:w-[95vw] sm:max-w-[620px] md:w-[80vw] md:max-w-[750px] lg:w-[60vw] lg:max-w-[800px] xl:max-w-[900px] rounded-2xl"
+        className="gpt:bg-gray-50 dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] sm:gpt:w-[95vw] sm:gpt:max-w-[620px] md:gpt:w-[80vw] md:gpt:max-w-[750px] lg:gpt:w-[60vw] lg:gpt:max-w-[800px] xl:gpt:max-w-[900px] gpt:rounded-2xl"
       >
-        <DialogHeader className={"sr-only"}>
-          <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
+        <DialogHeader className={"gpt:sr-only"}>
+          <DialogTitle className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2">
             {chrome.i18n.getMessage("are_you_sure")}
           </DialogTitle>
-          <DialogDescription className="sr-only">Description</DialogDescription>
+          <DialogDescription className="gpt:sr-only">Description</DialogDescription>
         </DialogHeader>
 
-        <div className="w-full flex flex-col gap-6 justify-center items-center">
-          <section className="flex flex-col justify-center items-center gap-4 text-justify">
-            <img src={LOGO} alt="GPT Reader Logo" className="size-12" />
-            <h1 className="text-xl font-medium">Important Information</h1>
-            <Carousel className="w-full">
+        <div className="gpt:w-full gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
+          <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
+            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />
+            <h1 className="gpt:text-xl gpt:font-medium">Important Information</h1>
+            <Carousel className="gpt:w-full">
               <CarouselContent>
                 {tutorialSteps.map((step, index) => (
                   <CarouselItem
                     key={index}
-                    className="flex flex-col items-center text-center"
+                    className="gpt:flex gpt:flex-col gpt:items-center gpt:text-center"
                   >
-                    <div className="flex flex-col gap-4">
-                      <p className="text-lg dark:text-gray-200 text-gray-600 leading-loose">
+                    <div className="gpt:flex gpt:flex-col gpt:gap-4">
+                      <p className="gpt:text-lg dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
                         {step.title}
                       </p>
-                      <div className="rounded-md overflow-hidden border border-muted aspect-[16/10] w-full max-w-lg mx-auto">
+                      <div className="gpt:rounded-md gpt:overflow-hidden gpt:border gpt:border-muted gpt:aspect-[16/10] gpt:w-full gpt:max-w-lg gpt:mx-auto">
                         <img
                           src={step.imageUrl}
                           alt={step.altText}
-                          className="w-full h-full object-contain"
+                          className="gpt:w-full gpt:h-full gpt:object-contain"
                         />
                       </div>
                       {step.description ? (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="gpt:text-sm gpt:text-muted-foreground">
                           {step.description}
                         </p>
                       ) : null}
@@ -117,16 +117,16 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="ml-8 dark:hover:bg-gray-600" />
-              <CarouselNext className="mr-8 dark:hover:bg-gray-600" />
+              <CarouselPrevious className="gpt:ml-8 dark:hover:gpt:bg-gray-600" />
+              <CarouselNext className="gpt:mr-8 dark:hover:gpt:bg-gray-600" />
             </Carousel>
           </section>
 
-          <footer className="flex items-end justify-center gap-4">
+          <footer className="gpt:flex gpt:items-end gpt:justify-center gpt:gap-4">
             <Button
               variant={"ghost"}
               size={"lg"}
-              className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+              className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
               onClick={() => handlePinTutorialAcknowledged(true)}
             >
               Okay

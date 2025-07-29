@@ -1,3 +1,4 @@
+/* eslint-disable no-self-assign */
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,11 +9,12 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, waitForElement } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, handleCheckUserSubscription, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
 import PinTutorialPopUp from "./pin-tutorial-popup";
+import { usePremiumModal } from "@/context/premium-modal";
 export interface PromptProps {
   text: string | undefined
 }
@@ -28,7 +30,8 @@ function Uploader() {
   const [overActiveInterval, setOverlayAciveInterval] = useState<NodeJS.Timeout | null>(null);
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
-  const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [isOffline, setIsOffline] = useState<boolean>(false)
+  const {setIsSubscribed} = usePremiumModal();
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
@@ -388,7 +391,33 @@ function Uploader() {
     } else {
       autoOpen.current = false;
     }
+  
+    if (detectBrowser() === "firefox") {
+      const isSubscribed = await new Promise<boolean>((resolve) => {
+        chrome.runtime.sendMessage(
+          { type: "CHECK_SUBSCRIPTION" },
+          (response) => {
+            resolve(response);
+          }
+        );
+      });
+      setIsSubscribed(isSubscribed);
+      return;
+    }
+    const isSubscribed = await handleCheckUserSubscription();
+    setIsSubscribed(isSubscribed);
   };
+  
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const sessionId = params.get("session_id");
+    if (success === "true" && sessionId) {
+      onOpenChange(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -436,8 +465,6 @@ function Uploader() {
       clearInterval(intervalId);
     };
   }, [isActive]);
-  
-        
 
   const handleConfirm = (state: boolean) => {
     if (!state) return onOpenChange(false);
@@ -494,13 +521,13 @@ function Uploader() {
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("shadow-md absolute flex justify-center items-center z-[101] top-60 right-0 rounded-l-full! bg-gray-100! dark:bg-gray-900! p-2 border border-r-0 border-gray-200! dark:border-gray-700! transition-all",
+            className={cn("gpt:shadow-md gpt:absolute gpt:flex gpt:justify-center gpt:items-center z-[101] gpt:top-60 gpt:right-0 gpt:rounded-l-full! dark:border-gray-700 dark:bg-gray-900 bg-gray-100 gpt:border-gray-200  gpt:p-2 gpt:border gpt:border-r-0  gpt:transition-all",
               {
-                "!z-[50]": isActive || isOverlayFallback,
+                "gpt:!z-[50]": isActive || isOverlayFallback,
               })
             }
           >
-            <img src={LOGO} alt="GPT Reader Logo" className="size-6" />{!minimised && (
+            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />{!minimised && (
               <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader</>
             )}
           </Button>
@@ -509,7 +536,7 @@ function Uploader() {
           onInteractOutside={(e: Event) => {
             e.preventDefault(); //prevents mask click close
           }}
-          className={cn("bg-gray-100 dark:bg-gray-800 max-w-screen h-full border-none flex flex-col gap-4", prompts?.length && "pb-0")}
+          className={cn("gpt:bg-gray-100 dark:bg-gray-800 gpt:max-w-screen gpt:h-full gpt:border-none gpt:flex gpt:flex-col gpt:gap-4", prompts?.length && "gpt:pb-0")}
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
           {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}

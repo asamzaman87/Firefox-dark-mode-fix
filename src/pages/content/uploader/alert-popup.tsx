@@ -9,34 +9,34 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
   const LOGO = chrome.runtime.getURL('logo-128.png');
 
   return (
-    <div className="flex flex-col justify-center items-center h-full">
-      <DialogHeader className={"sr-only"}>
-        <DialogTitle className="inline-flex flex-col justify-center items-center gap-2">
+    <div className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:h-full">
+      <DialogHeader className={"gpt:sr-only"}>
+        <DialogTitle className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2">
           {chrome.i18n.getMessage("are_you_sure")}
         </DialogTitle>
         <DialogDescription></DialogDescription>
       </DialogHeader>
 
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 shadow w-full md:w-1/2 flex flex-col gap-6 justify-center items-center">
+      <div className="gpt:rounded-2xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:p-6 gpt:shadow gpt:w-full md:gpt:w-1/2 gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
 
-        <section className="flex flex-col justify-center items-center gap-4 text-justify">
-          <img src={LOGO} alt="GPT Reader Logo" className="size-12" />
-          <h1 className="text-xl font-medium">
+        <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
+          <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />
+          <h1 className="gpt:text-xl gpt:font-medium">
             {chrome.i18n.getMessage("gpt_reader_notice")}
           </h1>
-          <p className="dark:text-gray-200 text-gray-600 leading-loose">
+          <p className="dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
             {chrome.i18n.getMessage("gpt_reader_chunk_explanation")}
           </p>
-          <p className="font-medium">
+          <p className="gpt:font-medium">
             {chrome.i18n.getMessage("acknowledge_and_accept")}
           </p>
         </section>
 
-        <footer className="flex items-end justify-center gap-4">
-          <Button variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all" onClick={() => setConfirmed(true)}>
+        <footer className="gpt:flex gpt:items-end gpt:justify-center gpt:gap-4">
+          <Button variant={"ghost"} className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all" onClick={() => setConfirmed(true)}>
             {chrome.i18n.getMessage("continue")}
           </Button>
-          {/* <Button className="rounded-lg text-lg" size={"lg"} variant={"outline"} onClick={() => setConfirmed(false)}>No</Button> */}
+          {/* <Button className="gpt:rounded-lg gpt:text-lg" size={"lg"} variant={"outline"} onClick={() => setConfirmed(false)}>No</Button> */}
         </footer>
       </div>
     </div>

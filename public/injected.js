@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const isFirefox = typeof InstallTrigger !== 'undefined'
   || /firefox/i.test(navigator.userAgent);
 
@@ -66,6 +67,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         let lastProgress = Date.now();
         let prevVal = '';
   
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const readResult = await reader.read();
             done = readResult.done;
@@ -172,6 +174,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             console.error('An error occurred while reading the stream:', error);
         }
     }
+    // eslint-disable-next-line no-undef
     return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
 };
 
@@ -192,7 +195,7 @@ window.fetch = async (...args) => {
     const isVoicesEndpoint = url.includes(VOICES_ENDPOINT);
 
     //getting the access token
-    if (response && url.includes('backend-api/me')) {
+    if (response && url.endsWith('backend-api/me') && args[0].method === "GET") {
         let accessToken;
         if (args.length > 1 && args[1]?.headers) {
             accessToken = args[1].headers.Authorization;
@@ -209,14 +212,12 @@ window.fetch = async (...args) => {
     }
 
     //signing out
-    if (response && url.includes('api/auth/signout')) {
-        const responseData = await response.clone().json();
-        if (responseData?.success) {
-            const signoutReceivedEvent = new CustomEvent('SIGNOUT_RECEIVED', {
-                detail: responseData,
-            });
-            window.dispatchEvent(signoutReceivedEvent);
-        }
+    if (response && url.endsWith("api/auth/signout")) {
+      const responseData = await response.clone().json();
+      const signoutReceivedEvent = new CustomEvent("SIGNOUT_RECEIVED", {
+        detail: responseData,
+      });
+      window.dispatchEvent(signoutReceivedEvent);
     }
 
     //read the stream to get the message id and conversation id
@@ -297,7 +298,8 @@ window.addEventListener("GET_TOKEN", () => {
   window.dispatchEvent(new CustomEvent("AUTH_RECEIVED", {
     detail: {
       accessToken,
-      userId: user?.id
+      userId: user?.id,
+      userData: user
     }
   }));
 });

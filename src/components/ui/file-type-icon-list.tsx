@@ -12,9 +12,9 @@ interface IconTextWrapperProps {
 
 const IconTextWrapper: FC<IconTextWrapperProps> = ({ tip, Icon }) => {
     return (
-        <div className="flex items-center justify-center flex-col gap-1 rounded-full border border-gray-500 border-dashed size-20">
-            <Icon className="size-7" />
-            <p className="mx-auto text-sm font-medium text-center align-middle">{tip}</p>
+        <div className="gpt:flex gpt:items-center gpt:justify-center gpt:flex-col gpt:gap-1 gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:size-20">
+            <Icon className="gpt:size-7" />
+            <p className="gpt:mx-auto gpt:text-sm gpt:font-medium gpt:text-center gpt:align-middle">{tip}</p>
         </div>
     );
 };
@@ -22,21 +22,21 @@ const IconTextWrapper: FC<IconTextWrapperProps> = ({ tip, Icon }) => {
 const DocxIcon = () => (
     <IconTextWrapper
         tip="DOCX"
-        Icon={() => <LetterTextIcon className="size-7" />}
+        Icon={() => <LetterTextIcon className="gpt:size-7" />}
     />
 );
 
 const PdfIcon = () => (
     <IconTextWrapper
         tip="PDF"
-        Icon={() => <FileTextIcon className="size-7" />}
+        Icon={() => <FileTextIcon className="gpt:size-7" />}
     />
 )
 
 const PlainTextIcon = () => (
     <IconTextWrapper
         tip="TXT"
-        Icon={() => <Type className="size-7" />} />
+        Icon={() => <Type className="gpt:size-7" />} />
 )
 
 const fileTypeVsIconMap: Record<string, ReactNode> = {
@@ -44,13 +44,13 @@ const fileTypeVsIconMap: Record<string, ReactNode> = {
     "application/msword": <DocxIcon />,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": <DocxIcon />,
     "text/plain": <PlainTextIcon />,
-    "default": <File className="size-10" />
+    "default": <File className="gpt:size-10" />
 }
 
 const FileTypeIconList: FC<FileTypeIconListProps> = ({ fileTypes }) => {
     if (!fileTypes.length) return <></>;
 
-    return <div className="w-max flex justify-center items-center gap-4">
+    return <div className="gpt:w-max gpt:flex gpt:justify-center gpt:items-center gpt:gap-4">
         {fileTypes.map(type => {
             if (!fileTypeVsIconMap[type]) return fileTypeVsIconMap["default"];
             return fileTypeVsIconMap[type];

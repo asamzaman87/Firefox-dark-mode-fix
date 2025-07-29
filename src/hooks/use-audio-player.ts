@@ -998,6 +998,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [chunks.length])
 
     return {
+        blobs,
         isPlaying,
         isPaused,
         currentIndex,
@@ -1044,7 +1045,8 @@ const useAudioPlayer = (isDownload: boolean) => {
         handleVolumeChange,
         onScrub,
         showInfoToast,
-        isTypeAACSupported
+        isTypeAACSupported,
+        chunks
     };
 
 

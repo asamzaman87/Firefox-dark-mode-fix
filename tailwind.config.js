@@ -1,7 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  prefix: "gpt",
   darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{ts,tsx,js,jsx}",
+    // Add any other paths where you use Tailwind classes
+  ],
   theme: {
     extend: {
       borderRadius: {
@@ -53,5 +58,15 @@ export default {
       }
     },
   },
-  plugins: [import("tailwindcss-animate")],
+  // Add these critical configurations
+  corePlugins: {
+    preflight: false, // Disable Tailwind's base styles to avoid conflicts
+  },
+  safelist: [
+    { pattern: /^gpt/, variants: ['hover', 'focus', 'active', 'dark'] }, // Force include all prefixed classes
+  ],
+  plugins: [
+    import("tailwindcss-animate"), 
+  ],
 };
+

@@ -39,33 +39,33 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
 
     return (
         <Form {...form}>
-            <form className="w-full space-y-4 [&_label]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
+            <form className="gpt:w-full gpt:space-y-4 [&_label]:text-lg" onSubmit={form.handleSubmit(onFormSubmit)}>
                 <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
-                        <FormItem className="w-full">
+                        <FormItem className="gpt:w-full">
                             <FormLabel>{chrome.i18n.getMessage('title')}</FormLabel>
                             <FormControl>
-                                <Input className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800" {...field} />
+                                <Input className="gpt:rounded gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:focus-visible:ring-offset-2" {...field} />
                             </FormControl>
-                            <FormMessage className="text-red-600" />
+                            <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )} />
                 <FormField
                     control={form.control}
                     name="text"
                     render={({ field }) => (
-                        <FormItem className="w-full">
+                        <FormItem className="gpt:w-full">
                             <FormLabel>{chrome.i18n.getMessage('text')}</FormLabel>
                             <FormControl>
-                                <Textarea className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 resize-none rounded min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 outline-none" {...field} />
+                                <Textarea className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] focus:border-gray-200 dark:focus:border-gray-700 gpt:outline-none" {...field} />
                             </FormControl>
-                            <FormMessage className="text-red-600" />
+                            <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={false} type="submit" variant={"ghost"} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
+                    <Button disabled={false} type="submit" variant={"ghost"} className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
                         <Send /> {chrome.i18n.getMessage('submit')}
                     </Button>
                 </DialogFooter>

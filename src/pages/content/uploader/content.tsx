@@ -1,3 +1,4 @@
+/* eslint-disable no-self-assign */
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileUploader } from "@/components/ui/file-uploader";
@@ -6,9 +7,9 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, removeAllListeners } from "@/lib/utils";
+import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
-import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
 import DownloadOrListen from "./download-or-listen-popup";
@@ -19,6 +20,10 @@ import PlayerBackup from "./player";
 import PresenceConfirmationPopup from "./presence-confirmation-popup";
 import Previews from "./previews";
 import VoiceSelector from "./voice-selector";
+import { usePremiumModal } from "@/context/premium-modal";
+import CancelPremiumPopup from "./cancel-premium-popup";
+import TimerPopup from "./timer-popup";
+import PremiumModal from "./premium-modal";
 
 interface ContentProps {
     setPrompts: (prompts: PromptProps[]) => void;
@@ -38,11 +43,18 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [title, setTitle] = useState<string>();
     const [pastedText, setPastedText] = useState<string>();
     const [showDownloadOrListen, setShowDownloadOrListen] = useState<boolean>(false);
+    const [inputPopupOpen, setInputPopupOpen] = useState<boolean>(false);
     const [fileExtractedText, setFileExtractedText] = useState<string>(); //ToDo: to find a better way to handle this
     const [showDownloadCancelConfirmation, setShowDownloadCancelConfirmation] = useState<boolean>(false);
     const [isDownloadConfirmationOpen, setIsDownloadConfirmationOpen] = useState<boolean>(false);
-    const { isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess } = useAudioPlayer(isDownload);
-    
+    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks } = useAudioPlayer(isDownload);
+    const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
+    const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
+    const [timerComplete, setTimerComplete] = useState<boolean>(false);
+    const [timerLeft, setTimerLeft] = useState<number>(0);
+    const [downloadDelay, setDownloadDelay] = useState<number>(0);
+    const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
     useMemo(() => {
         if (isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
     }, [isCancelDownloadConfirmation])
@@ -62,6 +74,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setPrompts([]);
         setTitle(undefined);
         resetDownloader();
+        setPastedText(undefined);
+        setFileExtractedText(undefined);
     }
 
     const onBackClick = async () => {
@@ -139,10 +153,68 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         listenOrDownloadAudio()
     }, [listenOrDownloadAudio]);
 
-    const handleDownload = () => {
+    // free-user download delay: 1 s per 100 chars, min 5 s, max 60 s
+    const startTimerOnce = useCallback(() => {
+        if (timerIntervalRef.current) return;
+
+        const charsPerSecond = 100;
+        const maxDelay = 150; // seconds
+
+        // sum characters in only as many chunks as we’ve fetched blobs for
+        const totalChars = chunks
+            .slice(0, blobs.length)
+            .reduce((sum, chunk) => sum + chunk.text.length, 0);
+
+        // compute raw secs (1 s/100 chars), then clamp between 5 s and 60 s
+        const raw = Math.ceil(totalChars / charsPerSecond);
+        const duration = Math.min(Math.max(raw, 5), maxDelay);
+        setDownloadDelay(duration);
+        setTimerLeft(duration);
+
+        timerIntervalRef.current = setInterval(() => {
+            setTimerLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timerIntervalRef.current!);
+                    timerIntervalRef.current = null;
+                    setTimerComplete(true);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    }, [blobs, chunks]);
+
+    const handleDownload = useCallback(() => {
+      if (isSubscribed) {
+        // For premium, download immediately
         const fileName = title ?? "gpt-reader-audio.aac";
         downloadCombinedFile(fileName);
-    }
+        return;
+      }
+
+      if (!timerComplete) {
+        // Show timer popup for non-premium users
+        if(upgradeModalOpen) setUpgradeModalOpen(false); // case when it is already there 
+        startTimerOnce();
+        setTimerPopupOpen(true);
+        return;
+      }
+
+      // Timer completed, proceed with download
+      const fileName = title ?? "gpt-reader-audio.aac";
+      downloadCombinedFile(fileName);
+
+      setTimerPopupOpen(false);
+      setTimerComplete(false);
+      setReason(`Did you know that upgrading to premium would have made your download ${downloadDelay || 0} seconds faster? Upgrade your GPT Reader plan to access faster downloads now.`);
+      setUpgradeModalOpen(true);
+    }, [isSubscribed, timerComplete, title, blobs]);
+
+    useEffect(() => {
+      if (timerComplete && !isSubscribed) {
+        handleDownload();
+      }
+    }, [timerComplete, isSubscribed, handleDownload]);
 
     //handles the yes button click to resume the player
     const handleYes = useCallback(() => {
@@ -153,7 +225,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const handleNo = useCallback(() => {
         resetter();
         onOverlayOpenChange(false);
-    },[onOverlayOpenChange, resetter]);
+    }, [onOverlayOpenChange, resetter]);
 
     const onDownloadCancel = useCallback(async () => {
         if (!isCancelDownloadConfirmation) {
@@ -172,45 +244,65 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setShowDownloadCancelConfirmation(state);
     }, [resetter])
 
+    const onClosePremiumModal = (open: boolean) => {
+      if (!open) {
+        setUpgradeModalOpen(open);
+        setShowDownloadOrListen(open);
+        setInputPopupOpen(open);
+      }
+    };
+
+    const triggerPremium = (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>
+    ) => {
+      if (!isSubscribed) {
+        setReason(
+          "Free users do not have the ability to download while listening. This is a premium only feature, please subscribe to use it."
+        );
+        setUpgradeModalOpen(true);
+        e.preventDefault();
+      }
+    };
+
     return (
         <>
-            <DialogHeader className={cn("h-max", { "sr-only": isDownload })}>
-                <DialogTitle className={"inline-flex flex-col justify-center items-center gap-2"}>
+            <DialogHeader className={cn("gpt:h-max", { "gpt:sr-only": isDownload })}>
+                <DialogTitle className={"gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2"}>
                     {title ?
-                        <div className="inline-flex justify-center w-full items-center gap-3">
-                            <p className="truncate max-w-[20dvw]">{title}</p>
+                        <div className="gpt:inline-flex gpt:justify-center gpt:w-full gpt:items-center gpt:gap-3">
+                            <p className="gpt:truncate gpt:max-w-[20dvw]">{title}</p>
                             <Popover onOpenChange={setIsDownloadConfirmationOpen} open={isDownloadConfirmationOpen}>
                                 <PopoverTrigger asChild>
-                                    <div className="relative size-10 hover:scale-115 active:scale-105 transition-all cursor-pointer">
+                                    <div onClick={triggerPremium} className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer">
                                         <Button
                                             disabled={!isPaused && !isPlaying}
                                             variant="ghost"
                                             size={"icon"}
-                                            className="absolute top-1/2 start-1/2 transform -translate-y-1/2 -translate-x-1/2 rounded-full [&_svg]:size-6"
+                                            className="gpt:absolute gpt:top-1/2 gpt:start-1/2 gpt:transform gpt:-translate-y-1/2 gpt:-translate-x-1/2 gpt:rounded-full gpt:[&_svg]:size-6"
                                         >
                                             <DownloadCloud />
                                         </Button>
-                                        <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="18" cy="18" r="16" fill="none" className="transition-all ease-in-out stroke-current text-gray-800 dark:text-gray-100" strokeWidth="2"></circle>
-                                            <circle cx="18" cy="18" r="16" fill="none" className="transition-all ease-in-out stroke-current text-gray-100 dark:text-gray-700" strokeWidth="2" strokeDasharray="100" strokeDashoffset={progress} strokeLinecap="square"></circle>
+                                        <svg className="gpt:size-full gpt:-rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="18" cy="18" r="16" fill="none" className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 dark:text-gray-100" strokeWidth="2"></circle>
+                                            <circle cx="18" cy="18" r="16" fill="none" className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 dark:text-gray-700" strokeWidth="2" strokeDasharray="100" strokeDashoffset={progress} strokeLinecap="square"></circle>
                                         </svg>
                                     </div>
-                                    {/* <span className={cn("absolute transition-all left-0 bottom-0 bg-blue-800 w-full max-h-full", { "bg-green-600": progress === 100 })} style={{ height: `${progress}%` }}></span> */}
+                                    {/* <span className={cn("gpt:absolute gpt:transition-all gpt:left-0 gpt:bottom-0 gpt:bg-blue-800 gpt:w-full gpt:max-h-full", { "gpt:bg-green-600": progress === 100 })} style={{ height: `${progress}%` }}></span> */}
                                 </PopoverTrigger>
-                                <PopoverContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                    <div className="flex flex-col gap-2">
-                                        <p className="text-wrap">{chrome.i18n.getMessage("download_confirm")}</p>
-                                        <div className="flex gap-4 w-full justify-center flex-wrap">
+                                <PopoverContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                                    <div className="gpt:flex gpt:flex-col gpt:gap-2">
+                                        <p className="gpt:text-wrap">{chrome.i18n.getMessage("download_confirm")}</p>
+                                        <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
                                             <Button
                                                 variant="ghost"
-                                                className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                                                className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                                                 onClick={() => { handleDownload(); setIsDownloadConfirmationOpen(false) }}
                                             >
                                                 {chrome.i18n.getMessage("yes")}
                                             </Button>
                                             <Button
                                                 variant="ghost"
-                                                className="flex-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all"
+                                                className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                                                 onClick={() => setIsDownloadConfirmationOpen(false)}
                                             >
                                                 {chrome.i18n.getMessage("no")}
@@ -220,20 +312,23 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        : <>{!prompts.length && <img src={logo} alt={chrome.i18n.getMessage("gpt_reader_logo")} className="size-10" />} {chrome.i18n.getMessage("gpt_reader")}</>}
+                        : <>{!prompts.length && <img src={logo} alt={chrome.i18n.getMessage("gpt_reader_logo")} className="gpt:size-10" />} {chrome.i18n.getMessage("gpt_reader")}</>}
                 </DialogTitle>
-                <DialogDescription className="sr-only">{chrome.i18n.getMessage("simplify_reading")}</DialogDescription>
+                <DialogDescription className="gpt:sr-only">{chrome.i18n.getMessage("simplify_reading")}</DialogDescription>
             </DialogHeader>
-            <div className="flex size-full flex-col justify-center gap-6 overflow-hidden" >
-                <div className={cn("absolute top-4 left-4 size-max flex gap-2 items-center justify-center", { "translate-x-12 transition-transform": (prompts.length > 0 || isDownload) })}>
+            <div className="gpt:flex gpt:size-full gpt:flex-col gpt:justify-center gpt:gap-6 gpt:overflow-hidden" >
+                <div className={cn("gpt:absolute gpt:top-4 gpt:left-4 gpt:size-max gpt:flex gpt:gap-2 gpt:items-center gpt:justify-center", { "gpt:translate-x-12 gpt:transition-transform": (prompts.length > 0 || isDownload) })}>
                     <ThemeToggle />
                     <FeedbackPopup />
                     <Announcements />
                 </div>
-                <div className={cn("absolute top-4 right-16 size-max")}>
-                    <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6 transition-all">
-                        <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
-                    </Button>
+                <div className={cn("gpt:absolute gpt:top-4 gpt:right-16 gpt:size-max")}>
+                    <div className="gpt:flex gpt:gap-4 gpt:items-center">
+                        <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
+                            <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
+                        </Button>
+                        <CancelPremiumPopup isSubscribed={isSubscribed} />
+                    </div>
                 </div>
 
                 <PresenceConfirmationPopup loading={false} handleYes={handleYes} handleNo={handleNo} open={isPresenceModalOpen} setOpen={setIsPresenceModalOpen} />
@@ -244,7 +339,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
                 {(prompts.length === 0 && !isDownload) ? <VoiceSelector voice={voices} setVoices={setVoices} disabled={isVoiceLoading} loading={isVoiceLoading} /> : null}
 
-                {(prompts.length > 0 || isDownload) && <Button title={chrome.i18n.getMessage("back")} size={"icon"} onClick={onBackClick} className="hover:scale-115 active:scale-105  transition-all font-medium absolute top-4 left-4 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 [&_svg]:size-6"><ArrowLeft /><span className="sr-only">{chrome.i18n.getMessage("back")}</span></Button>}
+                {(prompts.length > 0 || isDownload) && <Button title={chrome.i18n.getMessage("back")} size={"icon"} onClick={onBackClick} className="gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:font-medium gpt:absolute gpt:top-4 gpt:left-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6"><ArrowLeft /><span className="gpt:sr-only">{chrome.i18n.getMessage("back")}</span></Button>}
 
                 {
                     (prompts.length > 0 || isDownload) ?
@@ -264,10 +359,21 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
                 {
                     (!prompts?.length && !isDownload) ?
-                        <InputPopup disabled={isPlaying || isFetching} onSubmit={onFormSubmit} />
+                        <InputPopup open={inputPopupOpen} onOpenChange={setInputPopupOpen} disabled={isPlaying || isFetching} onSubmit={onFormSubmit} />
                         : null
                 }
-                {prompts.length > 0 && !isDownload && <InfoIcon onClick={() => showInfoToast(5000)} className={cn("z-[51] hover:cursor-pointer absolute bottom-4 right-4 rounded-full hover:scale-115 active:scale-105 transition-all size-6")} />}
+                {prompts.length > 0 && !isDownload && <InfoIcon onClick={() => showInfoToast(5000)} className={cn("gpt:z-[51] gpt:hover:cursor-pointer gpt:absolute gpt:bottom-4 gpt:right-4 gpt:rounded-full gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:size-6")} />}
+
+                {!isSubscribed && timerPopupOpen && (
+                    <TimerPopup
+                        open={timerPopupOpen}
+                        onClose={() => setTimerPopupOpen(false)}
+                        timeLeft={timerLeft}
+                    />
+                )}
+                
+                {/* Premium Modal  */}
+                {upgradeModalOpen && <PremiumModal open={upgradeModalOpen} onOpenChange={onClosePremiumModal} />}
             </div>
         </>
 

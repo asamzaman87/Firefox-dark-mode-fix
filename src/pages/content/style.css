@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" prefix(gpt);
 @tailwind utilities;
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -52,5 +52,12 @@
 @container thread (width >= 32rem) {
     .\@lg\/thread\:block {
         display: block;
+    }
+}
+
+/* Fixes for the premium modal height */
+@media (min-width: 640px) and (max-height: 660px) {
+    .h-screen-if-short {
+      @apply gpt:h-[95vh];
     }
 }
