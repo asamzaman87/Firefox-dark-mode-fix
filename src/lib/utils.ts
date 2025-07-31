@@ -372,7 +372,7 @@ export async function getToken(): Promise<string> {
   const res = await fetch(`${BACKEND_URI}/auth/token`, {
     method: "POST",
     headers: {
-      "x-from-extension": "true",
+      "X-From-Extension": "true",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ email, name, openaiId })
@@ -410,7 +410,7 @@ export async function secureFetch(
       Authorization: `Bearer ${token}`,
       ...( !neglact && {"Hat-Token": hashAccessToken}),
       "Content-Type": "application/json",
-      "x-from-extension": "true",
+      "X-From-Extension": "true",
     },
   });
 
@@ -488,16 +488,46 @@ export async function getStoredValue<T = string>(
   });
 }
 
+function waitForStorageKey<T>(
+  key: string,
+  storageArea: "sync" | "local" = "sync",
+  timeoutMs = 3000
+): Promise<T | null> {
+  return new Promise((resolve) => {
+    let timer: number;
+    chrome.storage[storageArea].get(key, res => {
+      if (res[key] != null) {
+        clearTimeout(timer);
+        return resolve(res[key]);
+      }
+      const listener = (
+        changes: Record<string, chrome.storage.StorageChange>,
+        area: string
+      ) => {
+        if (area === storageArea && changes[key]?.newValue != null) {
+          clearTimeout(timer);
+          chrome.storage.onChanged.removeListener(listener);
+          resolve(changes[key].newValue);
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+      timer = window.setTimeout(() => {
+        chrome.storage.onChanged.removeListener(listener);
+        resolve(null);
+      }, timeoutMs);
+    });
+  });
+}
+
 
 
 export const handleCheckUserSubscription = async () => {
   try {
-    const openaiId = await getStoredValue<string>("openaiId");
-    const accessToken = await getStoredValue<string>("accessToken");
+    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
 
-    if (!openaiId || !accessToken) {
-      chrome.storage.local.set({ hasSubscription: false });
-      return false;
+    if (!openaiId) {
+      chrome.storage.local.set({ hasSubscription: true });
+      return true;
     }
 
     const data: {

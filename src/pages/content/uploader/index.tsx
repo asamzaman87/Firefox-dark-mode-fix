@@ -32,6 +32,7 @@ function Uploader() {
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false)
   const {setIsSubscribed} = usePremiumModal();
+  const isOpeningInProgress = useRef(false);
 
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
@@ -336,77 +337,93 @@ function Uploader() {
     setIsActive,
   ]);
 
-  const onOpenChange = async (open: boolean) => {
-    if (!open) {
-      //show confirmation for cancel download if download is in progress
-      const download = window.localStorage.getItem("gptr/download");
-      if (download && download === "true") {
-        setIsCancelDownloadConfirmation(true);
-        return
-      }
-      setIsActive(false);
-      return
-    } else {
-      localStorage.setItem("gptr/download", "false");
-    }
-    isOpening.current = true;
-    const aoc = window.localStorage.getItem("gptr/aoc");
-    //return if overlay is already active.
-    if (open && aoc && +aoc > 0) {
-      setIsOverlayFallback(true);
-      return;
-    }
-    //redirect to login if click on button if not authorised
-    if (!isAuthenticated) {
-      const loginBtn: HTMLButtonElement | null = document.querySelector("[data-testid='login-button']");
-      if (loginBtn) {
-        // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
-        chrome.storage.local.set({ fromExtensionRedirect: true });
+  const onOpenChange = useCallback(
+    async (open: boolean) => {
+      if (isOpeningInProgress.current) return;
+      isOpeningInProgress.current = true;
 
-        window.localStorage.setItem("gptr/redirect-to-login", "true");
-        chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
-        loginBtn?.click();
-      } else {
-        //send message to background to try again if user is not authorised and login btn not present
-        chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
-      }
-      return;
-    }
-
-    window.localStorage.removeItem("gptr/redirect-to-login");
-    
-    if (isBadModel()) {
-      document.cookie = "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "oai-last-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.localStorage.setItem("gptr/reloadDone", "true");
-      window.location.href = `${window.location.origin}/?model=auto`;
-      return; 
-    }
-    
-    await triggerPromptFlow();
-
-    if (!autoOpen.current) {
-      // * Call banner count API event to the background script
-      chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
-    } else {
-      autoOpen.current = false;
-    }
-  
-    if (detectBrowser() === "firefox") {
-      const isSubscribed = await new Promise<boolean>((resolve) => {
-        chrome.runtime.sendMessage(
-          { type: "CHECK_SUBSCRIPTION" },
-          (response) => {
-            resolve(response);
+      try {
+        if (!open) {
+          //show confirmation for cancel download if download is in progress
+          const download = window.localStorage.getItem("gptr/download");
+          if (download && download === "true") {
+            setIsCancelDownloadConfirmation(true);
+            return;
           }
-        );
-      });
-      setIsSubscribed(isSubscribed);
-      return;
-    }
-    const isSubscribed = await handleCheckUserSubscription();
-    setIsSubscribed(isSubscribed);
-  };
+          setIsActive(false);
+          return;
+        } else {
+          localStorage.setItem("gptr/download", "false");
+        }
+        isOpening.current = true;
+        const aoc = window.localStorage.getItem("gptr/aoc");
+        //return if overlay is already active.
+        if (open && aoc && +aoc > 0) {
+          setIsOverlayFallback(true);
+          return;
+        }
+        //redirect to login if click on button if not authorised
+        if (!isAuthenticated) {
+          const loginBtn: HTMLButtonElement | null = document.querySelector(
+            "[data-testid='login-button']"
+          );
+          if (loginBtn) {
+            // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
+            chrome.storage.local.set({ fromExtensionRedirect: true });
+
+            window.localStorage.setItem("gptr/redirect-to-login", "true");
+            chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
+            loginBtn?.click();
+          } else {
+            //send message to background to try again if user is not authorised and login btn not present
+            chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
+          }
+          return;
+        }
+
+        window.localStorage.removeItem("gptr/redirect-to-login");
+
+        if (isBadModel()) {
+          document.cookie =
+            "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          document.cookie =
+            "oai-last-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+          window.localStorage.setItem("gptr/reloadDone", "true");
+          window.location.href = `${window.location.origin}/?model=auto`;
+          return;
+        }
+
+        await triggerPromptFlow();
+
+        if (!autoOpen.current) {
+          // * Call banner count API event to the background script
+          chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
+        } else {
+          autoOpen.current = false;
+        }
+
+        if (detectBrowser() === "firefox") {
+          const isSubscribed = await new Promise<boolean>((resolve) => {
+            chrome.runtime.sendMessage(
+              { type: "CHECK_SUBSCRIPTION" },
+              (response) => {
+                resolve(response);
+              }
+            );
+          });
+          setIsSubscribed(isSubscribed);
+          return;
+        }
+        const isSubscribed = await handleCheckUserSubscription();
+        setIsSubscribed(isSubscribed);
+      } catch (error) {
+        console.error("onOpenChange error:", error);
+      } finally {
+        isOpeningInProgress.current = false;
+      }
+    },
+    [isAuthenticated]
+  );
   
   useEffect(() => {
     if (!isAuthenticated) return;
