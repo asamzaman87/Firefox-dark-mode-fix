@@ -1,6 +1,6 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
 import { useToast } from "@/hooks/use-toast";
-import { ACCEPTED_FILE_TYPES, TOAST_STYLE_CONFIG } from "@/lib/constants";
+import { ACCEPTED_FILE_TYPES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
 import * as React from "react";
@@ -56,14 +56,6 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   accept?: DropzoneProps["accept"];
 
   /**
-   * Maximum file size for the uploader.
-   * @type number | undefined
-   * @default 1024 * 1024 * 2 // 2MB
-   * @example maxSize={1024 * 1024 * 2} // 2MB
-   */
-  maxSize?: DropzoneProps["maxSize"];
-
-  /**
    * Maximum number of files for the uploader.
    * @type number | undefined
    * @default 1
@@ -94,7 +86,6 @@ export function FileUploader(props: FileUploaderProps) {
     onValueChange,
     onUpload,
     accept = ACCEPTED_FILE_TYPES,
-    maxSize = 1024 * 1024 * 2,
     maxFileCount = 1,
     multiple = false,
     disabled = false,
@@ -128,6 +119,16 @@ export function FileUploader(props: FileUploaderProps) {
         toast({ description: chrome.i18n.getMessage('cannot_upload_more_files', [String(maxFileCount)]), style: TOAST_STYLE_CONFIG });
         return;
       }
+
+      // warn if any new file is huge (50 MB+)
+      acceptedFiles.forEach((file) => {
+        if (file.size > 50 * 1024 * 1024) {
+          toast({
+            description: "That file is pretty big! The extension might not work properly.",
+            style: TOAST_STYLE_CONFIG_INFO,
+          });
+        }
+      });
 
       const newFiles = acceptedFiles.map((file) =>
         Object.assign(file, {
@@ -201,7 +202,6 @@ export function FileUploader(props: FileUploaderProps) {
       <Dropzone
         onDrop={onDrop}
         accept={accept}
-        maxSize={maxSize}
         maxFiles={maxFileCount}
         multiple={maxFileCount > 1 || multiple}
         disabled={isDisabled}
@@ -246,7 +246,7 @@ export function FileUploader(props: FileUploaderProps) {
                     {chrome.i18n.getMessage('drag_and_drop_files')}
                   </p>
                   <p className="gpt:text-sm gpt:text-gray-500">
-                    {chrome.i18n.getMessage('upload_limit')}
+                    Avoid uploading files larger than 50MB as it can make the extension crash
                   </p>
                 </div>
               </div>

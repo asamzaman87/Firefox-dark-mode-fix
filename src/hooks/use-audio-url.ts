@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
 import { useToast } from "./use-toast";
+import useFormat from "./use-format";
 
 const useAudioUrl = (isDownload: boolean) => {
     const { toast } = useToast();
@@ -21,6 +22,19 @@ const useAudioUrl = (isDownload: boolean) => {
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
     const chunkNumList = useRef<Set<number>>(new Set());
+    // read the user’s chosen format (mp3, aac, or opus)
+    const { format } = useFormat();
+    const storedFormat = format.toLowerCase();
+    // map to the right MIME/codec for MSE and for blob fallbacks
+    let mimeCodec: string;
+    if (storedFormat === "aac") {
+        mimeCodec = 'audio/aac';
+    } else if (storedFormat === "opus") {
+        mimeCodec = 'audio/ogg';
+    } else {
+        // default to MP3
+        mimeCodec = "audio/mpeg";
+    }
     let activeSendObserver: MutationObserver | null = null;
     
     const sendPrompt = () => {
@@ -266,7 +280,7 @@ const useAudioUrl = (isDownload: boolean) => {
 
           // The Blob constructor automatically concatenates the provided blob parts.
           const combinedBlob = new Blob(ordered, {
-            type: ordered[0]?.type || "audio/mpeg",
+            type: ordered[0]?.type || mimeCodec,
           });
     
           // Create an object URL for the combined blob
@@ -275,7 +289,7 @@ const useAudioUrl = (isDownload: boolean) => {
           // Create a temporary download link and trigger a click to start download
           const downloadLink = document.createElement("a");
           downloadLink.href = combinedUrl;
-          downloadLink.download = `${sanitisedFileName}.mp3`;
+          downloadLink.download = `${sanitisedFileName}.${storedFormat}`;
           document.body.appendChild(downloadLink);
           downloadLink.click();
     
@@ -285,7 +299,7 @@ const useAudioUrl = (isDownload: boolean) => {
         } catch (error) {
           console.error("Error downloading combined file:", error);
         }
-      }, [blobs])
+      }, [blobs, format])
 
       
     useEffect(() => {

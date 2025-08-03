@@ -141,7 +141,7 @@
     "message": "GPT Reader seems to be taking longer than usual. Please click the back button and try uploading your text again."
   },
   "voice_selector_description": {
-    "message": "Choose from a variety of ChatGPT's enhanced voice options. Please note that the voice selection must be made prior to uploading your text."
+    "message": "Choose from a variety of ChatGPT's enhanced voice options. Please note that the selection must be made prior to uploading your text."
   },
   "cannot_upload_one_file": {
     "message": "Cannot upload more than 1 file at a time"

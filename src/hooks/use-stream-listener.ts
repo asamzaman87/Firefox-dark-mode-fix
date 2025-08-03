@@ -1,9 +1,10 @@
-import { AUDIO_FORMAT, GPT_BREAKER, LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
+import { LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
 import useVoice from "./use-voice";
 import { Chunk, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
+import useFormat from "./use-format";
 const MAX_RETRIES = 3; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
@@ -11,6 +12,7 @@ const useStreamListener = (
     chunkRef: React.MutableRefObject<Chunk[]>,                            
     injectPrompt: (text: string, id: string, ndx: number) => void,            
   ) => {
+    const { format } = useFormat();
     const { toast } = useToast();
     const [completedStreams, setCompletedStreams] = useState<string[]>([]);
     const [currentCompletedStream, setCurrentCompletedStream] = useState<{ messageId: string, conversationId: string, createTime: number, text: string, chunkNdx: number } | null>(null);
@@ -313,9 +315,10 @@ const useStreamListener = (
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             if (token) {
                 try {
+                    const storedFormat = format.toLowerCase();
                     // prefetching audio
                     const audioUrl = await fetchAndDecodeAudio(
-                        `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${AUDIO_FORMAT}`,
+                        `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${storedFormat}`,
                         +chunkNdx
                     );
                     
@@ -341,7 +344,7 @@ const useStreamListener = (
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx })
         }
         setIsLoading(false);
-    }, [retryCounts, retryFlow, fetchAndDecodeAudio, setCompletedStreams, setCurrentCompletedStream, handleError, setIsLoading, voices.selected, token]);
+    }, [retryCounts, retryFlow, fetchAndDecodeAudio, setCompletedStreams, setCurrentCompletedStream, handleError, setIsLoading, voices.selected, token, format]);
 
     const handleRateLimitExceeded = useCallback(async (e: Event) => {
         const { detail } = e as Event & { detail: string };

@@ -5,10 +5,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumModal } from "@/context/premium-modal";
 import { LISTENERS, PRO_VOICES, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import { ChevronDown, Crown, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
+import { cn, detectBrowser } from "@/lib/utils";
+import { ChevronDown, Crown, FileAudio, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useToast } from "../../../hooks/use-toast";
+import useFormat from "@/hooks/use-format";
+
+const FILE_TYPES = ["MP3", "OPUS", "AAC"] as const;
 
 export interface Voice {
     selected: string;
@@ -23,6 +26,7 @@ interface VoiceSelectorProps {
 }
 
 const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loading }) => {
+    const { format: fileType, setFormat: setFileType } = useFormat();
     const { selected, voices } = voice;
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
@@ -185,6 +189,31 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                             </>
                         ))}
                     </ScrollArea>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+                <DropdownMenuTrigger disabled={disabled}>
+                    <Trigger disabled={disabled}>
+                        <FileAudio className="gpt:size-4" /> {/* 📄 icon */}
+                            {fileType}
+                        <ChevronDown className="size-4" />
+                    </Trigger>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    {FILE_TYPES.map((fmt) => (
+                        <DropdownMenuItem
+                            key={fmt}
+                            onClick={() => {
+                                setFileType(fmt);
+                                if (fmt === "OPUS" && detectBrowser() === "chrome") {
+                                    toast({ description: 'Warning: the OPUS format will give you an audio player in the extension without the ability to skip forwards or backwards', style: TOAST_STYLE_CONFIG_INFO });
+                                }
+                            }}
+                            className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        >
+                            {fmt}
+                        </DropdownMenuItem>
+                    ))}
                 </DropdownMenuContent>
             </DropdownMenu>
             <Popover>

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
+import useFormat from "./use-format";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
@@ -21,7 +22,23 @@ const useAudioPlayer = (isDownload: boolean) => {
     const [playTimeDuration, setPlayTimeDuration] = useState<number>(0);
     const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
     const [partialChunkCompletedPlaying, setPartialChunkCompletedPlaying] = useState<boolean>(false);
-    const [isTypeAACSupported, setIsTypeAACSupported] = useState<boolean>(true);
+    // read the user’s chosen format (mp3, aac, or opus)
+    const { format } = useFormat();
+    const storedFormat = format.toLowerCase();
+    // map to the right MIME/codec for MSE and for blob fallbacks
+    let mimeCodec: string;
+    if (storedFormat === "aac") {
+      mimeCodec = 'audio/aac';
+    } else if (storedFormat === "opus") {
+      mimeCodec = 'audio/ogg';
+    } else {
+      // default to MP3
+      mimeCodec = "audio/mpeg";
+    }
+    const isTypeAACSupported = useMemo(
+      () => MediaSource.isTypeSupported(mimeCodec),
+      [mimeCodec]
+    );
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
     const memoryWarnedRef = useRef(false);
@@ -38,7 +55,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const isAtEnd = useRef<boolean>(false); 
 
     const sourceBuffer = useRef<SourceBuffer | null>(null);
-    const mediaSource = useMemo(() => new MediaSource(), [isBackPressed]);
+    const mediaSource = useMemo(() => new MediaSource(), [isBackPressed, format]);
     const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
     const blobsLength = useRef<number>(0);
     // ─── HYBRID FALLBACK SETUP ────────────────────────────────────────────────
@@ -138,11 +155,13 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (!mediaSource || mediaSource.readyState !== "open") return;
 
         try {
-            if (!MediaSource.isTypeSupported('audio/mpeg')) {
-                setIsTypeAACSupported(false);
+            if (!MediaSource.isTypeSupported(mimeCodec)) {
                 return
             }
-            sourceBuffer.current = mediaSource.addSourceBuffer('audio/mpeg'); // AAC codec
+            sourceBuffer.current = mediaSource.addSourceBuffer(mimeCodec);
+            if (audioCtxRef.current?.state === 'suspended') {
+              audioCtxRef.current.resume().catch(() => {});
+            }
         } catch (error) {
             console.error("Error initializing SourceBuffer:", error);
         }
@@ -304,7 +323,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         originalHistoryLengthRef.current = historyBuffersRef.current.length;
       
         // 5) build a blob URL from our history
-        const blob = new Blob(historyBuffersRef.current, { type: "audio/mpeg" });
+        const blob = new Blob(historyBuffersRef.current, { type: mimeCodec });
         const url = URL.createObjectURL(blob);
       
         // 6) revoke any previous fallback URL
@@ -386,7 +405,7 @@ const useAudioPlayer = (isDownload: boolean) => {
           // rebuild the blob under the hood so it “grows”
           if (historyBuffersRef.current.length > originalHistoryLengthRef.current) {
             const oldUrl = a.src;
-            const newBlob = new Blob(historyBuffersRef.current, { type: "audio/mpeg" });
+            const newBlob = new Blob(historyBuffersRef.current, { type: mimeCodec });
             const newUrl = URL.createObjectURL(newBlob);
             a.src = newUrl;
             a.currentTime = t;
