@@ -6,6 +6,7 @@ import { FastForwardIcon, RewindIcon } from "./icons";
 import PlayRateSlider from "./play-rate-slider";
 import Seekbar from "./seekbar";
 import VolumeSlider from "./volume-slider";
+import { usePremiumModal } from "@/context/premium-modal";
 
 interface PlayerBackupProps {
   isPaused: boolean;
@@ -78,6 +79,17 @@ const Player: FC<PlayerBackupProps> = ({
     if (isPlaying && !playbackEnded) pause();
     if (isPaused && !playbackEnded) play();
   },[replay, pause, play, isPlaying, isPaused, playbackEnded, setPlaybackEnded]);
+
+  const { isSubscribed, setOpen, setReason } = usePremiumModal();
+
+  const attemptForward = () => {
+    if (!isSubscribed) {
+      setReason("Fast forwarding is a premium feature. Please subscribe to use it.");
+      setOpen(true);
+      return;
+    }
+    onForward();
+  };
 
   if (minimized) {
     return (
@@ -209,7 +221,7 @@ const Player: FC<PlayerBackupProps> = ({
           </Button>
           {areSeekControlsAvailable && (
             <Button
-              onClick={onForward}
+              onClick={attemptForward}
               disabled={currentTime === duration}
               size={"icon"}
               variant="ghost"

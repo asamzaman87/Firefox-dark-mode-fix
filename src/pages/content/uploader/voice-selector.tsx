@@ -7,7 +7,7 @@ import { usePremiumModal } from "@/context/premium-modal";
 import { LISTENERS, PRO_VOICES, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, detectBrowser } from "@/lib/utils";
 import { ChevronDown, Crown, FileAudio, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "../../../hooks/use-toast";
 import useFormat from "@/hooks/use-format";
 
@@ -30,6 +30,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     const { selected, voices } = voice;
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
+    const hasInitializedFreeVoice = useRef(false);
     const { setIsTriggered, isSubscribed, setReason } = usePremiumModal();
     const {toast} = useToast();
     
@@ -59,6 +60,24 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         return aGender - bGender;
       });
     }, [voices, isSubscribed]);
+
+    useEffect(() => {
+        if (
+        allVoices.length > 0 && 
+        !isSubscribed && 
+        !hasInitializedFreeVoice.current
+        ) {
+            hasInitializedFreeVoice.current = true;
+
+            const selectedVoice = allVoices.find(v => v.voice === selected);
+            if (selectedVoice?.premium) {
+                const firstFree = allVoices.find(v => !v.premium);
+                if (firstFree) {
+                    setVoices(firstFree.voice);
+                }
+            }
+        }
+    }, [allVoices, isSubscribed, selected, setVoices]);
 
     useEffect(() => {
       const selectedVoice = allVoices.find((v) => v.voice === selected);
