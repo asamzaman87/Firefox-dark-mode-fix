@@ -1,9 +1,9 @@
 import { LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
-import { TOAST_REMOVE_DELAY, useToast } from "./use-toast";
+import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
+import { Chunk, handleError, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
 const MAX_RETRIES = 3; 
 const useStreamListener = (
@@ -31,10 +31,8 @@ const useStreamListener = (
         handleVoiceChange(voice);
     }
 
-    const handleError = (error: string, duration: number = TOAST_REMOVE_DELAY) => {
-        const errorEvent = new CustomEvent(LISTENERS.ERROR, { detail: { message: error} });
-        window.dispatchEvent(errorEvent);
-        toast({ description: error, style: TOAST_STYLE_CONFIG, duration });
+    const handleErrorWithNoFetch = (msg: string) => {
+        handleError(msg);
         setIsFetching(false);
         return
     }
@@ -140,7 +138,7 @@ const useStreamListener = (
                     setTimeout(() => reject(new Error("Token request timed out")), 15000)
                 ),
             ]).catch(() => {
-                handleError("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
+                handleErrorWithNoFetch("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
                 return null;
             });
 
@@ -186,10 +184,10 @@ const useStreamListener = (
         }
         if (response.status !== 200) {
             if (response.status === 429) {
-                handleError("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.", Infinity);
+                handleErrorWithNoFetch("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.");
                 return
             }
-            handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+            handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
             return;
         }
         let blob: Blob;
@@ -301,7 +299,7 @@ const useStreamListener = (
                 await retryFlow();
                 return;
             }
-            handleError("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
+            handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
             return;
         }
         
@@ -337,7 +335,7 @@ const useStreamListener = (
                         console.warn(`[Audio Prefetch] Failed to fetch audio for chunk ${chunkNdx}`);
                     }
                 } catch {
-                    handleError("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                    handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                     return;
                 }
             }

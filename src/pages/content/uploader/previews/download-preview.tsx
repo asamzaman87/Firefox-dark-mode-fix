@@ -28,6 +28,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
 }) => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useMemo(() => {
     if (downloadCancelConfirmation) {
@@ -44,15 +45,17 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
     }
   }, [progress, onDownload]);
 
-  const handleError = useCallback(() => {
+  const handleError = useCallback((e: CustomEvent<{ message: string }>) => {
     setHasError(true);
+    setErrorMessage(e.detail.message || chrome.i18n.getMessage("error_stopped_midway"));
   }, []);
 
+
   useEffect(() => {
-    window.addEventListener(LISTENERS.ERROR, handleError);
+    window.addEventListener(LISTENERS.ERROR, handleError as EventListener);
     return () => {
       setHasError(false);
-      window.removeEventListener(LISTENERS.ERROR, handleError);
+      window.removeEventListener(LISTENERS.ERROR, handleError as EventListener);
     }
   }, [])
 
@@ -91,8 +94,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
           <p className="gpt:text-red-500 gpt:text-wrap gpt:max-w-lg gpt:text-center">
             {progress === 0 &&
               chrome.i18n.getMessage("error_no_start")}
-            {progress > 0 &&
-              chrome.i18n.getMessage("error_stopped_midway")}
+            {progress > 0 && errorMessage}
           </p>
         )}
       </div>

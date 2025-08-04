@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOKEN_TTL_MS } from "./constants";
+import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENERS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOKEN_TTL_MS } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
+import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -613,4 +614,11 @@ export function formatPriceFromStripePrice(price?: Product["prices"]): string {
   const currency = price.currency.toUpperCase();
   const interval = price.recurring?.interval ?? '';
   return `${currency} $${amountInDollars}${interval ? `/${interval}` : ''}`;
+}
+
+export const handleError = (error: string, duration: number = TOAST_REMOVE_DELAY) => {
+    const errorEvent = new CustomEvent(LISTENERS.ERROR, { detail: { message: error} });
+    window.dispatchEvent(errorEvent);
+    if (!error.includes("1500")) toast({ description: error, style: TOAST_STYLE_CONFIG, duration });
+    return
 }

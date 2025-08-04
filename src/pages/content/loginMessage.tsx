@@ -30,7 +30,7 @@ chrome.storage.local.get("fromExtensionRedirect", (res) => {
 
     // Create text element
     const text = document.createElement("div");
-    text.textContent = "Continue signing in to use GPT Reader extension.";
+    text.textContent = "Continue signing in to use GPT Reader";
 
     // Append image and text to banner
     banner.appendChild(image);

@@ -116,4 +116,4 @@ export const BANNER_POLLING_TIME_INTERVAL = 20000;
 export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;
 
-export const PRO_VOICES = ["cove", "breeze", "maple", "glimmer", "orbit"];
+export const PRO_VOICES = [];

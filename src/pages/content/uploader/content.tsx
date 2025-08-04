@@ -8,7 +8,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, MAX_FILES, MAX_FILE_SIZE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, detectBrowser, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon, Crown } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -185,36 +185,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [blobs, chunks]);
 
     const handleDownload = useCallback(() => {
-      if (isSubscribed) {
-        // For premium, download immediately
-        const fileName = title ?? "gpt-reader-audio.aac";
-        downloadCombinedFile(fileName);
-        return;
-      }
-
-      if (!timerComplete) {
-        // Show timer popup for non-premium users
-        if(upgradeModalOpen) setUpgradeModalOpen(false); // case when it is already there 
-        startTimerOnce();
-        setTimerPopupOpen(true);
-        return;
-      }
-
       // Timer completed, proceed with download
       const fileName = title ?? "gpt-reader-audio.aac";
       downloadCombinedFile(fileName);
-
-      setTimerPopupOpen(false);
-      setTimerComplete(false);
-      setReason(`Did you know that upgrading to premium would have made your download ${downloadDelay || 0} seconds faster? Upgrade your GPT Reader plan to access faster downloads now.`);
-      setUpgradeModalOpen(true);
     }, [isSubscribed, timerComplete, title, blobs]);
-
-    useEffect(() => {
-      if (timerComplete && !isSubscribed) {
-        handleDownload();
-      }
-    }, [timerComplete, isSubscribed, handleDownload]);
 
     //handles the yes button click to resume the player
     const handleYes = useCallback(() => {
@@ -253,16 +227,19 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     };
 
     const triggerPremium = (
-      e: React.MouseEvent<HTMLDivElement, MouseEvent>
+        e: React.MouseEvent<HTMLElement, MouseEvent>,
+        customMessage?: string
     ) => {
-      if (!isSubscribed) {
-        setReason(
-          "Free users do not have the ability to download while listening. This is a premium only feature, please subscribe to use it."
-        );
-        setUpgradeModalOpen(true);
-        e.preventDefault();
-      }
+        if (!isSubscribed) {
+            setReason(
+                customMessage ??
+                "Free users do not have the ability to download while listening. This is a premium only feature, please subscribe to use it."
+            );
+            setUpgradeModalOpen(true);
+            e.preventDefault();
+        }
     };
+
 
     return (
         <>
@@ -273,7 +250,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             <p className="gpt:truncate gpt:max-w-[20dvw]">{title}</p>
                             <Popover onOpenChange={setIsDownloadConfirmationOpen} open={isDownloadConfirmationOpen}>
                                 <PopoverTrigger asChild>
-                                    <div onClick={triggerPremium} className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer">
+                                    <div onClick={e => triggerPremium(e)} className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer">
                                         <Button
                                             disabled={!isPaused && !isPlaying}
                                             variant="ghost"
@@ -323,10 +300,20 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                     <Announcements />
                 </div>
                 <div className={cn("gpt:absolute gpt:top-4 gpt:right-16 gpt:size-max")}>
-                    <div className="gpt:flex gpt:gap-4 gpt:items-center">
+                    <div className="gpt:flex gpt:gap-2 gpt:items-center">
                         <Button variant="ghost" onClick={() => chrome.runtime.sendMessage({ type: "OPEN_FAQ_VIDEO" })} className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
                             <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
                         </Button>
+                        {!isSubscribed && (
+                            <Button
+                                variant="ghost"
+                                onClick={e => triggerPremium(e, "Consider upgrading your membership to enjoy premium features now!")}
+                                className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                                aria-haspopup="dialog"
+                                >
+                                <Crown /> Upgrade Membership
+                            </Button>
+                        )}
                         <CancelPremiumPopup isSubscribed={isSubscribed} />
                     </div>
                 </div>

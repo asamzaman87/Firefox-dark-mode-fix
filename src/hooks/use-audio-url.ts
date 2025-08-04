@@ -1,10 +1,11 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { Chunk, detectBrowser, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
+import { Chunk, detectBrowser, handleError, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
 import { useToast } from "./use-toast";
 import useFormat from "./use-format";
+import { usePremiumModal } from "@/context/premium-modal";
 
 const useAudioUrl = (isDownload: boolean) => {
     const { toast } = useToast();
@@ -22,6 +23,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
     const chunkNumList = useRef<Set<number>>(new Set());
+    const { isSubscribed, setOpen, setReason } = usePremiumModal();
     // read the user’s chosen format (mp3, aac, or opus)
     const { format } = useFormat();
     const storedFormat = format.toLowerCase();
@@ -318,6 +320,13 @@ const useAudioUrl = (isDownload: boolean) => {
             return;
         }
 
+        if (isDownload && currentStreamChunkNdxRef.current === 1 && !isSubscribed) {
+            handleError("Free users can only download around 1500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download whats been processed so far.");
+            setReason("Free users can only download around 1500 characters at a time. Please upgrade to download without limits!");
+            setOpen(true);
+            return;
+        }
+        
         if (!isDownload) {
             setAudioUrls(completedStreams);
         }

@@ -22,7 +22,7 @@ const PlayRateSlider: FC<PlayRateSliderProps> = ({ disabled, playRate, setPlayRa
 
   const triggerPremiumModal = () => {
     setReason(
-      "You're trying to access a premium playback feature. Speeds over 1.2x require a premium plan."
+      "You're trying to access a premium playback feature. Speeds above 1x require a premium plan."
     );
     setOpen(true);
   };
@@ -46,20 +46,20 @@ const PlayRateSlider: FC<PlayRateSliderProps> = ({ disabled, playRate, setPlayRa
           title={chrome.i18n.getMessage("playback_speed")}
           onValueChange={(val) => {
             const rate = val[0];
-            if (!isSubscribed && rate > 1.2) {
+            if (!isSubscribed && rate > 1) {
               triggerPremiumModal();
               return;
             }
             setPlayRate(rate);
           }}
           onMarkerClick={(marker) => {
-            if (!isSubscribed && marker > 1.2) {
+            if (!isSubscribed && marker > 1) {
               triggerPremiumModal();
               return;
             }
             setPlayRate(marker);
           }}
-          isTickLocked={(tick) => !isSubscribed && tick > 1.2}
+          isTickLocked={(tick) => !isSubscribed && tick > 1}
           onLockedClick={() => triggerPremiumModal()}
           min={MIN_SLIDER_VALUE}
           max={MAX_SLIDER_VALUE}

@@ -91,29 +91,25 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
       isCurrent: true,
       features: [
         {
-          key: "basic_voices",
-          label: chrome.i18n.getMessage("basic_voices") || "Basic voices",
-        },
-        {
           key: "text_to_speech",
           label: chrome.i18n.getMessage("text_to_speech") || "Text to speech",
         },
         {
           key: "file_upload",
-          label: chrome.i18n.getMessage("file_upload") || "File upload",
+          label: chrome.i18n.getMessage("file_upload") || "Upload a file or paste text",
         },
         {
           key: "audio_player",
           label:
             chrome.i18n.getMessage("audio_player") ||
-            "Audio player with limited playback and seek",
+            "Audio player with limited features",
         },
         {
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Downloads with decent speed",
-        },
+            "Downloads with a 1500 character limit",
+        }
       ],
     },
     {
@@ -127,10 +123,6 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           label: chrome.i18n.getMessage("all_free_features") || "Includes all free features",
         },
         {
-          key: "premium_voices",
-          label: chrome.i18n.getMessage("premium_voices") || "Premium voices",
-        },
-        {
           key: "audio_player",
           label:
             chrome.i18n.getMessage("audio_player") ||
@@ -140,7 +132,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Downloads with ultra fast speed",
+            "Downloads with no character limit",
         },
         {
           key: "download_with_text",
