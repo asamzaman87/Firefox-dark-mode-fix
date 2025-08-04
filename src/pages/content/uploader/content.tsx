@@ -158,16 +158,16 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         if (timerIntervalRef.current) return;
 
         const charsPerSecond = 100;
-        const maxDelay = 150; // seconds
+        const maxDelay = 180; // seconds
 
         // sum characters in only as many chunks as we’ve fetched blobs for
         const totalChars = chunks
             .slice(0, blobs.length)
             .reduce((sum, chunk) => sum + chunk.text.length, 0);
 
-        // compute raw secs (1 s/100 chars), then clamp between 5 s and 60 s
+        // compute raw secs (1 s/100 chars), then clamp between min and max delay
         const raw = Math.ceil(totalChars / charsPerSecond);
-        const duration = Math.min(Math.max(raw, 5), maxDelay);
+        const duration = Math.min(Math.max(raw, 30), maxDelay);
         setDownloadDelay(duration);
         setTimerLeft(duration);
 
@@ -349,7 +349,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             disabled={isPlaying || isFetching}
                             accept={BROWSER === "firefox" ? ACCEPTED_FILE_TYPES_FIREFOX : ACCEPTED_FILE_TYPES}
                             maxFileCount={MAX_FILES}
-                            maxSize={MAX_FILE_SIZE}
                             onValueChange={onSave}
                         />
                 }
