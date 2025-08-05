@@ -92,7 +92,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
       features: [
         {
           key: "text_to_speech",
-          label: chrome.i18n.getMessage("text_to_speech") || "Text to speech",
+          label: chrome.i18n.getMessage("text_to_speech") || "Text to speech by ChatGPT",
         },
         {
           key: "file_upload",

@@ -6,7 +6,7 @@ import {
   PopoverPrimitive
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider-with-ticker"
-import { MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE, TICKS_TO_DISPLAY } from "@/lib/constants";
+import { MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, STEP_SLIDER_VALUE, TICKS_TO_DISPLAY, MAX_PLAYBACK_RATE } from "@/lib/constants";
 import { X } from "lucide-react";
 import { FC } from "react"
 import { usePremiumModal } from "../../../../context/premium-modal";
@@ -22,7 +22,7 @@ const PlayRateSlider: FC<PlayRateSliderProps> = ({ disabled, playRate, setPlayRa
 
   const triggerPremiumModal = () => {
     setReason(
-      "You're trying to access a premium playback feature. Speeds above 1x require a premium plan."
+      `You're trying to access a premium playback feature. Speeds above ${MAX_PLAYBACK_RATE}x require a premium plan.`
     );
     setOpen(true);
   };
@@ -46,20 +46,20 @@ const PlayRateSlider: FC<PlayRateSliderProps> = ({ disabled, playRate, setPlayRa
           title={chrome.i18n.getMessage("playback_speed")}
           onValueChange={(val) => {
             const rate = val[0];
-            if (!isSubscribed && rate > 1) {
+            if (!isSubscribed && rate > MAX_PLAYBACK_RATE) {
               triggerPremiumModal();
               return;
             }
             setPlayRate(rate);
           }}
           onMarkerClick={(marker) => {
-            if (!isSubscribed && marker > 1) {
+            if (!isSubscribed && marker > MAX_PLAYBACK_RATE) {
               triggerPremiumModal();
               return;
             }
             setPlayRate(marker);
           }}
-          isTickLocked={(tick) => !isSubscribed && tick > 1}
+          isTickLocked={(tick) => !isSubscribed && tick > MAX_PLAYBACK_RATE}
           onLockedClick={() => triggerPremiumModal()}
           min={MIN_SLIDER_VALUE}
           max={MAX_SLIDER_VALUE}
