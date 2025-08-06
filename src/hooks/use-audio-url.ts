@@ -320,7 +320,7 @@ const useAudioUrl = (isDownload: boolean) => {
             return;
         }
 
-        if (isDownload && currentStreamChunkNdxRef.current === 1 && !isSubscribed) {
+        if (isDownload && currentStreamChunkNdxRef.current === 1 && !isSubscribed && currentStreamChunkNdxRef.current !== chunks.length - 1) {
             handleError("Free users can only download around 1500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download whats been processed so far.");
             setReason("Free users can only download around 1500 characters at a time. Please upgrade to download without limits!");
             setOpen(true);

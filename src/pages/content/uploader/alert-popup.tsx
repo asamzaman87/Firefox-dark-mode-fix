@@ -17,7 +17,7 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
         <DialogDescription></DialogDescription>
       </DialogHeader>
 
-      <div className="gpt:rounded-2xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:p-6 gpt:shadow gpt:w-full md:gpt:w-1/2 gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
+      <div className="gpt:rounded-2xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:p-6 gpt:shadow gpt:w-full gpt:md:w-1/2 gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
 
         <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
           <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />

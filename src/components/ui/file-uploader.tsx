@@ -221,7 +221,7 @@ export function FileUploader(props: FileUploaderProps) {
           >
             <input {...getInputProps()} />
             {isDragActive ? (
-              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 sm:gpt:px-5">
+              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:sm:px-5">
                 <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
                   <UploadIcon
                     className="gpt:size-7"
@@ -233,7 +233,7 @@ export function FileUploader(props: FileUploaderProps) {
                 </p>
               </div>
             ) : (
-              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 sm:gpt:px-5">
+              <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:sm:px-5">
                 {/* <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
                   <UploadIcon
                     className="gpt:size-7"

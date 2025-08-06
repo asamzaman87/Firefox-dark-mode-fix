@@ -45,7 +45,7 @@ const DownloadOrListen: FC<InputPopupProps> = ({ onSubmit, ...props }) => {
         onInteractOutside={(e) => {
           e.preventDefault(); //prevents mask click close
         }}
-        className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw] gpt:w-screen md:gpt:w-max"
+        className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw] gpt:w-screen gpt:md:w-max"
       >
         <DialogHeader className="gpt:sr-only">
           <DialogTitle>Download or Listen Audio</DialogTitle>
@@ -53,7 +53,7 @@ const DownloadOrListen: FC<InputPopupProps> = ({ onSubmit, ...props }) => {
         </DialogHeader>
         <div className="gpt:w-full gpt:space-y-4">
           <div className="gpt:w-full gpt:space-y-1">
-            <h1 className="gpt:text-xl gpt:truncate gpt:max-w-[65dvw] md:gpt:max-w-[40dvw]" title="Would you like to download or listen to the audio?">{chrome.i18n.getMessage('would_you_like_to_download_or_listen')} </h1>
+            <h1 className="gpt:text-xl gpt:truncate gpt:max-w-[65dvw] gpt:md:max-w-[40dvw]" title="Would you like to download or listen to the audio?">{chrome.i18n.getMessage('would_you_like_to_download_or_listen')} </h1>
             {/* <p className="gpt:text-gray-500 gpt:text-sm">
               Would you like to download or listen to the audio?
             </p> */}
@@ -69,7 +69,7 @@ const DownloadOrListen: FC<InputPopupProps> = ({ onSubmit, ...props }) => {
                   "gpt:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 )}
               >
-                <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-2 sm:gpt:px-5 gpt:cursor-pointer">
+                <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-2 gpt:sm:px-5 gpt:cursor-pointer">
                   <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:flex gpt:items-center gpt:justify-center gpt:size-20">
                     {option.icon}
                   </div>

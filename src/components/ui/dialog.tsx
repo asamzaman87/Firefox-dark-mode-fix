@@ -66,7 +66,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "gpt:flex gpt:flex-col gpt:space-y-1.5 gpt:text-center sm:gpt:gpt:text-left",
+      "gpt:flex gpt:flex-col gpt:space-y-1.5 gpt:text-center gpt:sm:gpt:text-left",
       className
     )}
     {...props}
@@ -80,7 +80,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "gpt:flex gpt:flex-col-reverse sm:gpt:gpt:flex-row sm:gpt:gpt:justify-end sm:gpt:gpt:space-x-2",
+      "gpt:flex gpt:flex-col-reverse gpt:sm:gpt:flex-row gpt:sm:gpt:justify-end gpt:sm:gpt:space-x-2",
       className
     )}
     {...props}
