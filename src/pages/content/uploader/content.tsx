@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-self-assign */
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";

@@ -492,42 +492,32 @@ export async function getStoredValue<T = string>(
 function waitForStorageKey<T>(
   key: string,
   storageArea: "sync" | "local" = "sync",
-  timeoutMs = 3000
+  timeoutMs = 3000,
+  intervalMs = 100
 ): Promise<T | null> {
   return new Promise((resolve) => {
-    let timer: number;
-    chrome.storage[storageArea].get(key, res => {
-      if (res[key]) {
-        clearTimeout(timer);
-        return resolve(res[key]);
-      }
-      const listener = (
-        changes: Record<string, chrome.storage.StorageChange>,
-        area: string
-      ) => {
-        if (area === storageArea && changes[key]?.newValue != null) {
-          clearTimeout(timer);
-          chrome.storage.onChanged.removeListener(listener);
-          resolve(changes[key].newValue);
+    const start = Date.now();
+
+    const interval = setInterval(() => {
+      chrome.storage[storageArea].get(key, (res) => {
+        if (res[key]) {
+          clearInterval(interval);
+          resolve(res[key]);
+        } else if (Date.now() - start > timeoutMs) {
+          clearInterval(interval);
+          resolve(null);
         }
-      };
-      chrome.storage.onChanged.addListener(listener);
-      timer = window.setTimeout(() => {
-        chrome.storage.onChanged.removeListener(listener);
-        resolve(null);
-      }, timeoutMs);
-    });
+      });
+    }, intervalMs);
   });
 }
-
-
 
 export const handleCheckUserSubscription = async () => {
   try {
     const openaiId = await waitForStorageKey<string>("openaiId", "sync");
 
     if (!openaiId) {
-      console.log("No openaiId found in storage");
+      console.warn("No OpenAI ID found");
       chrome.storage.local.set({ hasSubscription: true });
       return true;
     }

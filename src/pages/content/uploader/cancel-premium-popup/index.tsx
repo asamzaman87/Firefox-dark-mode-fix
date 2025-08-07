@@ -56,7 +56,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       } else {
         res = await cancelSubscription(subscriptionId);
       }
-      console.log("Cancel subscription response", res);
+
       const { currentPeriodEnd, isSubscriptionCancelled } = res?.data || {};
       setCancelInfo({ currentPeriodEnd, isSubscriptionCancelled });
       toast({
