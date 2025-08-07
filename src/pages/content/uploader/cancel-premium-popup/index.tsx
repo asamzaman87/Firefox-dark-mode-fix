@@ -195,7 +195,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
               Are you sure you want to cancel your premium subscription?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gpt:flex gpt:justify-end gpt:gap-2">
             <Button
               variant="outline"
               onClick={() => setShowCancelDialog(false)}

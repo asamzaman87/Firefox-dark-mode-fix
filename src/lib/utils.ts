@@ -497,7 +497,7 @@ function waitForStorageKey<T>(
   return new Promise((resolve) => {
     let timer: number;
     chrome.storage[storageArea].get(key, res => {
-      if (res[key] != null) {
+      if (res[key]) {
         clearTimeout(timer);
         return resolve(res[key]);
       }
@@ -527,6 +527,7 @@ export const handleCheckUserSubscription = async () => {
     const openaiId = await waitForStorageKey<string>("openaiId", "sync");
 
     if (!openaiId) {
+      console.log("No openaiId found in storage");
       chrome.storage.local.set({ hasSubscription: true });
       return true;
     }
