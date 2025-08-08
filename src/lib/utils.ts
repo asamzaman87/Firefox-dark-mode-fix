@@ -610,6 +610,6 @@ export function formatPriceFromStripePrice(price?: Product["prices"]): string {
 export const handleError = (error: string, duration: number = TOAST_REMOVE_DELAY) => {
     const errorEvent = new CustomEvent(LISTENERS.ERROR, { detail: { message: error} });
     window.dispatchEvent(errorEvent);
-    if (!error.includes("1500")) toast({ description: error, style: TOAST_STYLE_CONFIG, duration });
+    if (!error.includes("2500")) toast({ description: error, style: TOAST_STYLE_CONFIG, duration });
     return
 }

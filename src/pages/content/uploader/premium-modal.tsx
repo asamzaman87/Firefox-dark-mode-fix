@@ -108,7 +108,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Downloads with a 1500 character limit",
+            "Downloads with a 2500 character limit",
         }
       ],
     },
