@@ -321,9 +321,11 @@ const useAudioUrl = (isDownload: boolean) => {
         }
 
         if (isDownload && currentStreamChunkNdxRef.current === 2 && !isSubscribed && currentStreamChunkNdxRef.current !== chunks.length - 1) {
-            handleError("Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download whats been processed so far.");
-            setReason("Free users can only download around 2500 characters at a time. Please upgrade to download without limits!");
-            setOpen(true);
+            setTimeout(() => {
+                handleError("Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download whats been processed so far.");
+                setReason("Free users can only download around 2500 characters at a time. Please upgrade to download without limits!");
+                setOpen(true);
+            }, 3000);
             return;
         }
         

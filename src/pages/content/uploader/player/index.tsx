@@ -83,11 +83,11 @@ const Player: FC<PlayerBackupProps> = ({
   const { isSubscribed, setOpen, setReason } = usePremiumModal();
 
   const attemptForward = () => {
-    if (!isSubscribed) {
-      setReason("Fast forwarding is a premium feature. Please subscribe to use it.");
-      setOpen(true);
-      return;
-    }
+    // if (!isSubscribed) {
+    //   setReason("Fast forwarding is a premium feature. Please subscribe to use it.");
+    //   setOpen(true);
+    //   return;
+    // }
     onForward();
   };
 
