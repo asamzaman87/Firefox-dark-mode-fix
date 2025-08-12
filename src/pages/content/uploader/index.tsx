@@ -261,16 +261,15 @@ function Uploader() {
   }
 
   const isBadModel = () => {
-    const isSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
+    const isNotSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
     // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if (modelSwitcher) {
-      // const name = modelSwitcher.innerText;
-      // // never flag models containing "mini"
-      // if (name.toLowerCase().includes("mini")) {
-      //   return false;
-      // }
-      return isSupportedModel(modelSwitcher.innerHTML);
+      const ariaLabel = modelSwitcher.getAttribute("aria-label") || "";
+      if (ariaLabel.toLowerCase().includes("thinking")) {
+        return true;
+      }
+      return isNotSupportedModel(modelSwitcher.innerHTML);
     }
     return false
   };
