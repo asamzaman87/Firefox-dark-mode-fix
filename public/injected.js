@@ -2,6 +2,8 @@
 const isFirefox = typeof InstallTrigger !== 'undefined'
   || /firefox/i.test(navigator.userAgent);
 
+const LOCAL_LOGS = false;
+
 // a global flag
 let shouldAbortStream = false;
 
@@ -34,15 +36,15 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let assistant = "";
     let done = false;
     let stopConvo = false;
+    let target = null;
+    let chunkLength = null;
     try {
-        const jsonArgs = JSON.parse(args[1]?.body);
+        const jsonArgs = JSON.parse(args[1]?.body || "{}");
         const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
         text = jsonArgs?.messages?.[0]?.content?.parts[0];
         // eslint-disable-next-line no-constant-condition
         // → wait for the hook to tell us this chunk’s expected length
         // → get the chunk length (use the stashed one if it already arrived)
-        let target;
-        let chunkLength = null;
         if (chunkText !== null) {
             chunkLength = chunkText.length;
             target = chunkText;
@@ -148,6 +150,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             // → once we’ve passed the threshold, notify the hook
             if (((normalizeAlphaNumeric(assistant).length >= threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
                 // immediately tell the server to stop sending more SSE
+                if (LOCAL_LOGS) console.log("[loopThroughReaderToExtractMessageId] Sending stop_conversation SSE for messageId:", messageId);
                 return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
                 // if (conversationId) {
                 //     // reuse the original auth header if there was one in the request args
@@ -166,6 +169,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             }
             // or if the stream is done
             if (done) {
+                if (LOCAL_LOGS) console.log("[loopThroughReaderToExtractMessageId] Stream is done for messageId:", messageId);
                 return { messageId, conversationId, createTime, text, assistant, stopConvo, target }; // Exit loop when reading is complete
             }
         }
@@ -228,6 +232,7 @@ window.fetch = async (...args) => {
                 const firstMsg = req.messages?.[0]?.content?.parts?.[0] || "";
                 const m = firstMsg.match(/^\[(\d+)\]/);
                 sentChunkNumber = m ? Number(m[1]) : null;
+                if (LOCAL_LOGS) console.log("[injected.js] Recieved chunk number:", sentChunkNumber);
             } catch (_err) {
                 if (url.endsWith('/conversation')) {
                     // dispatch a general error if we can't even parse the request
@@ -263,6 +268,7 @@ window.fetch = async (...args) => {
             const reader = stream.getReader();
             loopThroughReaderToExtractMessageId(reader, args)
             .then(detail => {
+                if (LOCAL_LOGS) console.log("[injected.js] End of stream event dispatched for chunk number:", sentChunkNumber);
                 window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail: {...detail, chunkNdx: sentChunkNumber} }));
             })
             .catch(err => console.error("stream error:", err));

@@ -1,4 +1,4 @@
-import { LISTENERS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
+import { LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
@@ -39,6 +39,7 @@ const useStreamListener = (
 
     const retryFlow = useCallback(
         async () => {
+          if (LOCAL_LOGS) console.log("[use-stream-listener] Calling retry flow");
           const idx = nextChunkRef.current - 1;
           if (idx < 0 || idx >= chunkRef.current.length) {
             console.log("Retry failed: invalid chunk index");
@@ -227,6 +228,7 @@ const useStreamListener = (
 
     const handleConvStream = useCallback(async (e: Event) => {
         let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo, target } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean, target: string } };
+        if (LOCAL_LOGS) console.log("[handleConvStream] Use stream listener got event for chunk number:", chunkNdx);
         if (!stopConvo) {
             const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
             if (stopButton) {
@@ -315,6 +317,7 @@ const useStreamListener = (
                 try {
                     const storedFormat = format.toLowerCase();
                     // prefetching audio
+                    if (LOCAL_LOGS) console.log(`[Audio Prefetch] Prefetching audio for chunk ${chunkNdx}`);
                     const audioUrl = await fetchAndDecodeAudio(
                         `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${storedFormat}`,
                         +chunkNdx
@@ -322,6 +325,7 @@ const useStreamListener = (
                     
                     // ignore as null returns would be from retries
                     if (!audioUrl) {
+                      console.error(`[Audio Prefetch] No audio url found for chunk ${chunkNdx}`);
                       return;
                     }
 
@@ -339,6 +343,7 @@ const useStreamListener = (
                     return;
                 }
             }
+            if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
             setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx })
         }
         setIsLoading(false);
@@ -350,6 +355,7 @@ const useStreamListener = (
             await retryFlow();
             return;
         }
+        console.error('In hadleRateLimitExceeded:', detail);
         toast({ description: detail, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
     }, [nextChunkRef, retryCounts, retryFlow, toast, setIsLoading]);

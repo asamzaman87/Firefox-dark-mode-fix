@@ -1,4 +1,4 @@
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, HELPER_PROMPTS, LISTENERS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { Chunk, detectBrowser, handleError, normalizeAlphaNumeric, splitIntoChunksV2 } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
@@ -86,6 +86,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+        if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);
         // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;
@@ -146,9 +147,11 @@ const useAudioUrl = (isDownload: boolean) => {
             setTimeout(() => {
                 sendPrompt();
             }, 50);
+            if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
         } else {
             // Fallback error
             const errorMessage = `GPT Reader is having trouble, please refresh your page and try again`;
+            console.error('In injectPrompt else:', errorMessage);
             window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
             toast({
                 description: errorMessage,
@@ -243,10 +246,12 @@ const useAudioUrl = (isDownload: boolean) => {
         if (!click && nextChunkRef.current && nextChunkRef.current > 0 && nextChunkRef.current < chunks.length && (nextChunkRef.current) % CHUNK_TO_PAUSE_ON === 0) {
             return;
         }
+        if (LOCAL_LOGS) console.log("Attempting to reStartChunkProcess");
         if (currentStreamChunkNdxRef.current != (nextChunkRef.current - 1)) {
             if (chunkNumList.current.has(nextChunkRef.current-1)) return;
             const chunk = chunks[nextChunkRef.current-1];
             if (chunk) {
+                if (LOCAL_LOGS) console.log("[ReStartChunkProcess] incorrect order detected");
                 chunkNumList.current.add(nextChunkRef.current-1);
                 setIsPromptingPaused(false);
                 setCurrentChunkBeingPromptedIndex(
@@ -258,6 +263,7 @@ const useAudioUrl = (isDownload: boolean) => {
         }
         const nextChunk = chunks[nextChunkRef.current];
         if (nextChunk && !chunkNumList.current.has(nextChunkRef.current)) {
+            if (LOCAL_LOGS) console.log("[ReStartChunkProcess] injecting chunk", nextChunk.id);
             chunkNumList.current.add(nextChunkRef.current);
             setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(nextChunkRef.current);
@@ -305,6 +311,7 @@ const useAudioUrl = (isDownload: boolean) => {
 
       
     useEffect(() => {
+        if (LOCAL_LOGS) console.log("[currentCompletedStream useEffect] Finished getting audio for chunk:", currentCompletedStream?.chunkNdx);
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
 
         if (currentCompletedStream?.chunkNdx != (nextChunkRef.current - 1)) {

@@ -117,3 +117,4 @@ export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;
 export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
+export const LOCAL_LOGS = false;
