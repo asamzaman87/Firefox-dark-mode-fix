@@ -448,34 +448,70 @@ function Uploader() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isActive) {
-      return; // do nothing when overlay is closed
-    }
-  
+    if (!isActive) return; // do nothing when overlay is closed
+
+    const minutesUntilNextUtcHour = () => {
+      const now = new Date();
+      const nextHourUtc = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours() + 1,
+        0, 0, 0
+      ));
+      return Math.ceil((nextHourUtc.getTime() - now.getTime()) / 60_000);
+    };
+
+    const findLimitBannerMinutes = (): number | null => {
+      // Look for the new banner text:
+      // "You've reached your message limit." and nearby "try again in 24 minutes"
+      const candidates = Array.from(document.querySelectorAll<HTMLElement>('h3,div,p,span'));
+
+      const header = candidates.find(el =>
+        (el.textContent || '').toLowerCase().includes("you've reached your message limit")
+      );
+
+      if (!header) return null;
+
+      // Search the closest container text for "try again in <n> minute"
+      const scopeText =
+        (header.closest('aside,div')?.textContent ||
+          header.parentElement?.textContent ||
+          header.textContent ||
+          '').toLowerCase();
+
+      const match = scopeText.match(/try again in\s+(\d+)\s+minutes?/);
+      if (match && match[1]) {
+        const mins = parseInt(match[1], 10);
+        if (!Number.isNaN(mins)) return mins;
+      }
+
+      return null; // found the banner, but no explicit minute count
+    };
+
     const intervalId = setInterval(() => {
+      // Detector #1 (existing): presence of retry/regenerate button
       const retryBtn = document.querySelector<HTMLButtonElement>(
         '[data-testid*="retry"], [data-testid*="regenerate"]'
       );
-      if (retryBtn) {
-        // Compute minutes until next UTC hour
-        const now = new Date();
-        const nextHourUtc = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate(),
-          now.getUTCHours() + 1,  // next UTC hour
-          0, 0, 0
-        ));
-        const msUntilNextHour = nextHourUtc.getTime() - now.getTime();
-        const minutesLeft = Math.ceil(msUntilNextHour / 60_000);
+
+      // Detector #2 (new): the banner shown in your screenshot
+      const bannerMinutes = findLimitBannerMinutes();
+
+      if (retryBtn || bannerMinutes !== null) {
+        const minutesLeft =
+          bannerMinutes !== null ? bannerMinutes : minutesUntilNextUtcHour();
+
         toast({
           description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
           style: TOAST_STYLE_CONFIG
         });
-        retryBtn.click();
+
+        // If retry/regenerate is present, click it to clear state like before
+        if (retryBtn) retryBtn.click();
       }
     }, 60_000);
-  
+
     // Cleanup: stop polling as soon as `isActive` flips false or component unmounts
     return () => {
       clearInterval(intervalId);

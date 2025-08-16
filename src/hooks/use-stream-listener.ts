@@ -201,21 +201,12 @@ const useStreamListener = (
             // use your existing retry helper
             return await retry(url, chunkNumber);
         }
-        // only append if this chunk is exactly the next one in sequence
-        let added = false;
-        setBlobs(bs => {
-            const expected = bs.length; 
-            if (chunkNumber !== expected) {
-                console.warn(
-                    `[Audio Prefetch] Out‐of‐order chunk ${chunkNumber}, expected ${expected}. Ignoring.`
-                );
-                return bs;
-            }
-            added = true;
-            return [...bs, { chunkNumber, blob }];
+        setBlobs(prev => {
+            const next = prev.filter(e => e.chunkNumber !== chunkNumber);
+            next.push({ chunkNumber, blob });
+            next.sort((a, b) => a.chunkNumber - b.chunkNumber);
+            return next;
         });
-        // if it wasn't sequential, give up and don't hand back a URL
-        if (!added) return;
         const audioUrl = URL.createObjectURL(blob);
         setIsFetching(false);
         return audioUrl;
@@ -224,7 +215,7 @@ const useStreamListener = (
     //retry fetching audio
     const retry = useCallback(async (url: string, chunkNumber: number): Promise<string | undefined> => {
         return await fetchAndDecodeAudio(url, chunkNumber);
-    }, [token])
+    }, [fetchAndDecodeAudio])
 
     const handleConvStream = useCallback(async (e: Event) => {
         let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo, target } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean, target: string } };
