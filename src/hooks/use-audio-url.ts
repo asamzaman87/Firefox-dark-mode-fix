@@ -70,12 +70,12 @@ const useAudioUrl = (isDownload: boolean) => {
         const timeout = setTimeout(() => {
             observer.disconnect();
             activeSendObserver = null;
-            console.error("[sendPrompt] Send button not found after 30 seconds.");
+            console.error("[sendPrompt] Send button not found after 20 seconds.");
             toast({
                 description: `GPT Reader is having trouble, please refresh your page and try again. You may have reached ChatGPT's hourly limit and will need to wait for a few minutes.`,
                 style: TOAST_STYLE_CONFIG
             })
-        }, 30000);
+        }, 20000);
     };
     
     const stopPrompt = async () => {
