@@ -26,6 +26,7 @@ const useStreamListener = (
     const lastRegularRetryChunk = useRef<number | null>(null);
     const promptNdx = useRef<number>(0);
     const chunkNdxRef = useRef<number>(0);
+    const blobsLength = useRef<number>(0);
     
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -205,6 +206,7 @@ const useStreamListener = (
             const next = prev.filter(e => e.chunkNumber !== chunkNumber);
             next.push({ chunkNumber, blob });
             next.sort((a, b) => a.chunkNumber - b.chunkNumber);
+            blobsLength.current = next.length;
             return next;
         });
         const audioUrl = URL.createObjectURL(blob);
@@ -314,10 +316,10 @@ const useStreamListener = (
                         +chunkNdx
                     );
                     
-                    // ignore as null returns would be from retries
-                    if (!audioUrl) {
-                      console.error(`[Audio Prefetch] No audio url found for chunk ${chunkNdx}`);
-                      return;
+                    // ignore as null returns would be from retries (in those cases no need to continue injecting)
+                    if (blobsLength.current !== chunkNdx + 1) {
+                        console.warn(`[Audio Prefetch] Blob length does not match chunk number: ${blobsLength.current} !== ${chunkNdx + 1}`);
+                        return
                     }
 
                     if (audioUrl) {
@@ -359,6 +361,7 @@ const useStreamListener = (
         lastRegularRetryChunk.current = null;
         promptNdx.current = 0;
         chunkNdxRef.current = 0;
+        blobsLength.current = 0;
     }
     
     useEffect(() => {

@@ -79,6 +79,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setFileExtractedText(undefined);
     }
 
+
     const onBackClick = async () => {
         if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
         // delete the old ChatGPT conversation if we have one
@@ -342,7 +343,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 }
 
                 {/* <Player currentTime={currentPlayTime} duration={playTimeDuration} handleVolumeChange={handleVolumeChange} volume={volume} onForward={onForward} onRewind={onRewind} isFirstChunk={isLoading} showControls={prompts.length > 0} hasPlayBackEnded={hasCompletePlaying} setHasPlayBackEnded={setHasCompletePlaying} isPaused={isPaused} isPlaying={isPlaying} isLoading={isLoading || isStreamLoading} play={play} pause={pause} handlePlayRateChange={handlePlayRateChange} playRate={playRate} /> */}
-                <PlayerBackup areSeekControlsAvailable={isTypeAACSupported} replay={replay} partialChunkCompletedPlaying={partialChunkCompletedPlaying} setPlaybackEnded={setHasCompletePlaying} showControls={prompts.length > 0} playRate={playRate} handlePlayRateChange={handlePlayRateChange} playbackEnded={hasCompletePlaying} isPaused={isPaused} isLoading={isLoading || isFetching} volume={volume} handleVolumeChange={handleVolumeChange} onScrub={onScrub} play={play} pause={pause} currentTime={currentPlayTime} duration={playTimeDuration} isPlaying={isPlaying} onForward={onForward} onRewind={onRewind} />
+                <PlayerBackup areSeekControlsAvailable={isTypeAACSupported || BROWSER === "firefox"} replay={replay} partialChunkCompletedPlaying={partialChunkCompletedPlaying} setPlaybackEnded={setHasCompletePlaying} showControls={prompts.length > 0} playRate={playRate} handlePlayRateChange={handlePlayRateChange} playbackEnded={hasCompletePlaying} isPaused={isPaused} isLoading={isLoading || isFetching} volume={volume} handleVolumeChange={handleVolumeChange} onScrub={onScrub} play={play} pause={pause} currentTime={currentPlayTime} duration={playTimeDuration} isPlaying={isPlaying} onForward={onForward} onRewind={onRewind} />
 
                 {
                     (!prompts?.length && !isDownload) ?

@@ -94,7 +94,41 @@ const useAudioPlayer = (isDownload: boolean) => {
     const gainNodeRef  = useRef<GainNode | null>(null);
 
     const isPlayingRef   = useRef(isPlaying);
+    const isFirefox =
+      typeof navigator !== "undefined" && /firefox/i.test(navigator.userAgent);
+    // FIREFOX-ONLY: staged parts waiting to be committed at the seam
+    const incomingEntriesRef = useRef<
+      Array<{ chunkNumber: number; buffer: ArrayBuffer; duration: number }>
+    >([]);
 
+    // FIREFOX-ONLY: total committed duration (seekbar length)
+    const committedDurationRef = useRef<number>(0);
+    const firefoxBufferNum = useRef<number>(0);
+
+    const commitPending = useCallback(() => {
+      if (!incomingEntriesRef.current.length) return;
+      const incomingEntries = incomingEntriesRef.current;
+      incomingEntriesRef.current = [];
+      for (const entry of incomingEntries) {
+        historyBuffersRef.current.push(entry.buffer);
+
+        const prevEnd =
+          chunkBoundariesRef.current.length
+            ? chunkBoundariesRef.current[chunkBoundariesRef.current.length - 1].endTime
+            : 0;
+
+        const newEnd = prevEnd + entry.duration;
+        chunkBoundariesRef.current.push({
+          chunkNumber: entry.chunkNumber,
+          endTime: newEnd,
+        });
+        committedDurationRef.current = newEnd;
+      }
+      setAudioLoading(false);
+      // Update seekbar ONLY when we commit (i.e., at exact end)
+      setPlayTimeDuration(committedDurationRef.current);
+    }, []);
+    
     useEffect(() => {
       isPlayingRef.current = isPlaying;
     }, [isPlaying]);
@@ -112,7 +146,9 @@ const useAudioPlayer = (isDownload: boolean) => {
                 if (!mediaSource || mediaSource.readyState !== "open") return;
                 mediaSource.endOfStream();
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {}
+            } catch (error) {
+              // console.error("Error ending MediaSource stream:", error);
+            }
         }
     }
 
@@ -192,7 +228,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     // watch for new buffers → try append (with quota-evict retry)
     useEffect(() => {
-        if (!chunks.length || isPresenceModalOpen) return;
+        if (!chunks.length || isPresenceModalOpen || !isTypeAACSupported) return;
         let cancelled = false;
         (async () => {
           while (!cancelled) {
@@ -261,6 +297,19 @@ const useAudioPlayer = (isDownload: boolean) => {
 
                   // now you can set total duration:
                   setPlayTimeDuration(newEnd);
+                  // if (prevEnd > 0) {
+                  //   console.log("[APPEND] evicting", prevEnd);
+                  //   sourceBuffer.current!.remove(0, prevEnd);
+                  //   while (sourceBuffer.current!.updating) {
+                  //       await new Promise<void>((resolve) => {
+                  //         const onEnd = () => {
+                  //           sourceBuffer.current!.removeEventListener("updateend", onEnd);
+                  //           resolve();
+                  //         };
+                  //         sourceBuffer.current!.addEventListener("updateend", onEnd);
+                  //       });
+                  //   }
+                  // }
                   if (bufferNum.current % CHUNK_TO_PAUSE_ON === 0) {
                     break;
                   }
@@ -301,10 +350,11 @@ const useAudioPlayer = (isDownload: boolean) => {
         return () => { cancelled = true; };
     }, [chunks, isPresenceModalOpen]);
 
-      const playFallback = async (startTime: number) => {
-        setIsPromptingPaused(true);
+    const playFallback = async (startTime: number) => {
+      if (!isFirefox) setIsPromptingPaused(true);
       
-        // 1) wait for any in‐flight MSE updates to finish
+      // 1) wait for any in‐flight MSE updates to finish
+      if (sourceBuffer.current) {
         while (sourceBuffer.current!.updating) {
           await new Promise<void>((resolve) => {
             const onEnd = () => {
@@ -314,72 +364,129 @@ const useAudioPlayer = (isDownload: boolean) => {
             sourceBuffer.current!.addEventListener("updateend", onEnd);
           });
         }
-        
-      
-        // 3) pause the MSE‐driven audio
-        seekAudio.pause();
-      
-        // 4) snapshot how many history buffers we have right now
+      }
+    
+      // 3) pause the MSE‐driven audio
+      if (seekAudio) seekAudio.pause();
+    
+      // 4) snapshot how many history buffers we have right now
+      if (!isFirefox) {
+        // Chrome fallback keeps growing mid-play as before
         originalHistoryLengthRef.current = historyBuffersRef.current.length;
-      
-        // 5) build a blob URL from our history
-        const blob = new Blob(historyBuffersRef.current, { type: mimeCodec });
-        const url = URL.createObjectURL(blob);
-      
-        // 6) revoke any previous fallback URL
-        if (fallbackAudioRef.current) {
-          URL.revokeObjectURL(fallbackAudioRef.current.src);
-        }
-      
-        // 7) create the fallback <audio>
-        const a = new Audio(url);
-        a.onplay = () => {
-          if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume().catch(() => {});
-          }
-        };
-        a.onpause = () => {
-          if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume().catch(() => {});
-          }
-        };
-        a.currentTime = startTime;
-        a.playbackRate = playRateRef.current;
-        a.volume       = volumeRef.current;
+      }
+    
+      // 5) build a blob URL from our history
+      const blob = new Blob(historyBuffersRef.current, { type: mimeCodec });
+      const url = URL.createObjectURL(blob);
+    
+      // 6) revoke any previous fallback URL
+      if (fallbackAudioRef.current) {
+        URL.revokeObjectURL(fallbackAudioRef.current.src);
+      }
+    
+      // 7) create the fallback <audio>
+      const a = new Audio(url);
+      fallbackAudioRef.current = a;
 
-        // Volume gain code
-        if (!audioCtxRef.current) {
-          audioCtxRef.current = new AudioContext();
+      a.onplay = () => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
         }
-        const audioCtx = audioCtxRef.current!;
-        
-        try {
-          const fallbackSource = audioCtx.createMediaElementSource(a);
-          if (gainNodeRef.current) {
-            // If we already have a GainNode, route fallback through it
-            fallbackSource.connect(gainNodeRef.current);
-          } else {
-            // Otherwise create a new GainNode and connect
-            const newGain = audioCtx.createGain();
-            newGain.gain.value = 1.0;
-            fallbackSource.connect(newGain).connect(audioCtx.destination);
-            gainNodeRef.current = newGain;
-          }
-        } catch {
-          // If createMediaElementSource fails (e.g. playback state), ignore
+      };
+
+      a.onpause = () => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
         }
+      };
+
+      a.currentTime = startTime;
+      a.playbackRate = playRateRef.current;
+      a.volume       = volumeRef.current;
+
+      // Volume gain code
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const audioCtx = audioCtxRef.current!;
       
-        // 8) on each tick, first try to jump back to MSE if it’s caught up;
-        //    otherwise, if our history grew, rebuild the blob in place
-        a.ontimeupdate = async () => {
-          if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume().catch(() => {});
+      try {
+        const fallbackSource = audioCtx.createMediaElementSource(a);
+        if (gainNodeRef.current) {
+          // If we already have a GainNode, route fallback through it
+          fallbackSource.connect(gainNodeRef.current);
+        } else {
+          // Otherwise create a new GainNode and connect
+          const newGain = audioCtx.createGain();
+          newGain.gain.value = 1.0;
+          fallbackSource.connect(newGain).connect(audioCtx.destination);
+          gainNodeRef.current = newGain;
+        }
+      } catch {
+        // If createMediaElementSource fails (e.g. playback state), ignore
+      }
+    
+      if (isFirefox) {
+        a.onended = async () => {
+          if (historyBuffersRef.current.length !== chunks.length) {
+            setAudioLoading(true);
+            setIsPlaying(false);
+            setIsPaused(false);
+
+            if (incomingEntriesRef.current.length) {
+              await new Promise(r => setTimeout(r, 250));
+            }
+            
+            while (!incomingEntriesRef.current.length) {
+              await new Promise(r => setTimeout(r, 500));
+            }
+
+            const prevDuration = committedDurationRef.current;
+            let currentTime = a.currentTime;
+            if (currentTime > prevDuration) currentTime = prevDuration;
+            commitPending();
+
+            const oldUrl = a.src;
+            const newBlob = new Blob(historyBuffersRef.current, { type: mimeCodec });
+            const newUrl = URL.createObjectURL(newBlob);
+            a.src = newUrl;
+            a.currentTime = currentTime;
+            a.playbackRate = playRateRef.current;
+            a.volume = volumeRef.current;
+            URL.revokeObjectURL(oldUrl);
+            if (!isPausedRef.current || isPlayingRef.current) a.play();
+          };
+       }
+      }
+      
+      // 8) on each tick, first try to jump back to MSE if it’s caught up;
+      //    otherwise, if our history grew, rebuild the blob in place
+      a.ontimeupdate = async () => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume().catch(() => {});
+        }
+        if (isFirefox && !isPausedRef.current && !isPlayingRef.current) {
+          setIsPlaying(true);
+          setIsPaused(false);
+        }
+        const t = a.currentTime;
+        setCurrentPlayTime(t);
+        currentTimeRef.current = t;
+
+        if (isFirefox) {
+          const chunkPlaying = getChunkAtTime(currentTimeRef.current);
+          const targetLength = blobsLength.current;
+          // Logic for the are you still here pop-up for firefox
+          // console.log(chunkPlaying % CHUNK_TO_PAUSE_ON === 0, isPromptingPaused, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
+          if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && isPromptingPausedRef.current && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
+              // console.log('chunkPlaying', chunkPlaying, 'targetLength', targetLength);
+              pauseChunksRef.current.add(chunkPlaying);
+              setIsPresenceModalOpen(true);
           }
+        }
+    
+        if (!isFirefox) {
           if (!fallbackAudioRef.current) return;
-          const t = a.currentTime;
-          setCurrentPlayTime(t);
-          currentTimeRef.current = t;
-      
           // check MSE buffer first
           const buf = seekAudio.buffered;
           for (let i = 0; i < buf.length; i++) {
@@ -400,7 +507,7 @@ const useAudioPlayer = (isDownload: boolean) => {
                 return;
             }
           }
-      
+         
           // else if we’ve recorded more history since we began fallback,
           // rebuild the blob under the hood so it “grows”
           if (historyBuffersRef.current.length > originalHistoryLengthRef.current) {
@@ -415,15 +522,74 @@ const useAudioPlayer = (isDownload: boolean) => {
             originalHistoryLengthRef.current = historyBuffersRef.current.length;
             if (!isPausedRef.current) a.play();
           }
-        };
-      
-        // 9) remember this instance & kick it off
-        fallbackAudioRef.current = a;
-        if (!isPausedRef.current) {
-          a.play();
         }
       };
-      
+    
+      if (!fallbackAudioRef.current) {
+        fallbackAudioRef.current = a;
+      }
+      if (!isPausedRef.current) {
+          play();
+      }
+    };
+
+    useEffect(() => {
+      // Only stage on Firefox when MSE is not supported for your mime and not downloading
+      if (!isFirefox || isTypeAACSupported || isDownload || !blobs.length || isBackPressed) return;
+
+      let alive = true;
+      (async () => {
+        for (const b of blobs) {
+          if (!alive) break;
+          
+          if (b.chunkNumber !== firefoxBufferNum.current) {
+            continue;
+          } 
+          const buffer = await b.blob.arrayBuffer();
+          if (!alive) break;
+
+          // Decode to know duration (don’t touch active blob yet)
+          let duration = 0;
+          try {
+            const ctx = new AudioContext();
+            if (ctx.state === "suspended") await ctx.resume();
+            const decoded = await ctx.decodeAudioData(buffer.slice(0));
+            duration = decoded.duration || 0;
+            ctx.close();
+          } catch {
+            // fall back to probing with <audio> (non-blocking)
+            try {
+              const mime = blobs[0]?.blob?.type || mimeCodec;
+              duration = await new Promise<number>((resolve) => {
+                const u = URL.createObjectURL(new Blob([buffer], { type: mime }));
+                const el = new Audio(u);
+                el.onloadedmetadata = () => { resolve(el.duration || 0); URL.revokeObjectURL(u); };
+                el.onerror = () => { resolve(0); URL.revokeObjectURL(u); };
+              });
+            } catch {/* ignore */}
+          }
+
+          if (incomingEntriesRef.current.some(e => e.chunkNumber === b.chunkNumber)) continue;
+          if (b.chunkNumber !== firefoxBufferNum.current) continue;
+          
+          incomingEntriesRef.current.push({
+            chunkNumber: b.chunkNumber,
+            buffer,
+            duration,
+          });
+
+          firefoxBufferNum.current += 1;
+
+          // Kick off playback once, when first data arrives
+          if (!fallbackAudioRef.current && historyBuffersRef.current.length === 0) {
+            commitPending();
+            await playFallback(0);
+          }
+        }
+      })();
+
+      return () => { alive = false; };
+    }, [blobs, isFirefox, isTypeAACSupported, isDownload, isBackPressed, commitPending, playFallback]);
 
     // fallback if MediaSource does not support AAC on browsers,
     // but revoke old AAC URLs to free memory in AAC mode
@@ -458,7 +624,8 @@ const useAudioPlayer = (isDownload: boolean) => {
     
     //initiating play
     useEffect(() => {
-        if (isTypeAACSupported) return;
+        if (isTypeAACSupported || isFirefox) return;
+
         if (audioUrls.length === 1 && !isDownload) {
             playNext(0);
         }
@@ -478,7 +645,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [audioUrls]);
 
     useEffect(() => {
-        if (isTypeAACSupported) return;
+        if (isTypeAACSupported || isFirefox) return;
         if (isLoading && isStreamLoading) {
             setAudioUrlsBeforeStop(audioUrls.length);
         }
@@ -490,7 +657,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
     seekAudio.onloadedmetadata = () => {
-        if (!isTypeAACSupported) {
+        if (!isFirefox && !isTypeAACSupported) {
             setPlayTimeDuration(seekAudio.duration);
         }
     };
@@ -507,7 +674,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
       const chunkPlaying = isTypeAACSupported ? (getChunkAtTime(current)) : +seekAudio.id;
       const targetLength = isTypeAACSupported ? blobsLength.current : audioUrls.length;
-      // Logic for the are you still here pop-up for both firefox and chrome
+      // Logic for the are you still here pop-up for chrome
       // console.log(!fallbackAudioRef.current, chunkPlaying % CHUNK_TO_PAUSE_ON === 0, isPromptingPaused, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
       if (!fallbackAudioRef.current && chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && isPromptingPausedRef.current && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
           // console.log('chunkPlaying', chunkPlaying, 'targetLength', targetLength);
@@ -518,12 +685,12 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     //controls loader state
     useMemo(() => {
-        if (!isTypeAACSupported) return;
-        const hasTimeCompleted = Math.round(currentPlayTime) === Math.round(playTimeDuration);
+        if (!isTypeAACSupported && !isFirefox) return;
+        const hasTimeCompleted = Math.abs(currentPlayTime - playTimeDuration) <= 0.5;
         const isLastChunk = getChunkAtTime(currentPlayTime) === chunks.length;
         setHasCompletePlaying(false);
         setPartialChunkCompletedPlaying(false);
-        if (hasTimeCompleted && isLastChunk && !fallbackAudioRef.current) return setHasCompletePlaying(true);
+        if (hasTimeCompleted && isLastChunk && (isFirefox || !fallbackAudioRef.current)) return setHasCompletePlaying(true);
         if (hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
     }, [currentPlayTime, playTimeDuration])
 
@@ -647,6 +814,9 @@ const useAudioPlayer = (isDownload: boolean) => {
             seekAudio.src = "";
             resetAudioUrl();
         }
+        incomingEntriesRef.current = [];
+        committedDurationRef.current = 0;
+        firefoxBufferNum.current = 0;
     }, [seekAudio, resetAudioUrl, isBackPressed])
 
     useMemo(() => {
@@ -713,6 +883,9 @@ const useAudioPlayer = (isDownload: boolean) => {
 
       const replay = useCallback(() => {
         if (!isTypeAACSupported) {
+          if (isFirefox) {
+            return playFallback(0);
+          }
           setCurrentIndex(0);
           return playNext(0);
         }
