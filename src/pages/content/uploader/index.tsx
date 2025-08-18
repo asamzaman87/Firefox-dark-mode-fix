@@ -126,12 +126,29 @@ function Uploader() {
       })();
     }
     const handleUnload = (event: BeforeUnloadEvent) => {
-      if (!isActive || !isAuthenticated) return;
+      if (!isAuthenticated) return;
+
       const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
-      if (storedChatId) {
-          event.preventDefault();
-          localStorage.setItem("gptr/pendingDelete", storedChatId);
-          deleteChatAndCreateNew(false);
+
+      // If overlay is active, queue the current chat and try to delete it now (fire-and-forget)
+      if (isActive && storedChatId) {
+        event.preventDefault();
+        localStorage.setItem("gptr/pendingDelete", storedChatId);
+        // delete current chat (best-effort; browser may ignore async on unload)
+        deleteChatAndCreateNew(false, storedChatId);
+      }
+
+      // Also try to delete any leftover chats we scheduled in LS (except current if active)
+      try {
+        const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+        if (Array.isArray(list) && list.length) {
+          for (const id of list) {
+            if (isActive && storedChatId && id === storedChatId) continue;
+            deleteChatAndCreateNew(false, id);
+          }
+        }
+      } catch {
+        // ignore
       }
     };
   
@@ -141,21 +158,62 @@ function Uploader() {
     };
   }, [isActive, isAuthenticated]);
 
-  // Makes sure that chat history is updated after unload delete
+  // On load: delete the pending current chat (if any) and drain the bulk list in one go.
+  // Refresh at most once after any successful delete, matching your existing refresh rules.
   useEffect(() => {
     if (!isAuthenticated) return;
-    const storedChatId = localStorage.getItem("gptr/pendingDelete");
-    if (storedChatId) {
-      (async () => {
-        const res = await deleteChatAndCreateNew(false, storedChatId);
-        localStorage.removeItem("gptr/pendingDelete");
-        if (
-          res?.ok && window.location.href.startsWith("https://chatgpt.com") && !isOpening.current
-        ) {
-            window.location.href = window.location.href;
+
+    (async () => {
+      let shouldRefresh = false;
+
+      // 1) Handle the "current" chat saved on unload
+      const pendingId = localStorage.getItem("gptr/pendingDelete");
+      if (pendingId) {
+        try {
+          const res = await deleteChatAndCreateNew(false, pendingId);
+          if (res?.ok) shouldRefresh = true;
+        } catch {
+          // ignore; leave it to LS if needed later
+        } finally {
+          localStorage.removeItem("gptr/pendingDelete");
         }
-      })();
-    }
+      }
+
+      // 2) Drain the bulk list of chats to delete
+      try {
+        const raw = localStorage.getItem("gptr/chatsToDelete") || "[]";
+        const list = JSON.parse(raw) as string[];
+        if (Array.isArray(list) && list.length) {
+          const remaining: string[] = [];
+          for (const id of list) {
+            // If the bulk list also contained the same pendingId, skip (already processed above)
+            if (id === pendingId) continue;
+            try {
+              const res = await deleteChatAndCreateNew(false, id);
+              if (res?.ok) {
+                shouldRefresh = true;
+              } else if (res?.status !== 404) {
+                remaining.push(id);
+              }
+            } catch {
+              remaining.push(id);
+            }
+          }
+          localStorage.setItem("gptr/chatsToDelete", JSON.stringify(remaining));
+        }
+      } catch {
+        // ignore parse errors
+      }
+
+      // 3) Refresh once if anything was deleted, preserving your existing rules
+      if (
+        shouldRefresh &&
+        window.location.href.startsWith("https://chatgpt.com") &&
+        !isOpening.current
+      ) {
+        window.location.href = window.location.href;
+      }
+    })();
   }, [isAuthenticated]);
   
   useEffect(() => {
@@ -504,7 +562,8 @@ function Uploader() {
 
         toast({
           description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
-          style: TOAST_STYLE_CONFIG
+          style: TOAST_STYLE_CONFIG,
+          duration: 30000
         });
 
         // If retry/regenerate is present, click it to clear state like before

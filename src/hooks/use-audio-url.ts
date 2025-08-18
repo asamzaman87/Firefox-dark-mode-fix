@@ -73,7 +73,8 @@ const useAudioUrl = (isDownload: boolean) => {
             console.error("[sendPrompt] Send button not found after 20 seconds.");
             toast({
                 description: `GPT Reader is having trouble, please refresh your page and try again. You may have reached ChatGPT's hourly limit and will need to wait for a few minutes.`,
-                style: TOAST_STYLE_CONFIG
+                style: TOAST_STYLE_CONFIG,
+                duration: 30000
             })
         }, 20000);
     };
@@ -186,19 +187,38 @@ const useAudioUrl = (isDownload: boolean) => {
           setDownloadPreviewText(undefined);
           return;
         }
-        if(currentCompletedStream){
-            const text = chunks[+currentCompletedStream?.chunkNdx]?.text ?? "";
-            setDownloadPreviewText(t => (t ?? "")  + `${text.replaceAll("\n", " ") ?? ""}`);
-        }
+        
         const totalChars = chunks.reduce((sum, chunk) => sum + chunk.text.length, 0);
-        const charsSoFar = chunks
-            .slice(0, blobs.length)
-            .reduce((sum, chunk) => sum + chunk.text.length, 0);
-        setProgress((charsSoFar / totalChars) * 100);
+
+        // build a set of available indices
+        const have = new Set<number>();
+        for (const b of blobs) have.add(b.chunkNumber);
+
+        // longest sequential prefix 0..k (no gaps)
+        let k = -1;
+        while (have.has(k + 1)) k += 1;
+
+        const charsSoFar = k >= 0
+        ? chunks.slice(0, k + 1).reduce((sum, chunk) => sum + chunk.text.length, 0)
+        : 0;
+
+        setProgress(totalChars > 0 ? (charsSoFar / totalChars) * 100 : 0);
+
+        // Build download preview ONLY from the sequential prefix (0..k)
+        if (k >= 0) {
+            const preview = chunks
+                .slice(0, k + 1)
+                .map(c => (c.text ?? "").replaceAll("\n", " "))
+                .join("");
+            setDownloadPreviewText(preview);
+        } else {
+            setDownloadPreviewText(undefined);
+        }
+
         if (blobs.length === chunks.length && !isDownload && blobs.length > 0) {
             toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
         }
-      }, [chunks, blobs, currentCompletedStream, isDownload]);
+    }, [chunks, blobs, isDownload]);
     
     const extractText = async (file: File) => {
         switch (file.type) {
@@ -274,40 +294,51 @@ const useAudioUrl = (isDownload: boolean) => {
 
     const downloadCombinedFile = useCallback(async(fileName: string) => {
         try {
-          const sanitisedFileName = fileName.split('.').slice(0, -1).join('.');
-          const seen = new Set<number>();
-          const ordered = blobs
+            const sanitisedFileName = fileName.split('.').slice(0, -1).join('.');
+            // dedupe & sort by chunkNumber
+            const seen = new Set<number>();
+            const sorted = blobs
             .slice()
             .sort((a, b) => a.chunkNumber - b.chunkNumber)
             .filter(entry => {
                 if (seen.has(entry.chunkNumber)) return false;
                 seen.add(entry.chunkNumber);
                 return true;
-            })
-            .map(entry => entry.blob);
+            });
 
-          // The Blob constructor automatically concatenates the provided blob parts.
-          const combinedBlob = new Blob(ordered, {
-            type: ordered[0]?.type || mimeCodec,
-          });
-    
-          // Create an object URL for the combined blob
-          const combinedUrl = URL.createObjectURL(combinedBlob);
-    
-          // Create a temporary download link and trigger a click to start download
-          const downloadLink = document.createElement("a");
-          downloadLink.href = combinedUrl;
-          downloadLink.download = `${sanitisedFileName}.${storedFormat}`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-    
-          // Clean up: remove the link and revoke the object URL
-          document.body.removeChild(downloadLink);
-          URL.revokeObjectURL(combinedUrl);
+            // ONLY the longest sequential prefix: 0..k with no gaps
+            const prefixBlobs: Blob[] = [];
+            let expected = 0;
+            for (const entry of sorted) {
+                if (entry.chunkNumber === expected) {
+                    prefixBlobs.push(entry.blob);
+                    expected += 1;
+                } else {
+                    break;
+                }
+            }
+            if (prefixBlobs.length === 0) {
+                console.warn("No sequential audio available to download yet.");
+                return;
+            }
+
+            const combinedBlob = new Blob(prefixBlobs, {
+                type: prefixBlobs[0]?.type || mimeCodec,
+            });
+
+            const combinedUrl = URL.createObjectURL(combinedBlob);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = combinedUrl;
+            downloadLink.download = `${sanitisedFileName}.${storedFormat}`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(combinedUrl);
         } catch (error) {
-          console.error("Error downloading combined file:", error);
+            console.error("Error downloading combined file:", error);
         }
-      }, [blobs, format])
+    }, [blobs, format]);
+
 
       
     useEffect(() => {
@@ -336,33 +367,31 @@ const useAudioUrl = (isDownload: boolean) => {
             return;
         }
         
+        // This is not the best way to set audioUrls due to the speed improvement, but we don't care for now
         if (!isDownload) {
             setAudioUrls(completedStreams);
         }
 
         if (isPromptingPaused) return;
        
-
-        if (completedStreams.length > 0 ) {
-            if (
-                currentCompletedStream?.chunkNdx != null &&
-                +currentCompletedStream.chunkNdx !== chunks.length - 1
-            ) {
-                const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
-                const chunkNumber = currentCompletedStream?.chunkNdx + 1;
-                if (!isDownload && chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber) % CHUNK_TO_PAUSE_ON) === 0)) {
-                    setIsPromptingPaused(true);
-                    setWasPromptStopped("PAUSED");
-                    return;
-                }
-                if (nextChunk && !chunkNumList.current.has(+currentCompletedStream.chunkNdx + 1)) {
-                    chunkNumList.current.add(+currentCompletedStream.chunkNdx + 1);
-                    setCurrentChunkBeingPromptedIndex(
-                        +currentCompletedStream.chunkNdx + 1
-                    );
-                    injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
-                    nextChunkRef.current += 1;
-                }
+        if (
+            currentCompletedStream?.chunkNdx != null &&
+            +currentCompletedStream.chunkNdx !== chunks.length - 1
+        ) {
+            const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
+            const chunkNumber = currentCompletedStream?.chunkNdx + 1;
+            if (!isDownload && chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber) % CHUNK_TO_PAUSE_ON) === 0)) {
+                setIsPromptingPaused(true);
+                setWasPromptStopped("PAUSED");
+                return;
+            }
+            if (nextChunk && !chunkNumList.current.has(+currentCompletedStream.chunkNdx + 1)) {
+                chunkNumList.current.add(+currentCompletedStream.chunkNdx + 1);
+                setCurrentChunkBeingPromptedIndex(
+                    +currentCompletedStream.chunkNdx + 1
+                );
+                injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
+                nextChunkRef.current += 1;
             }
         }
     }, [currentCompletedStream, isPromptingPaused])
