@@ -4,6 +4,7 @@ import './style.css';
 import Uploader from './uploader';
 import { observeElement } from "@/lib/utils";
 import { PremiumModalProvider } from "@/context/premium-modal";
+import { SpeechModeProvider } from "../../context/speech-mode";
 
 const render = (state: boolean) => {
   if (state) return; //return if shadow root is already present
@@ -25,7 +26,9 @@ const render = (state: boolean) => {
   root.render(
     <ThemeProvider>
       <PremiumModalProvider>
-        <Uploader />
+        <SpeechModeProvider>
+          <Uploader />
+        </SpeechModeProvider>
       </PremiumModalProvider>
     </ThemeProvider>
   );

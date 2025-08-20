@@ -44,10 +44,10 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
   const tutorialSteps: TutorialStep[] = [
     {
       title:
-        "For quick access to GPT Reader, we recommend pinning the extension",
+        "For quick access to GPT Reader & Transcriber, we recommend pinning the extension",
       description: isFirefox
-        ? "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader extension and click on the settings icon and then select the pin option"
-        : "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader extension and click on the pin icon next to it",
+        ? "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader & Transcriber extension and click on the settings icon and then select the pin option"
+        : "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader & Transcriber extension and click on the pin icon next to it",
       imageUrl: isFirefox ? FIREFOX_PIN : CHROME_PIN,
       altText: "Pin Extension Image",
     },

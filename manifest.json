@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "1.6.9",
+  "version": "1.7.0",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -49,6 +49,7 @@
       "resources": [
         "contentStyle.css",
         "logo-128.png",
+        "t-logo-128.png",
         "chrome-pin.png",
         "firefox-pin.png",
         "extension-guide.png",
@@ -58,7 +59,7 @@
       "matches": ["https://chatgpt.com/*"]
     },
     {
-      "resources": ["logo-128.png"],
+      "resources": ["logo-128.png", "t-logo-128.png"],
       "matches": ["https://auth.openai.com/*"]
     }
   ]

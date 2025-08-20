@@ -17,11 +17,11 @@ const formSchema = z.object({
 })
 
 export interface InputFormProps {
-    onSubmit: (values: z.infer<typeof formSchema>) => void;
+    onSubmit?: (values: z.infer<typeof formSchema>) => void;
     disabled?: boolean
 }
 
-const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
+const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
     const { toast } = useToast();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -33,8 +33,9 @@ const InputForm: FC<InputFormProps> = ({ onSubmit, disabled }) => {
     })
 
     const onFormSubmit = (values: z.infer<typeof formSchema>) => {
+        // eslint-disable-next-line no-constant-condition
         if (false) return toast({ description: chrome.i18n.getMessage('please_wait_previous'), style: TOAST_STYLE_CONFIG });
-        onSubmit(values);
+        onSubmit?.(values);
     }
 
     return (

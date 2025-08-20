@@ -1,7 +1,7 @@
 import { useControllableState } from "@/hooks/use-controllable-state";
 import { useToast } from "@/hooks/use-toast";
-import { ACCEPTED_FILE_TYPES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TRANSCRIBER_ACCEPTED_FILE_TYPES } from "@/lib/constants";
+import { cn, getFileAccept } from "@/lib/utils";
 import { UploadIcon } from "lucide-react";
 import * as React from "react";
 import Dropzone, {
@@ -11,6 +11,7 @@ import Dropzone, {
 import { toast as sonner } from "sonner";
 import FileTypeIconList from "./file-type-icon-list";
 import { usePremiumModal } from "../../context/premium-modal";
+import { useSpeechMode } from "../../context/speech-mode";
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Value of the uploader.
@@ -81,11 +82,14 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function FileUploader(props: FileUploaderProps) {
+  const {isTextToSpeech} = useSpeechMode();
+  const finalAccept = getFileAccept(isTextToSpeech);
+
   const {
     value: valueProp,
     onValueChange,
     onUpload,
-    accept = ACCEPTED_FILE_TYPES,
+    accept = finalAccept,
     maxFileCount = 1,
     multiple = false,
     disabled = false,
@@ -168,13 +172,6 @@ export function FileUploader(props: FileUploaderProps) {
     [files, maxFileCount, multiple, onUpload, setFiles, isTriggered]
   );
 
-  // function onRemove(index: number) {
-  //   if (!files) return;
-  //   const newFiles = files.filter((_, i) => i !== index);
-  //   setFiles(newFiles);
-  //   onValueChange?.(newFiles);
-  // }
-
   // Revoke preview url when component unmounts
   React.useEffect(() => {
     return () => {
@@ -223,120 +220,58 @@ export function FileUploader(props: FileUploaderProps) {
             {isDragActive ? (
               <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:sm:px-5">
                 <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
-                  <UploadIcon
-                    className="gpt:size-7"
-                    aria-hidden="true"
-                  />
+                  <UploadIcon className="gpt:size-7" aria-hidden="true" />
                 </div>
                 <p className="gpt:font-medium">
-                  {chrome.i18n.getMessage('drop_file_here')}
+                  {chrome.i18n.getMessage("drop_file_here")}
                 </p>
               </div>
             ) : (
               <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:sm:px-5">
-                {/* <div className="gpt:rounded-full gpt:border gpt:border-gray-500 gpt:border-dashed gpt:p-3">
-                  <UploadIcon
-                    className="gpt:size-7"
-                    aria-hidden="true"
-                  />
-                </div> */}
-                <FileTypeIconList fileTypes={Object.keys(accept).filter(type => type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document")} />
+                <FileTypeIconList
+                  fileTypes={
+                    isTextToSpeech
+                      ? Object.keys(accept).filter(
+                          (type) =>
+                            type !==
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        )
+                      : Array.from(
+                          new Set(
+                            Object.keys(TRANSCRIBER_ACCEPTED_FILE_TYPES).map((type) => {
+                              if (
+                                type.includes("mpeg") ||
+                                type.includes("mp3") ||
+                                type.includes("mp4")
+                              )
+                                return "mp3";
+                              if (type.includes("wav")) return "wav";
+                              if (type.includes("webm") || type.includes("ogg"))
+                                return "webm";
+                              return "other";
+                            })
+                          )
+                        )
+                  }
+                />
                 <div className="gpt:flex gpt:flex-col gpt:gap-px">
                   <p className="gpt:font-medium">
-                    {chrome.i18n.getMessage('drag_and_drop_files')}
+                    {chrome.i18n.getMessage("drag_and_drop_files")}
                   </p>
-                  <p className="gpt:text-sm gpt:text-gray-500">
-                    Avoid uploading files larger than 50MB as it can make the extension crash
-                  </p>
+                  { isTextToSpeech ? <p className="gpt:text-sm gpt:text-gray-500">
+                    Avoid uploading files larger than 50MB as it can make the
+                    extension crash
+                  </p> : null}
                 </div>
               </div>
             )}
           </div>
         )}
       </Dropzone>
-      {/* {files?.length ? (
-        <ScrollArea className="gpt:h-fit gpt:w-full gpt:px-3">
-          <div className="gpt:flex gpt:max-h-48 gpt:flex-col gpt:gap-4">
-            {files?.map((file, index) => (
-              <FileCard
-                key={index}
-                file={file}
-                onRemove={() => onRemove(index)}
-                progress={progresses?.[file.name]}
-              />
-            ))}
-          </div>
-        </ScrollArea>
-      ) : null} */}
     </div>
   );
 }
 
-// interface FileCardProps {
-//   file: File;
-//   onRemove: () => void;
-//   progress?: number;
-// }
-
-// function FileCard({ file, progress, onRemove }: FileCardProps) {
-//   return (
-//     <div className="gpt:relative gpt:flex gpt:items-center gpt:gap-2.5">
-//       <div className="gpt:flex gpt:flex-1 gpt:gap-2.5">
-//         {isFileWithPreview(file) ? <FilePreview file={file} /> : null}
-//         <div className="gpt:flex gpt:w-full gpt:flex-col gpt:gap-2">
-//           <div className="gpt:flex gpt:flex-col gpt:gap-px">
-//             <p className="gpt:line-clamp-1 gpt:text-sm gpt:font-medium gpt:text-foreground/80">
-//               {file.name}
-//             </p>
-//             <p className="gpt:text-xs gpt:text-muted-foreground">
-//               {formatBytes(file.size)}
-//             </p>
-//           </div>
-//           {progress ? <Progress value={progress} /> : null}
-//         </div>
-//       </div>
-//       <div className="gpt:flex gpt:items-center gpt:gap-2">
-//         <Button
-//           type="button"
-//           variant="ghost"
-//           size="icon"
-//           className="gpt:size-7"
-//           onClick={onRemove}
-//         >
-//           <X className="gpt:h-4 gpt:w-4" />
-//           <span className="gpt:sr-only">Remove file</span>
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
-
 function isFileWithPreview(file: File): file is File & { preview: string } {
   return "preview" in file && typeof file.preview === "string";
 }
-
-// interface FilePreviewProps {
-//   file: File & { preview: string };
-// }
-
-// function FilePreview({ file }: FilePreviewProps) {
-//   if (file.type.startsWith("image/")) {
-//     return (
-//       <img
-//         src={file.preview}
-//         alt={file.name}
-//         width={48}
-//         height={48}
-//         loading="lazy"
-//         className="gpt:aspect-square gpt:shrink-0 gpt:rounded-md gpt:object-cover"
-//       />
-//     );
-//   }
-
-//   return (
-//     <FileTextIcon
-//       className="gpt:size-10 gpt:text-muted-foreground"
-//       aria-hidden="true"
-//     />
-//   );
-// }

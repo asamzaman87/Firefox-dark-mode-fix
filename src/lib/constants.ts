@@ -13,6 +13,24 @@ export const ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
   "text/plain": [".txt"],
 };
 
+export const TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
+  "audio/*": []
+};
+
+export const TRANSCRIBER_ACCEPTED_FILE_TYPES: Accept = {
+  "audio/mpeg": [],       // .mp3
+  "audio/wav": [],        // .wav
+  "audio/webm": [],       // .webm
+  "audio/ogg": [],        // .ogg
+  "audio/mp4": [],        // .m4a
+  "audio/mp3": [],        // sometimes used
+};
+
+export const LIVE_ANALYSER_WINDOW = 2048;
+
+export const FRAME_MS = 20;
+export const MIN_SILENCE_MS = 500;
+
 export const LISTENERS = {
   "RECEIVED_MESSAGE_ID": "RECEIVED_MESSAGE_ID",
   "RATE_LIMIT_EXCEEDED": "RATE_LIMIT_EXCEEDED",
@@ -83,7 +101,7 @@ export const GPT_BREAKER = `Royal Road Log In The Villainess Takes What She Want
 export const SYNTHESIZE_ENDPOINT = "https://chatgpt.com/backend-api/synthesize";
 export const VOICE = "glimmer";
 export const AUDIO_FORMAT = "mp3";
-export const CHUNK_SIZE = 500;
+export const CHUNK_SIZE = 300;
 export const TOAST_STYLE_CONFIG = { backgroundColor: "darkred", color: "#fff", border: "1px solid #b30000" }
 export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#fff", border: "1px solid #001aff" }
 export const PLAY_RATE_STEP = 0.25;

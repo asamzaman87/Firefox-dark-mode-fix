@@ -91,12 +91,12 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
       isCurrent: true,
       features: [
         {
-          key: "text_to_speech",
-          label: chrome.i18n.getMessage("text_to_speech") || "Text to speech by ChatGPT",
+          key: "listening",
+          label: chrome.i18n.getMessage("listening") || "Unlimited listening to audio for uploaded text",
         },
         {
-          key: "file_upload",
-          label: chrome.i18n.getMessage("file_upload") || "Upload a file or paste text",
+          key: "transcriptions",
+          label: chrome.i18n.getMessage("transcriptions") || "Unlimited transcriptions for live or uploaded audio",
         },
         {
           key: "audio_player",
@@ -108,7 +108,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Downloads with a 2500 character limit",
+            "Text to speech downloads limited to 2500 characters",
         }
       ],
     },
@@ -132,13 +132,19 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Downloads with no character limit",
+            "Text to speech downloads with no character limit",
         },
         {
           key: "download_with_text",
           label:
             chrome.i18n.getMessage("download_with_text") ||
-            "Download while listening to text",
+            "Download while listening to audio of uploaded text",
+        },
+        {
+          key: "download_transcript",
+          label:
+            chrome.i18n.getMessage("download_transcript") ||
+            "Download transcribed text in text or pdf format",
         },
         {
           key: "more_coming",
@@ -245,7 +251,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
           e.preventDefault();
         }}
         className={cn(
-          "gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] gpt:sm:w-[95vw] gpt:sm:max-w-[665px] gpt:md:w-[85vw] gpt:md:max-w-[750px] gpt:lg:w-[70vw] gpt:lg:max-w-[800px] gpt:xl:max-w-[900px] gpt:rounded-2xl gpt:max-sm:w-screen gpt:max-sm:max-w-screen gpt:max-sm:h-screen gpt:!rounded-none gpt:overflow-auto", "h-screen-if-short"
+          "gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] gpt:sm:w-[95vw] gpt:sm:max-w-[665px] gpt:md:w-[85vw] gpt:md:max-w-[750px] gpt:lg:w-[70vw] gpt:lg:max-w-[800px] gpt:xl:max-w-[900px] gpt:rounded-2xl gpt:max-sm:w-screen gpt:max-sm:max-w-screen gpt:max-sm:h-screen gpt:max-sm:!rounded-none gpt:overflow-auto", "h-screen-if-short"
         )}
       >
         <DialogHeader>
@@ -255,7 +261,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
             <br />
             <span className="gpt:font-normal gpt:text-[16px]">
               {chrome.i18n.getMessage("premium_description") ||
-                "Upgrade your GPT Reader plan to access now"}
+                "Upgrade your GPT Reader & Transcriber plan to access now"}
             </span>
           </DialogTitle>
           <DialogDescription className={cn("gpt:text-center", { "sr-only": reason === "" })}>

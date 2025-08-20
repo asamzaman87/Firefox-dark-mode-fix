@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useFormat from "./use-format";
+import { useSpeechMode } from "../context/speech-mode";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
-    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading } = useAudioUrl(isDownload);
+    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading, transcribeChunks, cancelTranscription, setText } = useAudioUrl(isDownload);
+    const {isTextToSpeech} = useSpeechMode();
     const { isAuthenticated } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -455,7 +459,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             a.volume = volumeRef.current;
             URL.revokeObjectURL(oldUrl);
             if (!isPausedRef.current || isPlayingRef.current) a.play();
-          };
+          }
        }
       }
       
@@ -817,6 +821,10 @@ const useAudioPlayer = (isDownload: boolean) => {
         incomingEntriesRef.current = [];
         committedDurationRef.current = 0;
         firefoxBufferNum.current = 0;
+        if (!isTextToSpeech) {
+          // eslint-disable-next-line no-self-assign
+          window.location.href = window.location.href; // Reset the page to clear any state
+        }
     }, [seekAudio, resetAudioUrl, isBackPressed])
 
     useMemo(() => {
@@ -1238,7 +1246,10 @@ const useAudioPlayer = (isDownload: boolean) => {
         onScrub,
         showInfoToast,
         isTypeAACSupported,
-        chunks
+        chunks,
+        transcribeChunks,
+        cancelTranscription,
+        setText
     };
 
 

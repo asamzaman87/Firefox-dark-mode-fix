@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, LISTENERS, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOKEN_TTL_MS } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
+import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
+import { pdf } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
@@ -613,4 +616,483 @@ export const handleError = (error: string, duration: number = TOAST_REMOVE_DELAY
     console.error('[handleError]', error);
     if (!error.includes("2500")) toast({ description: error, style: TOAST_STYLE_CONFIG, duration });
     return
+}
+
+export function encodeWav(audioBuffer: AudioBuffer): Blob {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const bitDepth = 16;
+
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataLength = audioBuffer.length * blockAlign;
+  const buffer = new ArrayBuffer(44 + dataLength);
+  const view = new DataView(buffer);
+
+  let offset = 0;
+
+  const writeString = (str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset++, str.charCodeAt(i));
+    }
+  };
+
+  // RIFF header
+  writeString("RIFF");
+  view.setUint32(offset, 36 + dataLength, true);
+  offset += 4;
+  writeString("WAVE");
+
+  // fmt chunk
+  writeString("fmt ");
+  view.setUint32(offset, 16, true);
+  offset += 4; // Subchunk1Size
+  view.setUint16(offset, 1, true);
+  offset += 2; // PCM format
+  view.setUint16(offset, numChannels, true);
+  offset += 2;
+  view.setUint32(offset, sampleRate, true);
+  offset += 4;
+  view.setUint32(offset, sampleRate * blockAlign, true);
+  offset += 4;
+  view.setUint16(offset, blockAlign, true);
+  offset += 2;
+  view.setUint16(offset, bitDepth, true);
+  offset += 2;
+
+  // data chunk
+  writeString("data");
+  view.setUint32(offset, dataLength, true);
+  offset += 4;
+
+  // PCM samples
+  for (let i = 0; i < audioBuffer.length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      const sample = audioBuffer.getChannelData(channel)[i];
+      const intSample = Math.max(-1, Math.min(1, sample)) * 0x7fff;
+      view.setInt16(offset, intSample, true);
+      offset += 2;
+    }
+  }
+
+  return new Blob([view], { type: "audio/wav" });
+}
+
+export async function cleanAudioBuffer(
+  input: AudioBuffer
+): Promise<AudioBuffer | null> {
+  const TARGET_SR = 16000;
+  const raw = input.getChannelData(0);
+  const sr0 = input.sampleRate;
+
+  // ─── 1) FRAME-BASED TRIM using EXACTLY the same window & threshold as live ───
+  const frameSize = LIVE_ANALYSER_WINDOW;
+  const rmsThresh = 0.02; // exactly the same gate as your live path
+
+  let startSample = 0;
+  let foundSpeech = false;
+  // find the first frame whose RMS exceeds your gate
+  for (let offset = 0; offset + frameSize <= raw.length; offset += frameSize) {
+    let sumSq = 0;
+    for (let i = 0; i < frameSize; i++) {
+      sumSq += raw[offset + i] * raw[offset + i];
+    }
+    const rms = Math.sqrt(sumSq / frameSize);
+    if (rms > rmsThresh) {
+      foundSpeech = true;
+      startSample = offset;
+      break;
+    }
+  }
+
+  // if we never found any frame > threshold, treat as all-silence
+  if (!foundSpeech) {
+    return null;
+  }
+
+  // ─── add 1 second of lead‐in ───
+  const extraLead = sr0; // one second worth of samples at original SR
+  const newStart = Math.max(0, startSample - extraLead);
+  startSample = newStart;
+
+  let endSample = raw.length;
+  // find the last frame whose RMS exceeds your gate
+  for (
+    let offset = raw.length - frameSize;
+    offset >= startSample;
+    offset -= frameSize
+  ) {
+    let sumSq = 0;
+    for (let i = 0; i < frameSize; i++) {
+      sumSq += raw[offset + i] * raw[offset + i];
+    }
+    const rms = Math.sqrt(sumSq / frameSize);
+    if (rms > rmsThresh) {
+      endSample = offset + frameSize;
+      break;
+    }
+  }
+
+  // ─── add 1 second of tail padding ───
+  const extraTail = sr0; // one second worth of samples
+  const newEnd = Math.min(raw.length, endSample + extraTail);
+  endSample = newEnd;
+
+  // if we never saw anything above the gate
+  if (endSample <= startSample) {
+    return null;
+  }
+
+  // copy that exact “speech” region
+  const trimmedLen = endSample - startSample;
+
+  const trimmed = new AudioBuffer({
+    length: trimmedLen,
+    numberOfChannels: 1,
+    sampleRate: sr0,
+  });
+  trimmed.copyToChannel(raw.slice(startSample, endSample), 0);
+
+  // ─── 2) then resample & normalize as before ───
+  const offline = new OfflineAudioContext(
+    1,
+    Math.ceil(trimmed.duration * TARGET_SR),
+    TARGET_SR
+  );
+  const src = offline.createBufferSource();
+  src.buffer = trimmed;
+  src.connect(offline.destination);
+  src.start(0);
+  const rendered = await offline.startRendering();
+
+  // normalize peak to ~–3dB
+  const rd = rendered.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < rd.length; i++) {
+    peak = Math.max(peak, Math.abs(rd[i]));
+  }
+  if (peak > 0) {
+    const gain = 0.7 / peak;
+    for (let i = 0; i < rd.length; i++) {
+      rd[i] *= gain;
+    }
+  }
+
+  return rendered;
+}
+
+// ─── compute adaptive noise-floor ────────────────────────────────────────────────
+export function computeNoiseFloor(
+  data: Float32Array,
+  sampleRate: number,
+  durationMs = 200,
+  multiplier = 1.5
+): number {
+  const samples = Math.floor((durationMs / 1000) * sampleRate);
+  let sum = 0;
+  for (let i = 0; i < samples; i++) {
+    sum += Math.abs(data[i]);
+  }
+  return (sum / samples) * multiplier;
+}
+
+/**
+ * Scan channelData and return the first silence‐run **at or after** minChunkSamples.
+ * @returns the sample‐index (into channelData) where that run starts, or null if none found.
+ */
+export function findNextSilence(
+  channelData: Float32Array,
+  sampleRate: number,
+  frameMs = 20,
+  silenceThresh = 0.01,
+  minSilenceMs = 500,
+  minChunkSamples: number
+): number | null {
+  const frameSize = Math.floor((frameMs / 1000) * sampleRate);
+  const minFrames = Math.floor(minSilenceMs / frameMs);
+  const thresholdSq = silenceThresh * silenceThresh * frameSize;
+
+  let count = 0;
+  const lastOffset = channelData.length - frameSize;
+
+  for (let offset = 0; offset <= lastOffset; offset += frameSize) {
+    // accumulate sum of squares for this frame
+    let sumSq = 0;
+    for (let i = 0; i < frameSize; i++) {
+      const v = channelData[offset + i];
+      sumSq += v * v;
+    }
+
+    if (sumSq < thresholdSq) {
+      count++;
+      if (count >= minFrames) {
+        // compute where this run really started
+        const runStart = offset - (minFrames - 1) * frameSize;
+        // only accept it if it’s at/after our minimum chunk length
+        if (runStart >= minChunkSamples) {
+          return runStart;
+        }
+        // otherwise reset and keep looking
+        count = 0;
+      }
+    } else {
+      count = 0;
+    }
+  }
+
+  return null;
+}
+
+export function detectSilence(
+  channelData: Float32Array,
+  sampleRate: number,
+  frameMs = 20,
+  silenceThresh = 0.01, // your RMS threshold
+  minSilenceMs = 500
+): number[] {
+  const frameSize = Math.floor((frameMs / 1000) * sampleRate);
+  const minSilenceFrames = Math.floor(minSilenceMs / frameMs);
+
+  // precompute sumSq threshold instead of sqrt each time
+  const thresholdSq = silenceThresh * silenceThresh * frameSize;
+
+  const silentFrames: number[] = [];
+  let count = 0;
+
+  // iterate non-overlapping frames
+  const lastOffset = channelData.length - frameSize;
+  for (let offset = 0; offset <= lastOffset; offset += frameSize) {
+    let sumSq = 0;
+    // accumulate v*v (no Math.abs or Math.sqrt!)
+    for (let i = 0; i < frameSize; i++) {
+      const v = channelData[offset + i];
+      sumSq += v * v;
+    }
+
+    if (sumSq < thresholdSq) {
+      count++;
+      if (count >= minSilenceFrames) {
+        // mark start of that silent run
+        silentFrames.push(offset - (minSilenceFrames - 1) * frameSize);
+        count = 0;
+      }
+    } else {
+      count = 0;
+    }
+  }
+
+  return silentFrames;
+}
+
+async function splitBlobIntoParts(
+  blob: Blob,
+  parts: number,
+  audioCtx: AudioContext
+): Promise<Blob[]> {
+  // 1. Decode & clean the full buffer
+  const arrayBuffer = await blob.arrayBuffer();
+  const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+  const data = decoded.getChannelData(0);
+  const sr = decoded.sampleRate;
+  const totalSamples = data.length;
+
+  // 2. compute adaptive noise floor and pick threshold
+  const noiseFloor = computeNoiseFloor(data, sr);
+  const silenceThresh = noiseFloor * 0.8;
+  // find silence spots using that threshold
+  const silences = detectSilence(
+    data,
+    sr,
+    FRAME_MS,
+    silenceThresh,
+    MIN_SILENCE_MS
+  );
+
+  // 3. Pick split points nearest to 1/parts, 2/parts, … fractions
+  const boundaries: number[] = [0];
+  // Compute end-of-silence offset
+  const frameSize = Math.floor((FRAME_MS / 1000) * sr);
+  const minFrames = Math.floor(MIN_SILENCE_MS / FRAME_MS);
+
+  for (let i = 1; i < parts; i++) {
+    const target = Math.floor((i * totalSamples) / parts);
+    // pick nearest silence **start**
+    let rawSplit = target;
+    if (silences.length) {
+      rawSplit = silences.reduce(
+        (prev, curr) =>
+          Math.abs(curr - target) < Math.abs(prev - target) ? curr : prev,
+        silences[0]
+      );
+    }
+    // shift to the **end** of that silence
+    const splitPoint = Math.min(totalSamples, rawSplit + frameSize * minFrames);
+    boundaries.push(splitPoint);
+  }
+
+  boundaries.push(totalSamples);
+
+  // 4. Slice at those boundaries, re-clean each, and encode
+  const result: Blob[] = [];
+  for (let j = 0; j < boundaries.length - 1; j++) {
+    const start = boundaries[j];
+    const end = boundaries[j + 1];
+    const len = end - start;
+    if (len <= 0) continue;
+    // mono buffer segment
+    const segment = audioCtx.createBuffer(1, end - start, sr);
+    segment.copyToChannel(data.slice(start, end), 0);
+
+    result.push(encodeWav(segment));
+  }
+
+  return result;
+}
+
+export async function transcribeWithFallback(
+  blob: Blob,
+  label: string,
+  depth = 0,
+  token: string,
+  audioCtx: AudioContext
+): Promise<string> {
+  const MIN_TRANSCRIPT_LENGTH = 0; // You can adjust this threshold
+
+  const formData = new FormData();
+  formData.append("file", blob, `${label}.wav`);
+  formData.append("model", "gpt-4o-transcribe");
+  // ↓ make it deterministic
+  formData.append("temperature", "0");
+  formData.append(
+    "prompt",
+    "Transcribe each character as spoken in the audio. Do not skip any characters. Make sure to provide the text with the correct punctuation."
+  );
+
+  try {
+    const res = await fetch("https://chatgpt.com/backend-api/transcribe", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    const result = await res.json();
+    // console.log("result before splitting", result);
+
+    const transcript = result?.text?.trim() ?? "";
+
+    // If transcript is empty OR suspiciously short, fallback
+    if (
+      (transcript.length <= MIN_TRANSCRIPT_LENGTH ||
+        transcript.includes("transcript") ||
+        transcript.includes("gpt") ||
+        transcript.includes("DALL·E") ||
+        transcript.includes("OpenAI")) &&
+      depth === 0
+    ) {
+      const splits = await splitBlobIntoParts(blob, 2, audioCtx);
+
+      const results = await Promise.all(
+        splits.map((split, idx) =>
+          transcribeWithFallback(
+            split,
+            `${label}_${idx}`,
+            depth + 1,
+            token,
+            audioCtx
+          )
+        )
+      );
+
+      return results.filter(Boolean).join(" ");
+    }
+
+    // If transcript is long enough, return it
+    return transcript;
+  } catch (err) {
+    if (depth === 0) {
+      const splits = await splitBlobIntoParts(blob, 2, audioCtx);
+
+      const results = await Promise.all(
+        splits.map((split, idx) =>
+          transcribeWithFallback(
+            split,
+            `${label}_${idx}`,
+            depth + 1,
+            token,
+            audioCtx
+          )
+        )
+      );
+      console.log(err);
+
+      return results.filter(Boolean).join(" ");
+    } else {
+      toast({
+        description:
+          "Remember: GPT Transcriber can hallucinate so make sure to review the transcription!",
+        style: TOAST_STYLE_CONFIG_INFO,
+      });
+      return "";
+    }
+  }
+}
+
+export const downloadTranscriptAsText = (
+  text: string,
+  fileName = "transcript.txt"
+) => {
+  const cleanedText = text.replace(/⏳ Transcribing...$/, "").trim();
+  const blob = new Blob([cleanedText], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+export const downloadTranscriptAsPDF = async (
+  text: string,
+  fileName = "transcript.pdf"
+): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doc: any = generateTranscriptPDF(text);
+  const blob = await pdf(doc).toBlob();
+  saveAs(blob, fileName);
+};
+
+export const handleDownload = (
+  content: string,
+  format: string,
+  isDownloadDisabled: boolean
+) => {
+  if (isDownloadDisabled) return;
+
+  if (format === "txt") {
+    downloadTranscriptAsText(content);
+  } else if (format === "pdf") {
+    downloadTranscriptAsPDF(content);
+  }
+  // Add more formats if needed
+};
+
+export const getFileAccept = (isReader: boolean) => {
+  const browser = detectBrowser();
+  return browser === "firefox"
+    ? isReader
+      ? ACCEPTED_FILE_TYPES_FIREFOX
+      : TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX
+    : isReader
+    ? ACCEPTED_FILE_TYPES
+    : TRANSCRIBER_ACCEPTED_FILE_TYPES;
+};
+
+export function getSpeechModeKey(baseKey: string, isReader: boolean) {
+  const prefix = isReader ? "gptr" : "gptt";
+  return baseKey.replace(/^gptr|^gptt/, prefix);
 }

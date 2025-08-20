@@ -76,6 +76,8 @@ function Uploader() {
       const toastRoot = child.closest(".toast-root") as HTMLElement | null;
       if (toastRoot) {
         toastRoot.style.display = "none";
+      } else {
+        child.style.display = "none";
       }
     }
   };
@@ -639,7 +641,7 @@ function Uploader() {
             }
           >
             <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />{!minimised && (
-              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader</>
+              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader & Transcriber</>
             )}
           </Button>
         </DialogTrigger>

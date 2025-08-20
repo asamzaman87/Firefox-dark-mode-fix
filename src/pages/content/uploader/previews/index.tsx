@@ -1,8 +1,9 @@
 import { FC, memo } from "react";
 import DocumentViewer from "./document-viewer";
-import DownloadPreview from "./download-preview";
+import ReaderDownloadPreview from "./download-preview";
+import TranscriberDownloadPreview from "./transcriber-download-preview";
 import PdfViewer from "./pdf-viewer";
-
+import { useSpeechMode } from "../../../../context/speech-mode";
 interface PreviewsProps {
     file: File | null;
     content: string;
@@ -16,14 +17,35 @@ interface PreviewsProps {
 }
 
 const Previews: FC<PreviewsProps> = ({setDownloadCancelConfirmation, downloadCancelConfirmation,  downloadPreviewText, file, content, isDowloading, progress, onDownload, onDownloadCancel }) => {
+    const {isTextToSpeech} = useSpeechMode();
+
     if (isDowloading) {
-        return <DownloadPreview setDownloadCancelConfirmation={setDownloadCancelConfirmation} downloadCancelConfirmation={downloadCancelConfirmation} text={downloadPreviewText ?? ""}  progress={progress ?? 0} fileName={file?.name ?? ""}  onDownload={onDownload} onCancel={onDownloadCancel} />
+        return isTextToSpeech ? (
+            <ReaderDownloadPreview
+                setDownloadCancelConfirmation={setDownloadCancelConfirmation}
+                downloadCancelConfirmation={downloadCancelConfirmation}
+                text={downloadPreviewText ?? ""}
+                progress={progress ?? 0}
+                fileName={file?.name ?? ""}
+                onDownload={onDownload}
+                onCancel={onDownloadCancel}
+            />
+        ) : (
+            <TranscriberDownloadPreview
+                setDownloadCancelConfirmation={setDownloadCancelConfirmation}
+                downloadCancelConfirmation={downloadCancelConfirmation}
+                text={downloadPreviewText ?? ""}
+                progress={progress ?? 0}
+                fileName={file?.name ?? ""}
+                onCancel={onDownloadCancel}
+            />
+        );
     }
 
-    if (file?.type.includes("pdf")) {
+    if (isTextToSpeech && file?.type.includes("pdf")) {
         return <PdfViewer file={file} />
     }
-    return <DocumentViewer content={content} />
+    return  isTextToSpeech ? <DocumentViewer content={content} /> : null;
 }
 
 export default memo(Previews);

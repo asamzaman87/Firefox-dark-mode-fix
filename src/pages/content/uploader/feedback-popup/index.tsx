@@ -15,6 +15,7 @@ import { DialogProps, } from "@radix-ui/react-dialog";
 import { Heart, MessageSquareHeartIcon } from "lucide-react";
 import { FC, useState } from "react";
 import FeedbackForm, { FeedbackFormProps } from "./feeback-form";
+import { useSpeechMode } from "../../../../context/speech-mode";
 
 type FeedbackPopupProps = DialogProps;
 
@@ -24,6 +25,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [isRating5Stars, setIsRating5Stars] = useState<boolean>(false);
+    const {isTextToSpeech} = useSpeechMode();
 
     const { toast } = useToast();
     const confetti = useConfetti();
@@ -37,7 +39,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
                 feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
                 email: values.email || null,
                 browser,
-                extension: "GPT-Reader",
+                extension: isTextToSpeech ? "GPT-Reader" : "GPT Transcriber",
             }),
         }).then(() => {
             if (values.rating === 5) {

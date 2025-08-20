@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Free AI Text to Speech with ChatGPT Voices, TTS"
+    "message": "GPT Reader & Transcriber: Free AI Text to Speech & Speech to Text via ChatGPT"
   },
   "extensionDescription": {
-    "message": "Bring natural AI voices from ChatGPT to your text with text to speech (tts)—read aloud or download high-quality audio for free"
+    "message": "Free AI text to speech (tts) & speech to text with ChatGPT. Listen to natural voices or transcribe audio instantly."
   },
   "play_voice": {
     "message": "Play Voice"
@@ -22,6 +22,12 @@
   },
   "type_or_paste_text_v2": {
     "message": "Paste or type your text"
+  },
+    "speak_to_transcribe": {
+    "message": "Speak to Transcribe"
+  },
+  "speak_to_transcribe_v2": {
+    "message": "Speak to Transcribe"
   },
   "title": {
     "message": "Title"
@@ -56,11 +62,14 @@
   "full_download_note": {
     "message": "If the file did not download automatically, please click the 'Download' button below."
   },
+  "full_download_note_t": {
+    "message": "Your audio has been fully transcribed, click the ‘Download’ button below."
+  },
   "loading_preview": {
     "message": "Loading Preview"
   },
   "gpt4_download_note": {
-    "message": "Dear ChatGPT premium users, make sure the model you have chosen is GPT-4o or GPT-5 for fastest download speeds, avoid choosing models that have a slow output speed. Close the extension overlay to change the model."
+    "message": "Dear ChatGPT premium users, make sure the model you have chosen is 'GPT-4o' or 'GPT-5 fast' for fastest download speeds, avoid choosing models that have a slow output speed. Close the extension overlay to change the model."
   },
   "cancel": {
     "message": "Cancel"
@@ -117,10 +126,16 @@
     "message": "Are you sure"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader Notice"
+    "message": "GPT Reader & Transcriber Notice"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader is able to provide text to speech for free by breaking down large text into smaller chunks and sending them to ChatGPT for analysis. Depending on your usage, you might temporarily reach ChatGPT's rate limits. If this happens, you may need to wait about an hour before using ChatGPT or this extension again."
+    "message": "GPT Reader & Transciber is able to provide its services for free by breaking down user provided content into smaller chunks and sending them to ChatGPT for analysis. Depending on your usage, you might temporarily reach ChatGPT's rate limits. If this happens, you may need to wait about an hour before using ChatGPT or this extension again."
+  },
+  "gpt_transcriber_notice": {
+    "message": "GPT Transcriber Notice"
+  },
+  "gpt_transcriber_chunk_explanation": {
+    "message": "GPT Transcriber is able to provide speech to text for free by breaking down large audio into smaller chunks and sending them to ChatGPT Whisper API for analysis. Depending on your usage, you might temporarily reach ChatGPT's rate limits. If this happens, you may need to wait about an hour before using ChatGPT or this extension again."
   },
   "acknowledge_and_accept": {
     "message": "By continuing, you acknowledge and accept this as part of using the extension."
@@ -176,6 +191,9 @@
   "gpt_reader": {
     "message": "GPT Reader"
   },
+  "gpt_transcriber": {
+    "message": "GPT Transcriber"
+  },
   "simplify_reading": {
     "message": "Simplify reading long documents with GPT"
   },
@@ -190,6 +208,9 @@
   },
   "gpt_reader_logo": {
     "message": "GPT Reader Logo"
+  },
+  "gpt_transcriber_logo": {
+    "message": "GPT Transcriber Logo"
   },
   "login_to_use": {
     "message": "Login to use"
@@ -237,12 +258,18 @@
     "message": "Thank you for your valuable feedback!"
   },
   "five_stars": {
-    "message": "If you're enjoying GPT Reader, we'd love your feedback on the Chrome Web Store."
+    "message": "If you're enjoying GPT Reader & Transcriber, we'd love your feedback on the Chrome Web Store."
   },
   "store_redirect": {
     "message": "Take me to the store"
   },
   "volume": {
     "message": "Volume"
+  },
+  "loading_transcribe_text": {
+    "message": "Transcribing Text"
+  },
+  "transcribed_complete": {
+    "message":"Finished Transcribing"
   }
 }
