@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader & Transcriber: Free AI Text to Speech & Speech to Text via ChatGPT"
+    "message": "ChatGPT Reader & Transcriber: Free AI Text to Speech & Speech to Text"
   },
   "extensionDescription": {
-    "message": "Free AI text to speech (tts) & speech to text with ChatGPT. Listen to natural voices or transcribe audio instantly."
+    "message": "Free AI text to speech (tts) & speech to text (stt) with ChatGPT. Listen to natural voices or transcribe audio instantly."
   },
   "play_voice": {
     "message": "Play Voice"
