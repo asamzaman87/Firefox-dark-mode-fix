@@ -18,12 +18,12 @@ export default function Popup(): JSX.Element {
   const getPort = async () => {
     const queryOptions = { active: true, currentWindow: true };
     const tabs = await chrome.tabs.query(queryOptions);
-    if (tabs.length === 0 || !tabs[0].id) return;
-
-    const port = chrome.tabs.connect(tabs[0].id, {
-      name: "activate",
-    });
-    return port;
+    if (tabs.length === 0 || !tabs[0].id) return null;
+    try {
+      return chrome.tabs.connect(tabs[0].id, { name: "activate" });
+    } catch (_) {
+      return null; // no content script in this tab
+    }
   }
 
   const statusCheck = async () => {
@@ -62,8 +62,13 @@ export default function Popup(): JSX.Element {
   }
 
   useEffect(() => {
-    isCurrentTabGpt().then((isGpt) => setIsValidUrl(!!isGpt));
-    statusCheck();
+    (async () => {
+      const isGpt = await isCurrentTabGpt();
+      setIsValidUrl(!!isGpt);
+      if (isGpt) {
+        await statusCheck();
+      }
+    })();
   }, []);
 
   const logo = chrome.runtime.getURL('logo-128.png');

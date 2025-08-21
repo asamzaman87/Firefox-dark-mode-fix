@@ -218,35 +218,16 @@ function Uploader() {
     })();
   }, [isAuthenticated]);
   
+  // 2a) Inject the helper script ONCE
   useEffect(() => {
     if (!document.getElementById("gpt-reader-injected")) {
-      const s = document.createElement('script');
+      const s = document.createElement("script");
       s.id = "gpt-reader-injected";
-      s.src = chrome.runtime.getURL('injected.js');
+      s.src = chrome.runtime.getURL("injected.js");
       (document.head || document.documentElement).appendChild(s);
-
-      chrome.runtime.onMessage.addListener((message) => {
-        if (message.type === "OPEN_POPUP") {
-
-          //if origin is not verified, verify it
-          if (message.payload === "VERIFY_ORIGIN") {
-            chrome.runtime.sendMessage({ type: "VERIFY_ORIGIN" });
-            return
-          }
-
-          //if origin is verified, open the overlay
-          if (message.payload === "ORIGIN_VERIFIED") {
-            const active = window.localStorage.getItem("gptr/active");
-            //if overlay is set to closed, open the overlay
-            if (active && active !== "true") {
-              activateButton.current?.click();
-            }
-          }
-        }
-      })
-
     }
-    chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
+    // tell background we’re here
+    chrome.runtime.sendMessage({ type: "CONTENT_LOADED" });
 
     //checking if user has already confirmed the extension
     const cnf = window.localStorage.getItem("gptr/confirmation");
@@ -256,6 +237,31 @@ function Uploader() {
     setConfirmed(cnf === "true");
     setShowPinTutorial(isPinTutorialAcknowledged !== "true");
   }, []);
+
+  // 2b) ALWAYS register a message listener
+  useEffect(() => {
+    const onMsg = (message: any, _sender: any, sendResponse: (r?: any) => void) => {
+      if (message?.type === "PING") {
+        sendResponse({ ok: true });
+        return;
+      }
+      if (message?.type === "OPEN_POPUP") {
+        if (message.payload === "VERIFY_ORIGIN") {
+          chrome.runtime.sendMessage({ type: "VERIFY_ORIGIN" });
+          return;
+        }
+        if (message.payload === "ORIGIN_VERIFIED") {
+          const active = window.localStorage.getItem("gptr/active");
+          if (active && active !== "true") {
+            activateButton.current?.click();
+          }
+        }
+      }
+    };
+    chrome.runtime.onMessage.addListener(onMsg);
+    return () => chrome.runtime.onMessage.removeListener(onMsg);
+  }, []);
+
 
   //toddo: refactor as this might exceed space
   useEffect(() => {

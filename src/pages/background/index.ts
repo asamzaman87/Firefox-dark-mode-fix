@@ -8,7 +8,18 @@ import {
 } from "@/lib/constants";
 import { cancelSubscription, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, handleCheckUserSubscription, secureFetch, switchToActiveTab } from "@/lib/utils";
 
-chrome.storage.local.clear();
+async function waitForReady(tabId: number, tries = 40, delayMs = 150) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await chrome.tabs.sendMessage(tabId, { type: "PING" });
+      if (res?.ok) return true;
+    } catch (_) {
+      // ignore: receiving end does not exist yet
+    }
+    await new Promise(r => setTimeout(r, delayMs));
+  }
+  return false;
+}
 
 //listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -18,23 +29,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
     }
     case "CONTENT_LOADED": {
-      const tabId = sender?.tab?.id;
-      if (tabId) {
-        chrome.tabs.sendMessage(tabId, {
-          type: "OPEN_POPUP",
-          payload: "VERIFY_ORIGIN",
-        });
-      }
+      (async () => {
+        const tabId = sender?.tab?.id;
+        if (tabId && await waitForReady(tabId)) {
+          chrome.tabs.sendMessage(tabId, {
+            type: "OPEN_POPUP",
+            payload: "VERIFY_ORIGIN",
+          });
+        }
+      })();
       break;
     }
     case "NO_AUTH_TRY_AGAIN": {
-      const tabId = sender?.tab?.id;
-      if (tabId) {
-        chrome.tabs.sendMessage(tabId, {
-          type: "OPEN_POPUP",
-          payload: "VERIFY_ORIGIN",
-        });
-      }
+      (async () => {
+        const tabId = sender?.tab?.id;
+        if (tabId && await waitForReady(tabId)) {
+          chrome.tabs.sendMessage(tabId, {
+            type: "OPEN_POPUP",
+            payload: "VERIFY_ORIGIN",
+          });
+        }
+      })();
       break;
     }
     //verify if triggered from valid origin (onClick on onInstalled event)
@@ -44,10 +59,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (tabId) {
           const { origin } = (await chrome.storage.local.get("origin")) ?? {};
           if (origin) {
-            chrome.tabs.sendMessage(tabId, {
-              type: "OPEN_POPUP",
-              payload: "ORIGIN_VERIFIED",
-            });
+            if (await waitForReady(tabId)) {
+              chrome.tabs.sendMessage(tabId, {
+                type: "OPEN_POPUP",
+                payload: "ORIGIN_VERIFIED",
+              });
+            }
           }
         }
       })();
@@ -233,10 +250,12 @@ chrome.action.onClicked.addListener(async () => {
     ) => {
       if (updatedTabId === numericId && info.status === "complete") {
         chrome.tabs.onUpdated.removeListener(listener);
-        chrome.tabs.sendMessage(numericId, {
-          type: "OPEN_POPUP",
-          payload: "ORIGIN_VERIFIED",
-        });
+        (async () => {
+          if (await waitForReady(numericId)) {
+            chrome.tabs.sendMessage(numericId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+          }
+        })();
+
       }
     };
     chrome.tabs.onUpdated.addListener(listener);
@@ -244,10 +263,9 @@ chrome.action.onClicked.addListener(async () => {
   }
 
   // Existing ChatGPT tab – send immediately
-  chrome.tabs.sendMessage(tabId, {
-    type: "OPEN_POPUP",
-    payload: "ORIGIN_VERIFIED",
-  });
+  if (await waitForReady(tabId)) {
+    chrome.tabs.sendMessage(tabId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+  }
 });
 
 
@@ -366,3 +384,4 @@ const handleBannerCountView = async (count: number) => {
 }
 
 chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM);
+
