@@ -15,6 +15,7 @@ import AlertPopup from "./alert-popup";
 import Content from "./content";
 import PinTutorialPopUp from "./pin-tutorial-popup";
 import { usePremiumModal } from "@/context/premium-modal";
+import PremiumModal from "./premium-modal";
 import TrialGiftPopUp from "./trial-gift-popup";
 export interface PromptProps {
   text: string | undefined
@@ -32,7 +33,7 @@ function Uploader() {
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false)
-  const {setIsSubscribed} = usePremiumModal();
+  const {setIsSubscribed, isSubscribed} = usePremiumModal();
   const isOpeningInProgress = useRef(false);
 
   const { toast } = useToast();
@@ -45,6 +46,7 @@ function Uploader() {
   const [showTrialGift, setShowTrialGift] = useState<boolean>(false);
   const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
   const [pendingTrialAfterPin, setPendingTrialAfterPin] = useState<boolean>(false);
+  const [showDiscountPremium, setShowDiscountPremium] = useState<boolean>(false);
 
   // sending the auth status to the background script
   useMemo(() => {
@@ -472,20 +474,19 @@ function Uploader() {
           autoOpen.current = false;
         }
 
+        let effectiveIsSubscribed = false;
+
         if (detectBrowser() === "firefox") {
-          const isSubscribed = await new Promise<boolean>((resolve) => {
-            chrome.runtime.sendMessage(
-              { type: "CHECK_SUBSCRIPTION" },
-              (response) => {
-                resolve(response);
-              }
-            );
+          effectiveIsSubscribed = await new Promise<boolean>((resolve) => {
+            chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
+              resolve(response);
+            });
           });
-          setIsSubscribed(isSubscribed);
         } else {
-          const isSubscribed = await handleCheckUserSubscription();
-          setIsSubscribed(isSubscribed);
+          effectiveIsSubscribed = await handleCheckUserSubscription();
         }
+
+        setIsSubscribed(effectiveIsSubscribed);
 
         try {
           const { isTrial, trialEndsAt } = await chrome.storage.local.get([
@@ -506,13 +507,35 @@ function Uploader() {
         } catch {
           // ignore
         }
+
+        // After subscription/trial/pin gating, track opens and maybe show $1.99 promo
+        try {
+          // Only consider showing if user is NOT subscribed (no premium, no trial)
+          // `isSubscribed` is already accurate: true for premium OR trial
+          if (!effectiveIsSubscribed) {
+            const { openCount = 0 } = await chrome.storage.local.get(["openCount"]);
+            const newCount = (typeof openCount === "number" ? openCount : 0) + 1;
+            await chrome.storage.local.set({ openCount: newCount });
+
+            // Show every 5th open; skip if Pin Tutorial is still visible or Trial gift is queued
+            const isEvery5 = newCount % 5 === 0 && newCount > 0;
+            const pinVisible = showPinTutorial;
+            const trialWillShow = pendingTrialAfterPin || showTrialGift;
+
+            if (isEvery5 && !pinVisible && !trialWillShow) {
+              setShowDiscountPremium(true);
+            }
+          }
+        } catch {
+          // ignore counting errors
+        }
       } catch (error) {
         console.error("onOpenChange error:", error);
       } finally {
         isOpeningInProgress.current = false;
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, isSubscribed, showPinTutorial, pendingTrialAfterPin, showTrialGift]
   );
   
   useEffect(() => {
@@ -714,6 +737,13 @@ function Uploader() {
                 setShowTrialGift(open);
                 if (!open) window.localStorage.setItem("gptr/trialGiftShown", "true");
               }}
+            />
+          )}
+          { confirmed && (
+            <PremiumModal
+              open={showDiscountPremium}
+              onOpenChange={setShowDiscountPremium}
+              forceDiscount
             />
           )}
         </DialogContent>

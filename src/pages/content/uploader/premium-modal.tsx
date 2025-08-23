@@ -18,10 +18,12 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { usePremiumModal } from "../../../context/premium-modal";
 import { useToast } from "../../../hooks/use-toast";
-import { TOAST_STYLE_CONFIG } from "../../../lib/constants";
+import { DISCOUNT_PRICE_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When true, show $1.99/month and use discount price id for checkout */
+  forceDiscount?: boolean;
 }
 
 export interface FetchUserType {
@@ -77,7 +79,7 @@ export interface CheckoutPayloadType {
   priceId: string | undefined;
 }
 
-const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
+const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount = false }) => {
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState<boolean>(false);
   const { reason } = usePremiumModal();
@@ -115,7 +117,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
     {
       type: "premium",
       title: chrome.i18n.getMessage("premium") || "Premium",
-      price: formatPriceFromStripePrice(product?.prices),
+      price: forceDiscount ? "USD $1.99/month" : formatPriceFromStripePrice(product?.prices),
       isCurrent: false,
       features: [
         {
@@ -205,12 +207,15 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
 
       if (!openaiId) return;
 
+      // Prefer Stripe Product metadata "discount_price_id" when forcing discount, else fall back constant
+      const priceIdToUse = forceDiscount ? DISCOUNT_PRICE_ID : product?.prices?.priceId;
+
       const payload: CheckoutPayloadType = {
         openaiId,
         email,
         name,
         picture,
-        priceId: product?.prices?.priceId,
+        priceId: priceIdToUse,
       };
 
       let sessionUrl: string;
@@ -255,13 +260,17 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange }) => {
         )}
       >
         <DialogHeader>
-          <DialogTitle className="gpt:text-xl gpt:font-bold gpt:text-center">
-            {chrome.i18n.getMessage("premium_required") ||
-              "Hey! You just triggered a premium feature"}
+          <DialogTitle className="gpt:text-2xl gpt:font-bold gpt:text-center">
+            {forceDiscount
+              ? "🔊 Special Offer - Premium for $1.99/month 🔊"
+              : chrome.i18n.getMessage("premium_required") ||
+                "Hey! You just triggered a premium feature"}
             <br />
             <span className="gpt:font-normal gpt:text-[16px]">
-              {chrome.i18n.getMessage("premium_description") ||
-                "Upgrade your GPT Reader & Transcriber plan to access now"}
+              {forceDiscount
+                ? "❗ Over 50% off the regular $4.99 price — limited-time offer ❗"
+                : chrome.i18n.getMessage("premium_description") ||
+                  "Upgrade your GPT Reader & Transcriber plan to access now"}
             </span>
           </DialogTitle>
           <DialogDescription className={cn("gpt:text-center", { "sr-only": reason === "" })}>

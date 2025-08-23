@@ -149,6 +149,7 @@ const TranscriberDownloadPreview: FC<DownloadPreviewProps> = ({
               <Popover
                 onOpenChange={toggleConfirmation}
                 open={isConfirmationOpen}
+                modal
               >
                 <PopoverTrigger asChild>
                   <Button

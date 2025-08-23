@@ -136,3 +136,4 @@ export const REFRESH_MARGIN_MS = 15_000;
 export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;
+export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7";
