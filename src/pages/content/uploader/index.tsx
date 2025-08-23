@@ -15,6 +15,7 @@ import AlertPopup from "./alert-popup";
 import Content from "./content";
 import PinTutorialPopUp from "./pin-tutorial-popup";
 import { usePremiumModal } from "@/context/premium-modal";
+import TrialGiftPopUp from "./trial-gift-popup";
 export interface PromptProps {
   text: string | undefined
 }
@@ -40,6 +41,10 @@ function Uploader() {
   const isOpening = useRef<boolean>(false);
   const LOGO = chrome.runtime.getURL('logo-128.png');
   const autoOpen = useRef<boolean>(false);
+
+  const [showTrialGift, setShowTrialGift] = useState<boolean>(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
+  const [pendingTrialAfterPin, setPendingTrialAfterPin] = useState<boolean>(false);
 
   // sending the auth status to the background script
   useMemo(() => {
@@ -477,10 +482,30 @@ function Uploader() {
             );
           });
           setIsSubscribed(isSubscribed);
-          return;
+        } else {
+          const isSubscribed = await handleCheckUserSubscription();
+          setIsSubscribed(isSubscribed);
         }
-        const isSubscribed = await handleCheckUserSubscription();
-        setIsSubscribed(isSubscribed);
+
+        try {
+          const { isTrial, trialEndsAt } = await chrome.storage.local.get([
+            "isTrial",
+            "trialEndsAt",
+          ]);
+          const alreadyShown = window.localStorage.getItem("gptr/trialGiftShown") === "true";
+          if (isTrial && !alreadyShown) {
+            if (showPinTutorial) {
+              // Pin tutorial is visible; defer the trial popup
+              setPendingTrialAfterPin(true);
+            } else {
+              // Show trial now
+              setTrialEndsAt(typeof trialEndsAt === "number" ? trialEndsAt : null);
+              setShowTrialGift(true);
+            }
+          }
+        } catch {
+          // ignore
+        }
       } catch (error) {
         console.error("onOpenChange error:", error);
       } finally {
@@ -659,7 +684,38 @@ function Uploader() {
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
           {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}
-          { confirmed && showPinTutorial && <PinTutorialPopUp open={showPinTutorial} onClose={setShowPinTutorial}/>}
+          { confirmed && showPinTutorial && (
+            <PinTutorialPopUp
+              open={showPinTutorial}
+              onClose={(open) => {
+                setShowPinTutorial(open);
+                // When Pin closes AND a trial is pending, show it now
+                if (!open && pendingTrialAfterPin) {
+                  setPendingTrialAfterPin(false);
+                  chrome.storage.local
+                    .get(["isTrial", "trialEndsAt"])
+                    .then(({ isTrial, trialEndsAt }) => {
+                      const alreadyShown = window.localStorage.getItem("gptr/trialGiftShown") === "true";
+                      if (isTrial && !alreadyShown) {
+                        setTrialEndsAt(typeof trialEndsAt === "number" ? trialEndsAt : null);
+                        setShowTrialGift(true);
+                      }
+                    })
+                    .catch(() => {});
+                }
+              }}
+            />
+          )}
+          { confirmed && (
+            <TrialGiftPopUp
+              open={showTrialGift}
+              trialEndsAt={trialEndsAt}
+              onClose={(open) => {
+                setShowTrialGift(open);
+                if (!open) window.localStorage.setItem("gptr/trialGiftShown", "true");
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
       <Toaster />

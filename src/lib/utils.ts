@@ -521,33 +521,41 @@ export const handleCheckUserSubscription = async () => {
 
     if (!openaiId) {
       console.warn("No OpenAI ID found");
-      chrome.storage.local.set({ hasSubscription: true });
+      chrome.storage.local.set({ hasSubscription: true, isTrial: false, trialEndsAt: null });
       return true;
     }
 
     const data: {
       hasSubscription: boolean;
-      subscriptionId: string;
+      subscriptionId: string | null;
       isSubscriptionCancelled: boolean;
-      currentPeriodEnd: number;
-    } = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/check-subscription?openaiId=${openaiId}`
-    );
-    chrome.storage.local.set({
-      hasSubscription: data?.hasSubscription || false,
-      subscriptionId: data.subscriptionId,
+      currentPeriodEnd: number | null;
+      isTrial?: boolean;
+      trialEndsAt?: number | null;
+    } = await secureFetch(`${BACKEND_URI}/gpt-reader/check-subscription?openaiId=${openaiId}`);
+
+    const effectiveHasSub = !!(data?.hasSubscription || data?.isTrial);
+
+    await chrome.storage.local.set({
+      hasSubscription: effectiveHasSub,
+      subscriptionId: data.subscriptionId ?? null,
       isSubscriptionCancelled: data.isSubscriptionCancelled || false,
-      currentPeriodEnd: data.currentPeriodEnd,
+      currentPeriodEnd: data.currentPeriodEnd ?? null,
+      isTrial: !!data?.isTrial,
+      trialEndsAt: data?.trialEndsAt ?? null,
     });
-    return data.hasSubscription || false;
+
+    return effectiveHasSub;
   } catch (err) {
     console.error("Error checking subscription:", err);
-    //! HIGHLY CRITICAL CASE: ✅ Fallback to true if Vercel/API is down
+    // Fallback: allow access if backend down
     chrome.storage.local.set({
       hasSubscription: true,
       subscriptionId: null,
       isSubscriptionCancelled: false,
       currentPeriodEnd: null,
+      isTrial: false,
+      trialEndsAt: null,
     });
     return true;
   }

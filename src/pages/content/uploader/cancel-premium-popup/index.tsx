@@ -26,6 +26,23 @@ interface CancelInfoType {
 }
 
 const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
+    // ─── Free trial flags ────────────────────────────────────────────────────────
+  const [isTrial, setIsTrial] = useState<boolean>(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState<string>("");
+
+  const formatDuration = (ms: number) => {
+    if (ms <= 0) return "Expired";
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    if (days > 0) return `${days}d ${hours}h ${mins}m`;
+    if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
+    return `${mins}m ${secs}s`;
+  };
+
   const { toast } = useToast();
   const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false);
   const [cancelInfo, setCancelInfo] = useState<{
@@ -97,6 +114,36 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
     if (isSubscribed) fetchCancelInfo();
   }, [isSubscribed]);
 
+  // Load trial flags when user has effective access (could be trial)
+  useEffect(() => {
+    if (!isSubscribed) {
+      setIsTrial(false);
+      setTrialEndsAt(null);
+      setRemaining("");
+      return;
+    }
+
+    chrome.storage.local.get(["isTrial", "trialEndsAt"], (result) => {
+      const trial = !!result?.isTrial;
+      const endsAt = typeof result?.trialEndsAt === "number" ? result.trialEndsAt : null;
+      setIsTrial(trial);
+      setTrialEndsAt(endsAt);
+    });
+  }, [isSubscribed]);
+
+    // Live countdown while on trial
+  useEffect(() => {
+    if (!isTrial || !trialEndsAt) {
+      setRemaining("");
+      return;
+    }
+    const update = () => setRemaining(formatDuration(trialEndsAt - Date.now()));
+    update();
+    const id = window.setInterval(update, 1000);
+    return () => window.clearInterval(id);
+  }, [isTrial, trialEndsAt]);
+
+
   const formattedEndDate = useMemo(() => {
     return cancelInfo?.currentPeriodEnd
       ? new Date(cancelInfo.currentPeriodEnd * 1000).toLocaleDateString(
@@ -133,21 +180,27 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
             align="end"
           >
             <div className="gpt:p-2 gpt:space-y-3">
-              {cancelInfo?.isSubscriptionCancelled ? (
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="gpt:h-5 gpt:w-5 gpt:text-orange-600" />
-                  <div>
-                    <h4 className="gpt:font-semibold gpt:text-sm">
-                      Subscription Cancelled
-                    </h4>
-                    {formattedEndDate && (
-                      <p className="gpt:text-xs">
-                        Ends on {formattedEndDate || ""}
+                {isTrial ? (
+                  <div className="flex items-center gap-2">
+                    <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
+                    <div>
+                      <h4 className="gpt:font-semibold gpt:text-sm">Free Trial (24h)</h4>
+                      <p className="gpt:text-xs gpt:text-gray-500 gpt:dark:text-gray-400">
+                        {remaining ? `Ends in ${remaining}` : "Ends soon"}
                       </p>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ) : (
+                ) : cancelInfo?.isSubscriptionCancelled ? (
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="gpt:h-5 gpt:w-5 gpt:text-orange-600" />
+                    <div>
+                      <h4 className="gpt:font-semibold gpt:text-sm">Subscription Cancelled</h4>
+                      {formattedEndDate && (
+                        <p className="gpt:text-xs">Ends on {formattedEndDate || ""}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
                 <div className="flex items-center gap-2">
                   <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
                   <div>
@@ -155,7 +208,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                   </div>
                 </div>
               )}
-              {!cancelInfo?.isSubscriptionCancelled && (
+              {!isTrial && !cancelInfo?.isSubscriptionCancelled && (
                 <div className="gpt:space-y-2">
                   <Button
                     variant="ghost"
