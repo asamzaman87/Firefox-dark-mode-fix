@@ -467,6 +467,11 @@ function Uploader() {
 
         await triggerPromptFlow();
 
+        const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;
+        if (introButton) {
+          introButton.click();
+        }
+
         if (!autoOpen.current) {
           // * Call banner count API event to the background script
           chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
