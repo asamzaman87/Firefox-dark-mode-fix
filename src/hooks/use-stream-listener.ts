@@ -1,16 +1,18 @@
-import { LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
+import { FREE_DOWNLOAD_CHUNKS, LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
 import { Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
-const MAX_RETRIES = 3; 
+import { usePremiumModal } from "@/context/premium-modal";
+const MAX_RETRIES = 2; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
     chunkRef: React.MutableRefObject<Chunk[]>,                            
-    injectPrompt: (text: string, id: string, ndx: number) => void,            
+    injectPrompt: (text: string, id: string, ndx: number) => void, 
+    isDownload: boolean,           
   ) => {
     const { format } = useFormat();
     const { toast } = useToast();
@@ -21,11 +23,15 @@ const useStreamListener = (
     const { token } = useAuthToken();
     const { voices, handleVoiceChange, isLoading: isVoiceLoading } = useVoice();
     const [blobs, setBlobs] = useState<{ chunkNumber: number; blob: Blob }[]>([]);
+    const didIt = useRef<Set<number>>(new Set());
+    const audioIssueStop = useRef<boolean>(false);
+    const stopFlow = useRef<boolean>(false);
+    const audioIssueInjections = useRef<Set<number>>(new Set());
 
     const retryCounts = useRef<Record<number, number>>({});
-    const lastRegularRetryChunk = useRef<number | null>(null);
+    const lastRegularRetryChunk = useRef<Set<number>>(new Set());
     const promptNdx = useRef<number>(0);
-    const chunkNdxRef = useRef<number>(0);
+    const { isSubscribed, setOpen, setReason } = usePremiumModal();
 
     // —— CHAT / FETCH TRACKING & LS BRIDGE ——
     // Current chat (never delete it here; the Uploader owns current chat deletion on unload/load)
@@ -99,29 +105,31 @@ const useStreamListener = (
     }
 
     const retryFlow = useCallback(
-        async () => {
-            if (LOCAL_LOGS) console.log("[use-stream-listener] Calling retry flow");
-            const idx = nextChunkRef.current - 1;
-            if (idx < 0 || idx >= chunkRef.current.length) {
-                console.log("Retry failed: invalid chunk index");
+        async (failedChunkNdx: number, conversationId?: string, convKey?: string) => {
+            if (conversationId && convKey) {
+                completePending(conversationId, convKey);
+            }
+
+            if (failedChunkNdx < 0 || failedChunkNdx >= chunkRef.current.length) {
+                if (LOCAL_LOGS) console.log("[retryFlow] invalid chunk index", failedChunkNdx);
                 return;
             }
 
-            retryCounts.current[idx] = (retryCounts.current[idx] ?? 0) + 1;
+            // bump counter (kept for telemetry/visibility even though we don't cap in fetch path)
+            retryCounts.current[failedChunkNdx] = (retryCounts.current[failedChunkNdx] ?? 0) + 1;
 
-            // Record current chat so it can be cleaned later
+            // record current chat so it can be cleaned later
             const prevChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] || null;
 
-            // Open a new chat (do not delete the old one here)
+            // open a new chat (do not delete old one here)
             await new Promise<void>(async (resolve) => {
                 const newChatBtn = document.querySelector<HTMLButtonElement>(
                     "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                 );
                 if (newChatBtn) {
-                    chunkNdxRef.current = 0; // reset DOM turn mapping for new chat
                     newChatBtn.click();
                 }
-                // Wait briefly for the new chat URL
+                // wait briefly for the new chat URL
                 for (let i = 0; i < 10; i++) {
                     await new Promise((r) => setTimeout(r, 200));
                     const urlChat = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
@@ -130,8 +138,8 @@ const useStreamListener = (
                 resolve();
             });
 
-            // Re-inject SAME chunk text in the new chat
-            let { text, id } = chunkRef.current[idx];
+            // re-inject SAME chunk text in the new chat
+            const { text, id } = chunkRef.current[failedChunkNdx];
             promptNdx.current += 1;
             toast({
                 description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`,
@@ -140,17 +148,20 @@ const useStreamListener = (
             });
             injectPrompt(text, id, promptNdx.current);
 
-            // Ensure old chat is queued in LS for deletion by us/Uploader later
+            // queue old chat for deletion
             if (prevChatId) addChatToDeleteLS(prevChatId);
         },
-        [chunkRef, injectPrompt, nextChunkRef]
+        [chunkRef, injectPrompt, toast]
     );
 
     const fetchAndDecodeAudio = useCallback(async (url: string, chunkNumber: number, conversationId: string, messageId: string) => {
         setIsFetching(true);
         const convKey = `${conversationId}:${messageId}`;
-        registerPending(conversationId, convKey);
         try {
+            // if (chunkNumber % 3 === 0 && !didIt.current.has(chunkNumber)) {
+            //     didIt.current.add(chunkNumber);
+            //     throw new Error("Cannot fetch audio");
+            // }
             // ——— ensure we have a valid token ———
             let authToken = token;
             if (!authToken) {
@@ -171,7 +182,10 @@ const useStreamListener = (
                     handleErrorWithNoFetch("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
                     return null;
                 });
-                if (!authToken) return;
+                if (!authToken) {
+                    console.error("[fetchAndDecodeAudio] cannot fetch token");
+                    return;
+                }
             }
 
             let response: Response | undefined;
@@ -184,7 +198,9 @@ const useStreamListener = (
                     response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
                     if (response.status === 200) break;
                 }
-                if (!response) throw new Error("Failed to fetch audio after retries");
+                if (!response) {
+                    throw new Error("Cannot fetch audio");
+                }
             }
 
             if (response.status === 404) {
@@ -196,21 +212,20 @@ const useStreamListener = (
                 }
             }
 
-            // —— regular retry only; no retryFlow() here ——
+            // —— regular retry first time ——
             if (response.status !== 200) {
-                if (lastRegularRetryChunk.current !== chunkNumber && response.status !== 404) {
-                    lastRegularRetryChunk.current = chunkNumber;
-                    await new Promise((res) => setTimeout(res, 500));
+                if (!lastRegularRetryChunk.current.has(chunkNumber) && response.status !== 404) {
+                    lastRegularRetryChunk.current.add(chunkNumber);
                     return await retry(url, chunkNumber, conversationId, messageId);
                 }
             }
+
             if (response.status !== 200) {
                 if (response.status === 429) {
                     handleErrorWithNoFetch("You have exceeded the hourly limit for your current ChatGPT model. Please switch to another model to continue using GPT Reader or wait a few minutes.");
                     return;
                 }
-                handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
-                return;
+                throw new Error("Cannot fetch audio");
             }
 
             let blob: Blob;
@@ -218,29 +233,87 @@ const useStreamListener = (
                 blob = await response.blob();
             } catch (err) {
                 console.warn(`Audio blob read failed for chunk ${chunkNumber}, retrying…`, err);
-                await new Promise((r) => setTimeout(r, 300));
-                return await retry(url, chunkNumber, conversationId, messageId);
+                if (!lastRegularRetryChunk.current.has(chunkNumber)) {
+                    lastRegularRetryChunk.current.add(chunkNumber);
+                    return await retry(url, chunkNumber, conversationId, messageId);
+                } else {
+                    throw new Error("Cannot fetch audio");
+                }
             }
 
-            // Accept out-of-order; upsert & keep sorted
             setBlobs(prev => {
                 const next = prev.filter(e => e.chunkNumber !== chunkNumber);
+                if (!isSubscribed && isDownload && chunkNumber > FREE_DOWNLOAD_CHUNKS) {
+                    return next;
+                }
                 next.push({ chunkNumber, blob });
                 next.sort((a, b) => a.chunkNumber - b.chunkNumber);
+                // Free users download restriction
+                if (!isSubscribed && isDownload) {
+                    const has0 = next.some(e => e.chunkNumber === 0);
+                    const has1 = next.some(e => e.chunkNumber === 1);
+                    const has2 = next.some(e => e.chunkNumber === 2);
+                    const hasFirst3 = has0 && has1 && has2;
+
+                    // Trigger restriction only once we know chunks 0, 1, and 2 are all present
+                    if (hasFirst3 && chunkRef.current.length - 1 !== FREE_DOWNLOAD_CHUNKS) {     
+                        setTimeout(() => {
+                            handleError(
+                                "Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
+                            );
+                            setReason(
+                                "Free users can only download around 2500 characters at a time. Please upgrade to download without limits!"
+                            );
+                            setOpen(true);
+                        }, 3000);
+                    }
+                }
                 return next;
             });
 
-            const audioUrl = URL.createObjectURL(blob);
-            setIsFetching(false);
-            return audioUrl;
-        } finally {
             completePending(conversationId, convKey);
+            setIsFetching(false);
+
+            try {
+                const audioUrl = URL.createObjectURL(blob);
+                return audioUrl;
+            } catch (err) {
+                console.warn(`Audio URL creation failed for chunk ${chunkNumber}`, err);
+                return;
+            }
+        } catch (err) {
+            if (LOCAL_LOGS) console.warn("[fetchAndDecodeAudio] top-level error:", err);
+            audioIssueInjections.current.add(chunkNumber);
+            if (nextChunkRef.current === chunkRef.current.length) {
+                // Convert to array and sort ascending
+                const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+
+                // Take the first (lowest) element
+                const first = sorted[0];
+
+                console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
+
+                // Inject using the first element
+                injectPrompt(
+                    chunkRef.current[first].text,
+                    chunkRef.current[first].id,
+                    promptNdx.current
+                );
+                
+                stopFlow.current = true;
+            } else if (!stopFlow.current) {
+                localStorage.setItem('gptr/abort', 'true');
+                audioIssueStop.current = true;
+                console.log('gptr/abort SET FOR CHUNK NUMBER:', chunkNumber);
+            }
+            return;
         }
-    }, [token]);
+    }, [token, retryFlow, isDownload, isSubscribed]);
 
 
     //retry fetching audio
     const retry = useCallback(async (url: string, chunkNumber: number, conversationId: string, messageId: string): Promise<string | undefined> => {
+        await new Promise((res) => setTimeout(res, 500));
         return await fetchAndDecodeAudio(url, chunkNumber, conversationId, messageId);
     }, [fetchAndDecodeAudio]);
 
@@ -248,51 +321,78 @@ const useStreamListener = (
     const handleConvStream = useCallback(async (e: Event) => {
         let { detail: { messageId, conversationId, text, createTime, chunkNdx, assistant, stopConvo, target } } = e as Event & { detail: { conversationId: string, messageId: string, createTime: number, text: string, chunkNdx: number, assistant: string, stopConvo: boolean, target: string } };
         if (LOCAL_LOGS) console.log("[handleConvStream] Use stream listener got event for chunk number:", chunkNdx);
+        if (LOCAL_LOGS) {
+            if (document.querySelector<HTMLButtonElement>('[data-testid*="retry"], [data-testid*="regenerate"]')) {
+                console.log("[handleConvStream] Encountered a retry type button");
+            }
+        }
+        if (chunkNdx === null) {
+            console.warn("[handleConvStream] chunkNdx is null");
+            return;
+        }
+        
+        if (stopFlow.current) audioIssueStop.current = false;
+        if (audioIssueStop.current) {
+            // Since we stopped the current chunkNdx, it will need to be re-injected
+            audioIssueInjections.current.add(chunkNdx);
+            // Convert to array and sort ascending
+            const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+
+            // Take the first (lowest) element
+            const first = sorted[0];
+
+            console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
+
+            // Inject using the first element
+            injectPrompt(
+                chunkRef.current[first].text,
+                chunkRef.current[first].id,
+                promptNdx.current
+            );
+
+            // Remove it from the set
+            audioIssueInjections.current.delete(first);
+            audioIssueStop.current = false;
+            stopFlow.current = true;
+            return;
+        }
+
         if (!stopConvo) {
             const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
             if (stopButton) {
                 stopButton.click();
             }
         } 
-        // wait for the speech button in chrome and send in firefox after stopping
-        try {
-            await Promise.race([
-                waitForElement("[data-testid='composer-speech-button']", 3000),
-                waitForElement("[data-testid='send-button']", 3000),
-            ]);
-        } catch {
-            console.warn("No resume button appeared within 3s; retrying if not the last chunk");
-            if (chunkNdx < chunkRef.current.length - 1) {
-                await retryFlow();
-                return;
+
+        // Compute the last assistant conversation turn by counting turns (1=user, 2=assistant, 3=user, 4=assistant, ...)
+        // Then get the FIRST assistant message id within that last assistant turn.
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+        let domMessageId: string | null | undefined;
+
+        const turnNodes = document.querySelectorAll<HTMLElement>('[data-testid^="conversation-turn-"]');
+        if (turnNodes.length > 0) {
+            // if total turns is even → last assistant turn is N; if odd → N-1
+            const lastAssistantTurnN = (turnNodes.length % 2 === 0) ? turnNodes.length : (turnNodes.length - 1);
+            let turnElement: HTMLElement | null = null;
+            for (let i = 0; i < 5 && !turnElement; i++) { // up to ~250ms total
+                turnElement = document.querySelector<HTMLElement>(`[data-testid="conversation-turn-${lastAssistantTurnN}"]`);
+                if (!turnElement) await new Promise(r => setTimeout(r, 50));
+            }
+
+            if (turnElement) {
+                const asm = turnElement.querySelector<HTMLDivElement>('[data-message-author-role="assistant"][data-message-id]');
+                domMessageId = asm?.getAttribute('data-message-id') || null;
+            } else {
+                console.warn("Couldn't locate last assistant conversation turn element");
             }
         }
-        
-        // make sure we have the right message id
-        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const turnNumber = (chunkNdxRef.current + 1) * 2;  // chunk 0 → turn 2, chunk 1 → turn 4, etc.
-        chunkNdxRef.current += 1;
-        const turnElement = document.querySelector<HTMLElement>(
-            `[data-testid="conversation-turn-${turnNumber}"]`
-        );
-        let domMessageId: string | null | undefined;
-        if (turnElement) {
-            const asm = turnElement.querySelector<HTMLDivElement>(
-                '[data-message-author-role="assistant"]'
-            );
-            domMessageId = asm?.getAttribute('data-message-id');
-        } else {
-            console.warn("Couldn't find DOM message id");
-        }
+
         if (domMessageId && domMessageId !== messageId && uuidRe.test(domMessageId)) {
-            console.warn(
-                "Got the wrong message id. Falling back to DOM id:",
-                messageId,
-                "→",
-                domMessageId
-            );
+            console.warn("Got the wrong message id. Falling back to DOM id:", messageId, "→", domMessageId);
             messageId = domMessageId;
-        } 
+        }
+
         // make sure we have the right conversation id
         let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
         let urlConvId = convMatch?.[1] ?? "";
@@ -303,8 +403,26 @@ const useStreamListener = (
             console.warn("Got the wrong conversation id. Falling back to id in url");
             conversationId = urlConvId;
         }
+
         // mark the current chat so we never delete it here
         currentChatIdRef.current = conversationId;
+        const convKey = `${conversationId}:${messageId}`;
+        registerPending(conversationId, convKey);
+
+        // wait for the speech button in chrome and send in firefox after stopping
+        try {
+            await Promise.race([
+                waitForElement("[data-testid='composer-speech-button']", 3000),
+                waitForElement("[data-testid='send-button']", 3000),
+            ]);
+        } catch {
+            console.warn("No resume button appeared within 3s; retrying if not the last chunk");
+            if (chunkNdx != null && chunkNdx < chunkRef.current.length - 1) {
+                await retryFlow(chunkNdx, conversationId, convKey);
+                return;
+            }
+        }
+    
         // define needed consts
         const actual = assistant ? assistant : target;
         const comparisonActual = normalizeAlphaNumeric(actual);
@@ -319,7 +437,7 @@ const useStreamListener = (
             (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
         ) {
             if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
-                await retryFlow();
+                await retryFlow(chunkNdx, conversationId, convKey);
                 return;
             }
             handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
@@ -328,7 +446,7 @@ const useStreamListener = (
         
         
         if (comparisonActual !== comparisonExpected) {
-            await retryFlow();
+            await retryFlow(chunkNdx, conversationId, convKey);
             return;
         } 
         
@@ -336,8 +454,31 @@ const useStreamListener = (
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine
             if (token) {
-                if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
-                setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx });
+                if (audioIssueInjections.current.size > 0) {
+                    // Convert to array and sort ascending
+                    const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+
+                    // Take the first (lowest) element
+                    const first = sorted[0];
+
+                    console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
+
+                    // Inject using the first element
+                    injectPrompt(
+                        chunkRef.current[first].text,
+                        chunkRef.current[first].id,
+                        promptNdx.current
+                    );
+
+                    // Remove it from the set
+                    audioIssueInjections.current.delete(first);
+                    stopFlow.current = true;
+                } else {
+                    if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
+                    // The hope is that the biggest chunkNdx in audioIssueInjections is from the mainline
+                    setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx });
+                    stopFlow.current = false;
+                }
                 const storedFormat = format.toLowerCase();
                 if (LOCAL_LOGS) console.log(`[Audio Prefetch] Prefetching audio for chunk ${chunkNdx}`);
                 (async () => {
@@ -354,9 +495,7 @@ const useStreamListener = (
                                 ordered[chunkNdx] = audioUrl;
                                 return ordered;
                             });
-                        } else {
-                            console.warn(`[Audio Prefetch] Failed to fetch audio for chunk ${chunkNdx}`);
-                        }
+                        } 
                     } catch {
                         handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
                     }
@@ -367,13 +506,16 @@ const useStreamListener = (
     }, [retryCounts, retryFlow, fetchAndDecodeAudio, setCompletedStreams, setCurrentCompletedStream, handleError, setIsLoading, voices.selected, token, format]);
 
     const handleRateLimitExceeded = useCallback(async (e: Event) => {
-        const { detail } = e as Event & { detail: string };
-        if ((retryCounts.current[nextChunkRef.current - 1] ?? 0) < MAX_RETRIES) {
-            await retryFlow();
+        const { detail } = e as CustomEvent<{ message: string; chunkNdx?: number }>;
+        const failing = detail.chunkNdx ?? (nextChunkRef.current - 1);
+        
+        console.error('In hadleRateLimitExceeded:', detail);
+        if ((retryCounts.current[failing] ?? 0) < MAX_RETRIES) {
+            await retryFlow(failing);
             return;
         }
-        console.error('In hadleRateLimitExceeded:', detail);
-        toast({ description: detail, style: TOAST_STYLE_CONFIG });
+        
+        toast({ description: detail.message, style: TOAST_STYLE_CONFIG });
         setIsLoading(false);
     }, [nextChunkRef, retryCounts, retryFlow, toast, setIsLoading]);
 
@@ -382,9 +524,13 @@ const useStreamListener = (
         setCurrentCompletedStream(null);
         setBlobs([]);
         retryCounts.current = {};
-        lastRegularRetryChunk.current = null;
+        lastRegularRetryChunk.current.clear();
         promptNdx.current = 0;
-        chunkNdxRef.current = 0;
+        audioIssueInjections.current.clear();
+        stopFlow.current = false;
+        audioIssueStop.current = false;
+        didIt.current.clear();
+        chatToPendingRef.current.clear();
     }
     
     useEffect(() => {

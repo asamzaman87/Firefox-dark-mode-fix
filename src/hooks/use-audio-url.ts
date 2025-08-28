@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
 import { Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader from "./use-file-reader";
@@ -35,8 +35,9 @@ const useAudioUrl = (isDownload: boolean) => {
     const nextChunkRef = useRef<number>(0);
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
-    const chunkNumList = useRef<Set<number>>(new Set());
-    const { isSubscribed, setOpen, setReason } = usePremiumModal();
+    const chunkNumList = useRef<Set<number>>(new Set());    
+    const { isSubscribed } = usePremiumModal();
+    const showCompletionToast = useRef<boolean>(false);
     // read the user’s chosen format (mp3, aac, or opus)
     const { format } = useFormat();
     const storedFormat = format.toLowerCase();
@@ -286,7 +287,7 @@ const useAudioUrl = (isDownload: boolean) => {
         return
     };
 
-    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt); 
+    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt, isDownload); 
     const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
 
   
@@ -311,6 +312,17 @@ const useAudioUrl = (isDownload: boolean) => {
         ? chunks.slice(0, k + 1).reduce((sum, chunk) => sum + chunk.text.length, 0)
         : 0;
 
+        if (LOCAL_LOGS) {
+            // 🔎 log missing chunk numbers
+            const missing: number[] = [];
+            for (let i = 0; i < chunks.length; i++) {
+                if (!have.has(i)) {
+                    missing.push(i);
+                }
+            }
+            console.log("[UseAudioUrl] Missing chunkNumbers:", missing);
+        }
+
         setProgress(totalChars > 0 ? (charsSoFar / totalChars) * 100 : 0);
 
         // Build download preview ONLY from the sequential prefix (0..k)
@@ -324,7 +336,8 @@ const useAudioUrl = (isDownload: boolean) => {
             setDownloadPreviewText(undefined);
         }
 
-        if (blobs.length === chunks.length && !isDownload && blobs.length > 0) {
+        if (blobs.length === chunks.length && !isDownload && blobs.length > 0 && !showCompletionToast.current) {
+            showCompletionToast.current = true;
             toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
         }
     }, [chunks, blobs, isDownload]);
@@ -353,6 +366,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const reset = () => {
+        showCompletionToast.current = false;
         setAudioUrls([]);
         setCurrentChunkBeingPromptedIndex(0);
         setChunks([]);
@@ -459,11 +473,14 @@ const useAudioUrl = (isDownload: boolean) => {
 
       
     useEffect(() => {
-        if (LOCAL_LOGS) console.log("[currentCompletedStream useEffect] Finished getting audio for chunk:", currentCompletedStream?.chunkNdx);
+        if (LOCAL_LOGS) console.log("[currentCompletedStream useEffect] Recived chunk number:", currentCompletedStream?.chunkNdx);
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
 
         if (currentCompletedStream?.chunkNdx != (nextChunkRef.current - 1)) {
-            if (chunkNumList.current.has(nextChunkRef.current-1)) return;
+            if (chunkNumList.current.has(nextChunkRef.current-1)) {
+                if (LOCAL_LOGS) console.log("[useAudioUrl] chunkNumList already has chunk", nextChunkRef.current-1);
+                return;
+            }
             const chunk = chunks[nextChunkRef.current-1];
             if (chunk) {
                 chunkNumList.current.add(nextChunkRef.current-1);
@@ -473,15 +490,14 @@ const useAudioUrl = (isDownload: boolean) => {
                 injectPrompt(chunk.text, chunk.id, promptNdx.current);
             }
             return;
+        } else {
+            if (LOCAL_LOGS) console.log("[useAudioUrl] Chunk is in the correct order");
         }
 
-        if (isDownload && currentStreamChunkNdxRef.current === 2 && !isSubscribed && currentStreamChunkNdxRef.current !== chunks.length - 1) {
-            setTimeout(() => {
-                handleError("Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far.");
-                setReason("Free users can only download around 2500 characters at a time. Please upgrade to download without limits!");
-                setOpen(true);
-            }, 3000);
+        if (!isSubscribed && isDownload && currentStreamChunkNdxRef.current === FREE_DOWNLOAD_CHUNKS && currentStreamChunkNdxRef.current !== chunks.length - 1) {
             return;
+        } else {
+            if (LOCAL_LOGS) console.log("[useAudioUrl] User is not a free download user");
         }
         
         // This is not the best way to set audioUrls due to the speed improvement, but we don't care for now
@@ -489,12 +505,16 @@ const useAudioUrl = (isDownload: boolean) => {
             setAudioUrls(completedStreams);
         }
 
-        if (isPromptingPaused) return;
+        if (isPromptingPaused) {
+            if (LOCAL_LOGS) console.log("[useAudioUrl] isPromptingPaused is true");
+            return;
+        }
        
         if (
             currentCompletedStream?.chunkNdx != null &&
             +currentCompletedStream.chunkNdx !== chunks.length - 1
         ) {
+            if (LOCAL_LOGS) console.log("[useAudioUrl] Attempting to prompt next chunk");
             const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
             const chunkNumber = currentCompletedStream?.chunkNdx + 1;
             if (!isDownload && chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber) % CHUNK_TO_PAUSE_ON) === 0)) {
@@ -509,7 +529,11 @@ const useAudioUrl = (isDownload: boolean) => {
                 );
                 injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
                 nextChunkRef.current += 1;
+            } else {
+                if (LOCAL_LOGS) console.log("[useAudioUrl] No next chunk to prompt");
             }
+        } else {
+            if (LOCAL_LOGS) console.log("[useAudioUrl] No next chunk to prompt:", currentCompletedStream?.chunkNdx, chunks.length - 1);
         }
     }, [currentCompletedStream, isPromptingPaused])
 

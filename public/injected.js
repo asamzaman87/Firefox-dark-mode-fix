@@ -74,13 +74,15 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const readResult = await reader.read();
             done = readResult.done;
             const value = readResult.value;
-            // if we haven’t received any new assistant text in 10 s, trigger abort
+            // if we haven’t received any new assistant text in 3 s, trigger abort
             if (Date.now() - lastProgress > 3_000 && !done) {
                 console.log("No stream progress for 3s—aborting");
                 shouldAbortStream = true;
             }
   
-            if (shouldAbortStream) {
+            if (shouldAbortStream || localStorage.getItem("gptr/abort") === "true") {
+                if (LOCAL_LOGS) console.log("[Injected.js] Aborting stream loop");
+                localStorage.setItem('gptr/abort', 'false');
                 shouldAbortStream = false;
                 return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
             }
@@ -236,11 +238,13 @@ window.fetch = async (...args) => {
             } catch (_err) {
                 if (url.endsWith('/conversation')) {
                     // dispatch a general error if we can't even parse the request
-                    window.dispatchEvent(
-                        new CustomEvent("GENERAL_ERROR", {
-                            detail: "GPT Reader encountered an internal error. Please try again later.",
-                        })
-                    );
+                    const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
+                        detail: {
+                            message: "GPT Reader is experiencing issues. Please try again later.",
+                            chunkNdx: sentChunkNumber
+                        },
+                    });
+                    window.dispatchEvent(generalErrorEvent);
                 }
                 console.error("Chunk-number parse failed:", _err);
             }
@@ -251,14 +255,20 @@ window.fetch = async (...args) => {
         // I am being specific with the endpoint for the error, since 404 and other errors will not have a content type of event-stream
         if (clonedResponse.status === 429 && url.endsWith('/conversation')) {
             const rateLimitExceededEvent = new CustomEvent('RATE_LIMIT_EXCEEDED', {
-                detail: "You have exceeded the hourly limit for ChatGPT. Please wait a few minutes and try again.",
+                detail: {
+                    message: "You have exceeded the hourly limit for ChatGPT. Please wait a few minutes and try again.",
+                    chunkNdx: sentChunkNumber
+                },
             });
             window.dispatchEvent(rateLimitExceededEvent);
         } 
 
         if (clonedResponse.status !== 200 && clonedResponse.status !== 429 && url.endsWith('/conversation')) {
             const generalErrorEvent = new CustomEvent('GENERAL_ERROR', {
-                detail: "GPT Reader is experiencing issues. Please try again later.",
+                detail: {
+                    message: "GPT Reader is experiencing issues. Please try again later.",
+                    chunkNdx: sentChunkNumber
+                },
             });
             window.dispatchEvent(generalErrorEvent);
         }
