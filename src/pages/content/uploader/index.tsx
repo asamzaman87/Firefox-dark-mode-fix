@@ -17,6 +17,9 @@ import PinTutorialPopUp from "./pin-tutorial-popup";
 import { usePremiumModal } from "@/context/premium-modal";
 import PremiumModal from "./premium-modal";
 import TrialGiftPopUp from "./trial-gift-popup";
+import StartFromPopUp from "./start-from-popup";
+import { SectionIndex } from "@/hooks/use-file-reader";
+
 export interface PromptProps {
   text: string | undefined
 }
@@ -47,6 +50,12 @@ function Uploader() {
   const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
   const [pendingTrialAfterPin, setPendingTrialAfterPin] = useState<boolean>(false);
   const [showDiscountPremium, setShowDiscountPremium] = useState<boolean>(false);
+
+  const [startFromOpen, setStartFromOpen] = useState<boolean>(false);
+  const [startFromSections, setStartFromSections] = useState<SectionIndex[]>([]);
+  const [startFromSource, setStartFromSource] = useState<"pdf" | "docx" | "text">("text");
+  const [startFromFullText, setStartFromFullText] = useState<string>("");
+  const startFromConfirmOffsetRef = useRef<(args: { startAt: number; matchLength?: number }) => void>(() => {});
 
   // sending the auth status to the background script
   useMemo(() => {
@@ -711,7 +720,21 @@ function Uploader() {
           className={cn("gpt:bg-gray-100 dark:bg-gray-800 gpt:max-w-screen gpt:h-full gpt:border-none gpt:flex gpt:flex-col gpt:gap-4", prompts?.length && "gpt:pb-0")}
         >
           {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-          {confirmed && <Content isCancelDownloadConfirmation={isCancelDownloadConfirmation} setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation} onOverlayOpenChange={onOpenChange} setPrompts={setPrompts} prompts={prompts} />}
+          {confirmed && <Content
+              isCancelDownloadConfirmation={isCancelDownloadConfirmation}
+              setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation}
+              onOverlayOpenChange={onOpenChange}
+              setPrompts={setPrompts}
+              prompts={prompts}
+              onOpenStartFrom={({ sections, source, fullText, onConfirm }) => {
+                setStartFromSections(sections);
+                setStartFromSource(source);
+                setStartFromFullText(fullText);
+                startFromConfirmOffsetRef.current = onConfirm;
+                setStartFromOpen(true);
+              }}
+            /> 
+          }
           { confirmed && showPinTutorial && (
             <PinTutorialPopUp
               open={showPinTutorial}
@@ -751,6 +774,17 @@ function Uploader() {
               forceDiscount
             />
           )}
+          <StartFromPopUp
+            open={startFromOpen}
+            sections={startFromSections}
+            source={startFromSource}
+            fullText={startFromFullText}
+            onConfirm={(args) => {
+              setStartFromOpen(false);
+              startFromConfirmOffsetRef.current?.(args);
+            }}
+            onClose={(open) => setStartFromOpen(open)}
+          />
         </DialogContent>
       </Dialog>
       <Toaster />

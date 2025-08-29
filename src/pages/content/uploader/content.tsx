@@ -30,6 +30,7 @@ import { Label } from "../../../components/ui/label";
 import { Switch } from "../../../components/ui/switch";
 import useHybridTranscription from "@/hooks/useHybridTranscription";
 import MicTranscribeForm from "./input-popup/micTranscribeForm";
+import useFileReader, { StructuredText, SectionIndex } from "@/hooks/use-file-reader";
 
 interface ContentProps {
     setPrompts: (prompts: PromptProps[]) => void;
@@ -37,11 +38,17 @@ interface ContentProps {
     onOverlayOpenChange: (open: boolean) => void;
     isCancelDownloadConfirmation: boolean;
     setIsCancelDownloadConfirmation: (state: boolean) => void;
+    onOpenStartFrom: (args: {
+      sections: SectionIndex[];
+      source: "pdf" | "docx" | "text";
+      onConfirm: (args: { startAt: number; matchLength?: number }) => void;
+      fullText: string;
+    }) => void;
 }
 
 const BROWSER = detectBrowser();
 
-const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, isCancelDownloadConfirmation, setIsCancelDownloadConfirmation }) => {
+const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, isCancelDownloadConfirmation, setIsCancelDownloadConfirmation, onOpenStartFrom }) => {
     const { toast } = useToast();
     const [isDownload, setIsDownload] = useState<boolean>(false);
     const [files, setFiles] = useState<File[]>([]);
@@ -57,7 +64,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [showMicOnlyView, setShowMicOnlyView] = useState(false);
     const [isViewingText, setIsViewingText] = useState(false);
     
-    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText} = useAudioPlayer(isDownload);
+    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource} = useAudioPlayer(isDownload);
     const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
@@ -70,6 +77,15 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const logo = chrome.runtime.getURL(isTextToSpeech ? 'logo-128.png' : 't-logo-128.png');
     const extName = chrome.i18n.getMessage(isTextToSpeech ? "gpt_reader" : "gpt_transcriber");
     const extAlt = chrome.i18n.getMessage(isTextToSpeech ? "gpt_reader_logo" : "gpt_transcriber_logo");
+
+    const [structured, setStructured] = useState<StructuredText | null>(null);
+    const [lastInputWasFile, setLastInputWasFile] = useState<boolean>(false);
+    const [scrollToOffset, setScrollToOffset] = useState<number | null>(null);
+    const fileReader = useFileReader();
+
+    const [highlightLen, setHighlightLen] = useState<number>(0);
+    const [highlightActive, setHighlightActive] = useState<boolean>(false);
+    const lastActionRef = useRef<"LISTEN" | "DOWNLOAD">("LISTEN");
 
     useMemo(() => {
         if (isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
@@ -92,6 +108,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setFiles([]);
         setPrompts([]);
         setTitle(undefined);
+        setScrollToOffset(null);
+        setHighlightActive(false);
+        setHighlightLen(0);
         resetDownloader();
         if (!isTextToSpeech) {
           setText("");
@@ -103,6 +122,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setFileExtractedText(undefined);
         setShowMicOnlyView(false);
         setIsViewingText(false);
+        setPreviewHtmlSource(undefined);                    // ← add this
     }
 
 
@@ -153,19 +173,49 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setFiles(files);
         
         if (isTextToSpeech) {
-            extractText(files[0]).then((text) => {
-                setTitle(files[0].name);
-                setFileExtractedText(text);
-                setShowDownloadOrListen(true)
-            }).catch((e) => {
-                toast({ description: e.message, style: TOAST_STYLE_CONFIG });
-                resetter();
-            })
+            setLastInputWasFile(true);
+            const f = files[0];
+            const type = f.type;
+
+          const setup = (st: StructuredText) => {
+            setTitle(f.name);
+            setStructured(st);
+            setFileExtractedText(st.fullText);
+            setShowDownloadOrListen(true);
+            setPreviewHtmlSource(st.fullHtml ?? undefined);
+          };
+
+          (async () => {
+            try {
+              if (type === "application/pdf") {
+                const st = await fileReader.pdfToStructured(f);
+                setup(st);
+              } else if (
+                type === "application/msword" ||
+                type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              ) {
+                const st = await fileReader.docxToStructured(f);
+                setup(st);
+              } else if (type === "text/plain" || type === "text/rtf") {
+                const text = await fileReader.textPlainToText(f);
+                const st = fileReader.textToStructured(text);
+                setup(st);
+              } else {
+                // fallback: keep old extraction, then structure
+                const text = await extractText(f);
+                const st = fileReader.textToStructured(String(text ?? ""));
+                setup(st);
+              }
+            } catch (e: any) {
+              toast({ description: e?.message || "Failed to read file", style: TOAST_STYLE_CONFIG });
+              resetter();
+            }
+          })();
         } else {
-            // Transcriber mode
-            setIsDownload(true);
-            setTitle(files[0].name);
-            onDownloadSubmit(files[0]);
+          // Transcriber mode
+          setIsDownload(true);
+          setTitle(files[0].name);
+          onDownloadSubmit(files[0]);
         }
     }
 
@@ -186,32 +236,64 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [text])
 
     const onFormSubmit: InputFormProps["onSubmit"] = (values) => {
-        if (isBackPressed) setIsBackPressed(false); //reseting back pressed state if the form is submitted
-        setTitle(values.title?.trim().length ? values.title + ".txt" : chrome.i18n.getMessage("untitled_file"));
-        setPastedText(values.text)
-        setShowDownloadOrListen(true)
-    }
+      setLastInputWasFile(false);
+      if (isBackPressed) setIsBackPressed(false);
+      const t = values.title?.trim().length ? values.title + ".txt" : chrome.i18n.getMessage("untitled_file");
+      setTitle(t);
 
-    const listenOrDownloadAudio = useCallback(async () => {
-        if (files.length > 0 && fileExtractedText?.trim()?.length) {
-            return splitAndSendPrompt(fileExtractedText).finally(() => {
-                setShowDownloadOrListen(false);
-            });
-        }
-        if (pastedText?.trim().length && !files.length) {
-            return splitAndSendPrompt(pastedText).finally(() => {
-                setShowDownloadOrListen(false);
-            });
-        }
-    }, [pastedText, files, fileExtractedText]);
+      const raw = values.text ?? "";
+      const st = fileReader.textToStructured(raw);
+      setStructured(st);
+      setPastedText(raw);
+      setFileExtractedText(st.fullText);
+      setShowDownloadOrListen(true);
+      setPreviewHtmlSource(st.fullHtml ?? undefined);  
+    };
+
+    const listenOrDownloadAudioFrom = useCallback(async (startAt: number) => {
+      const payload = (fileExtractedText ?? pastedText ?? ""); // keep as-is to preserve indices
+      if (!payload) return;
+      const sliced = startAt > 0 ? payload.slice(startAt) : payload;
+      setScrollToOffset(startAt);
+      return splitAndSendPrompt(sliced).finally(() => {
+        setShowDownloadOrListen(false);
+      });
+    }, [fileExtractedText, pastedText, splitAndSendPrompt, setShowDownloadOrListen]);
 
     const onDownloadOrListenSubmit = useCallback(async (value: "DOWNLOAD" | "LISTEN") => {
-        if (value === "DOWNLOAD") {
-            setIsDownload(value === "DOWNLOAD");
-            localStorage.setItem("gptr/download", "true");
-        }
-        listenOrDownloadAudio()
-    }, [listenOrDownloadAudio]);
+      if (value === "DOWNLOAD") {
+        setIsDownload(true);
+        localStorage.setItem("gptr/download", "true");
+      } else {
+        setIsDownload(false);
+        localStorage.setItem("gptr/download", "false");
+      }
+      lastActionRef.current = value;
+
+      // Only show the page picker for **uploaded files** (not pasted/typed text)
+      if (lastInputWasFile && structured && structured.sections.length > 0) {
+        // Ask parent (index.tsx) to open the StartFromPopUp
+        onOpenStartFrom({
+          sections: structured.sections,
+          source: structured.source,
+          fullText: structured.fullText,
+          onConfirm: ({ startAt, matchLength }) => {
+            // enable the flash highlight ONLY when:
+            // - user is listening
+            // - it’s an uploaded file (already true in this path)
+            // - and not “start from beginning” (startAt > 0) OR user searched (matchLength > 0)
+            const shouldFlash = lastActionRef.current === "LISTEN" && (startAt > 0 || (matchLength ?? 0) > 0);
+            setHighlightActive(shouldFlash);
+            setHighlightLen(Math.max(0, matchLength ?? 0));
+
+            listenOrDownloadAudioFrom(startAt);
+          },
+        });
+      } else {
+        // No structure available; just start at 0
+        listenOrDownloadAudioFrom(0);
+      }
+    }, [lastInputWasFile, structured, onOpenStartFrom, listenOrDownloadAudioFrom]);
 
     // free-user download delay: 1 s per 100 chars, min 5 s, max 60 s
     const startTimerOnce = useCallback(() => {
@@ -580,15 +662,19 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               <Previews
                 setDownloadCancelConfirmation={onContinueDownload}
                 downloadCancelConfirmation={showDownloadCancelConfirmation}
-                downloadPreviewText={
-                  isTextToSpeech ? downloadPreviewText : text
-                }
+                downloadPreviewText={isTextToSpeech ? downloadPreviewText : text}
+                content={structured?.fullText ?? text}
+                contentHtml={structured?.fullHtml}
+                scrollToOffset={scrollToOffset ?? undefined}
+                sections={structured?.sections}
+                highlightLength={highlightLen}
+                highlightActive={highlightActive}
                 onDownload={handleDownload}
                 onDownloadCancel={onDownloadCancel}
                 file={files[0]}
-                content={text}
                 isDowloading={isDownload}
                 progress={progress}
+                downloadPreviewHtml={isTextToSpeech ? downloadPreviewHtml : undefined}
               />
             ) : (
               !showMicOnlyView && (

@@ -2,7 +2,7 @@
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
 import { Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useFileReader from "./use-file-reader";
+import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
 import { useToast } from "./use-toast";
 import useFormat from "./use-format";
@@ -32,6 +32,24 @@ const useAudioUrl = (isDownload: boolean) => {
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const [progress, setProgress] = useState<number>(0);
     const [downloadPreviewText, setDownloadPreviewText] = useState<string>();
+    // NEW: progressive rich HTML (mirrors downloadPreviewText length)
+    const [downloadPreviewHtml, setDownloadPreviewHtml] = useState<string>("");
+    const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
+
+    const setPreviewHtmlSource = useCallback((html?: string | null) => {
+        if (html && html.trim().length) {
+            try {
+                htmlSlicerRef.current = makeHtmlProgressSlicer(html);
+                setDownloadPreviewHtml("");
+            } catch {
+                htmlSlicerRef.current = null;
+                setDownloadPreviewHtml("");
+            }
+        } else {
+            htmlSlicerRef.current = null;
+            setDownloadPreviewHtml("");
+        }
+    }, []);
     const nextChunkRef = useRef<number>(0);
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
@@ -332,8 +350,16 @@ const useAudioUrl = (isDownload: boolean) => {
                 .map(c => (c.text ?? "").replaceAll("\n", " "))
                 .join("");
             setDownloadPreviewText(preview);
+            // mirror as rich HTML (when we have a DOCX HTML source)
+            if (htmlSlicerRef.current) {
+                const next = htmlSlicerRef.current(preview);
+                setDownloadPreviewHtml(prev =>
+                    next && next.length >= (prev?.length ?? 0) ? next : (prev ?? "")
+                );
+            }
         } else {
             setDownloadPreviewText(undefined);
+            setDownloadPreviewHtml("");
         }
 
         if (blobs.length === chunks.length && !isDownload && blobs.length > 0 && !showCompletionToast.current) {
@@ -387,6 +413,9 @@ const useAudioUrl = (isDownload: boolean) => {
         if(isDownload){
             setDownloadPreviewText(undefined);
         }
+        // clear progressive HTML slicer/preview
+        htmlSlicerRef.current = null;
+        setDownloadPreviewHtml("");
         if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
           audioCtxRef.current.close();
           audioCtxRef.current = null; // allow reinit later
@@ -537,8 +566,39 @@ const useAudioUrl = (isDownload: boolean) => {
         }
     }, [currentCompletedStream, isPromptingPaused])
 
-    return { downloadPreviewText, downloadCombinedFile, progress, setProgress, blobs, isFetching, wasPromptStopped, setWasPromptStopped, chunks, voices, setVoices, isVoiceLoading, text, audioUrls, setAudioUrls, extractText, splitAndSendPrompt, ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1, isLoading, setIsLoading, reset, is9ThChunk, reStartChunkProcess, setIs9thChunk, isPromptingPaused, setIsPromptingPaused, transcribeChunks, cancelTranscription, setText }
-
+    return {
+        downloadPreviewText,
+        downloadPreviewHtml,
+        setPreviewHtmlSource,
+        downloadCombinedFile,
+        progress,
+        setProgress,
+        blobs,
+        isFetching,
+        wasPromptStopped,
+        setWasPromptStopped,
+        chunks,
+        voices,
+        setVoices,
+        isVoiceLoading,
+        text,
+        audioUrls,
+        setAudioUrls,
+        extractText,
+        splitAndSendPrompt,
+        ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1,
+        isLoading,
+        setIsLoading,
+        reset,
+        is9ThChunk,
+        reStartChunkProcess,
+        setIs9thChunk,
+        isPromptingPaused,
+        setIsPromptingPaused,
+        transcribeChunks,
+        cancelTranscription,
+        setText
+    }
 }
 
 export default useAudioUrl;
