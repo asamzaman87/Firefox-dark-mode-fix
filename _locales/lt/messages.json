@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "ChatGPT skaitytuvas ir transkribuotojas: Nemokamas DI tekstas-į-kalbą ir kalba-į-tekstą"
+    "message": "ChatGPT skaitytuvas & transkribuotojas: Nemokamas DI tekstas↔kalba"
   },
   "extensionDescription": {
     "message": "Nemokamas DI tekstas-į-kalbą (tts) ir kalba-į-tekstą (stt) su ChatGPT. Klausykite natūralių balsų arba akimirksniu transkribuokite garsą."
