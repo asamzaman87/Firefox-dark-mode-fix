@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Libreng AI Text-to-Speech na may ChatGPT Voices, TTS"
+    "message": "ChatGPT Reader at Transcriber: Libreng AI text-to-speech at speech-to-text"
   },
   "extensionDescription": {
-    "message": "Natural na ChatGPT AI text-to-speech (TTS) para sa PDF, artikulo, at docs. I-download o basahin nang malakas gamit ang de-kalidad na boses sa GPT Reader"
+    "message": "Libreng AI para sa text-to-speech (tts) at speech-to-text (stt) gamit ang ChatGPT. Makinig sa natural na boses o mag-transcribe ng audio agad."
   },
   "play_voice": {
     "message": "I-play ang Boses"

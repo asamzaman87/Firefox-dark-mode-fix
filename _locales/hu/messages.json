@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Ingyenes AI szöveg-beszéd ChatGPT hangokkal, TTS"
+    "message": "ChatGPT Olvasó és Átíró: Ingyenes MI szöveg-beszéd és beszéd-szöveg"
   },
   "extensionDescription": {
-    "message": "Természetes ChatGPT AI szöveg-beszéd (TTS) PDF-ekhez, cikkekhez és dokumentumokhoz. Töltsd le vagy hallgasd meg kiváló hangokkal a GPT Readerben"
+    "message": "Ingyenes MI szöveg-beszéd (tts) és beszéd-szöveg (stt) a ChatGPT-vel. Hallgass természetes hangokat vagy írd át az audiót azonnal."
   },
   "play_voice": {
     "message": "Hang lejátszása"

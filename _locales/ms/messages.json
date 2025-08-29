@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: AI Teks ke Ucapan Percuma dengan Suara ChatGPT, TTS"
+    "message": "Pembaca & Transkriber ChatGPT: AI percuma teks ke pertuturan & pertuturan ke teks"
   },
   "extensionDescription": {
-    "message": "ChatGPT AI teks ke ucapan (TTS) semula jadi untuk PDF, artikel, & dokumen. Muat turun atau baca kuat dengan suara berkualiti tinggi di GPT Reader"
+    "message": "AI percuma teks-ke-pertuturan (tts) & pertuturan-ke-teks (stt) dengan ChatGPT. Dengar suara semula jadi atau transkrip audio serta-merta."
   },
   "play_voice": {
     "message": "Main Suara"

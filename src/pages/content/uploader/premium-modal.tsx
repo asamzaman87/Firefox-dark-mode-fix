@@ -94,11 +94,11 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
       features: [
         {
           key: "listening",
-          label: chrome.i18n.getMessage("listening") || "Unlimited listening to audio for uploaded text",
+          label: chrome.i18n.getMessage("listening") || "Unlimited listening to audio for your text",
         },
         {
           key: "transcriptions",
-          label: chrome.i18n.getMessage("transcriptions") || "Unlimited transcriptions for live or uploaded audio",
+          label: chrome.i18n.getMessage("transcriptions") || "Unlimited transcriptions for your audio",
         },
         {
           key: "audio_player",
@@ -140,13 +140,13 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           key: "download_with_text",
           label:
             chrome.i18n.getMessage("download_with_text") ||
-            "Download while listening to audio of uploaded text",
+            "Download while listening to audio",
         },
         {
           key: "download_transcript",
           label:
             chrome.i18n.getMessage("download_transcript") ||
-            "Download transcribed text in text or pdf format",
+            "Download transcribed text in txt or pdf format",
         },
         {
           key: "more_coming",

@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: ChatGPT音声対応の無料AI音声変換, TTS"
+    "message": "ChatGPT リーダー＆トランスクライバー：無料AIのテキスト読み上げ＆音声→テキスト"
   },
   "extensionDescription": {
-    "message": "自然なChatGPT AIテキスト読み上げ(TTS)をPDF、記事、文書で。高品質音声でのダウンロードまたは音読はGPT Readerで"
+    "message": "ChatGPT で無料のAIテキスト読み上げ（tts）と音声→テキスト（stt）。自然な声を聴くか、音声を即座に文字起こし。"
   },
   "play_voice": {
     "message": "音声再生"

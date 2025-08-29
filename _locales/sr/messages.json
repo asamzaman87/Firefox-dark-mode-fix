@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Besplatan AI tekst-u-govor sa ChatGPT glasovima, TTS"
+    "message": "ChatGPT Čitač i Transkriptor: Besplatna AI tekst-u-govor i govor-u-tekst"
   },
   "extensionDescription": {
-    "message": "Prirodni ChatGPT AI tekst-u-govor (TTS) za PDF, članke i dokumenta. Preuzmi ili slušaj uz visokokvalitetne glasove u GPT Reader"
+    "message": "Besplatna AI za tekst-u-govor (tts) i govor-u-tekst (stt) uz ChatGPT. Slušajte prirodne glasove ili odmah transkribujte audio."
   },
   "play_voice": {
     "message": "Pusti glas"

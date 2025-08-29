@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Ilmainen tekoälytekstistä puheeksi ChatGPT-äänillä, TTS"
+    "message": "ChatGPT-lukija ja -transkriboija: Ilmainen AI teksti-puheeksi & puhe-tekstiksi"
   },
   "extensionDescription": {
-    "message": "Luonnollinen ChatGPT AI tekstistä puheeksi (TTS) PDF-tiedostoille, artikkeleille ja asiakirjoille. Lataa tai kuuntele laadukkailla äänillä GPT Readerissa"
+    "message": "Ilmainen AI teksti-puheeksi (tts) ja puhe-tekstiksi (stt) ChatGPT:n kanssa. Kuuntele luonnollisia ääniä tai litteroi ääni välittömästi."
   },
   "play_voice": {
     "message": "Toista ääni"

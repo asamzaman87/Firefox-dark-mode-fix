@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Gratis AI text-till-tal med ChatGPT-röster, TTS"
+    "message": "ChatGPT-läsare och -transkriberare: Gratis AI text-till-tal & tal-till-text"
   },
   "extensionDescription": {
-    "message": "Naturligt ChatGPT AI text-till-tal (TTS) för PDF:er, artiklar och dokument. Ladda ner eller lyssna med högkvalitativa röster i GPT Reader"
+    "message": "Gratis AI för text-till-tal (tts) och tal-till-text (stt) med ChatGPT. Lyssna på naturliga röster eller transkribera ljud direkt."
   },
   "play_voice": {
     "message": "Spela röst"

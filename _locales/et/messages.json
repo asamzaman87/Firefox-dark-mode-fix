@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Tasuta AI teksti kõneks ChatGPT häältega, TTS"
+    "message": "ChatGPT lugeja ja transkribeerija: Tasuta tehisintellekt tekst-kõneks ja kõne-tekstiks"
   },
   "extensionDescription": {
-    "message": "Loomulik ChatGPT AI tekst-kõneks (TTS) PDF-ide, artiklite ja dokumentide jaoks. Laadi alla või kuula kvaliteetsete häältega GPT Readeris"
+    "message": "Tasuta tehisintellekt tekst-kõneks (tts) ja kõne-tekstiks (stt) koos ChatGPT-ga. Kuula loomulikke hääli või transkribi heli koheselt."
   },
   "play_voice": {
     "message": "Esita hääl"

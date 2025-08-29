@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: המרת טקסט לקול בחינם עם קולות ChatGPT, TTS"
+    "message": "קורא ומתמלל ChatGPT: בינה מלאכותית חינמית מטקסט לדיבור ומדיבור לטקסט"
   },
   "extensionDescription": {
-    "message": "המרת טקסט לקול (TTS) טבעית של ChatGPT עבור PDF, מאמרים ומסמכים. הורד או האזן בקולות איכותיים באמצעות GPT Reader"
+    "message": "בינה מלאכותית חינמית לטקסט-לדיבור (tts) ודיבור-לטקסט (stt) עם ChatGPT. האזן לקולות טבעיים או תמלל אודיו מיד."
   },
   "play_voice": {
     "message": "נגן קול"

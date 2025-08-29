@@ -108,6 +108,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     // FIREFOX-ONLY: total committed duration (seekbar length)
     const committedDurationRef = useRef<number>(0);
     const firefoxBufferNum = useRef<number>(0);
+    const LS_KEYS = { rate: "gptr/playRate", vol: "gptr/volume" };
 
     const commitPending = useCallback(() => {
       if (!incomingEntriesRef.current.length) return;
@@ -155,6 +156,21 @@ const useAudioPlayer = (isDownload: boolean) => {
             }
         }
     }
+
+    useEffect(() => {
+      try {
+        const savedRate = parseFloat(localStorage.getItem(LS_KEYS.rate) || "");
+        if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= 2) {
+          setPlayRate(savedRate);
+        }
+        const savedVol = parseFloat(localStorage.getItem(LS_KEYS.vol) || "");
+        if (!Number.isNaN(savedVol) && savedVol >= 0 && savedVol <= 1) {
+          // re-use your existing plumbing so both players + GainNode update
+          handleVolumeChange(savedVol);
+        }
+      } catch { /* ignore */ }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Volume gain code for seekAudio
     useEffect(() => {
@@ -1074,6 +1090,9 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
         // 3) Update React state
         setVolume(vol);
+
+        // Persist volume to local storage
+        try { localStorage.setItem(LS_KEYS.vol, String(vol)); } catch {}
       }, [seekAudio]);
 
     //handler to toggle rate change from the play button
@@ -1105,6 +1124,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             fallbackAudioRef.current.playbackRate = playRate;
         }
         playRateRef.current = playRate;
+        try { localStorage.setItem(LS_KEYS.rate, String(playRate)); } catch {}
     }, [seekAudio, playRate]);
 
     useEffect(() => {

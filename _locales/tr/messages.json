@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: ChatGPT sesleriyle ücretsiz AI metinden sese, TTS"
+    "message": "ChatGPT Okuyucu ve Transkriber: Ücretsiz Yapay Zeka metinden sese & sesten metne"
   },
   "extensionDescription": {
-    "message": "PDF, makale ve belgeler için doğal ChatGPT AI metinden sese (TTS). GPT Reader ile yüksek kaliteli sesleri dinleyin veya indirin"
+    "message": "ChatGPT ile ücretsiz Yapay Zeka metinden sese (tts) ve sesten metne (stt). Doğal sesleri dinleyin veya sesi anında yazıya dökün."
   },
   "play_voice": {
     "message": "Sesi Oynat"

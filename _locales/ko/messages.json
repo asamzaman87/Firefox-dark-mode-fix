@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: ChatGPT 음성 포함 무료 AI 텍스트 음성 변환, TTS"
+    "message": "ChatGPT 리더 & 트랜스크라이버: 무료 AI 텍스트-투-스피치 & 스피치-투-텍스트"
   },
   "extensionDescription": {
-    "message": "PDF, 기사, 문서를 위한 자연스러운 ChatGPT AI 텍스트 음성 변환(TTS). 고품질 음성으로 다운로드하거나 읽어주는 GPT Reader"
+    "message": "ChatGPT로 무료 AI 텍스트-투-스피치 (tts) 및 스피치-투-텍스트 (stt). 자연스러운 음성을 듣거나 오디오를 즉시 필사하세요."
   },
   "play_voice": {
     "message": "음성 재생"

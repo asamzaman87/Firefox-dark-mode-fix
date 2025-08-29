@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Kostenloser KI-Text-zu-Sprache mit ChatGPT-Stimmen, TTS"
+    "message": "ChatGPT Leser & Transkribierer: Kostenlose KI Text-zu-Sprache & Sprache-zu-Text"
   },
   "extensionDescription": {
-    "message": "Natürliche ChatGPT KI-Text-zu-Sprache (TTS) für PDFs, Artikel und Dokumente. Lade herunter oder höre hochqualitative Stimmen mit GPT Reader"
+    "message": "Kostenlose KI für Text-zu-Sprache (tts) & Sprache-zu-Text (stt) mit ChatGPT. Höre natürliche Stimmen oder transkribiere Audio sofort."
   },
   "play_voice": {
     "message": "Stimme abspielen"

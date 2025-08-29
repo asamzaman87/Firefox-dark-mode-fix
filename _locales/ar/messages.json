@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: تحويل نص مجاني بصوت AI وأصوات ChatGPT, TTS"
+    "message": "قارئ ومُحوِّل كلام ChatGPT: ذكاء اصطناعي مجاني من نص إلى كلام ومن كلام إلى نص"
   },
   "extensionDescription": {
-    "message": "التحويل الصوتي الطبيعي بـChatGPT للـPDF والمقالات. نزّل أو اقرأ بصوت عالي الجودة مع GPT Reader"
+    "message": "ذكاء اصطناعي مجاني لتحويل النص إلى كلام (tts) والكلام إلى نص (stt) مع ChatGPT. استمع إلى أصوات طبيعية أو حوّل الصوت إلى نص فورًا."
   },
   "play_voice": {
     "message": "تشغيل الصوت"

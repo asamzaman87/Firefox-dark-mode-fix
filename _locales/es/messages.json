@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: TTS AI gratis, voces ChatGPT"
+    "message": "ChatGPT Lector y Transcriptor: IA gratis de texto a voz y voz a texto"
   },
   "extensionDescription": {
-    "message": "Texto a voz natural ChatGPT para PDFs, artículos y docs. Descarga o escucha con voces premium en GPT Reader"
+    "message": "IA gratis de texto a voz (tts) y voz a texto (stt) con ChatGPT. Escucha voces naturales o transcribe audio al instante."
   },
   "play_voice": {
     "message": "Tocar voz"

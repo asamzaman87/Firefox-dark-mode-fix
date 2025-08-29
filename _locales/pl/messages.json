@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Darmowy AI Tekst na mowę z głosami ChatGPT, TTS"
+    "message": "Czytnik i Transkrybent ChatGPT: Darmowa AI tekst-na-mowę i mowa-na-tekst"
   },
   "extensionDescription": {
-    "message": "Naturalna synteza mowy ChatGPT AI dla PDF, artykułów i dokumentów. Pobierz lub odczytaj na głos przy użyciu wysokiej jakości głosów w GPT Reader"
+    "message": "Darmowa AI do tekst-na-mowę (tts) i mowa-na-tekst (stt) z ChatGPT. Słuchaj naturalnych głosów lub natychmiast transkrybuj audio."
   },
   "play_voice": {
     "message": "Odtwórz głos"

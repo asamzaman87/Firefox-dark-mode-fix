@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: nemokamas AI teksto į kalbą su ChatGPT balsais, TTS"
+    "message": "ChatGPT skaitytuvas ir transkribuotojas: Nemokamas DI tekstas-į-kalbą ir kalba-į-tekstą"
   },
   "extensionDescription": {
-    "message": "Natūralus ChatGPT AI teksto į kalbą (TTS) PDF, straipsniams ir dokumentams. Atsisiųskite arba klausykitės aukštos kokybės balsų su GPT Reader"
+    "message": "Nemokamas DI tekstas-į-kalbą (tts) ir kalba-į-tekstą (stt) su ChatGPT. Klausykite natūralių balsų arba akimirksniu transkribuokite garsą."
   },
   "play_voice": {
     "message": "Leisti balsą"

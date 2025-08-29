@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: ChatGPT અવાજો સાથે મફત AI લખાણથી અવાજ, TTS"
+    "message": "ChatGPT રીડર અને ટ્રાન્સક્રાઇબર: મફત AI ટેક્સ્ટ-ટુ-સ્પીચ અને સ્પીચ-ટુ-ટેક્સ્ટ"
   },
   "extensionDescription": {
-    "message": "PDFs, લેખો, doks માટે કુદરતી ChatGPT AI લખાણથી અવાજ (TTS). GPT Reader વડે ઉચ્ચ ગુણવત્તાવાળા અવાજમાં વાંચો કે ડાઉનલોડ કરો"
+    "message": "ChatGPT સાથે મફત AI ટેક્સ્ટ-ટુ-સ્પીચ (tts) અને સ્પીચ-ટુ-ટેક્સ્ટ (stt)। કુદરતી અવાજો સાંભળો અથવા તરત જ ઓડિયો ટ્રાન્સક્રાઇબ કરો."
   },
   "play_voice": {
     "message": "આવાજ બજાવો"

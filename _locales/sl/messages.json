@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: brezplačni AI pretvornik besedila v govor z glasovi ChatGPT TTS"
+    "message": "ChatGPT bralnik in prepisovalnik: Brezplačna AI besedilo-v-govor in govor-v-besedilo"
   },
   "extensionDescription": {
-    "message": "Naravni ChatGPT AI pretvornik besedila v govor (TTS) za PDF, članke in dokumente. Prenesite ali poslušajte z visokokakovostnimi glasovi v GPT Reader"
+    "message": "Brezplačna AI za besedilo-v-govor (tts) in govor-v-besedilo (stt) s ChatGPT. Poslušajte naravne glasove ali takoj prepišite zvok."
   },
   "play_voice": {
     "message": "Predvajaj glas"

@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Zdarma AI převod textu na řeč s hlasy ChatGPT, TTS"
+    "message": "Čtečka a Přepisovač ChatGPT: Zdarma AI text-na-řeč a řeč-na-text"
   },
   "extensionDescription": {
-    "message": "Přirozený ChatGPT AI převod textu na řeč (TTS) pro PDF, články a dokumenty. Stáhněte nebo předčítejte kvalitními hlasy v GPT Reader"
+    "message": "Zdarma AI pro text-na-řeč (tts) a řeč-na-text (stt) s ChatGPT. Poslouchejte přirozené hlasy nebo okamžitě přepisujte audio."
   },
   "play_voice": {
     "message": "Přehrát hlas"

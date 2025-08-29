@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: ফ্রি AI টেক্সট-টু-স্পিচ, ChatGPT ভয়েস, TTS"
+    "message": "ChatGPT রিডার ও ট্রান্সক্রাইবার: ফ্রি AI টেক্সট-টু-স্পিচ ও স্পিচ-টু-টেক্সট"
   },
   "extensionDescription": {
-    "message": "প্রাকৃতিক ChatGPT AI টেক্সট-টু-স্পিচ (TTS) PDF, আর্টিকেল, ডক-এর জন্য। উচ্চমানের ভয়েসে পড়ুন বা ডাউনলোড করুন GPT Reader দিয়ে"
+    "message": "ChatGPT দিয়ে ফ্রি AI টেক্সট-টু-স্পিচ (tts) ও স্পিচ-টু-টেক্সট (stt)। প্রাকৃতিক কণ্ঠ শুনুন বা সাথে সাথেই অডিও ট্রান্সক্রাইব করুন।"
   },
   "play_voice": {
     "message": "ভয়েস চালান"

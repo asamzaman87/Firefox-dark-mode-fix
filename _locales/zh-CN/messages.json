@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: 免费AI文字转语音，含ChatGPT声音，TTS"
+    "message": "ChatGPT 阅读与转写：免费的 AI 文本转语音 & 语音转文本"
   },
   "extensionDescription": {
-    "message": "自然ChatGPT AI文字转语音 (TTS)，用于PDF、文章、文档。用高质量语音在GPT Reader下载或朗读"
+    "message": "使用 ChatGPT 的免费 AI 文本转语音（tts）与语音转文本（stt）。聆听自然语音或即时转写音频。"
   },
   "play_voice": {
     "message": "播放语音"

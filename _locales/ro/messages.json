@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: AI gratuit de conversie text-în-vorbire cu voci ChatGPT, TTS"
+    "message": "Cititor și Transcriptor ChatGPT: AI gratuit text-în-vorbire și vorbire-în-text"
   },
   "extensionDescription": {
-    "message": "Conversie naturală ChatGPT AI text-în-vorbire (TTS) pentru PDF-uri, articole și documente. Descarcă sau citește cu voci de înaltă calitate în GPT Reader"
+    "message": "AI gratuit pentru text-în-vorbire (tts) și vorbire-în-text (stt) cu ChatGPT. Ascultă voci naturale sau transcrie audio instantaneu."
   },
   "play_voice": {
     "message": "Redă voce"

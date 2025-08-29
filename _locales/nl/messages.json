@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: Gratis AI tekst-naar-spraak met ChatGPT-stemmen, TTS"
+    "message": "ChatGPT Lezer & Transcribeerder: Gratis AI tekst-naar-spraak & spraak-naar-tekst"
   },
   "extensionDescription": {
-    "message": "Natuurlijk ChatGPT AI tekst-naar-spraak (TTS) voor PDF's, artikelen en documenten. Download of laat voorlezen met hoge kwaliteit in GPT Reader"
+    "message": "Gratis AI voor tekst-naar-spraak (tts) & spraak-naar-tekst (stt) met ChatGPT. Luister naar natuurlijke stemmen of transcribeer audio direct."
   },
   "play_voice": {
     "message": "Stem afspelen"

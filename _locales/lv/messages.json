@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: bezmaksas AI teksts uz runu ar ChatGPT balsīm, TTS"
+    "message": "ChatGPT lasītājs un transkribētājs: Bezmaksas AI teksts-uz-runu un runa-uz-tekstu"
   },
   "extensionDescription": {
-    "message": "Dabisks ChatGPT AI teksts uz runu (TTS) PDF, rakstiem un dokumentiem. Lejupielādējiet vai klausieties augstas kvalitātes balsīs, izmantojot GPT Reader"
+    "message": "Bezmaksas AI teksts-uz-runu (tts) un runa-uz-tekstu (stt) ar ChatGPT. Klausieties dabiskas balsis vai uzreiz pārrakstiet audio."
   },
   "play_voice": {
     "message": "Atskaņot balsi"

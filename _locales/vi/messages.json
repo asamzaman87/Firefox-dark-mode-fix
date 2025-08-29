@@ -1,9 +1,9 @@
 {
   "extensionName": {
-    "message": "GPT Reader: AI chuyển văn bản thành giọng nói miễn phí, giọng ChatGPT, TTS"
+    "message": "Trình Đọc & Chuyển Âm ChatGPT: AI miễn phí chuyển văn bản thành giọng nói & giọng nói thành văn bản"
   },
   "extensionDescription": {
-    "message": "Chuyển văn bản thành giọng nói (TTS) ChatGPT tự nhiên cho PDF, bài viết, & tài liệu. Tải xuống hoặc nghe với giọng chất lượng cao trên GPT Reader"
+    "message": "AI miễn phí text-to-speech (tts) & speech-to-text (stt) với ChatGPT. Nghe giọng nói tự nhiên hoặc chuyển âm thanh thành văn bản ngay lập tức."
   },
   "play_voice": {
     "message": "Phát Giọng"
