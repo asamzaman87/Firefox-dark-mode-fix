@@ -7,6 +7,7 @@ import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useFormat from "./use-format";
 import { useSpeechMode } from "../context/speech-mode";
+import { usePremiumModal } from "@/context/premium-modal";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
@@ -69,6 +70,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     // at top of useAudioPlayer
     const chunkBoundariesRef = useRef<Array<{chunkNumber: number; endTime: number}>>([]);
     const pendingRef = useRef<Array<{chunkNumber: number; buffer: ArrayBuffer}>>([]);
+    const MAX_RATE_FREE = 1.5;
+    const MAX_RATE_PREMIUM = 2;
+    const { isSubscribed } = usePremiumModal();
     /** Returns the 1-based chunk index containing time t */
     const getChunkAtTime = (t: number): number => {
         const bounds = chunkBoundariesRef.current;
@@ -160,8 +164,9 @@ const useAudioPlayer = (isDownload: boolean) => {
     useEffect(() => {
       try {
         const savedRate = parseFloat(localStorage.getItem(LS_KEYS.rate) || "");
-        if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= 2) {
-          setPlayRate(savedRate);
+        const max = isSubscribed ? MAX_RATE_PREMIUM : MAX_RATE_FREE;
+        if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= MAX_RATE_PREMIUM) {
+          setPlayRate(Math.min(savedRate, max));
         }
         const savedVol = parseFloat(localStorage.getItem(LS_KEYS.vol) || "");
         if (!Number.isNaN(savedVol) && savedVol >= 0 && savedVol <= 1) {
@@ -1119,13 +1124,17 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     // controls audio player rate
     useEffect(() => {
-        seekAudio.playbackRate = playRate;
-        if (fallbackAudioRef.current) {
-            fallbackAudioRef.current.playbackRate = playRate;
-        }
-        playRateRef.current = playRate;
-        try { localStorage.setItem(LS_KEYS.rate, String(playRate)); } catch {}
-    }, [seekAudio, playRate]);
+      const max = isSubscribed ? MAX_RATE_PREMIUM : MAX_RATE_FREE;
+      const clamped = Math.min(Math.max(playRate, 0.5), max);
+
+      seekAudio.playbackRate = clamped;
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.playbackRate = clamped;
+      }
+      playRateRef.current = clamped;
+
+      try { localStorage.setItem(LS_KEYS.rate, String(clamped)); } catch {}
+    }, [seekAudio, playRate, isSubscribed]);
 
     useEffect(() => {
         volumeRef.current = volume;

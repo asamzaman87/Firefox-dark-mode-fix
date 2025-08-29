@@ -11,7 +11,7 @@ import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "rea
 const stripImages = (raw: string) => {
   try {
     const doc = new DOMParser().parseFromString(raw, "text/html");
-    doc.querySelectorAll("img, picture, figure").forEach((el) => el.remove());
+    doc.querySelectorAll("img, picture, figure, svg").forEach((el) => el.remove());
     // Optional: kill inline background images so nothing sneaks in via CSS
     (doc.querySelectorAll("[style]") as NodeListOf<HTMLElement>).forEach((el) => {
       if (el.style?.backgroundImage) el.style.backgroundImage = "";
