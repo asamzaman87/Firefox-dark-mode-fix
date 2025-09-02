@@ -39,6 +39,12 @@ interface PreviewsProps {
   sections?: SectionIndex[] | null;
 
   downloadPreviewHtml?: string;
+
+  highlightCharacters?: string;
+
+  highlightAlphaBefore?: number;
+
+  highlightPulse?: number
 }
 
 const Previews: FC<PreviewsProps> = ({
@@ -57,6 +63,9 @@ const Previews: FC<PreviewsProps> = ({
   highlightActive,
   sections,
   downloadPreviewHtml,
+  highlightCharacters,
+  highlightAlphaBefore,
+  highlightPulse
 }) => {
   const { isTextToSpeech } = useSpeechMode();
 
@@ -103,6 +112,7 @@ const Previews: FC<PreviewsProps> = ({
         startOffset={scrollToOffset}
         highlightLength={highlightLength}
         highlightEnabled={!!highlightActive}
+        highlightPulse={highlightPulse}
       />
     );
   }
@@ -111,9 +121,13 @@ const Previews: FC<PreviewsProps> = ({
     <DocumentViewer
       // prefer rich formatting for LISTENING view
       content={contentHtml ?? content.replace(/\n/g, "<br/>")}
-      scrollToOffset={scrollToOffset}
-      highlightLength={highlightLength}
       highlightActive={!!highlightActive}
+      highlightDurationMs={4000}
+      highlightCharacters={highlightCharacters}
+      highlightAlphaBefore={highlightAlphaBefore}
+      highlightLength={highlightLength}
+      scrollToOffset={scrollToOffset}
+      highlightPulse={highlightPulse}
     />
   ) : null;
 };

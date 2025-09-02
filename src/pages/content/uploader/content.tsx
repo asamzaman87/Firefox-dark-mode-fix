@@ -59,12 +59,15 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [fileExtractedText, setFileExtractedText] = useState<string>(); //ToDo: to find a better way to handle this
     const [showDownloadCancelConfirmation, setShowDownloadCancelConfirmation] = useState<boolean>(false);
     const [isDownloadConfirmationOpen, setIsDownloadConfirmationOpen] = useState<boolean>(false);
-    
+    const [highlightChars, setHighlightChars] = useState<string | null>(null);
+    // NEW: alphanum count before the needle (for disambiguation)
+    const [highlightAlphaBefore, setHighlightAlphaBefore] = useState<number | null>(null);
+
     // Transcriber-specific state
     const [showMicOnlyView, setShowMicOnlyView] = useState(false);
     const [isViewingText, setIsViewingText] = useState(false);
     
-    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource} = useAudioPlayer(isDownload);
+    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, getChunkAtTime, getChunkStartTime, getChunkStartOffset } = useAudioPlayer(isDownload);
     const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
@@ -86,7 +89,112 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [highlightLen, setHighlightLen] = useState<number>(0);
     const [highlightActive, setHighlightActive] = useState<boolean>(false);
     const lastActionRef = useRef<"LISTEN" | "DOWNLOAD">("LISTEN");
+    // Auto-highlight bookkeeping
+    const lastTimeRef = useRef<number>(0);
+    const lastChunkRef = useRef<number>(0);
+    const inZoneRef = useRef<boolean>(false);
+    const inZoneChunkRef = useRef<number | null>(null);
+    // Base (global) offset for this listening session (set when user chooses "Start from")
+    const sessionBaseOffsetRef = useRef<number>(0);
+    // add near other state
+    const [highlightPulse, setHighlightPulse] = useState(0);
+    // session's first chunk index (1-based in the current TTS session)
+    const sessionFirstChunkRef = useRef<number | null>(null); 
+    // whether we've visited any chunk other than the session's first
+    const hasLeftSessionFirstChunkRef = useRef(false);
 
+    // helper: length = first sentence OR max 120 chars
+    const lenOneSentenceOr120 = (s: string): number => {
+      const takeOne = s.match(/^[\s\S]*?[.!?]["')\]]?(?:\s|$)/);
+      const len = takeOne ? takeOne[0].length : Math.min(120, s.length);
+      return Math.min(len, 120);
+    };
+
+    const countAlnumUpTo = (plain: string, endExclusive: number) => {
+      const lim = Math.max(0, Math.min(endExclusive, plain.length));
+      let k = 0;
+      for (let i = 0; i < lim; i++) {
+        const ch = plain[i];
+        if (/\p{L}|\p{N}/u.test(ch)) k++;
+      }
+      return k;
+    };
+
+    // Auto-highlight at chunk start — PDF uses offset/length; DOCX/TXT use needle (alphanum)
+    useEffect(() => {
+      // Only in Text-to-Speech listening view; not during download preview
+      if (!isTextToSpeech || isDownload || !chunks.length) { return; }
+
+      const now = currentPlayTime;
+      const chunk = getChunkAtTime(now);       // 1-based
+      // We don't know the session's first chunk yet, so set it to *whatever* chunk we first observe
+      if (sessionFirstChunkRef.current == null) {
+        sessionFirstChunkRef.current = chunk;
+      }
+      if (chunk !== sessionFirstChunkRef.current) {
+        hasLeftSessionFirstChunkRef.current = true;
+      }
+      const startS = getChunkStartTime(chunk); // seconds
+      const within3sOfStart = now >= startS && (now - startS) <= 3;
+      const dt = now - lastTimeRef.current;    // + = forward, - = backward
+      const jumpedForwardFar = dt > 3;         // “skip too ahead” via seek bar or big forward step
+      const jumpedForwardChunks = chunk - lastChunkRef.current > 1;
+      const suppress = (jumpedForwardFar || jumpedForwardChunks) && dt > 0;
+      if (within3sOfStart && hasLeftSessionFirstChunkRef.current) {
+        const enteringNewZone = !inZoneRef.current || inZoneChunkRef.current !== chunk;
+        if (enteringNewZone && !suppress) {
+          inZoneRef.current = true;
+          inZoneChunkRef.current = chunk;
+
+          const body = chunks[chunk - 1]?.text ?? "";
+          const len = lenOneSentenceOr120(body);
+
+          let leadingTrim = (body.match(/^\s+/)?.[0].length ?? 0);
+          if (structured?.source === "pdf") leadingTrim = 0;
+          const localStart = getChunkStartOffset(chunk) + leadingTrim;
+          const base = sessionBaseOffsetRef.current;
+          const globalStart = base + Math.max(0, localStart);
+
+          const sourcePlain =
+            structured?.fullText ?? fileExtractedText ?? pastedText ?? text ?? "";
+
+          if (structured?.source === "pdf") {
+            // Drive PdfViewer via offset/len; bump the pulse so we re-flash even if offset repeats.
+            setHighlightChars(null);
+            setHighlightAlphaBefore(null);
+            setScrollToOffset(globalStart);
+            setHighlightLen(Math.max(0, len));
+            setHighlightActive(true);
+          } else {
+            // DOCX/TXT will be handled by DocumentViewer via needle mode
+            const needle = body.slice(0, len);
+            setScrollToOffset(null);
+            setHighlightLen(0);
+            setHighlightChars(needle || null);
+            setHighlightAlphaBefore(needle ? countAlnumUpTo(sourcePlain, globalStart) : null);
+            setHighlightActive(Boolean(needle));
+          }
+          setHighlightPulse((x) => x + 1);
+        }
+      } else {
+        // Left the zone
+        inZoneRef.current = false;
+        inZoneChunkRef.current = null;
+      }
+
+      lastChunkRef.current = chunk;
+      lastTimeRef.current = now;
+    }, [
+      currentPlayTime,
+      isTextToSpeech,
+      isDownload,
+      chunks,
+      getChunkAtTime,
+      getChunkStartTime,
+      getChunkStartOffset,
+      structured?.source, // make sure effect updates per source type
+    ]);
+   
     useMemo(() => {
         if (isCancelDownloadConfirmation) setShowDownloadCancelConfirmation(true);
     }, [isCancelDownloadConfirmation])
@@ -105,6 +213,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const resetter = (isBackPressed: boolean = false) => {
         reset(true, undefined, isBackPressed);
+        sessionFirstChunkRef.current = null;
+        hasLeftSessionFirstChunkRef.current = false;
+        setHighlightChars(null);
+        setHighlightAlphaBefore(null);
         setFiles([]);
         setPrompts([]);
         setTitle(undefined);
@@ -122,7 +234,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setFileExtractedText(undefined);
         setShowMicOnlyView(false);
         setIsViewingText(false);
-        setPreviewHtmlSource(undefined);                    // ← add this
+        setPreviewHtmlSource(undefined);   
+        sessionBaseOffsetRef.current = 0;           
     }
 
 
@@ -251,6 +364,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     };
 
     const listenOrDownloadAudioFrom = useCallback(async (startAt: number) => {
+      sessionBaseOffsetRef.current = Math.max(0, startAt);
       const payload = (fileExtractedText ?? pastedText ?? ""); // keep as-is to preserve indices
       if (!payload) return;
       const sliced = startAt > 0 ? payload.slice(startAt) : payload;
@@ -285,8 +399,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             const shouldFlash = lastActionRef.current === "LISTEN" && (startAt > 0 || (matchLength ?? 0) > 0);
             setHighlightActive(shouldFlash);
             setHighlightLen(Math.max(0, matchLength ?? 0));
-
             listenOrDownloadAudioFrom(startAt);
+            sessionFirstChunkRef.current = null;   // unknown until we actually see a chunk
+            hasLeftSessionFirstChunkRef.current = false;
           },
         });
       } else {
@@ -675,6 +790,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 isDowloading={isDownload}
                 progress={progress}
                 downloadPreviewHtml={isTextToSpeech ? downloadPreviewHtml : undefined}
+                highlightCharacters={highlightChars ?? undefined}
+                highlightAlphaBefore={highlightAlphaBefore ?? undefined}
+                highlightPulse={highlightPulse}
               />
             ) : (
               !showMicOnlyView && (

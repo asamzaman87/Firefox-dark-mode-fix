@@ -112,6 +112,37 @@ const useAudioPlayer = (isDownload: boolean) => {
     // FIREFOX-ONLY: total committed duration (seekbar length)
     const committedDurationRef = useRef<number>(0);
     const firefoxBufferNum = useRef<number>(0);
+    // --- chunk → global offset mapping (by characters) ---
+    const chunkStartOffsetsRef = useRef<number[]>([]);
+
+    // Build cumulative (character) starts whenever chunks change
+    useEffect(() => {
+      const starts: number[] = []; // index (n-1) === start of 1-based chunk n
+      let acc = 0;
+      for (const c of chunks) {
+        const len = (c?.text?.length ?? 0);
+        starts.push(acc);
+        acc += len;
+      }
+      chunkStartOffsetsRef.current = starts;
+    }, [chunks]);
+
+
+    // Start time (seconds) for a 1-based chunk index
+    const getChunkStartTime = (n1: number): number => {
+      if (n1 <= 1) return 0;
+      // chunkBoundariesRef entries use 0-based 'chunkNumber' and store 'endTime' (cumulative)
+      const prev = chunkBoundariesRef.current.find(e => e.chunkNumber === (n1 - 2));
+      return prev?.endTime ?? 0;
+    };
+
+    // Start character offset for a 1-based chunk index
+    const getChunkStartOffset = (n1: number): number => {
+      const arr = chunkStartOffsetsRef.current;
+      const idx = Math.max(0, Math.min(n1 - 1, arr.length - 1));
+      return arr[idx] ?? 0;
+    };
+
     const LS_KEYS = { rate: "gptr/playRate", vol: "gptr/volume" };
 
     const commitPending = useCallback(() => {
@@ -163,6 +194,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     useEffect(() => {
       try {
+        if (!chunks.length) return;
         const savedRate = parseFloat(localStorage.getItem(LS_KEYS.rate) || "");
         const max = isSubscribed ? MAX_RATE_PREMIUM : MAX_RATE_FREE;
         if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= MAX_RATE_PREMIUM) {
@@ -175,7 +207,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         }
       } catch { /* ignore */ }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [chunks]);
 
     // Volume gain code for seekAudio
     useEffect(() => {
@@ -1124,6 +1156,7 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     // controls audio player rate
     useEffect(() => {
+      if (!chunks.length) return;
       const max = isSubscribed ? MAX_RATE_PREMIUM : MAX_RATE_FREE;
       const clamped = Math.min(Math.max(playRate, 0.5), max);
 
@@ -1134,7 +1167,7 @@ const useAudioPlayer = (isDownload: boolean) => {
       playRateRef.current = clamped;
 
       try { localStorage.setItem(LS_KEYS.rate, String(clamped)); } catch {}
-    }, [seekAudio, playRate, isSubscribed]);
+    }, [seekAudio, playRate, isSubscribed, chunks]);
 
     useEffect(() => {
         volumeRef.current = volume;
@@ -1280,7 +1313,10 @@ const useAudioPlayer = (isDownload: boolean) => {
         cancelTranscription,
         setText,
         downloadPreviewHtml,
-        setPreviewHtmlSource
+        setPreviewHtmlSource,
+        getChunkAtTime,
+        getChunkStartTime,
+        getChunkStartOffset,
     };
 
 

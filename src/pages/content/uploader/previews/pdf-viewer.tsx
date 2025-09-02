@@ -27,6 +27,8 @@ interface PdfViewerProps {
 
   /** How long the highlight stays visible (ms). Default: 4000 */
   highlightDurationMs?: number;
+
+  highlightPulse?: number
 }
 
 const PdfViewer: FC<PdfViewerProps> = ({
@@ -37,13 +39,17 @@ const PdfViewer: FC<PdfViewerProps> = ({
   highlightLength = 0,
   highlightEnabled = false,
   highlightDurationMs = 4000,
+  highlightPulse
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [flashOn, setFlashOn] = useState(false);
 
-  // NEW: ensure we only flash once per startOffset selection
+  // ensure we only flash once per startOffset selection
   const flashedOnceRef = useRef(false);
+  // remember the last startOffset we jumped for
+  const awaitingPulseRef = useRef<number | null>(null);
+  const prevPulsesRef = useRef<Set<number>>(new Set());
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -70,12 +76,6 @@ const PdfViewer: FC<PdfViewerProps> = ({
     return Math.max(0, startOffset - sec.start);
   }, [sections, startOffset, targetPage]);
 
-  // Reset "flashed" guard when user picks a new starting point
-  useEffect(() => {
-    flashedOnceRef.current = false;
-  }, [startOffset, highlightLength]);
-
-
     // Only trigger the flash once (per startOffset). Don’t re-flash when returning to the page.
     useEffect(() => {
         // Flash ONLY when the user chose a selection (highlightLength > 0),
@@ -89,8 +89,6 @@ const PdfViewer: FC<PdfViewerProps> = ({
         if (shouldFlash && !flashedOnceRef.current) {
             setFlashOn(true);
             flashedOnceRef.current = true;
-            const t = window.setTimeout(() => setFlashOn(false), highlightDurationMs);
-            return () => window.clearTimeout(t);
         } else {
             setFlashOn(false);
         }
@@ -185,6 +183,33 @@ const PdfViewer: FC<PdfViewerProps> = ({
     };
   }, [flashOn, pageNumber, targetPage, localOffsetWithSpaces, highlightLength]);
 
+    useEffect(() => {
+      if (!flashOn) return;
+      const t = window.setTimeout(() => setFlashOn(false), highlightDurationMs);
+      return () => window.clearTimeout(t);
+    }, [flashOn, highlightDurationMs]);
+  
+  // One-shot auto-jump for the current pulse; then get out of the way of Next/Prev
+    useEffect(() => {
+      if (!highlightEnabled) return;
+      if (startOffset == null) return;
+      if (!targetPage) return;
+      if (!highlightPulse) return;
+      if (prevPulsesRef.current.has(highlightPulse)) return;
+
+      if (pageNumber !== targetPage) {
+        // Jump first; defer the flash until page render completes
+        awaitingPulseRef.current = highlightPulse;
+        setPageNumber(targetPage);
+        return;
+      }
+
+      // Already on the correct page → flash now
+      prevPulsesRef.current.add(highlightPulse);
+      setFlashOn(true);
+    }, [highlightEnabled, startOffset, targetPage, pageNumber, highlightPulse]);
+
+
   return (
     <div className='gpt:flex gpt:flex-row gpt:justify-center gpt:items-center gpt:gap-2 gpt:size-full'>
       <Button
@@ -213,6 +238,19 @@ const PdfViewer: FC<PdfViewerProps> = ({
             }
             // Only provide renderer when flashing; otherwise render normal text
             customTextRenderer={flashOn ? textRenderer : undefined}
+            onRenderSuccess={() => {
+              // If a pulse is waiting and we’re now on its target page, flash once.
+              if (
+                awaitingPulseRef.current != null &&
+                awaitingPulseRef.current === highlightPulse &&
+                pageNumber === targetPage &&
+                !prevPulsesRef.current.has(highlightPulse!)
+              ) {
+                prevPulsesRef.current.add(highlightPulse!);
+                awaitingPulseRef.current = null;
+                setFlashOn(true); // universal 4s timer will handle duration/cleanup
+              }
+            }}
           />
         </Document>
       </div>
