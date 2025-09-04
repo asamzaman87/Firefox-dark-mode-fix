@@ -137,4 +137,4 @@ export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;
 export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7";
-export const FREE_DOWNLOAD_CHUNKS = 2;
+export const FREE_DOWNLOAD_CHUNKS = 3;
