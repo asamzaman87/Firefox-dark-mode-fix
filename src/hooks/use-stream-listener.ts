@@ -31,7 +31,7 @@ const useStreamListener = (
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<Set<number>>(new Set());
     const promptNdx = useRef<number>(0);
-    const { isSubscribed, setOpen, setReason } = usePremiumModal();
+    const { isSubscribed } = usePremiumModal();
 
     // —— CHAT / FETCH TRACKING & LS BRIDGE ——
     // Current chat (never delete it here; the Uploader owns current chat deletion on unload/load)
@@ -248,26 +248,6 @@ const useStreamListener = (
                 }
                 next.push({ chunkNumber, blob });
                 next.sort((a, b) => a.chunkNumber - b.chunkNumber);
-                // Free users download restriction
-                if (!isSubscribed && isDownload) {
-                    const has0 = next.some(e => e.chunkNumber === 0);
-                    const has1 = next.some(e => e.chunkNumber === 1);
-                    const has2 = next.some(e => e.chunkNumber === 2);
-                    const hasFirst3 = has0 && has1 && has2;
-
-                    // Trigger restriction only once we know chunks 0, 1, and 2 are all present
-                    if (hasFirst3 && chunkRef.current.length - 1 !== FREE_DOWNLOAD_CHUNKS) {     
-                        setTimeout(() => {
-                            handleError(
-                                "Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
-                            );
-                            setReason(
-                                "Free users can only download around 2500 characters at a time. Please upgrade to download without limits!"
-                            );
-                            setOpen(true);
-                        }, 3000);
-                    }
-                }
                 return next;
             });
 

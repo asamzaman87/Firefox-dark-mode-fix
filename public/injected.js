@@ -74,9 +74,9 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const readResult = await reader.read();
             done = readResult.done;
             const value = readResult.value;
-            // if we haven’t received any new assistant text in 3 s, trigger abort
-            if (Date.now() - lastProgress > 3_000 && !done) {
-                console.log("No stream progress for 3s—aborting");
+            // if we haven’t received any new assistant text in 6 s, trigger abort
+            if (Date.now() - lastProgress > 6_000 && !done) {
+                console.log("No stream progress for 6s—aborting");
                 shouldAbortStream = true;
             }
   

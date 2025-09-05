@@ -54,7 +54,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const [chunks, setChunks] = useState<Chunk[]>([]);
     const chunkRef = useRef<Chunk[]>([]);
     const chunkNumList = useRef<Set<number>>(new Set());    
-    const { isSubscribed } = usePremiumModal();
+    const { isSubscribed, setOpen, setReason } = usePremiumModal();
     const showCompletionToast = useRef<boolean>(false);
     // read the user’s chosen format (mp3, aac, or opus)
     const { format } = useFormat();
@@ -362,6 +362,23 @@ const useAudioUrl = (isDownload: boolean) => {
             setDownloadPreviewHtml("");
         }
 
+        // —— Premium modal trigger moved here ——
+        if (
+            !isSubscribed &&
+            isDownload &&
+            k >= FREE_DOWNLOAD_CHUNKS &&
+            chunks.length - 1 !== FREE_DOWNLOAD_CHUNKS
+        ) {
+            setTimeout(() => {
+                handleError(
+                    "Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
+                );
+                setReason(
+                    "Free users can only download around 2500 characters at a time. Please upgrade to download without limits!"
+                );
+                setOpen(true);
+            }, 3000);
+        }
         if (blobs.length === chunks.length && !isDownload && blobs.length > 0 && !showCompletionToast.current) {
             showCompletionToast.current = true;
             toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
