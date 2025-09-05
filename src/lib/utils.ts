@@ -577,12 +577,15 @@ export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
   try {
     const data = await secureFetch(
       `${BACKEND_URI}/gpt-reader/create-checkout-session`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }
+      { method: "POST", body: JSON.stringify(payload) }
     );
-    return data?.session ?? null;
+
+    // 👇 Normalize both server shapes to { url }
+    const url =
+      data?.session?.url ??
+      (data?.action === "pay_existing_invoice" ? data?.url : undefined);
+
+    return url ? { url } : null;
   } catch (error) {
     console.log("Error creating checkout session:", error);
     throw error;
