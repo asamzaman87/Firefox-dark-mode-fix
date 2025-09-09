@@ -951,15 +951,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             />
           )}
                 {openVoicePopup && <VoiceSelectPopup voices={voices} setVoices={setVoices} isVoiceLoading={isVoiceLoading} open={openVoicePopup} onClose={async() => {
-                  setOpenVoicePopup(false)
+                  setOpenVoicePopup(false);
                   setPendingSelectedText("");
                 }} onVoiceSelect={async() => {
                     if(pendingSelectedText){ 
-                        setTitle('Web Page Content')
-                        setPastedText(pendingSelectedText)
-                        setOpenVoicePopup(false)
+                        setOpenVoicePopup(false);
+                        onFormSubmit({text: pendingSelectedText});
                         setPendingSelectedText("");
-                        setShowDownloadOrListen(true)
                     }
                 }} />}
         </div>
