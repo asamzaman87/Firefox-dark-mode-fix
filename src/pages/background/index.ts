@@ -140,6 +140,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })();
       break;
     }
+    case "TAB_ACTIVATED": {
+      const tabId = sender?.tab?.id;
+      
+      if (tabId) {
+        // Don’t start the selected-text flow yet; just nudge overlay that it’s now active.
+        chrome.tabs.sendMessage(tabId, {
+          type: "OVERLAY_PING",
+          payload: "OVERLAY_PING",
+        });
+      }
+
+      break;
+    }
+    case "PROCEED_SELECTED_TEXT": {
+      const tabId = sender?.tab?.id;
+      if (tabId) chrome.tabs.sendMessage(tabId, { type: "HAS_SELECTED_TEXT", payload: "HAS_SELECTED_TEXT" });
+      break;
+    }
     default:
       break;
   }
@@ -204,7 +222,9 @@ chrome.tabs.onActivated.addListener(async () => {
 
 //switch to gpt when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
+  
   const manifest = chrome.runtime.getManifest();
+  
   const currentVersion = manifest.version;
   // Should switch to an explicit read, so for first time users the popup is always opened correctly
   const stored = await chrome.storage.sync.get("version");
@@ -227,6 +247,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   } else {
     await showNotificationFallback("install");
   }
+
 });
 
 // click on extension icon to switch to gpt
@@ -382,6 +403,207 @@ const handleGetBannerCount = async () => {
 const handleBannerCountView = async (count: number) => {
   await chrome.storage.sync.set({ bannerCount: count, countLastViewedOn: new Date().toISOString() });
 }
+const handleCustomContextMenu = async (selectedText: string) => {
+  chrome.storage.local.set({ origin: true });
+
+  await chrome.storage.local.set({ selectedText });
+  await chrome.storage.local.set({ iswebreader: Date.now() });
+  
+  const tabId = await switchToActiveTab();
+  if (!tabId) {
+    await showNotificationFallback("icon_click");
+    return;
+  }
+  // A new ChatGPT tab was created (tabId is a "123::new_tab" string)
+  if (typeof tabId === "string") {
+    const numericId = +tabId.split("::")[0];
+
+    // wait until the tab’s status === "complete", then send the popup message
+    const listener = (
+      updatedTabId: number,
+      info: chrome.tabs.TabChangeInfo
+    ) => {
+      if (updatedTabId === numericId && info.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(listener);
+        chrome.tabs.sendMessage(numericId, {
+          type: "OPEN_POPUP",
+          payload: "ORIGIN_VERIFIED",
+        });
+    
+      }
+    };
+    chrome.tabs.onUpdated.addListener(listener);
+    return;
+  }
+
+  // Existing ChatGPT tab – send immediately
+  chrome.tabs.sendMessage(tabId, {
+    type: "OPEN_POPUP",
+    payload: "ORIGIN_VERIFIED",
+  });
+  
+};
+
+
+// This function will run in the context of the webpage
+function getAllText(): string {
+  // Selectors for main content (customize based on website structure)
+  const contentSelectors = [
+     'h1', 'h2', 'h3', 'h4', 'h5', 'h6','p', 'span'
+  ];
+
+  // Elements to exclude (navigation, ads, etc.)
+  const excludeSelectors = [
+    'nav', 'header', 'footer', 'aside','script','link', 
+    '.navbar', '.ad', '.menu', 
+    '.footer', '.ad-container'
+  ];
+
+  // Create a temporary container to filter content
+  const container = document.createElement('div');
+  container.innerHTML = document.body.innerHTML;
+
+  // Remove excluded elements
+  excludeSelectors.forEach(selector => {
+    const elements = container.querySelectorAll(selector);
+    elements.forEach(el => el.remove());
+  });
+
+  // Extract text from content elements
+  const textParts: string[] = [];
+  contentSelectors.forEach(selector => {
+    const elements = container.querySelectorAll(selector);
+ 
+    elements.forEach(el => {
+      const text = el.textContent?.trim();
+
+
+      if (text) {
+        textParts.push(text);
+      }
+    });
+  });
+
+  return textParts.join('\n\n'); // Double newline for better readability
+}
+function createMenus() {
+  chrome.contextMenus.removeAll(() => {
+    // Create the parent
+    chrome.contextMenus.create({
+      id: "gptReaderParent",
+      title: "Read Aloud Using GPT Reader",
+      contexts: ["selection", "page"], // show when either context is valid
+    });
+
+    // Child: selected text
+    chrome.contextMenus.create({
+      id: "customContextMenu",
+      parentId: "gptReaderParent",
+      title: "Send selected text to GPT Reader",
+      contexts: ["selection"],
+    });
+
+    // Child: all text
+    chrome.contextMenus.create({
+      id: "customContextMenuAll",
+      parentId: "gptReaderParent",
+      title: "Send all text on current page to GPT Reader",
+      contexts: ["page", "selection"],
+    });
+  });
+}
+
+function attachContextMenuListener() {
+  if (!chrome.contextMenus?.onClicked.hasListener(contextMenuHandler)) {
+    chrome.contextMenus?.onClicked.addListener(contextMenuHandler);
+  }
+}
+
+const contextMenuHandler= (info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => {
+  if (info.menuItemId === "customContextMenu") {
+    let selectedText = info.selectionText || "";
+    if (!selectedText) return;
+    // Prefer extracting the DOM selection inside the page to preserve paragraphs and BRs.
+    if (!tab?.id) return;
+    const fallback = () => {
+      const text = info.selectionText || "";
+      if (text) handleCustomContextMenu(text);
+    };
+
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tab.id!, ...(info.frameId != null ? { frameIds: [info.frameId] } : {}) },
+        func: () => {
+          const BLOCK_TAGS = new Set(["P","DIV","LI","UL","OL","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","PRE","TABLE","TR","SECTION","ARTICLE"]);
+          const isBlock = (el: Element) => BLOCK_TAGS.has(el.tagName);
+          const sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) return "";
+          let out = "";
+          for (let i = 0; i < sel.rangeCount; i++) {
+            const frag = sel.getRangeAt(i).cloneContents();
+            const walker = document.createTreeWalker(frag, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+            let lastEndedWithBreak = false;
+            const brk = (n = 1) => { out += "\n".repeat(n); lastEndedWithBreak = true; };
+            while (walker.nextNode()) {
+              const node = walker.currentNode as Node;
+              if (node.nodeType === Node.TEXT_NODE) {
+                const t = (node.nodeValue || "").replace(/\s+/g, " ").trim();
+                if (t) {
+                  if (out && !out.endsWith("\n") && !out.endsWith(" ")) out += " ";
+                  out += t;
+                  lastEndedWithBreak = false;
+                }
+              } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const el = node as HTMLElement;
+                if (el.tagName.toLowerCase() === "br") brk(1);
+                if (isBlock(el)) {
+                  if (!lastEndedWithBreak && !out.endsWith("\n")) brk(2);
+                }
+              }
+            }
+            if (!out.endsWith("\n")) brk(2);
+          }
+          return out.replace(/\n{3,}/g, "\n\n").trim();
+        }
+      },
+      (results) => {
+        const text = results?.[0]?.result;
+        if (typeof text === "string" && text.trim()) {
+          handleCustomContextMenu(text);
+        } else {
+          // Still nothing? Fall back.
+          fallback();
+        }
+      }
+    );
+  }
+  
+  if (info.menuItemId === "customContextMenuAll") {
+    if (!tab?.id) return;
+
+    chrome.scripting.executeScript(
+      { target: { tabId: tab.id! }, func: getAllText },
+      (results) => {
+        const allText = results?.[0]?.result || "";
+        if (allText?.trim()) handleCustomContextMenu(allText);
+      }
+    );
+  }
+}
 
 chrome.runtime.setUninstallURL(UNINSTALL_GOOGLE_FORM);
+
+// Also re-create on browser startup (helps Firefox reliability)
+chrome.runtime.onStartup?.addListener(() => {
+  try {
+    createMenus();
+    attachContextMenuListener();
+  } catch {}
+});
+
+// Recreate context menus silently
+createMenus();
+attachContextMenuListener();
+
+
 

@@ -386,6 +386,7 @@ const useStreamListener = (
 
         // mark the current chat so we never delete it here
         currentChatIdRef.current = conversationId;
+        localStorage.setItem("gptr/pendingDelete", currentChatIdRef.current);
         const convKey = `${conversationId}:${messageId}`;
         registerPending(conversationId, convKey);
 

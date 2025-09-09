@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, handleCheckUserSubscription, waitForElement } from "@/lib/utils";
+import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, deleteChatAndCreateNew, detectBrowser, handleCheckUserSubscription, isWebReaderFresh, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -19,6 +19,7 @@ import PremiumModal from "./premium-modal";
 import TrialGiftPopUp from "./trial-gift-popup";
 import StartFromPopUp from "./start-from-popup";
 import { SectionIndex } from "@/hooks/use-file-reader";
+import WebReaderPermissionPopup from "./webreader-permission-popup";
 
 export interface PromptProps {
   text: string | undefined
@@ -56,7 +57,73 @@ function Uploader() {
   const [startFromSource, setStartFromSource] = useState<"pdf" | "docx" | "text">("text");
   const [startFromFullText, setStartFromFullText] = useState<string>("");
   const startFromConfirmOffsetRef = useRef<(args: { startAt: number; matchLength?: number }) => void>(() => {});
+  const deferredSelectedPingRef = useRef<boolean>(false);
 
+  const [showWebReaderPerm, setShowWebReaderPerm] = useState<boolean>(false);
+
+  // ---- Gating helpers for the selected-text flow ----
+  const hasPendingSelectedText = useCallback(async () => {
+    const { selectedText } = await chrome.storage.local.get("selectedText");
+    return !!(selectedText && selectedText.length);
+  }, []);
+
+  const isOverlayReady = useCallback(() => {
+    // Ready when all first-run surfaces are gone
+    return confirmed && !showWebReaderPerm && !showPinTutorial;
+  }, [confirmed, showWebReaderPerm, showPinTutorial]);
+
+  const maybeProceedSelectedText = useCallback(async () => {
+    if (!await hasPendingSelectedText()) {
+      await chrome.storage.local.set({ iswebreader: 0 });
+      return;
+    }
+
+    if (!isActive) return;
+
+    if (!deferredSelectedPingRef.current) return;
+
+    if (!isOverlayReady()) return;
+    
+    if (!await isWebReaderFresh()) return;
+
+    chrome.runtime.sendMessage({ type: "PROCEED_SELECTED_TEXT" });
+    deferredSelectedPingRef.current = false;
+  }, [isOverlayReady, hasPendingSelectedText, isActive]);
+
+  // ⬇️ Listen for the background's neutral overlay ping, then gate & proceed
+  useEffect(() => {
+    const onMsg = (message: any) => {
+      if (message?.type === "OVERLAY_PING") {
+        deferredSelectedPingRef.current = true;
+        void maybeProceedSelectedText();
+      }
+    };
+    chrome.runtime.onMessage.addListener(onMsg);
+    return () => chrome.runtime.onMessage.removeListener(onMsg);
+  }, [maybeProceedSelectedText]);
+
+  // Re-check whenever gates change (ensures auto-open after popups resolve)
+  useEffect(() => {
+    void maybeProceedSelectedText();
+  }, [confirmed, showWebReaderPerm, showPinTutorial, maybeProceedSelectedText]);
+
+
+  useEffect(() => {
+    if (!isActive) return;
+    setShowWebReaderPerm(!localStorage.getItem("webReaderFxAck"));
+    return;
+  }, [isActive]);
+
+  const handlePrimaryWebReader = useCallback(async () => {
+    localStorage.setItem("webReaderFxAck", "true");
+    setShowWebReaderPerm(false);
+    toast({
+      description: "🎉 Web Reader is ready. Right-click selected text or choose ‘Get all text’.",
+      style: TOAST_STYLE_CONFIG_INFO,
+    });
+    return;
+  }, [toast]);
+  
   // sending the auth status to the background script
   useMemo(() => {
     chrome.runtime.sendMessage({ isAuthenticated: isAuthenticated, type: LISTENERS.AUTH_RECEIVED });
@@ -92,8 +159,6 @@ function Uploader() {
       const toastRoot = child.closest(".toast-root") as HTMLElement | null;
       if (toastRoot) {
         toastRoot.style.display = "none";
-      } else {
-        child.style.display = "none";
       }
     }
   };
@@ -139,6 +204,7 @@ function Uploader() {
       (async () => {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
+          await new Promise(r => setTimeout(r, 500));
           window.location.href = window.location.href;
         }
       })();
@@ -229,6 +295,7 @@ function Uploader() {
         window.location.href.startsWith("https://chatgpt.com") &&
         !isOpening.current
       ) {
+        await new Promise(r => setTimeout(r, 500));
         window.location.href = window.location.href;
       }
     })();
@@ -267,10 +334,16 @@ function Uploader() {
           return;
         }
         if (message.payload === "ORIGIN_VERIFIED") {
-          const active = window.localStorage.getItem("gptr/active");
-          if (active && active !== "true") {
-            activateButton.current?.click();
-          }
+          (async () => {
+            const active = window.localStorage.getItem("gptr/active");
+            if (active && active !== "true") {
+              activateButton.current?.click();
+            }
+            while (window.localStorage.getItem("gptr/active") !== "true") {
+              await new Promise(r => setTimeout(r, 100));
+            }
+            chrome.runtime.sendMessage({ type: "TAB_ACTIVATED" });
+          })();
         }
       }
     };
@@ -278,8 +351,6 @@ function Uploader() {
     return () => chrome.runtime.onMessage.removeListener(onMsg);
   }, []);
 
-
-  //toddo: refactor as this might exceed space
   useEffect(() => {
     const interval = setInterval(() => {
       const active = window.localStorage.getItem("gptr/active");
@@ -422,7 +493,6 @@ function Uploader() {
     async (open: boolean) => {
       if (isOpeningInProgress.current) return;
       isOpeningInProgress.current = true;
-
       try {
         if (!open) {
           //show confirmation for cancel download if download is in progress
@@ -490,6 +560,9 @@ function Uploader() {
 
         let effectiveIsSubscribed = false;
 
+        const prev = await chrome.storage.local.get("hasSubscription");
+        const prevHasSub = prev?.hasSubscription ?? false;
+
         if (detectBrowser() === "firefox") {
           effectiveIsSubscribed = await new Promise<boolean>((resolve) => {
             chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
@@ -498,6 +571,14 @@ function Uploader() {
           });
         } else {
           effectiveIsSubscribed = await handleCheckUserSubscription();
+        }
+
+        if (prevHasSub === true && effectiveIsSubscribed === false) {
+          toast({description: "Your monthly recurring payment failed. Please upgrade again if you wish to use premium.", style: TOAST_STYLE_CONFIG, duration: 20000});
+        }
+
+        if (prevHasSub === false && effectiveIsSubscribed === true) {
+          toast({description: "Welcome! You have successfully subscribed to GPT Reader. 🥳", style: TOAST_STYLE_CONFIG_INFO, duration: 10000});
         }
 
         setIsSubscribed(effectiveIsSubscribed);
@@ -565,15 +646,22 @@ function Uploader() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const reloaded = window.localStorage.getItem("gptr/reloadDone") === "true";
-    if (reloaded) {
-      (async () => {
+
+    const run = async () => {
+      const reloaded =
+        window.localStorage.getItem("gptr/reloadDone") === "true";
+
+      if (reloaded || await isWebReaderFresh()) {
         autoOpen.current = true;
         await onOpenChange(true);
+        chrome.runtime.sendMessage({ type: "TAB_ACTIVATED" });
         window.localStorage.removeItem("gptr/reloadDone");
-      })();
-    }
+      }
+    };
+
+    run();
   }, [isAuthenticated]);
+
 
   useEffect(() => {
     if (!isActive) return; // do nothing when overlay is closed
@@ -719,22 +807,32 @@ function Uploader() {
           }}
           className={cn("gpt:bg-gray-100 dark:bg-gray-800 gpt:max-w-screen gpt:h-full gpt:border-none gpt:flex gpt:flex-col gpt:gap-4", prompts?.length && "gpt:pb-0")}
         >
-          {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-          {confirmed && <Content
-              isCancelDownloadConfirmation={isCancelDownloadConfirmation}
-              setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation}
-              onOverlayOpenChange={onOpenChange}
-              setPrompts={setPrompts}
-              prompts={prompts}
-              onOpenStartFrom={({ sections, source, fullText, onConfirm }) => {
-                setStartFromSections(sections);
-                setStartFromSource(source);
-                setStartFromFullText(fullText);
-                startFromConfirmOffsetRef.current = onConfirm;
-                setStartFromOpen(true);
-              }}
-            /> 
-          }
+          {showWebReaderPerm && (
+            <WebReaderPermissionPopup
+              onPrimary={handlePrimaryWebReader}
+            />
+          )}
+          {!showWebReaderPerm && (
+            <>
+              {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
+              {confirmed && (
+                <Content
+                  isCancelDownloadConfirmation={isCancelDownloadConfirmation}
+                  setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation}
+                  onOverlayOpenChange={onOpenChange}
+                  setPrompts={setPrompts}
+                  prompts={prompts}
+                  onOpenStartFrom={({ sections, source, fullText, onConfirm }) => {
+                    setStartFromSections(sections);
+                    setStartFromSource(source);
+                    setStartFromFullText(fullText);
+                    startFromConfirmOffsetRef.current = onConfirm;
+                    setStartFromOpen(true);
+                  }}
+                />
+              )}
+            </>
+          )}
           { confirmed && showPinTutorial && (
             <PinTutorialPopUp
               open={showPinTutorial}

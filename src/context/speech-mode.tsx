@@ -25,15 +25,29 @@ export const SpeechModeProvider: React.FC<SpeechModeProviderProps> = ({
   children,
   defaultMode = "text-to-speech",
 }) => {
-  const [mode, setMode] = useState<SpeechMode>(defaultMode);
+  const [mode, _setMode] = useState<SpeechMode>(defaultMode);
 
   useEffect(() => {
     const saved = localStorage.getItem(MODE_STORAGE_KEY) as SpeechMode | null;
-    if (saved) setMode(saved);
+    if (saved) _setMode(saved);
+    else localStorage.setItem(MODE_STORAGE_KEY, defaultMode);
+    // reflect external writes (other tabs / scripts)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === MODE_STORAGE_KEY && e.newValue) {
+        _setMode(e.newValue as SpeechMode);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const setModePersist = useCallback((next: SpeechMode) => {
+    _setMode(next);
+    localStorage.setItem(MODE_STORAGE_KEY, next);
   }, []);
 
   const toggleMode = useCallback(() => {
-    setMode((prev) => {
+    _setMode((prev) => {
       const newMode =
         prev === "text-to-speech" ? "speech-to-text" : "text-to-speech";
       localStorage.setItem(MODE_STORAGE_KEY, newMode);
@@ -43,7 +57,7 @@ export const SpeechModeProvider: React.FC<SpeechModeProviderProps> = ({
 
   const value: SpeechModeContextType = {
     mode,
-    setMode,
+    setMode: setModePersist,
     toggleMode,
     isTextToSpeech: mode === "text-to-speech",
   };

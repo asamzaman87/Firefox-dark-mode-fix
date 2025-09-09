@@ -30,6 +30,7 @@ import { Label } from "../../../components/ui/label";
 import { Switch } from "../../../components/ui/switch";
 import useHybridTranscription from "@/hooks/useHybridTranscription";
 import MicTranscribeForm from "./input-popup/micTranscribeForm";
+import VoiceSelectPopup from "./voice-select-popup";
 import useFileReader, { StructuredText, SectionIndex } from "@/hooks/use-file-reader";
 
 interface ContentProps {
@@ -50,6 +51,7 @@ const BROWSER = detectBrowser();
 
 const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, isCancelDownloadConfirmation, setIsCancelDownloadConfirmation, onOpenStartFrom }) => {
     const { toast } = useToast();
+    const [openVoicePopup, setOpenVoicePopup] = useState<boolean>(false);
     const [isDownload, setIsDownload] = useState<boolean>(false);
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
@@ -72,14 +74,17 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
     const [timerLeft, setTimerLeft] = useState<number>(0);
-    const [downloadDelay, setDownloadDelay] = useState<number>(0);
+    // const [downloadDelay, setDownloadDelay] = useState<number>(0);
     const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const {isTextToSpeech, toggleMode} = useSpeechMode();
+    const {isTextToSpeech, setMode} = useSpeechMode();
+    const activatingWebReader = useRef(false);
+
     const { reset: resetMic, stop: stopMic } = useHybridTranscription();
     
     const logo = chrome.runtime.getURL(isTextToSpeech ? 'logo-128.png' : 't-logo-128.png');
     const extName = chrome.i18n.getMessage(isTextToSpeech ? "gpt_reader" : "gpt_transcriber");
     const extAlt = chrome.i18n.getMessage(isTextToSpeech ? "gpt_reader_logo" : "gpt_transcriber_logo");
+    const usingGPTReader = useRef(false);
 
     const [structured, setStructured] = useState<StructuredText | null>(null);
     const [lastInputWasFile, setLastInputWasFile] = useState<boolean>(false);
@@ -102,6 +107,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const sessionFirstChunkRef = useRef<number | null>(null); 
     // whether we've visited any chunk other than the session's first
     const hasLeftSessionFirstChunkRef = useRef(false);
+    const [pendingSelectedText, setPendingSelectedText] = useState<string>(""); // local buffer
 
     // helper: length = first sentence OR max 120 chars
     const lenOneSentenceOr120 = (s: string): number => {
@@ -213,6 +219,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const resetter = (isBackPressed: boolean = false) => {
         reset(true, undefined, isBackPressed);
+        usingGPTReader.current = false;
+        activatingWebReader.current = false;
         sessionFirstChunkRef.current = null;
         hasLeftSessionFirstChunkRef.current = false;
         setHighlightChars(null);
@@ -244,8 +252,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
             // delete the old ChatGPT conversation if we have one
             toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
-            await new Promise(resolve => setTimeout(resolve, 400));
             localStorage.setItem("gptr/reloadDone", "true");
+            await new Promise(resolve => setTimeout(resolve, 400));
             window.location.href = window.location.href;
         } else {
             // Transcriber mode back button logic
@@ -272,13 +280,57 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             setIsBackPressed(true);
         }
     }
+    const getSelectedText = useCallback(async () => {
+      return await chrome.storage.local.get("selectedText");
+    }, []);
+
+    const handleExistingText = useCallback(async () => {
+      const existingText = await getSelectedText();
+      if (existingText?.selectedText?.length) {
+        const text = String(existingText.selectedText);
+
+        const persisted =
+          (localStorage.getItem("gptr/ext-mode") as
+            | "text-to-speech"
+            | "speech-to-text"
+            | null) ?? (isTextToSpeech ? "text-to-speech" : "speech-to-text");
+
+        if (persisted !== "text-to-speech") {
+          setMode("text-to-speech");
+          window.location.href = window.location.href;
+          return;
+        }
+
+        if (usingGPTReader.current) {
+          usingGPTReader.current = false;
+          window.location.href = window.location.href;
+          return;
+        }
+
+        setPendingSelectedText(text);
+        await chrome.storage.local.remove(["selectedText"]);
+        await chrome.storage.local.set({ iswebreader: 0 });
+        setOpenVoicePopup(true);
+      }
+      activatingWebReader.current = false;
+    }, [isTextToSpeech]);
+
+    
+    // keep the same function identity so removeListener works
+    const onMessage = useCallback((message: any) => {
+      if (message.type === "HAS_SELECTED_TEXT" && !activatingWebReader.current) {
+        activatingWebReader.current = true;
+        handleExistingText();
+      }
+    }, [handleExistingText]); // ok if handleExistingText is stable (useCallback) or use a ref
 
     useEffect(() => {
-        return () => {
-            resetter();
-            removeAllListeners(); //removing all listeners to avoid listening to stream events after reset (when the overlay is closed)
-        }
-    }, [])
+      chrome.runtime.onMessage.addListener(onMessage);
+
+      return () => {
+        chrome.runtime.onMessage.removeListener(onMessage);
+      };
+    }, [onMessage]);
 
     const onSave = (files: File[]) => {
         if (!files?.length) return toast({ description: chrome.i18n.getMessage("no_files_selected"), style: TOAST_STYLE_CONFIG });
@@ -369,6 +421,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       if (!payload) return;
       const sliced = startAt > 0 ? payload.slice(startAt) : payload;
       setScrollToOffset(startAt);
+      usingGPTReader.current = true;
       return splitAndSendPrompt(sliced).finally(() => {
         setShowDownloadOrListen(false);
       });
@@ -411,6 +464,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     }, [lastInputWasFile, structured, onOpenStartFrom, listenOrDownloadAudioFrom]);
 
     // free-user download delay: 1 s per 100 chars, min 5 s, max 60 s
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const startTimerOnce = useCallback(() => {
         if (timerIntervalRef.current) return;
 
@@ -425,7 +480,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         // compute raw secs (1 s/100 chars), then clamp between min and max delay
         const raw = Math.ceil(totalChars / charsPerSecond);
         const duration = Math.min(Math.max(raw, 30), maxDelay);
-        setDownloadDelay(duration);
+        // setDownloadDelay(duration);
         setTimerLeft(duration);
 
         timerIntervalRef.current = setInterval(() => {
@@ -530,11 +585,11 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       }
     }, [isTextToSpeech]);
 
-    const handleToggle = () => {
-      toggleMode();
+    const handleToggle = (checked: boolean) => {
+      setMode(checked ? "text-to-speech" : "speech-to-text");
       setShowMicOnlyView(false);
       setIsViewingText(false);
-    };
+    };   
 
     const showToggle = !prompts.length && !isDownload && !showMicOnlyView
 
@@ -895,6 +950,18 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               onOpenChange={onClosePremiumModal}
             />
           )}
+                {openVoicePopup && <VoiceSelectPopup voices={voices} setVoices={setVoices} isVoiceLoading={isVoiceLoading} open={openVoicePopup} onClose={async() => {
+                  setOpenVoicePopup(false)
+                  setPendingSelectedText("");
+                }} onVoiceSelect={async() => {
+                    if(pendingSelectedText){ 
+                        setTitle('Web Page Content')
+                        setPastedText(pendingSelectedText)
+                        setOpenVoicePopup(false)
+                        setPendingSelectedText("");
+                        setShowDownloadOrListen(true)
+                    }
+                }} />}
         </div>
       </>
     );

@@ -16,7 +16,7 @@ export default mergeConfig(
             service_worker: 'src/pages/background/index.ts',
             type: 'module'
           },
-        } as ManifestV3Export,
+        } as unknown as ManifestV3Export,
         browser: 'chrome',
         contentScripts: {
           injectCss: true,

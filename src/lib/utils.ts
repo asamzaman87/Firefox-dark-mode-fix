@@ -257,6 +257,20 @@ export const switchToActiveTab = async () => {
   return activeTab[0].id;
 }
 
+const THRESHOLD = 150 * 1000; // 150 seconds in ms
+export const isWebReaderFresh = async () => {
+  const { iswebreader } = await chrome.storage.local.get("iswebreader");
+  
+  if (!iswebreader) {
+    return false; // nothing stored yet
+  }
+
+  const now = Date.now();
+  const age = now - iswebreader; // difference in ms
+
+  return age < THRESHOLD;
+};
+
 //detect browser type
 export const detectBrowser = () => {
   const userAgent = navigator?.userAgent;

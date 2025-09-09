@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "1.8.0",
+  "version": "1.8.1",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -18,7 +18,10 @@
   "permissions": [
     "tabs",
     "storage",
-    "notifications"
+    "notifications",
+    "activeTab",
+    "contextMenus",
+    "scripting"
   ],
   "content_scripts": [
     {
@@ -54,7 +57,8 @@
         "firefox-pin.png",
         "extension-guide.png",
         "pdf.worker.js",
-        "injected.js"
+        "injected.js",
+        "webreader.png"
       ],
       "matches": ["https://chatgpt.com/*"]
     },
