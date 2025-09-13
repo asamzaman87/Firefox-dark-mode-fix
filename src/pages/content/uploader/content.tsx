@@ -954,7 +954,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   setOpenVoicePopup(false);
                   setPendingSelectedText("");
                 }} onVoiceSelect={async() => {
-                    if(pendingSelectedText){ 
+                    if (pendingSelectedText) { 
                         setOpenVoicePopup(false);
                         onFormSubmit({text: pendingSelectedText});
                         setPendingSelectedText("");

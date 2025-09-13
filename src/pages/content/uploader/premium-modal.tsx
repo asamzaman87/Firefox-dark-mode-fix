@@ -18,7 +18,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { usePremiumModal } from "../../../context/premium-modal";
 import { useToast } from "../../../hooks/use-toast";
-import { DISCOUNT_PRICE_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
+import { DISCOUNT_FREQUENCY, DISCOUNT_PRICE_ID, FIRST_DISCOUNT_PRICE_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,6 +84,31 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
   const [loading, setLoading] = useState<boolean>(false);
   const { reason } = usePremiumModal();
   const { toast } = useToast();
+  const [openCount, setOpenCount] = useState<number | undefined>(undefined);
+
+  // read openCount once to decide which discount label to show
+  useEffect(() => {
+    if (!open) return;
+    try {
+      chrome.storage.local.get("openCount").then((res) => {
+        if (typeof res?.openCount === "number") setOpenCount(res.openCount);
+      });
+    } catch {
+      /* noop */
+    }
+  }, [open]);
+
+  const isFirstDiscount = forceDiscount && openCount === DISCOUNT_FREQUENCY;
+  const premiumPriceLabel = forceDiscount
+    ? isFirstDiscount
+      ? "USD $2.99/month"
+      : "USD $1.99/month"
+    : formatPriceFromStripePrice(product?.prices);
+  const discountTitlePrice = isFirstDiscount ? "$2.99/month" : "$1.99/month";
+  // 4.99 → 2.99 is ~40% off; 4.99 → 1.99 is ~60% off
+  const discountPercentCopy = isFirstDiscount
+    ? "❗ Over 40% off the regular $4.99 price — limited-time offer ❗"
+    : "❗ Over 60% off the regular $4.99 price — limited-time offer ❗";
 
   const plans: PlansDetails[] = [
     {
@@ -117,7 +142,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
     {
       type: "premium",
       title: chrome.i18n.getMessage("premium") || "Premium",
-      price: forceDiscount ? "USD $1.99/month" : formatPriceFromStripePrice(product?.prices),
+      price: premiumPriceLabel,
       isCurrent: false,
       features: [
         {
@@ -208,8 +233,16 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
       if (!openaiId) return;
 
       // Prefer Stripe Product metadata "discount_price_id" when forcing discount, else fall back constant
-      const priceIdToUse = forceDiscount ? DISCOUNT_PRICE_ID : product?.prices?.priceId;
-
+      const { openCount } = await chrome.storage.local.get("openCount");
+      let priceIdToUse;
+      if (openCount === DISCOUNT_FREQUENCY && forceDiscount) {
+        priceIdToUse = FIRST_DISCOUNT_PRICE_ID;
+      } else if (forceDiscount) {
+        priceIdToUse = DISCOUNT_PRICE_ID;
+      } else {
+        priceIdToUse = product?.prices?.priceId;
+      }
+      
       const payload: CheckoutPayloadType = {
         openaiId,
         email,
@@ -262,13 +295,13 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
         <DialogHeader>
           <DialogTitle className="gpt:text-2xl gpt:font-bold gpt:text-center">
             {forceDiscount
-              ? "🔊 Special Offer - Premium for $1.99/month 🔊"
+              ? `🔊 Special Offer - Premium for ${discountTitlePrice} 🔊`
               : chrome.i18n.getMessage("premium_required") ||
                 "Hey! You just triggered a premium feature"}
             <br />
             <span className="gpt:font-normal gpt:text-[16px]">
               {forceDiscount
-                ? "❗ Over 50% off the regular $4.99 price — limited-time offer ❗"
+                ? discountPercentCopy
                 : chrome.i18n.getMessage("premium_description") ||
                   "Upgrade your GPT Reader & Transcriber plan to access now"}
             </span>

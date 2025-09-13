@@ -730,6 +730,7 @@ const useAudioPlayer = (isDownload: boolean) => {
       currentTimeRef.current = current;
 
       const chunkPlaying = isTypeAACSupported ? (getChunkAtTime(current)) : +seekAudio.id;
+      // console.log('This is the chunk playing: ', chunkPlaying);
       const targetLength = isTypeAACSupported ? blobsLength.current : audioUrls.length;
       // Logic for the are you still here pop-up for chrome
       // console.log(!fallbackAudioRef.current, chunkPlaying % CHUNK_TO_PAUSE_ON === 0, isPromptingPaused, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);

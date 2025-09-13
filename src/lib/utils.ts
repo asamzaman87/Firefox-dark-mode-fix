@@ -76,62 +76,124 @@ export const waitForPrepareChat = (): Promise<{ event: string; data: any }[]> =>
 
 //split text to small chunks
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
-  // Split the text into sentences based on common delimiters
-  const sentences = text.match(/(?:[^.!?•]+[.!?•]+[\])'"`’”]*|[^.!?•]+(?:$))/g) || [];
-  // const sentences = text.match(/[^.!?]+[.!?]+[\])'"`’”]*|.+/g) || [];
+  // 1) Sentence segmentation with multilingual support
+  // Prefer Intl.Segmenter if present; else fall back to a Unicode-aware regex.
+  let rawSegments: string[];
+  try {
+    const segCtor = (typeof Intl !== "undefined" && (Intl as any).Segmenter) as (new (...args:any[]) => any) | null;
+    const seg = segCtor ? new segCtor(undefined, { granularity: "sentence" }) : null;
+    if (seg) {
+      // Spread iterator of segments into array of strings
+      // .segment(text) yields { segment, index, isWordLike } objects
+      rawSegments = Array.from((seg as any).segment(text), (s: any) => String(s.segment));
+    } else {
+      // Fallback: split on a wider set of end-of-sentence marks (incl. CJK),
+      // and also treat hard line breaks as boundaries.
+      const rx =
+        /(?:[^\.\!\?。！？።։…•\n\r]+[\.\!\?。！？።։…•]+[\])'"`’”]*|[^\.\!\?。！？።։…•\n\r]+|\n+)/g;
+      rawSegments = text.match(rx) || [];
+    }
+  } catch {
+    const rx =
+      /(?:[^\.\!\?。！？።։…•\n\r]+[\.\!\?。！？።։…•]+[\])'"`’”]*|[^\.\!\?。！？።։…•\n\r]+|\n+)/g;
+    rawSegments = text.match(rx) || [];
+  }
+
+  // Normalize segments: trim and drop empty/newline-only pieces,
+  // but keep paragraph boundaries as spaces between segments.
+  const preSegments = rawSegments
+    .map(s => s.replace(/\s+/g, " ").trim())
+    .filter(s => s.length > 0);
+
+  // 2) Guard against single segments that are too large:
+  // split any over-long segment into sub-segments at whitespace so none exceed maxChunkSize.
+  const maxChunkSize = 4000; // unchanged
+  const sentences: string[] = [];
+  for (const seg of preSegments) {
+    if (seg.length <= maxChunkSize) {
+      sentences.push(seg);
+      continue;
+    }
+    // Split a single gigantic segment into word-based parts ≤ maxChunkSize.
+    // Works for languages with spaces; for CJK (no spaces), we fall back to hard slicing.
+    const parts = seg.split(/\s+/);
+    if (parts.length > 1) {
+      let buf = "";
+      for (const p of parts) {
+        const candidate = buf ? `${buf} ${p}` : p;
+        if (candidate.length <= maxChunkSize) {
+          buf = candidate;
+        } else {
+          if (buf) sentences.push(buf);
+          // p itself may be longer than max (e.g., a massive token). Hard slice if needed.
+          if (p.length <= maxChunkSize) {
+            buf = p;
+          } else {
+            // Hard slice long token into chunks of maxChunkSize
+            for (let i = 0; i < p.length; i += maxChunkSize) {
+              const slice = p.slice(i, i + maxChunkSize);
+              if (slice.length === maxChunkSize) sentences.push(slice);
+              else buf = slice; // keep remainder in buffer
+            }
+          }
+        }
+      }
+      if (buf) sentences.push(buf);
+    } else {
+      // No spaces: hard slice into max-sized pieces
+      for (let i = 0; i < seg.length; i += maxChunkSize) {
+        sentences.push(seg.slice(i, i + maxChunkSize));
+      }
+    }
+  }
+
   let currentChunk = "";
   let chunkId = 0;
 
-  const initialChunkSize = chunkSize; // Initial chunk size in characters
-  let targetSize = initialChunkSize;   // Current target chunk size
-  const maxChunkSize = 4000;           // Maximum chunk size in characters
+  const initialChunkSize = chunkSize; // keep your pacing inputs
+  let targetSize = initialChunkSize;
 
-  const chunks = sentences.reduce((chunks, sentence, i, arr) => {
-    // Calculate the potential new chunk if the current sentence is added
-    const potentialChunk = currentChunk ? currentChunk + ' ' + sentence.trim() : sentence.trim();
+  const chunks = sentences.reduce((acc, sentence, i, arr) => {
+    const s = sentence.trim();
+    const potentialChunk = currentChunk ? `${currentChunk} ${s}` : s;
     const potentialSize = potentialChunk.length;
 
-    const isCurrentChunkSizeGreaterThanOrEqualTargetSize = potentialSize >= targetSize;
-    const isEnd = i === arr.length - 1; // Check if it's the last sentence
+    const isAtOrOverTarget = potentialSize >= targetSize;
+    const isEnd = i === arr.length - 1;
 
-    if (isCurrentChunkSizeGreaterThanOrEqualTargetSize) {
-      // Push the current chunk to the chunks array if it's not empty
-      if (currentChunk.trim().length > 0) {
-        chunks.push({ id: `${chunkId++}`, text: currentChunk.trim(), completed: false });
+    if (isAtOrOverTarget) {
+      // ✅ Key change: finalize the *potential* chunk (includes this sentence),
+      // so we don't emit an underfilled chunk followed by a tiny sentence.
+      const finalized = potentialChunk.trim();
+      if (finalized.length > 0) {
+        acc.push({ id: `${chunkId++}`, text: finalized, completed: false });
       }
+      currentChunk = ""; // start fresh
 
-      // Start a new chunk with the current sentence
-      currentChunk = sentence.trim();
-
-      // Determine if the next chunk should reset based on chunkId
+      // Keep your existing pacing logic (unchanged)
       const isEveryNthChunk = (chunkId % CHUNK_TO_PAUSE_ON) === 0;
-
-      // Adjust the target size based on conditions
       if (isEveryNthChunk) {
-        // Reset to the initial chunk size
         targetSize = initialChunkSize;
       } else {
-        // Increase the target size by 50%, ensuring it does not exceed maxChunkSize
         targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
       }
     } else {
-      // Accumulate the sentence into the current chunk
       currentChunk = potentialChunk;
     }
 
-    // If it's the last sentence, we need to ensure the last chunk is pushed
     if (isEnd) {
-      // Always push the last chunk if it has content
-      if (currentChunk.trim().length > 0) {
-        chunks.push({ id: `${chunkId}`, text: currentChunk.trim(), completed: false });
+      const tail = currentChunk.trim();
+      if (tail.length > 0) {
+        acc.push({ id: `${chunkId}`, text: tail, completed: false });
       }
     }
 
-    return chunks;
+    return acc;
   }, [] as Chunk[]);
 
   return chunks;
 }
+
 export function normalizeAlphaNumeric(str: string) {
   // This will keep all Unicode letters and digits
   return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();

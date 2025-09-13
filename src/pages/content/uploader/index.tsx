@@ -8,7 +8,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, handleCheckUserSubscription, isWebReaderFresh, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
@@ -20,6 +20,8 @@ import TrialGiftPopUp from "./trial-gift-popup";
 import StartFromPopUp from "./start-from-popup";
 import { SectionIndex } from "@/hooks/use-file-reader";
 import WebReaderPermissionPopup from "./webreader-permission-popup";
+import BillingIssuePopup from "./billing-issue-popup";
+import { createCheckoutSession, fetchStripeProducts } from "@/lib/utils";
 
 export interface PromptProps {
   text: string | undefined
@@ -60,6 +62,69 @@ function Uploader() {
   const deferredSelectedPingRef = useRef<boolean>(false);
 
   const [showWebReaderPerm, setShowWebReaderPerm] = useState<boolean>(false);
+  const [showBillingIssue, setShowBillingIssue] = useState<boolean>(false);
+
+  const handleBillingIssueUpgrade = async () => {
+    try {
+      // 1) Read user from storage
+      const storageData = await new Promise<{
+        email: string;
+        name: string;
+        openaiId: string;
+        picture?: string;
+      }>((resolve, reject) => {
+        chrome.storage.sync.get(["email", "name", "openaiId", "picture"], (result) => {
+          if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+          resolve(result as any);
+        });
+      });
+
+      const { email, name, openaiId, picture } = storageData;
+      if (!openaiId) return;
+
+      // 2) Get default (non-discount) priceId
+      let product: any;
+      if (detectBrowser() === "firefox") {
+        product = await new Promise<any>((resolve) => {
+          chrome.runtime.sendMessage({ type: "GET_PRODUCTS_PRICES" }, (response) =>
+            resolve(response)
+          );
+        });
+      } else {
+        product = await fetchStripeProducts();
+      }
+      const priceIdToUse = product?.prices?.priceId;
+
+      // 3) Create checkout session and redirect
+      const payload = { openaiId, email, name, picture, priceId: priceIdToUse };
+      let sessionUrl: string;
+      if (detectBrowser() === "firefox") {
+        const session = await new Promise<any>((resolve) => {
+          chrome.runtime.sendMessage({ type: "CREATE_CHECKOUT_SESSION", payload }, (response) =>
+            resolve(response)
+          );
+        });
+        sessionUrl = session?.url;
+      } else {
+        const session = await createCheckoutSession(payload);
+        sessionUrl = session?.url;
+      }
+
+      if (!sessionUrl) {
+        throw new Error("No checkout URL");
+      }
+      setShowBillingIssue(false);
+      window.open(sessionUrl, "_self");
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast({
+        description: "Something went wrong while attempting to checkout",
+        style: TOAST_STYLE_CONFIG,
+        duration: 5000,
+      });
+      throw error;
+    }
+  };
 
   // ---- Gating helpers for the selected-text flow ----
   const hasPendingSelectedText = useCallback(async () => {
@@ -545,6 +610,7 @@ function Uploader() {
         }
 
         await triggerPromptFlow();
+        document.documentElement.style.overflow = 'hidden';
 
         const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;
         if (introButton) {
@@ -574,7 +640,8 @@ function Uploader() {
         }
 
         if (prevHasSub === true && effectiveIsSubscribed === false) {
-          toast({description: "Your monthly recurring payment failed. Please upgrade again if you wish to use premium.", style: TOAST_STYLE_CONFIG, duration: 20000});
+          setShowBillingIssue(true);
+          setShowDiscountPremium(false);
         }
 
         if (prevHasSub === false && effectiveIsSubscribed === true) {
@@ -612,12 +679,12 @@ function Uploader() {
             const newCount = (typeof openCount === "number" ? openCount : 0) + 1;
             await chrome.storage.local.set({ openCount: newCount });
 
-            // Show every 5th open; skip if Pin Tutorial is still visible or Trial gift is queued
-            const isEvery5 = newCount % 5 === 0 && newCount > 0;
+            // Show every Nth open; skip if Pin Tutorial is still visible or Trial gift is queued
+            const isEveryN = newCount % DISCOUNT_FREQUENCY === 0 && newCount > 0;
             const pinVisible = showPinTutorial;
             const trialWillShow = pendingTrialAfterPin || showTrialGift;
 
-            if (isEvery5 && !pinVisible && !trialWillShow) {
+            if (isEveryN && !pinVisible && !trialWillShow) {
               setShowDiscountPremium(true);
             }
           }
@@ -863,6 +930,13 @@ function Uploader() {
                 setShowTrialGift(open);
                 if (!open) window.localStorage.setItem("gptr/trialGiftShown", "true");
               }}
+            />
+          )}
+          {confirmed && (
+            <BillingIssuePopup
+              open={showBillingIssue}
+              onClose={setShowBillingIssue}
+              onUpgrade={handleBillingIssueUpgrade}
             />
           )}
           { confirmed && (

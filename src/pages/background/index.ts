@@ -447,44 +447,7 @@ const handleCustomContextMenu = async (selectedText: string) => {
 
 // This function will run in the context of the webpage
 function getAllText(): string {
-  // Selectors for main content (customize based on website structure)
-  const contentSelectors = [
-     'h1', 'h2', 'h3', 'h4', 'h5', 'h6','p', 'span'
-  ];
-
-  // Elements to exclude (navigation, ads, etc.)
-  const excludeSelectors = [
-    'nav', 'header', 'footer', 'aside','script','link', 
-    '.navbar', '.ad', '.menu', 
-    '.footer', '.ad-container'
-  ];
-
-  // Create a temporary container to filter content
-  const container = document.createElement('div');
-  container.innerHTML = document.body.innerHTML;
-
-  // Remove excluded elements
-  excludeSelectors.forEach(selector => {
-    const elements = container.querySelectorAll(selector);
-    elements.forEach(el => el.remove());
-  });
-
-  // Extract text from content elements
-  const textParts: string[] = [];
-  contentSelectors.forEach(selector => {
-    const elements = container.querySelectorAll(selector);
- 
-    elements.forEach(el => {
-      const text = el.textContent?.trim();
-
-
-      if (text) {
-        textParts.push(text);
-      }
-    });
-  });
-
-  return textParts.join('\n\n'); // Double newline for better readability
+  return document.body.innerText;
 }
 function createMenus() {
   chrome.contextMenus.removeAll(() => {

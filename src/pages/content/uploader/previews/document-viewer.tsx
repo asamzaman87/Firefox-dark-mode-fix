@@ -37,6 +37,39 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
   const divRef = useRef<HTMLDivElement>(null);
   // NOTE: make ref nullable; reset to null instead of undefined
   const cleanupRef = useRef<(() => void) | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Center an element inside *our* scroll container (never the page)
+  const centerInContainer = (target: HTMLElement) => {
+    const el = containerRef.current;
+    if (!el || !target) return { dispose: () => {} };
+
+    const centerOnce = () => {
+      const elRect = el.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const delta =
+        tRect.top + el.scrollTop - (elRect.top + (el.clientHeight / 2 - tRect.height / 2));
+      el.scrollTop = Math.max(0, delta);
+    };
+
+    // initial + next frame (post layout), mirroring old behavior
+    centerOnce();
+    const raf = requestAnimationFrame(centerOnce);
+
+    // if images load later inside the content, re-center
+    const imgs = Array.from((divRef.current ?? el).querySelectorAll("img"));
+    const onLoad = () => centerOnce();
+    imgs.forEach((img) => {
+      if (!img.complete) img.addEventListener("load", onLoad, { once: true });
+    });
+
+    return {
+      dispose: () => {
+        cancelAnimationFrame(raf);
+        imgs.forEach((img) => img.removeEventListener("load", onLoad));
+      },
+    };
+  };
 
   /**
    * Robust needle locator around an approximate alnum position (floorK).
@@ -204,32 +237,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
       r.setEnd(endNode, endOffset);
 
       // Helper to center on a target + recenter after layout shifts
-      const centerWithRelayout = (target: HTMLElement) => {
-        let raf = 0;
-        const pendingImgs: HTMLImageElement[] = [];
-        let onImgLoad: ((e: Event) => void) | null = null;
-        const center = (behavior: ScrollBehavior = "auto") =>
-          target.scrollIntoView({ block: "center", inline: "nearest", behavior });
-
-        center("auto");
-        raf = requestAnimationFrame(() => center("auto"));
-
-        const imgs = Array.from(root.querySelectorAll("img"));
-        onImgLoad = () => center("auto");
-        imgs.forEach((img) => {
-          if (!img.complete) {
-            pendingImgs.push(img);
-            img.addEventListener("load", onImgLoad!, { once: true });
-          }
-        });
-
-        return {
-          dispose: () => {
-            cancelAnimationFrame(raf);
-            if (onImgLoad) pendingImgs.forEach((img) => img.removeEventListener("load", onImgLoad));
-          },
-        };
-      };
+      const centerWithRelayout = centerInContainer;
 
       // Create one highlight span factory
       const mkWrap = () => {
@@ -376,29 +384,8 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
       wrappers.push(wrap);
     }
 
-    // center first wrapper and recenter on layout shifts
-    let raf = 0;
-    const pendingImgs: HTMLImageElement[] = [];
-    let onImgLoad: ((e: Event) => void) | null = null;
-
-    if (wrappers[0]) {
-      const target = wrappers[0];
-      const center = (behavior: ScrollBehavior = "auto") =>
-        target.scrollIntoView({ block: "center", inline: "nearest", behavior });
-
-      center("auto");
-      raf = requestAnimationFrame(() => center("auto"));
-
-      const rootEl = divRef.current!;
-      const imgs = Array.from(rootEl.querySelectorAll("img"));
-      onImgLoad = () => center("auto");
-      imgs.forEach((img) => {
-        if (!img.complete) {
-          pendingImgs.push(img);
-          img.addEventListener("load", onImgLoad!, { once: true });
-        }
-      });
-    }
+    let cleanupCenter: { dispose: () => void } | null = null;
+    if (wrappers[0]) cleanupCenter = centerInContainer(wrappers[0]);
 
     const timer = window.setTimeout(() => {
       for (const w of wrappers) {
@@ -411,8 +398,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
 
     cleanupRef.current = () => {
       window.clearTimeout(timer);
-      cancelAnimationFrame(raf);
-      if (onImgLoad) pendingImgs.forEach((img) => img.removeEventListener("load", onImgLoad));
+      cleanupCenter?.dispose();
       for (const w of wrappers) {
         const parent = w.parentNode;
         if (!parent) continue;
@@ -442,12 +428,15 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
 
   return (
     <div 
+      ref={containerRef}
       className="gpt:text-[23px] gpt:size-full gpt:overflow-y-auto gpt:max-h-full gpt:text-justify gpt:[&_p]:my-4 gpt:[&_p]:leading-loose gpt:sm:px-[15%]"
       style={{ 
         overflowAnchor: 'none',
         overscrollBehavior: 'contain',
         scrollBehavior: 'auto',
       }}
+      onWheel={(e) => { e.stopPropagation(); }}
+      onTouchMove={(e) => { e.stopPropagation(); }}
     >
       <div
         ref={divRef}
