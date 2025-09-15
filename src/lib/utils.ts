@@ -681,6 +681,39 @@ export const cancelSubscription = async (subscriptionId: string) => {
   }
 };
 
+export const getSubscriptionDetails = async (): Promise<{
+  subscriptionId: string | null;
+  currentPriceId: string | null;
+  currentPeriodEnd: number | null;
+} | null> => {
+  try {
+    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
+    if (!openaiId) return null;
+    const data = await secureFetch(
+      `${BACKEND_URI}/gpt-reader/subscription-details?openaiId=${openaiId}`,
+      { method: "GET" }
+    );
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+export const switchSubscriptionToPrice = async (
+  subscriptionId: string,
+  priceId: string
+): Promise<{
+  subscriptionId: string;
+  currentPriceId: string | null;
+  currentPeriodEnd: number | null;
+}> => {
+  const data = await secureFetch(
+    `${BACKEND_URI}/gpt-reader/switch-subscription-price`,
+    { method: "POST", body: JSON.stringify({ subscriptionId, priceId }) }
+  );
+  return data;
+};
+
 export const createHash = async (token: string) => {
   const msgBuffer = new TextEncoder().encode(token);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
