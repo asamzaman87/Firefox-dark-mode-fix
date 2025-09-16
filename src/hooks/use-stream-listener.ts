@@ -264,7 +264,8 @@ const useStreamListener = (
         } catch (err) {
             if (LOCAL_LOGS) console.warn("[fetchAndDecodeAudio] top-level error:", err);
             audioIssueInjections.current.add(chunkNumber);
-            if (nextChunkRef.current === chunkRef.current.length) {
+            const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+            if (nextChunkRef.current === chunkRef.current.length && !stopButton) {
                 // Convert to array and sort ascending
                 const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
 
@@ -279,7 +280,8 @@ const useStreamListener = (
                     chunkRef.current[first].id,
                     promptNdx.current
                 );
-                
+
+                audioIssueInjections.current.delete(first);
                 stopFlow.current = true;
             } else if (!stopFlow.current) {
                 localStorage.setItem('gptr/abort', 'true');
