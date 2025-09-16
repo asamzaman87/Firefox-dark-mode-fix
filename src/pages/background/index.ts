@@ -6,7 +6,7 @@ import {
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
-import { cancelSubscription, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, handleCheckUserSubscription, secureFetch, switchToActiveTab } from "@/lib/utils";
+import { cancelSubscription, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, getSubscriptionDetails, handleCheckUserSubscription, secureFetch, switchSubscriptionToPrice, switchToActiveTab } from "@/lib/utils";
 
 async function waitForReady(tabId: number, tries = 40, delayMs = 150) {
   for (let i = 0; i < tries; i++) {
@@ -106,6 +106,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case "CHECK_SUBSCRIPTION": {
       (async () => {
         const result = await handleCheckUserSubscription();
+        sendResponse(result);
+      })();
+      return true;
+    }
+    case "GET_SUBSCRIPTION_DETAILS": {
+      (async () => {
+        const result = await getSubscriptionDetails();
+        sendResponse(result);
+      })();
+      return true;
+    }
+    case "SWITCH_SUBSCRIPTION_PRICE": {
+      const { subscriptionId, priceId } = request.payload;
+      (async () => {
+        const result = await switchSubscriptionToPrice(subscriptionId, priceId);
         sendResponse(result);
       })();
       return true;

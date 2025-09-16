@@ -85,6 +85,30 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
   const { reason } = usePremiumModal();
   const { toast } = useToast();
   const [openCount, setOpenCount] = useState<number | undefined>(undefined);
+  // ADD: countdown gating for the X when forceDiscount is true
+  const [closeCountdown, setCloseCountdown] = useState<number>(0);
+  const [canClose,       setCanClose]       = useState<boolean>(!forceDiscount);
+
+  // ADD: kick off a 3s countdown only when forced discount modal is opened
+  useEffect(() => {
+    if (!open || !forceDiscount) return;
+
+    setCanClose(false);
+    setCloseCountdown(3);
+
+    const id = setInterval(() => {
+      setCloseCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(id);
+          setCanClose(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [open, forceDiscount]);
 
   // read openCount once to decide which discount label to show
   useEffect(() => {
@@ -107,8 +131,8 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
   const discountTitlePrice = isFirstDiscount ? "$2.99/month" : "$1.99/month";
   // 4.99 → 2.99 is ~40% off; 4.99 → 1.99 is ~60% off
   const discountPercentCopy = isFirstDiscount
-    ? "❗ Over 40% off the regular $4.99 price — limited-time offer ❗"
-    : "❗ Over 60% off the regular $4.99 price — limited-time offer ❗";
+    ? "❗ Over 40% off the regular $4.99 price — CLOSE THIS POPUP AND ITS GONE ❗"
+    : "❗ Over 60% off the regular $4.99 price — CLOSE THIS POPUP AND ITS GONE ❗";
 
   const plans: PlansDetails[] = [
     {
@@ -281,9 +305,14 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
       setLoading(false);
     }
   };
+  // ADD: block close while counting down (forced discount only)
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && forceDiscount && !canClose) return; // block early close
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         onInteractOutside={(e: Event) => {
           e.preventDefault();
@@ -292,6 +321,18 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           "gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] gpt:sm:w-[95vw] gpt:sm:max-w-[665px] gpt:md:w-[85vw] gpt:md:max-w-[750px] gpt:lg:w-[70vw] gpt:lg:max-w-[800px] gpt:xl:max-w-[900px] gpt:rounded-2xl gpt:max-sm:w-screen gpt:max-sm:max-w-screen gpt:max-sm:h-screen gpt:max-sm:!rounded-none gpt:overflow-auto", "h-screen-if-short"
         )}
       >
+        {/* ADD: top-right countdown → real X once canClose is true */}
+        {forceDiscount && !canClose && (
+          <div className="gpt:absolute gpt:top-4 gpt:right-4 gpt:z-[999]">
+            <div
+              aria-hidden="true"
+              className="gpt:flex gpt:items-center gpt:justify-center gpt:w-12 gpt:h-12 gpt:rounded-full gpt:bg-white gpt:dark:bg-gray-800 gpt:opacity-100 gpt:text-lg gpt:text-gray-900 gpt:dark:text-gray-100 gpt:ring-2 gpt:ring-black/10 gpt:shadow-sm gpt:cursor-not-allowed gpt:select-none"
+            >
+              {closeCountdown || 3}
+            </div>
+          </div>
+        )}
+        <div className="gpt:relative">
         <DialogHeader>
           <DialogTitle className="gpt:text-2xl gpt:font-bold gpt:text-center">
             {forceDiscount
@@ -361,6 +402,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
               </ul>
             </div>
           ))}
+        </div>
         </div>
       </DialogContent>
     </Dialog>

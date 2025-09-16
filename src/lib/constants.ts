@@ -138,5 +138,6 @@ export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;
 export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7";
 export const FIRST_DISCOUNT_PRICE_ID = "price_1S6qdOLARZb1bIqHixjkvhwc";
+export const ORIGINAL_PRICE_ID = "price_1RokrdLARZb1bIqHJf3nXvxX";
 export const FREE_DOWNLOAD_CHUNKS = 3;
 export const DISCOUNT_FREQUENCY = 5;

@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   DISCOUNT_PRICE_ID,
   FIRST_DISCOUNT_PRICE_ID,
+  ORIGINAL_PRICE_ID,
   TOAST_STYLE_CONFIG,
   TOAST_STYLE_CONFIG_INFO,
 } from "@/lib/constants";
@@ -327,20 +328,29 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const isEligibleFor199 = (priceId: string | null, defPriceId: string | null) => {
     if (!priceId) return false;
     if (priceId === DISCOUNT_PRICE_ID) return false; // already on $1.99
-    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID].filter(Boolean) as string[];
+    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID].filter(Boolean) as string[];
     return candidates.includes(priceId);
   };
 
   const isOn299or499 = (priceId: string | null, defPriceId: string | null) => {
     if (!priceId) return false;
-    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID].filter(Boolean) as string[];
+    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID].filter(Boolean) as string[];
     return candidates.includes(priceId);
   };
 
   // Entry point when user clicks “Cancel Subscription”
   const handleOpenCancelClick = async () => {
     try {
-      const details = await getSubscriptionDetails(); // { subscriptionId, currentPriceId, currentPeriodEnd? }
+      let details;
+      if (detectBrowser() === "firefox") {
+        details = await new Promise<any>((resolve) => {
+          chrome.runtime.sendMessage({ type: "GET_SUBSCRIPTION_DETAILS" }, (response) =>
+            resolve(response)
+          );
+        });
+      } else {
+        details = await getSubscriptionDetails();
+      }
       const current = details?.currentPriceId ?? null;
       setCurrentPriceId(current);
 
@@ -408,8 +418,17 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       const subscriptionId = await getStoredValue<string>("subscriptionId", "local");
       if (!subscriptionId) throw new Error("Missing subscriptionId");
 
-      // Use the endpoint response to set the local flag + when
-      const resp = await switchSubscriptionToPrice(subscriptionId, DISCOUNT_PRICE_ID);
+      let resp;
+      if (detectBrowser() === "firefox") {
+        resp = await new Promise<any>((resolve) => {
+          chrome.runtime.sendMessage(
+            { type: "SWITCH_SUBSCRIPTION_PRICE", payload: { subscriptionId, priceId: DISCOUNT_PRICE_ID } },
+            (response) => resolve(response)
+          );
+        });
+      } else {
+        resp = await switchSubscriptionToPrice(subscriptionId, DISCOUNT_PRICE_ID);
+      }
       const whenFromResp: number | null =
         typeof resp?.currentPeriodEnd === "number" ? resp.currentPeriodEnd : null;
 
