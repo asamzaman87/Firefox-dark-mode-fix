@@ -224,7 +224,7 @@ const PdfViewer: FC<PdfViewerProps> = ({
       </Button>
 
       <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:relative gpt:overflow-y-auto gpt:max-h-full">
-        <span className="gpt:z-10 gpt:fixed gpt:bottom-2 gpt:right-32 gpt:px-4 gpt:py-2 gpt:text-sm gpt:font-medium gpt:text-muted-foreground gpt:text-center gpt:mx-auto gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow">
+        <span className="gpt:z-10 gpt:fixed gpt:bottom-2 gpt:left-36 gpt:px-4 gpt:py-2 gpt:text-sm gpt:font-medium gpt:text-muted-foreground gpt:text-center gpt:mx-auto gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow">
           Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
         </span>
         <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>

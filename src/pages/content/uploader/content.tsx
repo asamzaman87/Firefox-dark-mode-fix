@@ -9,7 +9,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon, Crown, Mic, Volume2 } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon, Crown, Mic, Volume2, LocateFixed, Search } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -108,6 +108,167 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     // whether we've visited any chunk other than the session's first
     const hasLeftSessionFirstChunkRef = useRef(false);
     const [pendingSelectedText, setPendingSelectedText] = useState<string>(""); // local buffer
+
+    // --- Locate audio + search state ---
+    const [locateCtaOpen, setLocateCtaOpen] = useState<boolean>(false);    // shows "Search for text"
+    const [locateSearchMode, setLocateSearchMode] = useState<boolean>(false); // shows full search UI
+    const [locateOpen, setLocateOpen] = useState<boolean>(false); // internal (popover open when CTA or search is visible)
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [searchMatches, setSearchMatches] = useState<number[]>([]);
+    const [searchSel, setSearchSel] = useState<number>(0);
+    const lastLocateOffsetRef = useRef<number | null>(null);
+    const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Clean up tooltip timer on unmount
+    useEffect(() => {
+      return () => {
+        if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
+      };
+    }, []);
+
+
+    // Plain full text source we highlight against (same logic used elsewhere)
+    const sourcePlain = structured?.fullText ?? fileExtractedText ?? pastedText ?? text ?? "";
+
+    const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
+
+    const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const applyHighlightAt = (offset: number, len: number) => {
+      if (!Number.isFinite(offset) || offset < 0) return;
+
+      if (structured?.source === "pdf") {
+        // PDF path uses absolute offset + length
+        setScrollToOffset(offset);
+        setHighlightLen(Math.max(0, len));
+        setHighlightChars(null);
+        setHighlightAlphaBefore(null);
+      } else {
+        // DOCX/TXT path uses a needle + alphanum-before disambiguator
+        const snippet = sourcePlain.slice(offset, offset + Math.max(1, len));
+        setScrollToOffset(null);
+        setHighlightLen(0);
+        setHighlightChars(snippet || null);
+        setHighlightAlphaBefore(countAlnumUpTo(sourcePlain, offset));
+      }
+
+      setHighlightActive(true);
+      setHighlightPulse((x) => x + 1); // flash again even if same spot
+    };
+
+    // Always highlight a 200-char window centered at `center` (100 back, 100 forward)
+    const applyLocateWindowAtCenter = (center: number) => {
+      const total = sourcePlain.length;
+      if (!total) return;
+      const start = Math.max(0, Math.min(center - 100, Math.max(0, total - 1)));
+      const maxLen = Math.min(200, Math.max(0, total - start));
+      applyHighlightAt(start, maxLen);
+    };
+
+    const locateNow = useCallback(() => {
+      if (!chunks.length) {
+        toast({
+          description: "Nothing is playing yet. You can still search in the text.",
+          style: TOAST_STYLE_CONFIG_INFO,
+          duration: 3500,
+        });
+        // No auto-open; user must click again to open the search
+        return;
+      }
+
+      const n = getChunkAtTime(currentPlayTime); // 1-based
+      const tStart = getChunkStartTime(n);
+      let tEnd = n < chunks.length ? getChunkStartTime(n + 1) : playTimeDuration;
+      if (!Number.isFinite(tEnd) || tEnd <= tStart) tEnd = tStart + 1;
+
+      const body = chunks[n - 1]?.text ?? "";
+      const chunkLen = body.length || 0;
+
+      const p = clamp01((currentPlayTime - tStart) / Math.max(0.001, tEnd - tStart));
+      const posInChunk = Math.min(chunkLen, Math.max(0, Math.round(p * chunkLen)));
+
+      // Center is the precise doc offset where we think the audio is
+      const centerOffset = sessionBaseOffsetRef.current + getChunkStartOffset(n) + posInChunk;
+
+      lastLocateOffsetRef.current = centerOffset;
+      applyLocateWindowAtCenter(centerOffset);
+    }, [
+      chunks,
+      currentPlayTime,
+      getChunkAtTime,
+      getChunkStartTime,
+      getChunkStartOffset,
+      playTimeDuration,
+      applyLocateWindowAtCenter,
+    ]);
+
+    const onLocateClick = useCallback(() => {
+      // Always perform the locate highlight
+      locateNow();
+
+      // If user is already in search mode, keep that open and do nothing else
+      if (locateSearchMode) {
+        setLocateOpen(true);
+        return;
+      }
+
+      // Show CTA ("Search for text") and keep it for the same window the highlight is visible
+      setLocateCtaOpen(true);
+      setLocateOpen(true);
+      if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
+      ctaTimerRef.current = setTimeout(() => {
+        setLocateCtaOpen(false);
+        // Close popover only if search hasn't been opened
+        setLocateOpen((prev) => (locateSearchMode ? true : false));
+      }, 4000); // keep in sync with your highlight lifetime
+    }, [locateNow, locateSearchMode]);
+
+
+
+    // Recompute matches whenever query or text changes (only when popover is open)
+    useEffect(() => {
+      if (!locateOpen) return;
+      const q = searchQuery.trim();
+      if (!q) {
+        setSearchMatches([]);
+        setSearchSel(0);
+        return;
+      }
+      const re = new RegExp(escapeRegExp(q), "gi");
+      const idxs: number[] = [];
+      for (let m = re.exec(sourcePlain); m; m = re.exec(sourcePlain)) {
+        idxs.push(m.index);
+        // Avoid infinite loops on zero-length matches
+        if (m.index === re.lastIndex) re.lastIndex++;
+      }
+      setSearchMatches(idxs);
+
+      // Prefer first match after last located offset; else first match
+      if (idxs.length) {
+        const anchor = lastLocateOffsetRef.current ?? 0;
+        let i = idxs.findIndex((x) => x >= anchor);
+        if (i < 0) i = 0;
+        setSearchSel(i);
+      } else {
+        setSearchSel(0);
+      }
+    }, [searchQuery, sourcePlain, locateOpen]);
+
+    const jumpToMatch = useCallback(
+      (nextIdx: number) => {
+        if (!searchMatches.length) return;
+        const L = searchMatches.length;
+        const norm = ((nextIdx % L) + L) % L;
+        const at = searchMatches[norm];
+        const len = Math.max(1, searchQuery.trim().length);
+        applyHighlightAt(at, len);
+        setSearchSel(norm);
+      },
+      [searchMatches, searchQuery, applyHighlightAt]
+    );
+
+    const nextMatch = useCallback(() => jumpToMatch(searchSel + 1), [jumpToMatch, searchSel]);
+    const prevMatch = useCallback(() => jumpToMatch(searchSel - 1), [jumpToMatch, searchSel]);
 
     // helper: length = first sentence OR max 120 chars
     const lenOneSentenceOr120 = (s: string): number => {
@@ -927,12 +1088,121 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           )}
 
           {prompts.length > 0 && !isDownload && (
-            <InfoIcon
-              onClick={() => showInfoToast(5000)}
-              className={cn(
-                "gpt:z-[51] gpt:hover:cursor-pointer gpt:absolute gpt:bottom-4 gpt:right-4 gpt:rounded-full gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:size-6"
-              )}
-            />
+            <div className="gpt:z-[51] gpt:absolute gpt:bottom-4 gpt:right-4 gpt:flex gpt:items-center gpt:gap-3">
+              {/* Locate (left of Info) */}
+              <Popover
+                modal={locateSearchMode}
+                open={locateOpen}
+                onOpenChange={(o) => {
+                  if (!o) {
+                    setLocateOpen(false);
+                    setLocateCtaOpen(false);
+                    setLocateSearchMode(false);
+                    if (ctaTimerRef.current) {
+                      clearTimeout(ctaTimerRef.current);
+                      ctaTimerRef.current = null;
+                    }
+                  }
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    onPointerDown={(e) => e.preventDefault()} // stops Radix from toggling
+                    onClick={onLocateClick}
+                    className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
+                    title="Locate Audio"
+                  >
+                    <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
+                    Locate Audio
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent
+                  align="end"
+                  className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:w-auto gpt:min-w-0 gpt:px-2 gpt:py-2"
+                  onInteractOutside={() => {           
+                    setLocateOpen(false);
+                    setLocateCtaOpen(false);
+                    setLocateSearchMode(false);
+                    if (ctaTimerRef.current) {
+                      clearTimeout(ctaTimerRef.current);
+                      ctaTimerRef.current = null;
+                    }
+                  }}
+                >
+                  {/* CTA (when not in search mode) */}
+                  {!locateSearchMode && locateCtaOpen ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        // Enter full search ONLY via this CTA
+                        setLocateSearchMode(true);
+                        setLocateCtaOpen(false);
+                        if (ctaTimerRef.current) {
+                          clearTimeout(ctaTimerRef.current);
+                          ctaTimerRef.current = null;
+                        }
+                      }}
+                      className="gpt:h-7 gpt:px-1.5 gpt:py-0.5 gpt:text-[11px] gpt:leading-none gpt:gap-1 gpt:whitespace-nowrap gpt:rounded"
+                    >
+                      <Search className="gpt:w-4 gpt:h-4" />
+                      Search for text
+                    </Button>
+                  ) : (
+                    <div className="gpt:flex gpt:flex-col gpt:gap-3">
+                      <div className="gpt:flex gpt:items-center gpt:gap-2">
+                        <input
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              nextMatch();
+                            } else if (e.key === "Enter" && e.shiftKey) {
+                              e.preventDefault();
+                              prevMatch();
+                            } else if (e.key === "Escape") {
+                              setLocateOpen(false);
+                              setLocateSearchMode(false);
+                            }
+                          }}
+                          placeholder="Search text…"
+                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 dark:border-gray-600 gpt:bg-white dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
+                        />
+                        <Button variant="ghost" onClick={prevMatch} className="gpt:px-3">Prev</Button>
+                        <Button variant="ghost" onClick={nextMatch} className="gpt:px-3">Next</Button>
+                      </div>
+
+                      <div className="gpt:flex gpt:items-center gpt:justify-between gpt:text-xs gpt:text-gray-600 dark:text-gray-300">
+                        <span>
+                          {searchMatches.length ? `${searchSel + 1} / ${searchMatches.length}` : "0 / 0"}
+                        </span>
+                        <div className="gpt:flex gpt:gap-2">
+                          <Button
+                            variant="ghost"
+                            className="gpt:px-2"
+                            onClick={() => { locateNow(); }}
+                          >
+                            Go to Audio
+                          </Button>
+                          <Button variant="ghost" className="gpt:px-2" onClick={() => { setLocateOpen(false); setLocateSearchMode(false); }}>
+                            Close
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              {/* Info (to the right) */}
+              <InfoIcon
+                onClick={() => showInfoToast(5000)}
+                className="gpt:hover:cursor-pointer gpt:rounded-full gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:size-6"
+              />
+            </div>
           )}
 
           {!isSubscribed && timerPopupOpen && (
