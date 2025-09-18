@@ -380,6 +380,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const resetter = (isBackPressed: boolean = false) => {
         reset(true, undefined, isBackPressed);
+        try { fileReader.revokeStructuredObjectURLs(structured!); } catch {}
         usingGPTReader.current = false;
         activatingWebReader.current = false;
         sessionFirstChunkRef.current = null;
@@ -415,7 +416,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
             localStorage.setItem("gptr/reloadDone", "true");
             await new Promise(resolve => setTimeout(resolve, 400));
-            window.location.href = window.location.href;
+            window.location.href = `${window.location.origin}/?model=auto`;
         } else {
             // Transcriber mode back button logic
             cancelTranscription();
@@ -458,13 +459,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
         if (persisted !== "text-to-speech") {
           setMode("text-to-speech");
-          window.location.href = window.location.href;
+          window.location.href = `${window.location.origin}/?model=auto`;
           return;
         }
 
         if (usingGPTReader.current) {
           usingGPTReader.current = false;
-          window.location.href = window.location.href;
+          window.location.href = `${window.location.origin}/?model=auto`;
           return;
         }
 
@@ -513,7 +514,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
           (async () => {
             try {
-              if (type === "application/pdf") {
+              if (type === "application/pdf" || /\.pdf$/i.test(f.name)) {
                 const st = await fileReader.pdfToStructured(f);
                 setup(st);
               } else if (
@@ -521,6 +522,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               ) {
                 const st = await fileReader.docxToStructured(f);
+                setup(st);
+              } else if (
+                type === "application/epub+zip" ||
+                /\.epub$/i.test(f.name)       
+              ) {
+                const st = await fileReader.epubToStructured(f); 
                 setup(st);
               } else if (type === "text/plain" || type === "text/rtf") {
                 const text = await fileReader.textPlainToText(f);
@@ -581,7 +588,16 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       const payload = (fileExtractedText ?? pastedText ?? ""); // keep as-is to preserve indices
       if (!payload) return;
       const sliced = startAt > 0 ? payload.slice(startAt) : payload;
-      setScrollToOffset(startAt);
+
+      if (structured?.source === "pdf") {
+        setScrollToOffset(startAt);
+      } else {
+        setScrollToOffset(null);
+      }
+
+      // Re-arm preview HTML (important for EPUB)
+      setPreviewHtmlSource(structured?.fullHtml ?? undefined);
+
       usingGPTReader.current = true;
       return splitAndSendPrompt(sliced).finally(() => {
         setShowDownloadOrListen(false);
@@ -606,15 +622,25 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           source: structured.source,
           fullText: structured.fullText,
           onConfirm: ({ startAt, matchLength }) => {
-            // enable the flash highlight ONLY when:
-            // - user is listening
-            // - it’s an uploaded file (already true in this path)
-            // - and not “start from beginning” (startAt > 0) OR user searched (matchLength > 0)
-            const shouldFlash = lastActionRef.current === "LISTEN" && (startAt > 0 || (matchLength ?? 0) > 0);
-            setHighlightActive(shouldFlash);
-            setHighlightLen(Math.max(0, matchLength ?? 0));
+            const shouldFlash =
+              lastActionRef.current === "LISTEN" &&
+              (startAt > 0 || (matchLength ?? 0) > 0);
+
+            if (structured.source === "pdf") {
+              // PDF uses absolute selection path
+              setHighlightActive(shouldFlash);
+              setHighlightLen(Math.max(0, matchLength ?? 0));
+              // scroll handled inside listenOrDownloadAudioFrom for PDFs
+            } else {
+              // DOCX/TXT/EPUB → use robust needle mode (alnum-based)
+              const bodyTail = structured.fullText.slice(startAt) || "";
+              const needleLen = Math.max(1, matchLength ?? lenOneSentenceOr120(bodyTail));
+              // Use the existing helper that sets needle + alphaBefore for non-PDF sources
+              applyHighlightAt(startAt, needleLen);
+            }
+
             listenOrDownloadAudioFrom(startAt);
-            sessionFirstChunkRef.current = null;   // unknown until we actually see a chunk
+            sessionFirstChunkRef.current = null; // unknown until we actually see a chunk
             hasLeftSessionFirstChunkRef.current = false;
           },
         });
@@ -684,10 +710,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 toast({ description: 'GPT Reader Alert: Clicking on the cancel button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
                 await new Promise(resolve => setTimeout(resolve, 400));
                 localStorage.setItem("gptr/reloadDone", "true");
-                window.location.href = window.location.href;
+                window.location.href = `${window.location.origin}/?model=auto`;
             } else {
                 localStorage.setItem("gptr/reloadDone", "false");
-                window.location.href = window.location.href;
+                window.location.href = `${window.location.origin}/?model=auto`;
             }
         } else {
             // Transcriber mode cancel

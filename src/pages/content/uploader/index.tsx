@@ -270,7 +270,7 @@ function Uploader() {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
           await new Promise(r => setTimeout(r, 500));
-          window.location.href = window.location.href;
+          window.location.href = `${window.location.origin}/?model=auto`;
         }
       })();
     }
@@ -361,7 +361,7 @@ function Uploader() {
         !isOpening.current
       ) {
         await new Promise(r => setTimeout(r, 500));
-        window.location.href = window.location.href;
+        window.location.href = `${window.location.origin}/?model=auto`;
       }
     })();
   }, [isAuthenticated]);
@@ -610,6 +610,7 @@ function Uploader() {
         }
 
         await triggerPromptFlow();
+        window.localStorage.removeItem("gptr/reloadDone");
         document.documentElement.style.overflow = 'hidden';
 
         const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;
@@ -722,7 +723,6 @@ function Uploader() {
         autoOpen.current = true;
         await onOpenChange(true);
         chrome.runtime.sendMessage({ type: "TAB_ACTIVATED" });
-        window.localStorage.removeItem("gptr/reloadDone");
       }
     };
 

@@ -1,6 +1,6 @@
 {
   "name": "gpt-reader",
-  "version": "1.8.5",
+  "version": "1.8.6",
   "description": "Bring ChatGPT’s natural AI voices to your text or document—instantly read aloud or download high-quality speech for free",
   "license": "MIT",
   "url": "https://www.gpt-reader.com/",
@@ -36,6 +36,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
+    "fflate": "^0.8.2",
     "file-saver": "^2.0.5",
     "lucide-react": "^0.503.0",
     "mammoth": "^1.9.0",

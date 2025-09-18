@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, GAIN_MULTIPLIER, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
@@ -877,7 +877,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         firefoxBufferNum.current = 0;
         if (!isTextToSpeech) {
           // eslint-disable-next-line no-self-assign
-          window.location.href = window.location.href; // Reset the page to clear any state
+          window.location.href = `${window.location.origin}/?model=auto`; // Reset the page to clear any state
         }
     }, [seekAudio, resetAudioUrl, isBackPressed])
 
@@ -1120,7 +1120,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         // 2) Drive the Web-Audio gain if present
         const gainNode = gainNodeRef.current;
         if (gainNode) {
-          gainNode.gain.value = vol * 1.5;
+          gainNode.gain.value = vol * GAIN_MULTIPLIER;
           // make sure the context is running
           if (audioCtxRef.current?.state === 'suspended') {
             audioCtxRef.current.resume();
@@ -1217,11 +1217,11 @@ const useAudioPlayer = (isDownload: boolean) => {
       
         const checkMemory = () => {
           const used = (performance as any).memory.usedJSHeapSize;
-          const threshold = 425 * 1024 * 1024; // 425 MB
+          const threshold = 500 * 1024 * 1024; // 500 MB
           if (!memoryWarnedRef.current && used > threshold) {
             toast({
-              description: "Memory usage has exceeded 425 MB. GPT Reader recommends closing this tab and then clicking on the extension icon.",
-              style: TOAST_STYLE_CONFIG,
+              description: "Memory usage has exceeded 500 MB. If the speed is too slow, GPT Reader recommends closing and re-opening the extension.",
+              style: TOAST_STYLE_CONFIG_INFO,
             });
             memoryWarnedRef.current = true;
           }

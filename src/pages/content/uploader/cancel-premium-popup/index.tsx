@@ -211,7 +211,17 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   useEffect(() => {
     (async () => {
       try {
-        const product = await fetchStripeProducts();
+        let product;
+        if (detectBrowser() === "firefox") {
+          product = await new Promise<any>((resolve) => {
+            chrome.runtime.sendMessage(
+              { type: "GET_PRODUCTS_PRICES" },
+              (response) => resolve(response)
+            );
+          });
+        } else {
+          product = await fetchStripeProducts();
+        }
         setDefaultPriceId(product?.prices?.priceId ?? null);
       } catch {
         setDefaultPriceId(null);

@@ -23,6 +23,14 @@ const stripImages = (raw: string) => {
   }
 };
 
+const formatProgress = (p: number): string => {
+  // clamp + round to 2 decimals for display
+  const v = Math.max(0, Math.min(100, Math.round((Number.isFinite(p) ? p : 0) * 100) / 100));
+  // show 2 decimals unless they're both zero
+  return Number.isInteger(v) ? v.toFixed(0) : v.toFixed(2);
+};
+
+
 /**
  * Plain viewer that behaves like the old DocumentViewer:
  * - takes a *plain string*
@@ -121,15 +129,15 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         {!hasError && (
           <h1 className="gpt:text-xl gpt:font-bold">
             {progress >= 0 && progress < 100 &&
-              `${chrome.i18n.getMessage("downloading_status")} (${progress.toFixed(0)}%)`}
+              `${chrome.i18n.getMessage("downloading_status")} (${formatProgress(progress)}%)`}
             {progress === 100 &&
-              `${chrome.i18n.getMessage("download_complete")} (${progress.toFixed(0)}%)`}
+              `${chrome.i18n.getMessage("download_complete")} (${formatProgress(progress)}%)`}
           </h1>
         )}
 
         {hasError && (
           <h1 className="gpt:text-xl gpt:font-bold gpt:text-red-600">
-            {`${chrome.i18n.getMessage("download_aborted")} (${progress.toFixed(0)}%)`}
+            {`${chrome.i18n.getMessage("download_aborted")} (${formatProgress(progress)}%)`}
           </h1>
         )}
 

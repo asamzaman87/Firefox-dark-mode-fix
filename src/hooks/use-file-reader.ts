@@ -1,5 +1,6 @@
 import mammoth from "mammoth";
 import { pdfjs } from "react-pdf";
+import { unzipSync, strFromU8 } from "fflate";
 
 // Path to the pdf.worker.js file
 pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.js");
@@ -21,6 +22,388 @@ export type StructuredText = {
   sections: SectionIndex[];
   source: "pdf" | "docx" | "text";
 };
+
+// ── EPUB helpers (NEW) ─────────────────────────────────────────────────────────
+
+/** Very small sanitizer: removes risky tags + attributes, keeps readable markup */
+function sanitizeHtmlFragment(fragmentHtml: string): HTMLElement {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(fragmentHtml, "text/html");
+  const root = doc.body;
+
+  // 1) Drop dangerous/irrelevant elements
+  root.querySelectorAll(
+    "script,style,link,iframe,frame,frameset,object,embed,form,video,audio,source"
+  ).forEach(n => n.remove());
+
+  // 2) Strip risky attributes
+  root.querySelectorAll("*").forEach(el => {
+    const attrNames = Array.from(el.attributes).map(a => a.name);
+    for (const name of attrNames) {
+      if (
+        name.startsWith("on") ||
+        name === "style" ||
+        name === "target"
+      ) {
+        el.removeAttribute(name);
+      }
+      // neuter anchors
+      if (el.tagName.toLowerCase() === "a" && name === "href") {
+        el.setAttribute("href", "#");
+      }
+    }
+  });
+
+  return root;
+}
+
+/** Path resolve helper for zip paths (base can be like `OPS/book.opf`) */
+function resolveZipHref(basePath: string, href: string): string {
+  try {
+    const baseDir = basePath.replace(/[^\/]+$/, "");
+    // use URL with dummy origin for robust resolution
+    const url = new URL(href, `https://x/${baseDir}`);
+    // strip origin
+    return decodeURIComponent(url.pathname.slice(1));
+  } catch {
+    // fallback: naive join
+    const baseDir = basePath.replace(/[^\/]+$/, "");
+    return (baseDir + href).replace(/\/\.\//g, "/");
+  }
+}
+
+/** crude mime from extension (for images mostly) */
+function mimeFromExt(p: string): string {
+  const ext = p.split(".").pop()?.toLowerCase() || "";
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "gif":
+      return "image/gif";
+    case "svg":
+      return "image/svg+xml";
+    case "webp":
+      return "image/webp";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+// Keep track of blob URLs created for a specific StructuredText so we can revoke later
+const _blobRegistry = new WeakMap<object, string[]>();
+
+/** Detect likely DRM: presence of META-INF/encryption.xml referencing non-font content */
+function isLikelyDrm(zip: Record<string, Uint8Array>): boolean {
+  const encKey = Object.keys(zip).find(
+    k => k.toLowerCase() === "meta-inf/encryption.xml"
+  );
+  if (!encKey) return false;
+  try {
+    const xml = strFromU8(zip[encKey]);
+    const doc = new DOMParser().parseFromString(xml, "application/xml");
+    // If it references encrypted data and doesn't look like just font obfuscation, treat as DRM
+    const encNodes = Array.from(doc.getElementsByTagName("EncryptedData"));
+    if (!encNodes.length) return false;
+    const algos = encNodes
+      .map(n => n.querySelector("EncryptionMethod")?.getAttribute("Algorithm") || "")
+      .join(" ");
+    // IDPF font obfuscation URIs are the "safe" case. Anything else → likely DRM.
+    const onlyFont =
+      /idpf\.org\/2008\/embedding/i.test(algos) && !/xmlenc/i.test(algos);
+    return !onlyFont;
+  } catch {
+    return true; // be conservative on parse failure
+  }
+}
+
+/** Parse EPUB to StructuredText (treated as "docx" source to reuse needle path) */
+const epubToStructured = async (file: File): Promise<StructuredText> => {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const zip = unzipSync(bytes); // filename (case-sensitive) -> Uint8Array
+
+  // Normalize key lookup (case-insensitive) via a resolver
+  const keyList = Object.keys(zip);
+  const findKey = (p: string) => {
+    const norm = p.replace(/\\/g, "/");
+    const exact = keyList.find(k => k === norm);
+    if (exact) return exact;
+    const lower = norm.toLowerCase();
+    return keyList.find(k => k.toLowerCase() === lower) || null;
+  };
+
+  // container.xml → OPF path
+  const containerKey =
+    findKey("META-INF/container.xml") || findKey("meta-inf/container.xml");
+  if (!containerKey) {
+    throw new Error("Invalid EPUB: missing META-INF/container.xml");
+  }
+  const containerXml = strFromU8(zip[containerKey]);
+  const containerDoc = new DOMParser().parseFromString(containerXml, "application/xml");
+  const rootfileEl = containerDoc.querySelector("rootfile");
+  const opfPath = rootfileEl?.getAttribute("full-path") || "";
+  if (!opfPath) throw new Error("Invalid EPUB: missing OPF path");
+
+  const opfKey = findKey(opfPath);
+  if (!opfKey) throw new Error("Invalid EPUB: OPF not found in archive");
+  const opfXml = strFromU8(zip[opfKey]);
+  const opfDoc = new DOMParser().parseFromString(opfXml, "application/xml");
+
+  // DRM check early
+  if (isLikelyDrm(zip)) {
+    throw new Error("This EPUB appears to be DRM-protected and can’t be read.");
+  }
+
+  // manifest map: id -> href/media-type/properties
+  const manifest = new Map<
+    string,
+    { href: string; type: string; properties: string | null }
+  >();
+  opfDoc.querySelectorAll("manifest > item").forEach((it) => {
+    manifest.set(it.getAttribute("id") || "", {
+      href: it.getAttribute("href") || "",
+      type: it.getAttribute("media-type") || "",
+      properties: it.getAttribute("properties"),
+    });
+  });
+
+  // spine reading order (ids)
+  const spineIds: string[] = [];
+  opfDoc.querySelectorAll("spine > itemref").forEach((ir) => {
+    const idref = ir.getAttribute("idref");
+    if (idref) spineIds.push(idref);
+  });
+  if (!spineIds.length) throw new Error("Invalid EPUB: empty reading spine");
+
+  // TOC labels (EPUB3 nav.xhtml or EPUB2 toc.ncx)
+  const labelsByHref = new Map<string, string>();
+  // EPUB 3: nav
+  const navItemId = Array.from(manifest.entries()).find(
+    ([, v]) => (v.properties || "").split(/\s+/).includes("nav")
+  )?.[0];
+  if (navItemId) {
+    const href = manifest.get(navItemId)!.href;
+    const navKey = findKey(resolveZipHref(opfPath, href));
+    if (navKey) {
+      const navHtml = strFromU8(zip[navKey]);
+      const navDoc = new DOMParser().parseFromString(navHtml, "text/html");
+      const tocNav =
+        navDoc.querySelector('nav[epub\\:type="toc"]') ||
+        navDoc.querySelector('nav[role="doc-toc"]') ||
+        navDoc.querySelector("nav");
+      if (tocNav) {
+        tocNav.querySelectorAll("a[href]").forEach((a) => {
+          const raw = a.getAttribute("href") || "";
+          const label = a.textContent?.trim() || "";
+          if (!raw || !label) return;
+          const pathOnly = raw.split("#")[0];
+          const abs = resolveZipHref(opfPath, pathOnly);
+          labelsByHref.set(abs.toLowerCase(), label);
+        });
+      }
+    }
+  } else {
+    // EPUB 2: NCX
+    const ncxId = Array.from(manifest.entries()).find(
+      ([, v]) => v.type === "application/x-dtbncx+xml"
+    )?.[0];
+    if (ncxId) {
+      const href = manifest.get(ncxId)!.href;
+      const ncxKey = findKey(resolveZipHref(opfPath, href));
+      if (ncxKey) {
+        const ncxXml = strFromU8(zip[ncxKey]);
+        const ncxDoc = new DOMParser().parseFromString(ncxXml, "application/xml");
+        ncxDoc.querySelectorAll("navPoint").forEach((np) => {
+          const label = np.querySelector("navLabel > text")?.textContent?.trim() || "";
+          const src = np.querySelector("content")?.getAttribute("src") || "";
+          if (!src || !label) return;
+          const pathOnly = src.split("#")[0];
+          const abs = resolveZipHref(opfPath, pathOnly);
+          labelsByHref.set(abs.toLowerCase(), label);
+        });
+      }
+    }
+  }
+
+  // Build HTML + text + sections
+  const blobUrls: string[] = [];
+  const fullHtmlParts: string[] = [];
+  const sections: SectionIndex[] = [];
+
+  let fullText = "";
+  let offset = 0;
+
+  const parser = new DOMParser();
+
+  for (let i = 0; i < spineIds.length; i++) {
+    const id = spineIds[i];
+    const it = manifest.get(id);
+    if (!it) continue;
+    const href = it.href;
+    const absPath = resolveZipHref(opfPath, href);
+    const itemKey = findKey(absPath);
+    if (!itemKey) continue;
+
+    const media = it.type;
+    if (!/xhtml|html/i.test(media)) {
+      // skip non-XHTML spine items
+      continue;
+    }
+
+    const xhtml = strFromU8(zip[itemKey]);
+    // sanitize + resolve images
+    const fragRoot = sanitizeHtmlFragment(xhtml);
+
+    // rewrite image src to blob URLs from zip
+    const imgs = fragRoot.querySelectorAll("img");
+    imgs.forEach((img) => {
+      // prefer src, else fallback to srcset first candidate, else data-src/lazy attrs
+      let raw = img.getAttribute("src") || "";
+
+      if (!raw) {
+        const ss = img.getAttribute("srcset");
+        if (ss) {
+          // take the first candidate URL (before space/comma)
+          const first = ss.split(",")[0]?.trim();
+          if (first) raw = first.split(/\s+/)[0];
+        }
+      }
+
+      // common lazy attributes
+      if (!raw) raw = img.getAttribute("data-src") || "";
+      if (!raw) raw = img.getAttribute("data-original") || "";
+      if (!raw) raw = img.getAttribute("data-lazy-src") || "";
+
+      if (!raw) return;
+
+      // skip data URIs or external links
+      if (/^data:/i.test(raw) || /^https?:/i.test(raw)) return;
+
+      // drop fragment/query (e.g., foo.svg#id?x=1)
+      const clean = raw.split("#")[0].split("?")[0];
+      const resolved = resolveZipHref(absPath, clean);
+      const k = findKey(resolved);
+      if (!k) return;
+
+      const mime = mimeFromExt(resolved);
+      const blob = new Blob([zip[k]], { type: mime });
+      const url = URL.createObjectURL(blob);
+      blobUrls.push(url);
+
+      img.setAttribute("src", url);
+      // once we have a definite src, remove srcset to avoid browser picking stale candidates
+      img.removeAttribute("srcset");
+    });
+
+    // ---- Rewire <svg><image href|xlink:href="..."> references: ----
+    const svgImages = fragRoot.querySelectorAll("image");
+    svgImages.forEach((node: Element) => {
+      const rawHref =
+        node.getAttribute("href") ||
+        node.getAttribute("xlink:href") ||
+        "";
+
+      if (!rawHref) return;
+      if (/^data:/i.test(rawHref) || /^https?:/i.test(rawHref)) return;
+
+      const clean = rawHref.split("#")[0].split("?")[0];
+      const resolved = resolveZipHref(absPath, clean);
+      const k = findKey(resolved);
+      if (!k) return;
+
+      const mime = mimeFromExt(resolved);
+      const blob = new Blob([zip[k]], { type: mime });
+      const url = URL.createObjectURL(blob);
+      blobUrls.push(url);
+
+      node.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", url);
+      node.setAttribute("href", url);
+      node.removeAttribute("xlink:href");
+    });
+
+    // innerHTML after sanitization
+    const sectionHtml = fragRoot.innerHTML;
+
+    // text extraction for TTS + mapping
+    const textDoc = parser.parseFromString(sectionHtml, "text/html");
+    const plain = (textDoc.body.textContent || "").replace(/\s+/g, " ").trim();
+
+    // label: TOC label if present, else "Chapter N"
+    const label =
+      labelsByHref.get(absPath.toLowerCase()) || `Chapter ${i + 1}`;
+
+    // Split very long chapters into parts for a better "Start from" dialog
+    const MAX_CHAP = 3600;
+    if (plain.length > MAX_CHAP * 1.2) {
+      let chapStart = 0;
+      let part = 1;
+      while (chapStart < plain.length) {
+        const chunkEnd = findWordSafeBreak(plain, chapStart, MAX_CHAP);
+        const slice = plain.slice(chapStart, chunkEnd);
+        const subId = `chap_${i + 1}_part_${part}`;
+        sections.push({
+          id: subId,
+          label: `${label} — Part ${part}`,
+          start: offset,
+          end: offset + slice.length,
+          preview: clampPreview(slice),
+        });
+        fullText += slice;
+        offset += slice.length;
+        chapStart = chunkEnd;
+        part++;
+      }
+      // HTML: still keep as one <section> for preview (less DOM)
+      fullHtmlParts.push(
+        `<section id="ch-${i + 1}">${sectionHtml}</section>`
+      );
+    } else {
+      sections.push({
+        id: `chap_${i + 1}`,
+        label,
+        start: offset,
+        end: offset + plain.length,
+        preview: clampPreview(plain),
+      });
+      fullText += plain;
+      offset += plain.length;
+
+      fullHtmlParts.push(
+        `<section id="ch-${i + 1}">${sectionHtml}</section>`
+      );
+    }
+  }
+
+  if (!fullText.trim()) {
+    throw new Error("There was an error parsing the file! It might not have valid text content.");
+  }
+
+  const fullHtml = `<div class="epub-doc">${fullHtmlParts.join("\n")}</div>`;
+
+  const structured: StructuredText = {
+    fullText,
+    fullHtml,
+    sections,
+    // IMPORTANT: treat EPUB like DOCX so the existing needle-based highlighter is used
+    source: "docx",
+  };
+
+  _blobRegistry.set(structured as object, blobUrls);
+  return structured;
+};
+
+/** Allow caller to revoke generated object URLs when done (optional but recommended) */
+const revokeStructuredObjectURLs = (st: StructuredText | null | undefined) => {
+  if (!st) return;
+  const urls = _blobRegistry.get(st as object) || [];
+  urls.forEach((u) => URL.revokeObjectURL(u));
+  _blobRegistry.delete(st as object);
+};
+
+
+
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const clampPreview = (s: string, n = 160) =>
@@ -338,5 +721,7 @@ export default function useFileReader() {
     docxToStructured,
     textToStructured,
     makeHtmlProgressSlicer,
+    epubToStructured,    
+    revokeStructuredObjectURLs, 
   };
 }

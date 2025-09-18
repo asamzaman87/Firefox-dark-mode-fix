@@ -45,14 +45,14 @@ const BillingIssuePopup: FC<BillingIssuePopupProps> = ({
             Billing Issue
           </DialogTitle>
           <DialogDescription className="gpt:sr-only">
-            Your subscription billing failed
+            You no longer have access to premium
           </DialogDescription>
         </DialogHeader>
 
         <div className="gpt:w-full gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
           <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
             <h1 className="gpt:text-xl gpt:font-medium">
-              Your monthly recurring payment failed
+              Your monthly recurring payment seems to have failed
             </h1>
             <p className="gpt:text-base gpt:text-muted-foreground gpt:text-center">
               Please upgrade again if you wish to continue using premium features.

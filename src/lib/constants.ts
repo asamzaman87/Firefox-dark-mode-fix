@@ -7,6 +7,7 @@ export const ACCEPTED_FILE_TYPES: Accept = {
   "application/msword": [],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [],
   "text/plain": [],
+  "application/epub+zip": [".epub"],
 };
 
 export const ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
@@ -141,3 +142,4 @@ export const FIRST_DISCOUNT_PRICE_ID = "price_1S6qdOLARZb1bIqHixjkvhwc";
 export const ORIGINAL_PRICE_ID = "price_1RokrdLARZb1bIqHJf3nXvxX";
 export const FREE_DOWNLOAD_CHUNKS = 3;
 export const DISCOUNT_FREQUENCY = 5;
+export const GAIN_MULTIPLIER = 2.5;

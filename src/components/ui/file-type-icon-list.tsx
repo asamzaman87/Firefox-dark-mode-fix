@@ -1,4 +1,4 @@
-import { File, FileTextIcon, LetterTextIcon, Type, MusicIcon, FileAudioIcon, Volume2Icon } from "lucide-react";
+import { File, FileTextIcon, LetterTextIcon, Type, MusicIcon, FileAudioIcon, Volume2Icon, BookOpen } from "lucide-react";
 import { FC, ReactNode } from "react";
 import { useSpeechMode } from "../../context/speech-mode";
 
@@ -34,6 +34,14 @@ const PdfIcon = () => (
     />
 )
 
+const EpubIcon = () => (
+  <IconTextWrapper
+    tip="EPUB"
+    Icon={() => <BookOpen className="gpt:size-7" />}
+  />
+);
+
+
 const PlainTextIcon = () => (
     <IconTextWrapper
         tip="TXT"
@@ -51,6 +59,7 @@ const readerFileTypeVsIconMap: Record<string, ReactNode> = {
     "application/msword": <DocxIcon />,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": <DocxIcon />,
     "text/plain": <PlainTextIcon />,
+    "application/epub+zip": <EpubIcon />,
     "default": <File className="gpt:size-10" />
 }
 
