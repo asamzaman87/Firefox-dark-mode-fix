@@ -346,32 +346,65 @@ const useStreamListener = (
             }
         } 
 
-        // Compute the last assistant conversation turn by counting turns (1=user, 2=assistant, 3=user, 4=assistant, ...)
-        // Then get the FIRST assistant message id within that last assistant turn.
+        // Compute the last conversation turn element and ensure it's an assistant turn.
+        // Then, within that assistant turn, get the FIRST data-message-id (poll up to 3s in both steps).
         const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-        let domMessageId: string | null | undefined;
+        let domMessageId: string | null | undefined = null;
 
-        const turnNodes = document.querySelectorAll<HTMLElement>('[data-testid^="conversation-turn-"]');
-        if (turnNodes.length > 0) {
-            // if total turns is even → last assistant turn is N; if odd → N-1
-            const lastAssistantTurnN = (turnNodes.length % 2 === 0) ? turnNodes.length : (turnNodes.length - 1);
-            let turnElement: HTMLElement | null = null;
-            for (let i = 0; i < 5 && !turnElement; i++) { // up to ~250ms total
-                turnElement = document.querySelector<HTMLElement>(`[data-testid="conversation-turn-${lastAssistantTurnN}"]`);
-                if (!turnElement) await new Promise(r => setTimeout(r, 50));
+        // helper: poll for up to `ms` until fn() returns a truthy value
+        const poll = async <T>(fn: () => T | null | undefined, ms = 3000, interval = 100): Promise<T | null> => {
+            const end = Date.now() + ms;
+            while (Date.now() < end) {
+                const val = fn();
+                if (val) return val;
+                await new Promise(r => setTimeout(r, interval));
             }
+            return null;
+        };
 
-            if (turnElement) {
-                const asm = turnElement.querySelector<HTMLDivElement>('[data-message-author-role="assistant"][data-message-id]');
-                domMessageId = asm?.getAttribute('data-message-id') || null;
-            } else {
-                console.warn("Couldn't locate last assistant conversation turn element");
+        // 1) Get the last node whose test id starts with conversation-turn-
+        const getLastTurn = (): HTMLElement | null => {
+            const nodes = document.querySelectorAll<HTMLElement>('[data-testid^="conversation-turn-"]');
+            if (!nodes.length) return null;
+            return nodes[nodes.length - 1]!;
+        };
+
+        let lastTurnEl = getLastTurn();
+
+        // If the last turn is not an assistant turn, poll up to 3s for a new last assistant turn to appear
+        if (!lastTurnEl || lastTurnEl.getAttribute("data-turn") !== "assistant") {
+            lastTurnEl = await poll<HTMLElement>(() => {
+                const el = getLastTurn();
+                return el && el.getAttribute("data-turn") === "assistant" ? el : null;
+            }, 3000, 100);
+            if (!lastTurnEl) {
+                console.warn("[handleConvStream] No assistant turn appeared within 3s; retrying…");
+                await retryFlow(chunkNdx, conversationId); // convKey optional
+                return;
             }
         }
 
+        // 2) Within the assistant turn, get the FIRST data-message-id (poll up to 3s)
+        const findFirstMessageId = (): string | null => {
+            // Be permissive: grab the first element carrying data-message-id inside this turn.
+            const elWithMsg = lastTurnEl!.querySelector<HTMLElement>("[data-message-id]");
+            return elWithMsg?.getAttribute("data-message-id") ?? null;
+        };
+
+        domMessageId = findFirstMessageId();
+        if (!domMessageId) {
+            domMessageId = await poll<string>(() => findFirstMessageId(), 3000, 100);
+            if (!domMessageId) {
+                console.warn("[handleConvStream] No message id found within 3s; retrying…");
+                await retryFlow(chunkNdx, conversationId); // convKey optional
+                return;
+            }
+        }
+
+        // If we got a valid domMessageId different from the streamed one, prefer DOM
         if (domMessageId && domMessageId !== messageId && uuidRe.test(domMessageId)) {
-            console.warn("Got the wrong message id. Falling back to DOM id:", messageId, "→", domMessageId);
+            console.warn("Using DOM message id instead of streamed id:", messageId, "→", domMessageId);
             messageId = domMessageId;
         }
 

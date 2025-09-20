@@ -402,6 +402,7 @@ function Uploader() {
           (async () => {
             const active = window.localStorage.getItem("gptr/active");
             if (active && active !== "true") {
+              window.localStorage.setItem("gptr/reloadDone", "true");
               activateButton.current?.click();
             }
             while (window.localStorage.getItem("gptr/active") !== "true") {
@@ -611,7 +612,6 @@ function Uploader() {
 
         await triggerPromptFlow();
         window.localStorage.removeItem("gptr/reloadDone");
-        document.documentElement.style.overflow = 'hidden';
 
         const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;
         if (introButton) {

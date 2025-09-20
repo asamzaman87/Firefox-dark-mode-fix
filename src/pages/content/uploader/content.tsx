@@ -156,12 +156,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       setHighlightPulse((x) => x + 1); // flash again even if same spot
     };
 
-    // Always highlight a 200-char window centered at `center` (100 back, 100 forward)
+    // Always highlight a 200-char window starting 25 left of `center` and 175 right
     const applyLocateWindowAtCenter = (center: number) => {
       const total = sourcePlain.length;
       if (!total) return;
-      const start = Math.max(0, Math.min(center - 100, Math.max(0, total - 1)));
+
+      const start = Math.max(0, center - 25);
       const maxLen = Math.min(200, Math.max(0, total - start));
+
       applyHighlightAt(start, maxLen);
     };
 

@@ -40,6 +40,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Center an element inside *our* scroll container (never the page)
+  // Only scroll if the target is not fully within view.
   const centerInContainer = (target: HTMLElement) => {
     const el = containerRef.current;
     if (!el || !target) return { dispose: () => {} };
@@ -47,6 +48,10 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
     const centerOnce = () => {
       const elRect = el.getBoundingClientRect();
       const tRect = target.getBoundingClientRect();
+
+      const fullyInView = tRect.top >= elRect.top && tRect.bottom <= elRect.bottom;
+      if (fullyInView) return; // already visible → do not scroll
+
       const delta =
         tRect.top + el.scrollTop - (elRect.top + (el.clientHeight / 2 - tRect.height / 2));
       el.scrollTop = Math.max(0, delta);
@@ -56,7 +61,7 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
     centerOnce();
     const raf = requestAnimationFrame(centerOnce);
 
-    // if images load later inside the content, re-center
+    // if images load later inside the content, re-center (will no-op if in view)
     const imgs = Array.from((divRef.current ?? el).querySelectorAll("img"));
     const onLoad = () => centerOnce();
     imgs.forEach((img) => {
