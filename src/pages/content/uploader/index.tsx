@@ -402,7 +402,6 @@ function Uploader() {
           (async () => {
             const active = window.localStorage.getItem("gptr/active");
             if (active && active !== "true") {
-              window.localStorage.setItem("gptr/reloadDone", "true");
               activateButton.current?.click();
             }
             while (window.localStorage.getItem("gptr/active") !== "true") {
