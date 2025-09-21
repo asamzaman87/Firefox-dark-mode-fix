@@ -188,7 +188,7 @@ const useWhisperTranscription = () => {
         mediaRecorderRef.current?.state === "recording"
       ) {
         longSilenceTimerRef.current = setTimeout(() => {
-          stopRecording(); // ⛔ Stop everything if silent > 5s
+          stopRecording(); // ⛔ Stop everything if silent > 10s
           toast({
             description:
               "🎤 You have been automatically muted due to inactivity. If you want to continue live transcription, then unmute yourself by clicking on the button again.",
@@ -196,7 +196,7 @@ const useWhisperTranscription = () => {
               "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:break-words gpt:text-left gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white gpt:dark:text-black gpt:bg-gray-800 gpt:dark:bg-gray-100 gpt:absolute gpt:top-1/2 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-34 gpt:opacity-100 gpt:transition-all gpt:ease-in-out",
             duration: 10000,
           });
-        }, 3500);
+        }, 10000);
       }
     }
   };
