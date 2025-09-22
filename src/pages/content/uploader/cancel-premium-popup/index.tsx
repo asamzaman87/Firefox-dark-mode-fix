@@ -16,26 +16,32 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import {
+  DISCOUNT_PRICE_ANNUAL_ID,
   DISCOUNT_PRICE_ID,
+  FIRST_DISCOUNT_PRICE_ANNUAL_ID,
   FIRST_DISCOUNT_PRICE_ID,
+  ORIGINAL_PRICE_ANNUAL_ID,
   ORIGINAL_PRICE_ID,
+  SCHEDULED_199_AT,
+  SCHEDULED_199_FLAG,
   TOAST_STYLE_CONFIG,
   TOAST_STYLE_CONFIG_INFO,
 } from "@/lib/constants";
 import {
   cancelSubscription,
+  clearScheduled199Flags,
+  clearScheduledAnnualFlags,
   detectBrowser,
   fetchStripeProducts,
   getStoredValue,
   getSubscriptionDetails,
+  isAnnualPriceId,
+  reconcileScheduledAnnualFlag,
   switchSubscriptionToPrice,
 } from "@/lib/utils";
 import { AlertTriangle, Crown } from "lucide-react";
 import { FC, useEffect, useMemo, useState } from "react";
-
-/* Local storage keys for tracking a scheduled downgrade chosen in the UI */
-const SCHEDULED_199_FLAG = "gptr/scheduledDowngradeTo199";
-const SCHEDULED_199_AT = "gptr/scheduledDowngradeAt";
+import AnnualUpsellPopup from "../annual-upsell-popup";
 
 /* Small helpers for local flag management */
 const getScheduledAt = (): number | null => {
@@ -48,10 +54,6 @@ const setScheduled = (atSec?: number | null) => {
   if (typeof atSec === "number" && atSec > 0) {
     window.localStorage.setItem(SCHEDULED_199_AT, String(atSec));
   }
-};
-const clearScheduled = () => {
-  window.localStorage.removeItem(SCHEDULED_199_FLAG);
-  window.localStorage.removeItem(SCHEDULED_199_AT);
 };
 
 /* ──────────────────────────────────────────────────────────────────────────────
@@ -193,6 +195,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const [showCancelDialog, setShowCancelDialog] = useState<boolean>(false); // Popup 1
   const [showOfferDialog, setShowOfferDialog] = useState<boolean>(false);   // Popup 2
   const [showAlreadyDialog, setShowAlreadyDialog] = useState<boolean>(false); // Popup 3
+  const [showAlreadyAnnualDialog, setShowAlreadyAnnualDialog] = useState<boolean>(false); // NEW Popup 4
 
   const [cancelInfo, setCancelInfo] = useState<{
     currentPeriodEnd: number;
@@ -202,6 +205,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
 
   const [loading, setLoading] = useState<boolean>(false);        // for real cancel
   const [offerLoading, setOfferLoading] = useState<boolean>(false); // for switching to 1.99
+  const [showAnnualUpsell, setShowAnnualUpsell] = useState<boolean>(false); 
 
   // For display/debug only (don’t rely on these for eligibility decisions)
   const [currentPriceId, setCurrentPriceId] = useState<string | null>(null);
@@ -253,7 +257,10 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       setCancelInfo({ currentPeriodEnd, isSubscriptionCancelled });
 
       // Cancelling means the “scheduled $1.99 later” plan is obsolete
-      clearScheduled();
+      clearScheduled199Flags();
+
+      // Clear any scheduled-annual local flags on successful cancellation
+      clearScheduledAnnualFlags();
 
       toast({
         description: (res as any)?.message || "Cancel subscription successfully",
@@ -338,13 +345,13 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const isEligibleFor199 = (priceId: string | null, defPriceId: string | null) => {
     if (!priceId) return false;
     if (priceId === DISCOUNT_PRICE_ID) return false; // already on $1.99
-    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID].filter(Boolean) as string[];
+    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID, FIRST_DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ANNUAL_ID].filter(Boolean) as string[];
     return candidates.includes(priceId);
   };
 
-  const isOn299or499 = (priceId: string | null, defPriceId: string | null) => {
+  const isOnPrev = (priceId: string | null, defPriceId: string | null) => {
     if (!priceId) return false;
-    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID].filter(Boolean) as string[];
+    const candidates = [defPriceId, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ID, FIRST_DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ANNUAL_ID].filter(Boolean) as string[];
     return candidates.includes(priceId);
   };
 
@@ -363,6 +370,18 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       }
       const current = details?.currentPriceId ?? null;
       setCurrentPriceId(current);
+      if (isAnnualPriceId(current)) {
+        // Clean any stale local flags; user is already on annual
+        clearScheduledAnnualFlags();
+      }
+
+      // If user has scheduled a switch to ANNUAL and is not on annual yet, ask them
+      // for confirmation (like your $1.99 already-switched flow)
+      const scheduledAnnual = reconcileScheduledAnnualFlag();
+      if (scheduledAnnual && !isAnnualPriceId(current)) {
+        setShowAlreadyAnnualDialog(true); // show popup 4 (annual-specific)
+        return;
+      }
 
       // If backend returned the period end, update local view so the popups can reflect it
       if (typeof details?.currentPeriodEnd === "number") {
@@ -391,19 +410,19 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
 
       // If user has already moved to $1.99 (backend truth) → clear stale flag
       if (current === DISCOUNT_PRICE_ID) {
-        clearScheduled();
+        clearScheduled199Flags();
         alreadyScheduled = false;
       }
 
       // If flag says scheduled but we have no timestamp or timestamp passed → clear too
       if (alreadyScheduled && (!at || at <= nowSec)) {
-        clearScheduled();
+        clearScheduled199Flags();
         alreadyScheduled = false;
       }
 
       // Branching:
       // A) If user previously chose $1.99 AND they’re still on 2.99/4.99 → show popup #3
-      if (alreadyScheduled && isOn299or499(current, dpid)) {
+      if (alreadyScheduled && isOnPrev(current, dpid)) {
         setShowAlreadyDialog(true);
         return;
       }
@@ -459,6 +478,8 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       });
       setShowOfferDialog(false);
       setIsOpen(false);
+      // User chose monthly $1.99 → clear any scheduled-annual choice
+      clearScheduledAnnualFlags();
     } catch (error) {
       console.log("Error switching price", error);
       toast({
@@ -525,6 +546,25 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
 
               {!isTrial && !cancelInfo?.isSubscriptionCancelled && (
                 <div className="gpt:space-y-2">
+                  {/* NEW: Switch to Annual (Save 20%) — hidden if already scheduled */}
+                  {!(reconcileScheduledAnnualFlag() || isAnnualPriceId(currentPriceId) || localStorage.getItem("gptr/annualPlan") === "true") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gpt:w-full gpt:justify-start gpt:text-left gpt:h-auto gpt:p-2"
+                      onClick={() => setShowAnnualUpsell(true)}
+                    >
+                      <div>
+                        <div className="gpt:font-medium gpt:text-[16px]">
+                          Switch to Annual (Save 20%)
+                        </div>
+                        <div className="gpt:text-xs gpt:text-gray-400">
+                          Pay once a year and save
+                        </div>
+                      </div>
+                    </Button>
+                  )}
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -608,6 +648,55 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
         loading={loading}
         nextCycleDate={formattedEndDate}
       />
+
+      <AnnualUpsellPopup
+        open={showAnnualUpsell}
+        onOpenChange={(open) => {
+          setShowAnnualUpsell(open);
+        }}
+      />
+
+      {/* NEW Popup 4: Already scheduled Annual → still cancel? */}
+      <Dialog open={showAlreadyAnnualDialog} onOpenChange={setShowAlreadyAnnualDialog}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          className="gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[620px] gpt:rounded-2xl"
+        >
+          <DialogHeader>
+            <DialogTitle className="gpt:text-xl gpt:font-bold gpt:text-center">
+              You’re already switching to Annual
+            </DialogTitle>
+            <DialogDescription className="gpt:text-center gpt:text-sm gpt:mt-2">
+              You chose to switch to the annual plan starting next cycle
+              {formattedEndDate ? ` (after ${formattedEndDate})` : ""}. Do you still want to cancel now?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="gpt:flex gpt:flex-col gpt:gap-4 gpt:mt-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowAlreadyAnnualDialog(false);
+                setIsOpen(false);
+              }}
+              className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700"
+            >
+              Keep Annual switch
+            </Button>
+            <LoadingButton
+              loading={offerLoading}
+              onClick={() => {
+                // Close this dialog and show the existing $1.99 offer flow
+                setShowAlreadyAnnualDialog(false);
+                setShowCancelDialog(false);
+                setShowOfferDialog(true);
+              }}
+              className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:bg-red-600 gpt:hover:bg-red-700 gpt:text-white"
+            >
+              Yes, cancel subscription
+            </LoadingButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

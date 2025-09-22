@@ -14,11 +14,12 @@ import {
   detectBrowser,
   fetchStripeProducts,
   formatPriceFromStripePrice,
+  toAnnualPriceId,
 } from "../../../lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { usePremiumModal } from "../../../context/premium-modal";
 import { useToast } from "../../../hooks/use-toast";
-import { DISCOUNT_FREQUENCY, DISCOUNT_PRICE_ID, FIRST_DISCOUNT_PRICE_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
+import { DISCOUNT_FREQUENCY, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ANNUAL_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -82,6 +83,7 @@ export interface CheckoutPayloadType {
 const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount = false }) => {
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
   const { reason } = usePremiumModal();
   const { toast } = useToast();
   const [openCount, setOpenCount] = useState<number | undefined>(undefined);
@@ -123,11 +125,28 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
   }, [open]);
 
   const isFirstDiscount = forceDiscount && openCount === DISCOUNT_FREQUENCY;
-  const premiumPriceLabel = forceDiscount
-    ? isFirstDiscount
-      ? "USD $2.99/month"
-      : "USD $1.99/month"
-    : formatPriceFromStripePrice(product?.prices);
+  // Monthly label (existing behavior)
+  const monthlyPriceLabel =
+    forceDiscount
+      ? isFirstDiscount
+        ? "USD $2.99/month"
+        : "USD $1.99/month"
+      : formatPriceFromStripePrice(product?.prices);
+
+  // Annual label (derived from mapping of whichever monthly price id we will use)
+  const deriveAnnualLabel = (): string => {
+    // Determine which monthly price id we’d pass to checkout in this context
+    let monthlyId: string | undefined = product?.prices?.priceId;
+    if (forceDiscount) {
+      monthlyId = isFirstDiscount ? FIRST_DISCOUNT_PRICE_ID : DISCOUNT_PRICE_ID;
+    }
+    const annualId = toAnnualPriceId(monthlyId, product?.prices?.priceId);
+    if (annualId === ORIGINAL_PRICE_ANNUAL_ID) return "USD $49.99/year";
+    if (annualId === FIRST_DISCOUNT_PRICE_ANNUAL_ID) return "USD $29.99/year";
+    if (annualId === DISCOUNT_PRICE_ANNUAL_ID) return "USD $19.99/year";
+    return "USD $—/year";
+  };
+  const annualPriceLabel = deriveAnnualLabel();
   const discountTitlePrice = isFirstDiscount ? "$2.99/month" : "$1.99/month";
   // 4.99 → 2.99 is ~40% off; 4.99 → 1.99 is ~60% off
   const discountPercentCopy = isFirstDiscount
@@ -166,7 +185,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
     {
       type: "premium",
       title: chrome.i18n.getMessage("premium") || "Premium",
-      price: premiumPriceLabel,
+      price: monthlyPriceLabel,
       isCurrent: false,
       features: [
         {
@@ -266,6 +285,18 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
       } else {
         priceIdToUse = product?.prices?.priceId;
       }
+
+            // NEW: if Annual chosen, map monthly → annual id
+      if (billingInterval === "year") {
+        const annualId = toAnnualPriceId(priceIdToUse, product?.prices?.priceId);
+        if (annualId) {
+          priceIdToUse = annualId;
+        } else {
+          // If we can't map, fall back gracefully to monthly (no breakage)
+          console.warn("No annual mapping found for", priceIdToUse);
+        }
+      }
+
       
       const payload: CheckoutPayloadType = {
         openaiId,
@@ -366,10 +397,63 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
               key={plan.type}
               className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:rounded-lg gpt:p-4 gpt:bg-white gpt:dark:bg-gray-700"
             >
+              {/* NEW: Toggle ABOVE the "Premium" title */}
+              {plan.type === "premium" && (
+                <div className="gpt:flex gpt:justify-center gpt:mb-3">
+                  {/* Segmented control with strong contrast, ring and shadow */}
+                  <div
+                    className={cn(
+                      "gpt:inline-flex gpt:overflow-hidden gpt:rounded-full",
+                      "gpt:bg-white dark:gpt:bg-gray-900",
+                      "gpt:border gpt:border-gray-300 dark:gpt:border-gray-700",
+                      "gpt:shadow-sm gpt:ring-1 gpt:ring-gray-200 dark:gpt:ring-gray-800"
+                    )}
+                    role="tablist"
+                    aria-label="Billing interval"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setBillingInterval("month")}
+                      className={cn(
+                        "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
+                        billingInterval === "month"
+                          ? "gpt:bg-gray-900 gpt:text-white dark:gpt:bg-gray-100 dark:gpt:text-gray-900"
+                          : "gpt:bg-transparent gpt:text-gray-800 dark:gpt:text-gray-200 hover:gpt:bg-gray-50 dark:hover:gpt:bg-gray-800/50"
+                      )}
+                      role="tab"
+                      aria-selected={billingInterval === "month"}
+                      aria-controls="billing-month"
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBillingInterval("year")}
+                      className={cn(
+                        "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
+                        billingInterval === "year"
+                          ? "gpt:bg-gray-900 gpt:text-white dark:gpt:bg-gray-100 dark:gpt:text-gray-900"
+                          : "gpt:bg-transparent gpt:text-gray-800 dark:gpt:text-gray-200 hover:gpt:bg-gray-50 dark:hover:gpt:bg-gray-800/50"
+                      )}
+                      role="tab"
+                      aria-selected={billingInterval === "year"}
+                      aria-controls="billing-year"
+                    >
+                      Annually (Save 20%)
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <h3 className="gpt:font-bold gpt:text-lg gpt:mb-1">{plan.title}</h3>
-              <p className="gpt:text-sm gpt:text-gray-500 gpt:mb-4 gpt:font-medium">
-                {plan.price}
+              <p className="gpt:text-sm gpt:text-gray-900 dark:gpt:text-white gpt:mb-4 gpt:font-semibold">
+                {plan.type === "premium"
+                  ? billingInterval === "year"
+                    ? annualPriceLabel
+                    : monthlyPriceLabel
+                  : plan.price}
               </p>
+
 
               <div className="gpt:flex gpt:justify-center gpt:mb-4">
                 <LoadingButton

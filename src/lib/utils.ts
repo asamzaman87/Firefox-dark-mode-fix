@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DOWLOAD_CHUNK_SIZE, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
@@ -566,6 +566,93 @@ export async function getStoredValue<T = string>(
       }
     });
   });
+}
+
+export function isAnnualPriceId(id?: string | null): boolean {
+  if (!id) return false;
+  return (
+    id === DISCOUNT_PRICE_ANNUAL_ID ||
+    id === FIRST_DISCOUNT_PRICE_ANNUAL_ID ||
+    id === ORIGINAL_PRICE_ANNUAL_ID
+  );
+}
+
+/**
+ * Map a known monthly priceId → its annual counterpart.
+ * If `monthlyId` equals your product default, we return ORIGINAL_PRICE_ANNUAL_ID.
+ * Returns null if no mapping is known.
+ */
+export function toAnnualPriceId(
+  monthlyId?: string | null,
+  defaultMonthlyId?: string | null
+): string | null {
+  if (!monthlyId) return null;
+
+  if (monthlyId === DISCOUNT_PRICE_ID) return DISCOUNT_PRICE_ANNUAL_ID;
+  if (monthlyId === FIRST_DISCOUNT_PRICE_ID) return FIRST_DISCOUNT_PRICE_ANNUAL_ID;
+  if (monthlyId === ORIGINAL_PRICE_ID) return ORIGINAL_PRICE_ANNUAL_ID;
+
+  // Treat the product's default monthly id as "original"
+  if (defaultMonthlyId && monthlyId === defaultMonthlyId) {
+    return ORIGINAL_PRICE_ANNUAL_ID;
+  }
+  return null;
+}
+
+export function clearScheduled199Flags() {
+  try {
+    window.localStorage.removeItem(SCHEDULED_199_FLAG);
+    window.localStorage.removeItem(SCHEDULED_199_AT);
+  } catch {
+    /* no-op */
+  }
+}
+
+/** True iff a $1.99 switch is scheduled AND its effective time is in the future. Clears stale flags otherwise. */
+export function reconcileScheduled199Flag(nowSec = Math.floor(Date.now() / 1000)): boolean {
+  const flag = window.localStorage.getItem(SCHEDULED_199_FLAG) === "true";
+  if (!flag) return false;
+  const raw = window.localStorage.getItem(SCHEDULED_199_AT);
+  const at = raw ? Number(raw) : NaN;
+
+  if (!Number.isFinite(at) || at <= nowSec) {
+    clearScheduled199Flags();
+    return false;
+  }
+  return true;
+}
+
+
+export function clearScheduledAnnualFlags() {
+  try {
+    window.localStorage.removeItem(SCHEDULED_ANNUAL_FLAG);
+    window.localStorage.removeItem(SCHEDULED_ANNUAL_AT);
+  } catch {
+    /* no-op */
+  }
+}
+
+/**
+ * Returns true iff an annual plan switch is scheduled AND its effective timestamp is in the future.
+ * If timestamp is missing/invalid/past, clears the local flags and returns false.
+ * Reads/writes window.localStorage only.
+ */
+export function reconcileScheduledAnnualFlag(nowSec = Math.floor(Date.now() / 1000)): boolean {
+  const flag = window.localStorage.getItem(SCHEDULED_ANNUAL_FLAG) === "true";
+  if (!flag) return false;
+  const raw = window.localStorage.getItem(SCHEDULED_ANNUAL_AT);
+  const at = raw ? Number(raw) : NaN;
+
+  if (!at) {
+    return true;
+  }
+
+  // No timestamp, NaN, or already passed → clear & return false
+  if (!Number.isFinite(at) || at <= nowSec) {
+    clearScheduledAnnualFlags();
+    return false;
+  }
+  return true;
 }
 
 function waitForStorageKey<T>(

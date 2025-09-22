@@ -137,9 +137,19 @@ export const REFRESH_MARGIN_MS = 15_000;
 export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;
-export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7";
-export const FIRST_DISCOUNT_PRICE_ID = "price_1S6qdOLARZb1bIqHixjkvhwc";
-export const ORIGINAL_PRICE_ID = "price_1RokrdLARZb1bIqHJf3nXvxX";
+export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7"; // 2 a month
+export const FIRST_DISCOUNT_PRICE_ID = "price_1S6qdOLARZb1bIqHixjkvhwc"; // 3 a month
+export const ORIGINAL_PRICE_ID = "price_1RokrdLARZb1bIqHJf3nXvxX"; // 5 a month
 export const FREE_DOWNLOAD_CHUNKS = 3;
-export const DISCOUNT_FREQUENCY = 5;
+export const DISCOUNT_FREQUENCY = 5; // for free users
 export const GAIN_MULTIPLIER = 2.5;
+export const DISCOUNT_PRICE_ANNUAL_ID = "price_1S9fjNLARZb1bIqHz4A65VlC"; // 19.99 a year
+export const FIRST_DISCOUNT_PRICE_ANNUAL_ID = "price_1S9fjgLARZb1bIqHFyucGuH5"; // 29.99 a year
+export const ORIGINAL_PRICE_ANNUAL_ID = "price_1S9fk2LARZb1bIqH8tCt1IoE"; // 49.99 a year 
+export const SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY = 10;
+// Track when user has chosen to switch to Annual (but switch isn’t effective yet)
+export const SCHEDULED_ANNUAL_FLAG = "gptr/scheduledSwitchToAnnual";
+export const SCHEDULED_ANNUAL_AT   = "gptr/scheduledSwitchToAnnualAt";
+// $1.99 offer scheduling keys (mirror the annual keys)
+export const SCHEDULED_199_FLAG = "gptr/scheduledDowngradeTo199";
+export const SCHEDULED_199_AT   = "gptr/scheduledDowngradeTo199At";

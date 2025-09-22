@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, handleCheckUserSubscription, isWebReaderFresh, waitForElement } from "@/lib/utils";
+import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, deleteChatAndCreateNew, detectBrowser, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -22,6 +22,7 @@ import { SectionIndex } from "@/hooks/use-file-reader";
 import WebReaderPermissionPopup from "./webreader-permission-popup";
 import BillingIssuePopup from "./billing-issue-popup";
 import { createCheckoutSession, fetchStripeProducts } from "@/lib/utils";
+import AnnualUpsellPopup from "./annual-upsell-popup";
 
 export interface PromptProps {
   text: string | undefined
@@ -39,7 +40,7 @@ function Uploader() {
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false)
-  const {setIsSubscribed, isSubscribed} = usePremiumModal();
+  const {setIsSubscribed, isSubscribed, setOpen, setReason} = usePremiumModal();
   const isOpeningInProgress = useRef(false);
 
   const { toast } = useToast();
@@ -53,6 +54,7 @@ function Uploader() {
   const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
   const [pendingTrialAfterPin, setPendingTrialAfterPin] = useState<boolean>(false);
   const [showDiscountPremium, setShowDiscountPremium] = useState<boolean>(false);
+  const [showAnnualUpsell, setShowAnnualUpsell] = useState<boolean>(false);
 
   const [startFromOpen, setStartFromOpen] = useState<boolean>(false);
   const [startFromSections, setStartFromSections] = useState<SectionIndex[]>([]);
@@ -670,11 +672,13 @@ function Uploader() {
           // ignore
         }
 
-        // After subscription/trial/pin gating, track opens and maybe show $1.99 promo
+        // After subscription/trial/pin gating:
+        // A) Free users: track opens and maybe show discount premium
+        // B) Subscribed users: every Nth open, nudge annual
         try {
-          // Only consider showing if user is NOT subscribed (no premium, no trial)
-          // `isSubscribed` is already accurate: true for premium OR trial
+          // A) Free users
           if (!effectiveIsSubscribed) {
+            localStorage.removeItem("gptr/annualPlan");
             const { openCount = 0 } = await chrome.storage.local.get(["openCount"]);
             const newCount = (typeof openCount === "number" ? openCount : 0) + 1;
             await chrome.storage.local.set({ openCount: newCount });
@@ -686,6 +690,50 @@ function Uploader() {
 
             if (isEveryN && !pinVisible && !trialWillShow) {
               setShowDiscountPremium(true);
+            }
+          } else {
+            // B) Subscribed users (exclude trial or cancelled)
+            const { isTrial: trialFlag = false, isSubscriptionCancelled = false } =
+              await chrome.storage.local.get(["isTrial", "isSubscriptionCancelled"]);
+            if (!trialFlag && !isSubscriptionCancelled) {
+              try {
+                // Determine current plan and scheduled-annual status
+                let details;
+                if (detectBrowser() === "firefox") {
+                  details = await new Promise<any>((resolve) => {
+                    chrome.runtime.sendMessage({ type: "GET_SUBSCRIPTION_DETAILS" }, (response) =>
+                      resolve(response)
+                    );
+                  });
+                } else {
+                  details = await getSubscriptionDetails();
+                }
+                const currentId = details?.currentPriceId ?? null;
+                const scheduledAnnual = reconcileScheduledAnnualFlag();
+                if (isAnnualPriceId(currentId)) {
+                  localStorage.setItem("gptr/annualPlan", "true");
+                } else {
+                  localStorage.removeItem("gptr/annualPlan");
+                }
+
+                // Only count/nudge on MONTHLY and not-scheduled-to-annual
+                if (currentId && !isAnnualPriceId(currentId) && !scheduledAnnual) {
+                  const { premiumOpenCount = 0 } = await chrome.storage.local.get([
+                    "premiumOpenCount",
+                  ]);
+                  const nextCount =
+                    (typeof premiumOpenCount === "number" ? premiumOpenCount : 0) + 1;
+                  await chrome.storage.local.set({ premiumOpenCount: nextCount });
+
+                  const shouldNudge =
+                    nextCount % SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY === 0 && nextCount > 0;
+                  if (shouldNudge) {
+                    setShowAnnualUpsell(true);
+                  }
+                }
+              } catch {
+                /* silent: if details fail, do nothing (no count, no nudge) */
+              }
             }
           }
         } catch {
@@ -936,6 +984,10 @@ function Uploader() {
               open={showBillingIssue}
               onClose={setShowBillingIssue}
               onUpgrade={handleBillingIssueUpgrade}
+              openPremiumModal={() => {
+                setOpen(true);
+                setReason("You no longer have access to premium. Upgrade again if you want to access premium features.");
+              }}
             />
           )}
           { confirmed && (
@@ -943,6 +995,13 @@ function Uploader() {
               open={showDiscountPremium}
               onOpenChange={setShowDiscountPremium}
               forceDiscount
+            />
+          )}
+          {/* NEW: Annual Upsell for subscribed users */}
+          {confirmed && (
+            <AnnualUpsellPopup
+              open={showAnnualUpsell}
+              onOpenChange={setShowAnnualUpsell}
             />
           )}
           <StartFromPopUp

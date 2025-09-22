@@ -13,16 +13,26 @@ interface BillingIssuePopupProps {
   open: boolean;
   onClose: (open: boolean) => void;
   onUpgrade: () => Promise<void> | void;
+  openPremiumModal?: () => void;
 }
 
 const BillingIssuePopup: FC<BillingIssuePopupProps> = ({
   open,
   onClose,
   onUpgrade,
+  openPremiumModal,
 }) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
+    // Prefer opening the Premium modal (monthly/annual) if provided.
+    if (typeof openPremiumModal === "function") {
+      openPremiumModal();
+      onClose(false);
+      return;
+    }
+
+    // Backward-compat: fall back to the existing onUpgrade flow.
     setLoading(true);
     try {
       await onUpgrade();
