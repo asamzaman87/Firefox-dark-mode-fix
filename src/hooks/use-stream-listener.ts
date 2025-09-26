@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, waitForElement } from "@/lib/utils";
+import { Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, waitForEditor, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
 import { usePremiumModal } from "@/context/premium-modal";
 const MAX_RETRIES = 2; 
@@ -115,6 +115,11 @@ const useStreamListener = (
                 return;
             }
 
+            const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
+            if (stopButton) {
+                stopButton.click();
+            }
+
             // bump counter (kept for telemetry/visibility even though we don't cap in fetch path)
             retryCounts.current[failedChunkNdx] = (retryCounts.current[failedChunkNdx] ?? 0) + 1;
 
@@ -132,8 +137,8 @@ const useStreamListener = (
                 // wait briefly for the new chat URL
                 for (let i = 0; i < 10; i++) {
                     await new Promise((r) => setTimeout(r, 200));
-                    const urlChat = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
-                    if (urlChat) break;
+                    const urlChat = window.location.href;
+                    if (urlChat === "https://chatgpt.com/") break;
                 }
                 resolve();
             });
@@ -312,7 +317,39 @@ const useStreamListener = (
             console.warn("[handleConvStream] chunkNdx is null");
             return;
         }
-        
+        if (!stopFlow.current && chunkNdx !== nextChunkRef.current - 1) {
+            // if its not part of the stop flow or the main flow then force it to be on the main flow
+            console.warn("[handleConvStream] Chunk fund to be in neither stop or main flow, retrying:", chunkNdx);
+            await retryFlow(nextChunkRef.current - 1, conversationId); // convKey optional
+            return;
+        }
+        if (!stopConvo) {
+            const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+            if (stopButton) {
+                stopButton.click();
+            }
+        } 
+        // wait for the speech button in chrome and send in firefox after stopping
+        // this is done to make sure the next injection proceeds successfully
+        try {
+            await Promise.race([
+                waitForElement("[data-testid='composer-speech-button']", 3000),
+                waitForElement("[data-testid='send-button']", 3000),
+            ]);
+        } catch {
+            console.warn("No resume button appeared within 3s; opening a new chat");
+            const newChatBtn = document.querySelector<HTMLButtonElement>(
+                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+            );
+            if (newChatBtn) {
+                newChatBtn.click();
+            } else if (chunkNdx != null && chunkNdx < chunkRef.current.length - 1) {
+                await retryFlow(chunkNdx, conversationId);
+                return;
+            } else {
+                console.log('[handleConvStream] I dont know what to do here', chunkNdx);
+            }
+        }
         if (stopFlow.current) audioIssueStop.current = false;
         if (audioIssueStop.current) {
             // Since we stopped the current chunkNdx, it will need to be re-injected
@@ -338,13 +375,6 @@ const useStreamListener = (
             stopFlow.current = true;
             return;
         }
-
-        if (!stopConvo) {
-            const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-            if (stopButton) {
-                stopButton.click();
-            }
-        } 
 
         // Compute the last conversation turn element and ensure it's an assistant turn.
         // Then, within that assistant turn, get the FIRST data-message-id (poll up to 3s in both steps).
@@ -424,20 +454,6 @@ const useStreamListener = (
         localStorage.setItem("gptr/pendingDelete", currentChatIdRef.current);
         const convKey = `${conversationId}:${messageId}`;
         registerPending(conversationId, convKey);
-
-        // wait for the speech button in chrome and send in firefox after stopping
-        try {
-            await Promise.race([
-                waitForElement("[data-testid='composer-speech-button']", 3000),
-                waitForElement("[data-testid='send-button']", 3000),
-            ]);
-        } catch {
-            console.warn("No resume button appeared within 3s; retrying if not the last chunk");
-            if (chunkNdx != null && chunkNdx < chunkRef.current.length - 1) {
-                await retryFlow(chunkNdx, conversationId, convKey);
-                return;
-            }
-        }
     
         // define needed consts
         const actual = assistant ? assistant : target;

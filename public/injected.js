@@ -230,6 +230,7 @@ window.fetch = async (...args) => {
     if (hasConversationEndpoint && args[1]?.method === 'POST') {
         if (args[1]?.body) {
             try {
+                localStorage.removeItem("gptr/sended");
                 const req = JSON.parse(args[1].body);
                 const firstMsg = req.messages?.[0]?.content?.parts?.[0] || "";
                 const m = firstMsg.match(/^\[(\d+)\]/);
@@ -247,6 +248,7 @@ window.fetch = async (...args) => {
                     window.dispatchEvent(generalErrorEvent);
                 }
                 console.error("Chunk-number parse failed:", _err);
+                return response;
             }
         }
  

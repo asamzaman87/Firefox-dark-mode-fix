@@ -849,6 +849,27 @@ function Uploader() {
     };
   }, [isActive]);
 
+  // Hide ChatGPT's fetch/limit toasts
+  useEffect(() => {
+    if (!isActive) return;
+    const hide = (root: ParentNode = document) => {
+      root.querySelectorAll<HTMLElement>('[data-ignore-for-page-load="true"]').forEach((el) => {
+        // Hide the toast container if present; otherwise hide the element itself
+        (el.closest('[role="status"], [role="alert"], .toast-root') as HTMLElement || el).style.display = "none";
+      });
+    };
+    hide(); // initial pass
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const n of Array.from(m.addedNodes)) {
+          if (n && n.nodeType === 1) hide(n as ParentNode);
+        }
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [isActive]);
+
   const handleConfirm = (state: boolean) => {
     if (!state) return onOpenChange(false);
     window.localStorage.setItem("gptr/confirmation", String(state));

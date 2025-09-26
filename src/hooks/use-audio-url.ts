@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback } from "@/lib/utils";
+import { Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -35,6 +35,9 @@ const useAudioUrl = (isDownload: boolean) => {
     // NEW: progressive rich HTML (mirrors downloadPreviewText length)
     const [downloadPreviewHtml, setDownloadPreviewHtml] = useState<string>("");
     const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
+    const sendWatchdogIntervalRef = useRef<number | null>(null);
+    const sendWatchdogStopRef = useRef<() => void>(() => {});
+
 
     const setPreviewHtmlSource = useCallback((html?: string | null) => {
         if (html && html.trim().length) {
@@ -72,12 +75,21 @@ const useAudioUrl = (isDownload: boolean) => {
     let activeSendObserver: MutationObserver | null = null;
     const { token } = useAuthToken();
     
-    const sendPrompt = () => {
+    const sendPrompt = (payload: { text: string; id: string; ndx: number }) => {
         setIsLoading(true);
-    
+        const clickAndWatch = (btn: HTMLButtonElement) => {
+            btn.click();
+            // only set the flag if we actually clicked
+            try {
+            localStorage.setItem("gptr/sended", "true");
+            } catch { /* ignore */ }
+            // start the non-blocking watchdog
+            startSendWatchdog(payload);
+        };
+        
         const sendButton = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
         if (sendButton && !sendButton.disabled) {
-            sendButton.click();
+            clickAndWatch(sendButton);
             return;
         }
     
@@ -90,7 +102,7 @@ const useAudioUrl = (isDownload: boolean) => {
         const observer = new MutationObserver((mutations, obs) => {
             const btn = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
             if (btn && !btn.disabled) {
-                btn.click();
+                clickAndWatch(btn);
                 obs.disconnect();
                 activeSendObserver = null;
                 clearTimeout(timeout);
@@ -215,6 +227,7 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+        await waitForEditor();
         if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);
         // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
@@ -274,7 +287,7 @@ const useAudioUrl = (isDownload: boolean) => {
             localStorage.setItem("gptr/is-first-audio-loading", String(id === "0"));
             // Send the prompt from the input content
             setTimeout(() => {
-                sendPrompt();
+                sendPrompt({ text, id, ndx });
             }, 50);
             if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
         } else {
@@ -288,6 +301,71 @@ const useAudioUrl = (isDownload: boolean) => {
             })
         }
     }, []);
+
+    const startSendWatchdog = useCallback(
+        (payload: { text: string; id: string; ndx: number }) => {
+            // prevent parallel watchdogs
+            if (sendWatchdogIntervalRef.current) {
+                clearInterval(sendWatchdogIntervalRef.current);
+                sendWatchdogIntervalRef.current = null;
+            }
+
+            const start = Date.now();
+
+            // define a stop function so we can cancel elsewhere if needed
+            sendWatchdogStopRef.current = () => {
+            if (sendWatchdogIntervalRef.current) {
+                clearInterval(sendWatchdogIntervalRef.current);
+                sendWatchdogIntervalRef.current = null;
+            }
+            };
+
+            // poll every 250ms for up to 5s
+            sendWatchdogIntervalRef.current = window.setInterval(async () => {
+                try {
+                    const flag = localStorage.getItem("gptr/sended");
+
+                    // If flag is gone, the send succeeded and someone cleared it → stop.
+                    if (!flag) {
+                        sendWatchdogStopRef.current();
+                        return;
+                    }
+
+                    // If 5s elapsed and flag still present → clear + retry inject once.
+                    const elapsed = Date.now() - start;
+                    if (elapsed >= 5000) {
+                        console.log("[startSendWatchdog] Flag still present after 5s, retrying...");
+                        localStorage.removeItem("gptr/sended");
+                        sendWatchdogStopRef.current();
+                        const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
+                        if (stopButton) {
+                            stopButton.click();
+                        }
+                        await new Promise<void>(async (resolve) => {
+                            const newChatBtn = document.querySelector<HTMLButtonElement>(
+                                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                            );
+                            if (newChatBtn) {
+                                newChatBtn.click();
+                            }
+                            // wait briefly for the new chat URL
+                            for (let i = 0; i < 10; i++) {
+                                await new Promise((r) => setTimeout(r, 200));
+                                const urlChat = window.location.href;
+                                if (urlChat === "https://chatgpt.com/") break;
+                            }
+                            resolve();
+                        });
+                        injectPrompt(payload.text, payload.id, payload.ndx);
+                    }
+                } catch {
+                    // On storage error, stop to avoid looping.
+                    sendWatchdogStopRef.current();
+                }
+            }, 250);
+        },
+    [injectPrompt]
+    );
 
     const splitAndSendPrompt = async (text: string) => {
         setText(text);
@@ -423,6 +501,11 @@ const useAudioUrl = (isDownload: boolean) => {
         chunkNumList.current.clear();
         currentStreamChunkNdxRef.current = 0;
         chunkRef.current = [];
+        if (sendWatchdogIntervalRef.current) {
+            clearInterval(sendWatchdogIntervalRef.current);
+            sendWatchdogIntervalRef.current = null;
+        }
+        sendWatchdogStopRef.current = () => {};
         if (activeSendObserver) {
             activeSendObserver.disconnect();
             activeSendObserver = null;

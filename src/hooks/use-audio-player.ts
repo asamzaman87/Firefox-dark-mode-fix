@@ -64,7 +64,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const seekAudio = useMemo(() => new Audio(URL.createObjectURL(mediaSource)), [mediaSource]);
     const blobsLength = useRef<number>(0);
     // ─── HYBRID FALLBACK SETUP ────────────────────────────────────────────────
-    const MAX_HISTORY = 50;                                              // how many past chunks to keep
+    const MAX_HISTORY = 500;                                              // how many past chunks to keep
     const historyBuffersRef = useRef<ArrayBuffer[]>([]);                 // last N raw buffers
     const fallbackAudioRef  = useRef<HTMLAudioElement | null>(null); 
     // at top of useAudioPlayer
