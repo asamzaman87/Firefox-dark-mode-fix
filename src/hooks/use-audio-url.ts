@@ -227,6 +227,26 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+        const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
+        if (stopButton) {
+            stopButton.click();
+            console.log('[injectPrompt] stopButton found in injectPrompt, opening new chat...');
+            await new Promise<void>(async (resolve) => {
+                const newChatBtn = document.querySelector<HTMLButtonElement>(
+                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                );
+                if (newChatBtn) {
+                    newChatBtn.click();
+                    // wait briefly for the new chat URL
+                    for (let i = 0; i < 10; i++) {
+                        await new Promise((r) => setTimeout(r, 200));
+                        const urlChat = window.location.href;
+                        if (urlChat === "https://chatgpt.com/") break;
+                    }
+                }
+                resolve();
+            });
+        }
         await waitForEditor();
         if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);
         // Cycle through helper prompts
@@ -347,12 +367,12 @@ const useAudioUrl = (isDownload: boolean) => {
                             );
                             if (newChatBtn) {
                                 newChatBtn.click();
-                            }
-                            // wait briefly for the new chat URL
-                            for (let i = 0; i < 10; i++) {
-                                await new Promise((r) => setTimeout(r, 200));
-                                const urlChat = window.location.href;
-                                if (urlChat === "https://chatgpt.com/") break;
+                                // wait briefly for the new chat URL
+                                for (let i = 0; i < 10; i++) {
+                                    await new Promise((r) => setTimeout(r, 200));
+                                    const urlChat = window.location.href;
+                                    if (urlChat === "https://chatgpt.com/") break;
+                                }
                             }
                             resolve();
                         });

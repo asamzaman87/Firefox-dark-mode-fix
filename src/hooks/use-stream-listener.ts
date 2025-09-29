@@ -133,12 +133,12 @@ const useStreamListener = (
                 );
                 if (newChatBtn) {
                     newChatBtn.click();
-                }
-                // wait briefly for the new chat URL
-                for (let i = 0; i < 10; i++) {
-                    await new Promise((r) => setTimeout(r, 200));
-                    const urlChat = window.location.href;
-                    if (urlChat === "https://chatgpt.com/") break;
+                    // wait briefly for the new chat URL
+                    for (let i = 0; i < 10; i++) {
+                        await new Promise((r) => setTimeout(r, 200));
+                        const urlChat = window.location.href;
+                        if (urlChat === "https://chatgpt.com/") break;
+                    }
                 }
                 resolve();
             });
@@ -323,12 +323,10 @@ const useStreamListener = (
             await retryFlow(nextChunkRef.current - 1, conversationId); // convKey optional
             return;
         }
-        if (!stopConvo) {
-            const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-            if (stopButton) {
-                stopButton.click();
-            }
-        } 
+        const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+        if (stopButton) {
+            stopButton.click();
+        }
         // wait for the speech button in chrome and send in firefox after stopping
         // this is done to make sure the next injection proceeds successfully
         try {
