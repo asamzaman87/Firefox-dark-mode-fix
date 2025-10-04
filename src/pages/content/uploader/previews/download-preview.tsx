@@ -50,7 +50,16 @@ const DocumentPreview: FC<{ html?: string; text?: string }> = ({ html, text }) =
 
   return (
     <div className="gpt:text-[23px] gpt:size-full gpt:overflow-y-auto gpt:max-h-full gpt:text-justify gpt:[&_p]:my-4 gpt:[&_p]:leading-loose gpt:sm:px-[15%]">
-      <div ref={divRef} className="gpt:p-10 gpt:mb-32 gpt:bg-white dark:bg-black gpt:min-h-full gpt:h-max gpt:rounded gpt:drop-shadow" />
+      <div
+        ref={divRef}
+        className="
+          gpt:p-10 gpt:mb-32 gpt:bg-white dark:bg-black gpt:min-h-full gpt:h-max gpt:rounded gpt:drop-shadow
+          gpt:break-words
+          gpt:[&_pre]:max-w-full gpt:[&_pre]:overflow-x-auto gpt:[&_pre]:whitespace-pre-wrap gpt:[&_pre]:break-words
+          gpt:[&_code]:whitespace-pre-wrap gpt:[&_code]:break-words
+          gpt:[&_pre]:p-3 gpt:[&_pre]:rounded-md
+        "
+      />
     </div>
   );
 };

@@ -115,13 +115,13 @@ const useAudioUrl = (isDownload: boolean) => {
         const timeout = setTimeout(() => {
             observer.disconnect();
             activeSendObserver = null;
-            console.error("[sendPrompt] Send button not found after 20 seconds.");
+            console.error("[sendPrompt] Send button not found after 8 seconds.");
             toast({
-                description: `GPT Reader is having trouble, please refresh your page and try again. You may have reached ChatGPT's hourly limit and will need to wait for a few minutes.`,
+                description: `GPT Reader is having trouble, you may have reached ChatGPT's hourly limit. Try refreshing and opening the extension again.`,
                 style: TOAST_STYLE_CONFIG,
                 duration: 30000
             })
-        }, 20000);
+        }, 8000);
     };
     
     const stopPrompt = async () => {
@@ -312,7 +312,7 @@ const useAudioUrl = (isDownload: boolean) => {
             if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
         } else {
             // Fallback error
-            const errorMessage = `GPT Reader is having trouble, please refresh your page and try again`;
+            const errorMessage = `ChatGPT is showing a popup underneath this extension that is causing it to not work. Please close it and try again.`;
             console.error('In injectPrompt else:', errorMessage);
             window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
             toast({
@@ -353,8 +353,8 @@ const useAudioUrl = (isDownload: boolean) => {
 
                     // If 5s elapsed and flag still present → clear + retry inject once.
                     const elapsed = Date.now() - start;
-                    if (elapsed >= 5000) {
-                        console.log("[startSendWatchdog] Flag still present after 5s, retrying...");
+                    if (elapsed >= 8000) {
+                        console.log("[startSendWatchdog] Flag still present after 8s, retrying...");
                         localStorage.removeItem("gptr/sended");
                         sendWatchdogStopRef.current();
                         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");

@@ -665,6 +665,32 @@ export const waitForEditor = async (timeoutMs = 5000) => {
   return false;
 };
 
+export function restoreRootInfo() {
+  const saved = localStorage.getItem("gptr/root-info");
+
+  if (!saved) return;
+
+  try {
+    const rootInfo = JSON.parse(saved);
+    console.log("Saved root info:", rootInfo);
+
+    const root = document.documentElement;
+    root.className = ""; // clear existing classes
+
+    if (Array.isArray(rootInfo.classList)) {
+      rootInfo.classList.forEach((cls: string) => root.classList.add(cls));
+    }
+
+    if (rootInfo.colorScheme) {
+      root.style.colorScheme = rootInfo.colorScheme;
+    }
+    localStorage.setItem('gptr/next-theme', rootInfo.colorScheme);
+  } catch (err) {
+    console.error("Could not parse saved root info:", err);
+  }
+}
+
+
 function waitForStorageKey<T>(
   key: string,
   storageArea: "sync" | "local" = "sync",

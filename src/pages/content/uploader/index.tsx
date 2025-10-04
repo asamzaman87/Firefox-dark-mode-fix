@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, waitForElement } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -268,6 +268,7 @@ function Uploader() {
       wasActive.current = true;
     }
     if (!isActive && wasActive.current) {
+      restoreRootInfo();
       (async () => {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
@@ -278,6 +279,8 @@ function Uploader() {
     }
     const handleUnload = (event: BeforeUnloadEvent) => {
       if (!isAuthenticated) return;
+      restoreRootInfo();
+      localStorage.removeItem("gptr/root-info");
 
       const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
 
@@ -776,6 +779,40 @@ function Uploader() {
     run();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const saveRootInfo = () => {
+      if (localStorage.getItem("gptr/active") !== "true") {
+        const info = {
+          classList: Array.from(root.classList),
+          colorScheme: root.style.colorScheme || "",
+        };
+        localStorage.setItem("gptr/root-info", JSON.stringify(info));
+        localStorage.setItem("gptr/next-theme", root.style.colorScheme || "");
+        // console.log("Stored root COLOR", root.style.colorScheme);
+      }
+    };
+
+    // Save once immediately
+    saveRootInfo();
+
+    // Watch for changes to the style attribute
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "style"
+        ) {
+          saveRootInfo();
+        }
+      }
+    });
+
+    observer.observe(root, { attributes: true, attributeFilter: ["style"] });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isActive) return; // do nothing when overlay is closed

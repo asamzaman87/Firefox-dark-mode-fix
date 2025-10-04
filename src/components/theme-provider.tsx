@@ -32,7 +32,12 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = document.documentElement;
+    if (localStorage.getItem('gptr/active') !== 'true') {
+      return
+    }
+
+    // console.log('this is the theme being set', theme);
 
     root.classList.remove("light", "dark")
 
