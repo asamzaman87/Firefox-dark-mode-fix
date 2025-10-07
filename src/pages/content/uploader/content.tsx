@@ -848,6 +848,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 <Popover
                   onOpenChange={setIsDownloadConfirmationOpen}
                   open={isDownloadConfirmationOpen}
+                  modal
                 >
                   {isTextToSpeech && (
                     <PopoverTrigger asChild>

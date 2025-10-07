@@ -272,7 +272,7 @@ function Uploader() {
       (async () => {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise(r => setTimeout(r, 1000));
           window.location.href = `${window.location.origin}/?model=auto`;
         }
       })();

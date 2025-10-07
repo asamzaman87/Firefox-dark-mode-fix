@@ -8,6 +8,23 @@ import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-t
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 
+// LocalStorage list so Uploader can also clean these up
+const LS_CHATS_TO_DELETE = "gptr/chatsToDelete";
+export const readChatsToDelete = (): string[] => {
+    try { return JSON.parse(localStorage.getItem(LS_CHATS_TO_DELETE) || "[]"); } catch { return []; }
+};
+export const writeChatsToDelete = (ids: string[]) => {
+    localStorage.setItem(LS_CHATS_TO_DELETE, JSON.stringify([...new Set(ids)]));
+};
+export const addChatToDeleteLS = (chatId?: string) => {
+    if (!chatId) chatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
+    const list = readChatsToDelete();
+    if (!list.includes(chatId)) writeChatsToDelete([...list, chatId]);
+};
+export const removeChatFromDeleteLS = (chatId: string) => {
+    writeChatsToDelete(readChatsToDelete().filter(id => id !== chatId));
+};
+
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
 
 /**
@@ -672,7 +689,7 @@ export function restoreRootInfo() {
 
   try {
     const rootInfo = JSON.parse(saved);
-    console.log("Saved root info:", rootInfo);
+    // console.log("Saved root info:", rootInfo);
 
     const root = document.documentElement;
     root.className = ""; // clear existing classes

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, waitForEditor, waitForElement } from "@/lib/utils";
+import { addChatToDeleteLS, Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, removeChatFromDeleteLS, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
 import { usePremiumModal } from "@/context/premium-modal";
 const MAX_RETRIES = 2; 
@@ -39,22 +39,6 @@ const useStreamListener = (
 
     // Map: chatId -> Set of convKeys `${conversationId}:${messageId}` (one per synth fetch)
     const chatToPendingRef = useRef<Map<string, Set<string>>>(new Map());
-
-    // LocalStorage list so Uploader can also clean these up
-    const LS_CHATS_TO_DELETE = "gptr/chatsToDelete";
-    const readChatsToDelete = (): string[] => {
-        try { return JSON.parse(localStorage.getItem(LS_CHATS_TO_DELETE) || "[]"); } catch { return []; }
-    };
-    const writeChatsToDelete = (ids: string[]) => {
-        localStorage.setItem(LS_CHATS_TO_DELETE, JSON.stringify([...new Set(ids)]));
-    };
-    const addChatToDeleteLS = (chatId: string) => {
-        const list = readChatsToDelete();
-        if (!list.includes(chatId)) writeChatsToDelete([...list, chatId]);
-    };
-    const removeChatFromDeleteLS = (chatId: string) => {
-        writeChatsToDelete(readChatsToDelete().filter(id => id !== chatId));
-    };
 
     const registerPending = (chatId: string, convKey: string) => {
         let set = chatToPendingRef.current.get(chatId);
@@ -340,6 +324,7 @@ const useStreamListener = (
                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
             );
             if (newChatBtn) {
+                addChatToDeleteLS();
                 newChatBtn.click();
             } else if (chunkNdx != null && chunkNdx < chunkRef.current.length - 1) {
                 await retryFlow(chunkNdx, conversationId);
@@ -474,12 +459,54 @@ const useStreamListener = (
             return;
         }
         
-        
         if (comparisonActual !== comparisonExpected) {
             await retryFlow(chunkNdx, conversationId, convKey);
             return;
         } 
-        
+
+        // DOM visibility check — ensure the last 10 alphanum chars of the expected message
+        // are actually visible in the rendered assistant bubble.
+        // NOTE: We normalize to alphanumeric to match `normalizeAlphaNumeric` behavior.
+        {
+            const expectedSuffixLen = Math.min(10, comparisonExpected.length);
+            const expectedSuffix = comparisonExpected.slice(-expectedSuffixLen);
+
+            const deadline = Date.now() + 5000; // monitor DOM for up to 5 seconds
+            let suffixFound = false;
+
+            while (Date.now() < deadline) {
+                // Re-acquire the last assistant turn each iteration (DOM may update)
+                const curTurn = getLastTurn();
+                const domVisibleTextRaw = curTurn?.innerText ?? curTurn?.textContent ?? "";
+                const domVisibleText = normalizeAlphaNumeric(domVisibleTextRaw);
+
+                if (domVisibleText.indexOf(expectedSuffix) !== -1) {
+                    suffixFound = true;
+                    break;
+                }
+
+                await new Promise((r) => setTimeout(r, 100));
+                if (LOCAL_LOGS) console.log("[handleConvStream] Waiting for DOM for chunk", chunkNdx);
+            }
+
+            if (!suffixFound) {
+                if (LOCAL_LOGS) {
+                    const curTurn = getLastTurn();
+                    const domVisibleTextRaw = curTurn?.innerText ?? curTurn?.textContent ?? "";
+                    const domVisibleText = normalizeAlphaNumeric(domVisibleTextRaw);
+                    console.warn(
+                        "[handleConvStream] Render check failed after 5s — expected suffix not visible in DOM.",
+                        {
+                        expectedSuffix,
+                        domTail: domVisibleText.slice(-80),
+                        assistantTail: comparisonActual.slice(-80),
+                        }
+                    );
+                }
+                await retryFlow(chunkNdx, conversationId, convKey);
+                return;
+            }
+        }
         
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumModal } from "@/context/premium-modal";
 import { LISTENERS, PRO_VOICES, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, detectBrowser } from "@/lib/utils";
-import { ChevronDown, Crown, FileAudio, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
+import { ArrowDown, Check, ChevronDown, Crown, FileAudio, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
 import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "../../../hooks/use-toast";
 import useFormat from "@/hooks/use-format";
@@ -33,6 +33,33 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     const hasInitializedFreeVoice = useRef(false);
     const { setIsTriggered, isSubscribed, setReason } = usePremiumModal();
     const {toast} = useToast();
+
+    // Fire GET_VOICES once on mount if the list is empty (covers inline usage)
+    useEffect(() => {
+        if (!loading && voice.voices.length === 0) {
+            window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+        }
+    }, []);
+
+    // Fire GET_VOICES whenever the dropdown opens and voices are still empty
+    useEffect(() => {
+        if (open && voice.voices.length === 0) {
+            window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+        }
+    }, [open, voice.voices.length]);
+
+    // Normalize selected to a plain string
+    const selectedKey = useMemo(() => {
+        if (typeof selected === "string") return selected;
+        const v = (selected as any)?.voice;
+        return typeof v === "string" ? v : "";
+    }, [selected]);
+
+    const selectedLabel = useMemo(() => {
+        if (!selectedKey) return "—";
+        return selectedKey.charAt(0).toUpperCase() + selectedKey.slice(1);
+    }, [selectedKey]);
+
     
     const allVoices = useMemo(() => {
       const proSet = new Set(PRO_VOICES);
@@ -60,6 +87,33 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         return aGender - bGender;
       });
     }, [voices, isSubscribed]);
+
+    const listRef = useRef<HTMLDivElement | null>(null);
+    const [showScrollHint, setShowScrollHint] = useState(false);
+
+    useEffect(() => {
+        const el = listRef.current;
+        if (!el) return;
+
+        const update = () => {
+            const canScroll = el.scrollHeight > el.clientHeight;
+            // show only if scrollable AND we're at the very top
+            setShowScrollHint(canScroll && el.scrollTop === 0);
+        };
+
+        update(); // run once on open / data change
+
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+
+        el.addEventListener("scroll", update, { passive: true });
+
+        return () => {
+            ro.disconnect();
+            el.removeEventListener("scroll", update);
+        };
+    }, [allVoices.length, open]); // rerun when menu opens or voices change
+
 
     useEffect(() => {
         if (
@@ -146,7 +200,16 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         disabled?: boolean
     }
     const Trigger: FC<TriggerProps> = ({ children, onClick, disabled }) => (
-        <span aria-disabled={disabled} className="gpt:w-max gpt:aria-disabled:cursor-not-allowed gpt:shadow-sm gpt:hover:cursor-pointer gpt:inline-flex gpt:items-center gpt:justify-evenly gpt:gap-2 gpt:py-1 gpt:px-2 gpt:text-sm gpt:font-medium gpt:rounded-full gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-500 dark:border-gray-700" onClick={onClick}>
+        <span
+            aria-disabled={disabled}
+            onClick={onClick}
+            className={cn(
+                "gpt:w-max gpt:inline-flex gpt:items-center gpt:justify-evenly gpt:gap-2 gpt:py-1 gpt:px-2 gpt:text-sm gpt:font-medium",
+                "gpt:rounded-full gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-500 dark:border-gray-700 gpt:shadow-sm",
+                "gpt:transition-transform gpt:hover:scale-105 gpt:active:scale-95 gpt:hover:cursor-pointer",
+                "gpt:aria-disabled:cursor-not-allowed"
+            )}
+        >
             {children}
         </span>
     )
@@ -160,7 +223,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         }
     }
 
-    if (loading)
+    if (loading || (open && voice.voices.length === 0))
         return (
             <div className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
                 <Skeleton className="gpt:rounded-full gpt:w-32 gpt:h-8" />
@@ -179,16 +242,19 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
             <DropdownMenu onOpenChange={onOpenChange}>
                 <DropdownMenuTrigger disabled={disabled}>
                     <Trigger disabled={disabled}>
-                        <UserCircle2Icon className="gpt:size-4" /> {voice.selected.charAt(0).toUpperCase() + voice.selected.slice(1)} <ChevronDown className={cn("gpt:size-4", { "gpt:rotate-180": open })} />
+                        <UserCircle2Icon className="gpt:size-4" /> {selectedLabel} <ChevronDown className={cn("gpt:size-4", { "gpt:rotate-180": open })} />
                     </Trigger>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
-                    <ScrollArea className="gpt:h-72 gpt:w-full">
+                    <div
+                        ref={listRef}
+                        className="gpt:relative gpt:max-h-72 gpt:w-full gpt:overflow-y-auto gpt:pr-1"
+                    >
                         {allVoices.map((voice, i, arr) => (
                             <>
                                 <DropdownMenuItem className="gpt:flex-col gpt:items-start gpt:justify-between gpt:cursor-pointer gpt:disabled:cursor-not-allowed gpt:hover:bg-gray-200 dark:hover:bg-gray-700 gpt:rounded gpt:gap-1" disabled={selected === voice.voice} key={voice.voice} onClick={() => onDropItemSelect(voice)}>
                                     <div className="gpt:flex gpt:justify-between gpt:items-center gpt:w-full gpt:gap-2">
-                                        <span className="gpt:inline-flex gpt:gap-1 gpt:items-center gpt:justify-start">
+                                        <span className="gpt:inline-flex gpt:gap-1 gpt:items-center gpt:justify-start">{selected === voice.voice && (<Check className="gpt:w-4 gpt:h-4 gpt:text-gray-600 dark:text-gray-300" />)}
                                             {voice.voice.charAt(0).toUpperCase() + voice.voice.slice(1)}
                                             {voice.gender &&
                                                 <Badge className={cn("gpt:text-xs gpt:font-medium gpt:rounded-full gpt:text-white", { "gpt:bg-blue-800 dark:bg-blue-700": voice.gender === chrome.i18n.getMessage("male"), "gpt:bg-pink-700 dark:bg-pink-800": voice.gender === chrome.i18n.getMessage("female") })}>
@@ -208,7 +274,15 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                                 {i === arr.length - 1 ? null : <DropdownMenuSeparator className="gpt:bg-gray-200 dark:bg-gray-700" />}
                             </>
                         ))}
-                    </ScrollArea>
+                        {showScrollHint && (
+                            <div className="gpt:pointer-events-none gpt:absolute gpt:bottom-2 gpt:left-1/2 gpt:-translate-x-1/2 gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
+                                <span className="gpt:text-sm gpt:font-semibold gpt:px-2 gpt:py-0.5 gpt:rounded-md gpt:bg-white/80 dark:gpt:bg-black/70 gpt:whitespace-nowrap">
+                                    <span className="gpt:text-red-500 gpt:animate-pulse">Scroll down</span>
+                                </span>
+                                <ArrowDown className="gpt:size-8 gpt:animate-bounce gpt:text-red-500" />
+                            </div>
+                        )}
+                    </div>
                 </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
+import { addChatToDeleteLS, Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -75,25 +75,30 @@ const useAudioUrl = (isDownload: boolean) => {
     let activeSendObserver: MutationObserver | null = null;
     const { token } = useAuthToken();
     
+    const sendWaitCancelRef = useRef<null | (() => void)>(null);
     const sendPrompt = (payload: { text: string; id: string; ndx: number }) => {
         setIsLoading(true);
+
+        // 🔹 CANCEL any previous waiter (observer + timeout) before starting a new one
+        try { sendWaitCancelRef.current?.(); } catch {}
+        sendWaitCancelRef.current = null;
+
         const clickAndWatch = (btn: HTMLButtonElement) => {
             btn.click();
-            // only set the flag if we actually clicked
-            try {
-            localStorage.setItem("gptr/sended", "true");
-            } catch { /* ignore */ }
-            // start the non-blocking watchdog
+            try { localStorage.setItem("gptr/sended", "true"); } catch {}
+            // success path: no more waiting → clear any cancel hook just in case
+            sendWaitCancelRef.current?.();
+            sendWaitCancelRef.current = null;
             startSendWatchdog(payload);
         };
-        
+
         const sendButton = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
         if (sendButton && !sendButton.disabled) {
             clickAndWatch(sendButton);
             return;
         }
-    
-        // Prevent multiple observers
+
+        // Prevent multiple observers (legacy guard)
         if (activeSendObserver) {
             activeSendObserver.disconnect();
             activeSendObserver = null;
@@ -106,22 +111,31 @@ const useAudioUrl = (isDownload: boolean) => {
                 obs.disconnect();
                 activeSendObserver = null;
                 clearTimeout(timeout);
+                sendWaitCancelRef.current = null; // 🔹 clear cancel hook
             }
         });
-    
+
         observer.observe(document.body, { childList: true, subtree: true });
         activeSendObserver = observer;
-    
+
         const timeout = setTimeout(() => {
             observer.disconnect();
             activeSendObserver = null;
+            sendWaitCancelRef.current = null; // 🔹 clear cancel hook
             console.error("[sendPrompt] Send button not found after 8 seconds.");
             toast({
-                description: `GPT Reader is having trouble, you may have reached ChatGPT's hourly limit. Try refreshing and opening the extension again.`,
-                style: TOAST_STYLE_CONFIG,
+                description: `GPT Reader may be having trouble, you may have reached ChatGPT's hourly limit. If you notice issues, try refreshing and opening the extension again.`,
+                style: TOAST_STYLE_CONFIG_INFO,
                 duration: 30000
             })
         }, 8000);
+
+        // 🔹 register a cancel function for THIS waiter
+        sendWaitCancelRef.current = () => {
+            try { observer.disconnect(); } catch {}
+            try { clearTimeout(timeout); } catch {}
+            activeSendObserver = null;
+        };
     };
     
     const stopPrompt = async () => {
@@ -236,6 +250,7 @@ const useAudioUrl = (isDownload: boolean) => {
                     "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                 );
                 if (newChatBtn) {
+                    addChatToDeleteLS();
                     newChatBtn.click();
                     // wait briefly for the new chat URL
                     for (let i = 0; i < 10; i++) {
@@ -366,6 +381,7 @@ const useAudioUrl = (isDownload: boolean) => {
                                 "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                             );
                             if (newChatBtn) {
+                                addChatToDeleteLS(); 
                                 newChatBtn.click();
                                 // wait briefly for the new chat URL
                                 for (let i = 0; i < 10; i++) {
@@ -507,6 +523,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const reset = () => {
+        sendWaitCancelRef.current = null
         showCompletionToast.current = false;
         setAudioUrls([]);
         setCurrentChunkBeingPromptedIndex(0);
