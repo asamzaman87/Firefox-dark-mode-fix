@@ -529,6 +529,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const reset = () => {
+        injectedRef.current = false;
         sendWaitCancelRef.current = null
         showCompletionToast.current = false;
         setAudioUrls([]);
