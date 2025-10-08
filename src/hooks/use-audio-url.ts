@@ -37,7 +37,6 @@ const useAudioUrl = (isDownload: boolean) => {
     const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
-    const injectedRef = useRef<boolean>(false);
 
 
     const setPreviewHtmlSource = useCallback((html?: string | null) => {
@@ -86,7 +85,6 @@ const useAudioUrl = (isDownload: boolean) => {
 
         const clickAndWatch = (btn: HTMLButtonElement) => {
             btn.click();
-            injectedRef.current = false;
             try { localStorage.setItem("gptr/sended", "true"); } catch {}
             // success path: no more waiting → clear any cancel hook just in case
             sendWaitCancelRef.current?.();
@@ -244,8 +242,6 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
-        if (injectedRef.current) return;
-        injectedRef.current = true;
         const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
         if (stopButton) {
             stopButton.click();
@@ -317,7 +313,6 @@ const useAudioUrl = (isDownload: boolean) => {
             //     cancelable: true,
             // });
             // editor.dispatchEvent(pasteEvt);
-          
             editor.innerHTML = `<p>${raw}</p>`;
             
             // Dispatch an input event so ChatGPT picks up the change
@@ -331,8 +326,6 @@ const useAudioUrl = (isDownload: boolean) => {
             }, 50);
             if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
         } else {
-            // Fallback error
-            injectedRef.current = false;
             const errorMessage = `ChatGPT is showing a popup underneath this extension that is causing it to not work. Please close it and try again.`;
             console.error('In injectPrompt else:', errorMessage);
             window.dispatchEvent(new CustomEvent(LISTENERS.ERROR, { detail: { message: errorMessage } }));
@@ -529,8 +522,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const reset = () => {
-        injectedRef.current = false;
-        sendWaitCancelRef.current = null
+        sendWaitCancelRef.current = null;
         showCompletionToast.current = false;
         setAudioUrls([]);
         setCurrentChunkBeingPromptedIndex(0);

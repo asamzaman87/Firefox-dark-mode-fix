@@ -95,28 +95,41 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 if (line.startsWith("data: ")) {
                   try {
                     const data = JSON.parse(line.slice(6));
-                    // 1) straight append deltas
-                    if (data.p === "/message/content/parts/0" && data.o === "append") {
-                      assistant += data.v;
+                    // Ignore non-delta “info” payloads early
+                    if (data?.type) continue; // e.g., server_ste_metadata, title_generation, message_stream_complete
+
+                    // 1) Single-op append/replace directly at the root
+                    if (data.p === "/message/content/parts/0" && (data.o === "append" || data.o === "replace")) {
+                      if (typeof data.v === "string") assistant += data.v;
+                      continue;
                     }
-                    // 2) patch operations
-                    else if (data.o === "patch" && Array.isArray(data.v)) {
-                      for (const op of data.v) {
-                        if (op.p === "/message/content/parts/0") {
-                          assistant += op.v;
+
+                    // 2) Batched ops: either explicit { o:"patch", v:[...] } OR implicit { v:[...] }
+                    if ((data.o === "patch" && Array.isArray(data.v)) || Array.isArray(data.v)) {
+                      const ops = Array.isArray(data.v) ? data.v : [];
+                      for (const op of ops) {
+                        if (op?.p === "/message/content/parts/0" && (op.o === "append" || op.o === "replace")) {
+                          if (typeof op.v === "string") assistant += op.v;
                         }
                       }
+                      continue;
                     }
-                    // 3) some “bulk” deltas come as bare strings
-                    else if (typeof data.v === "string" && data.p !== "/message/status" && data.p !== "/message/metadata/message_locale") {
-                      assistant += data.v;
-                    }
-                    // 4) fallback to full parts array — but only for assistant messages
-                    else if (
-                      data.v?.message?.content?.parts &&
-                      data.v.message.author?.role === "assistant"
+
+                    // 3) Some providers sometimes send raw strings; ignore known non-text paths
+                    if (
+                      typeof data.v === "string" &&
+                      data.p !== "/message/status" &&
+                      data.p !== "/message/metadata/message_locale"
                     ) {
-                      assistant = data.v.message.content.parts[0] || assistant;
+                      assistant += data.v;
+                      continue;
+                    }
+
+                    // 4) Fallback snapshot: full assistant message with parts array
+                    if (data.v?.message?.content?.parts && data.v?.message?.author?.role === "assistant") {
+                      // join in case future models send multiple parts
+                      const parts = data.v.message.content.parts;
+                      if (Array.isArray(parts)) assistant = parts.join("");
                     }
                   } catch {
                     /* ignore non-JSON or other events */

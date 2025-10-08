@@ -6,7 +6,7 @@ import useVoice from "./use-voice";
 import { addChatToDeleteLS, Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, removeChatFromDeleteLS, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
 import { usePremiumModal } from "@/context/premium-modal";
-const MAX_RETRIES = 2; 
+const MAX_RETRIES = 4; 
 const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
@@ -106,6 +106,11 @@ const useStreamListener = (
 
             // bump counter (kept for telemetry/visibility even though we don't cap in fetch path)
             retryCounts.current[failedChunkNdx] = (retryCounts.current[failedChunkNdx] ?? 0) + 1;
+
+            if (retryCounts.current[failedChunkNdx] > MAX_RETRIES) {
+                handleErrorWithNoFetch('GPT Reader seems to be having issues. Please contact me at democraticdeveloper@gmail.com if you continue to see this error.');
+                return;
+            }
 
             // record current chat so it can be cleaned later
             const prevChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] || null;
@@ -307,32 +312,19 @@ const useStreamListener = (
             await retryFlow(nextChunkRef.current - 1, conversationId); // convKey optional
             return;
         }
-        const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-        if (stopButton) {
-            stopButton.click();
-        }
-        // wait for the speech button in chrome and send in firefox after stopping
-        // this is done to make sure the next injection proceeds successfully
-        try {
-            await Promise.race([
-                waitForElement("[data-testid='composer-speech-button']", 3000),
-                waitForElement("[data-testid='send-button']", 3000),
-            ]);
-        } catch {
-            console.warn("No resume button appeared within 3s; opening a new chat");
-            const newChatBtn = document.querySelector<HTMLButtonElement>(
-                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-            );
-            if (newChatBtn) {
-                addChatToDeleteLS();
-                newChatBtn.click();
-            } else if (chunkNdx != null && chunkNdx < chunkRef.current.length - 1) {
-                await retryFlow(chunkNdx, conversationId);
-                return;
-            } else {
-                console.log('[handleConvStream] I dont know what to do here', chunkNdx);
+        if (audioIssueStop.current === false) {
+            // wait for the speech button in chrome and send in firefox after stopping
+            // this is done to make sure the next injection proceeds successfully
+            try {
+                await Promise.race([
+                    waitForElement("[data-testid='composer-speech-button']", 5000),
+                    waitForElement("[data-testid='send-button']", 5000),
+                ]);
+            } catch {
+                console.warn("No resume button appeared within 5s");
             }
         }
+        
         if (stopFlow.current) audioIssueStop.current = false;
         if (audioIssueStop.current) {
             // Since we stopped the current chunkNdx, it will need to be re-injected
@@ -460,53 +452,10 @@ const useStreamListener = (
         }
         
         if (comparisonActual !== comparisonExpected) {
+            console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
             await retryFlow(chunkNdx, conversationId, convKey);
             return;
         } 
-
-        // DOM visibility check — ensure the last 10 alphanum chars of the expected message
-        // are actually visible in the rendered assistant bubble.
-        // NOTE: We normalize to alphanumeric to match `normalizeAlphaNumeric` behavior.
-        {
-            const expectedSuffixLen = Math.min(10, comparisonExpected.length);
-            const expectedSuffix = comparisonExpected.slice(-expectedSuffixLen);
-
-            const deadline = Date.now() + 5000; // monitor DOM for up to 5 seconds
-            let suffixFound = false;
-
-            while (Date.now() < deadline) {
-                // Re-acquire the last assistant turn each iteration (DOM may update)
-                const curTurn = getLastTurn();
-                const domVisibleTextRaw = curTurn?.innerText ?? curTurn?.textContent ?? "";
-                const domVisibleText = normalizeAlphaNumeric(domVisibleTextRaw);
-
-                if (domVisibleText.indexOf(expectedSuffix) !== -1) {
-                    suffixFound = true;
-                    break;
-                }
-
-                await new Promise((r) => setTimeout(r, 100));
-                if (LOCAL_LOGS) console.log("[handleConvStream] Waiting for DOM for chunk", chunkNdx);
-            }
-
-            if (!suffixFound) {
-                if (LOCAL_LOGS) {
-                    const curTurn = getLastTurn();
-                    const domVisibleTextRaw = curTurn?.innerText ?? curTurn?.textContent ?? "";
-                    const domVisibleText = normalizeAlphaNumeric(domVisibleTextRaw);
-                    console.warn(
-                        "[handleConvStream] Render check failed after 5s — expected suffix not visible in DOM.",
-                        {
-                        expectedSuffix,
-                        domTail: domVisibleText.slice(-80),
-                        assistantTail: comparisonActual.slice(-80),
-                        }
-                    );
-                }
-                await retryFlow(chunkNdx, conversationId, convKey);
-                return;
-            }
-        }
         
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine
