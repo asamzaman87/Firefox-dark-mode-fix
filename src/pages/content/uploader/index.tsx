@@ -66,6 +66,9 @@ function Uploader() {
   const [showWebReaderPerm, setShowWebReaderPerm] = useState<boolean>(false);
   const [showBillingIssue, setShowBillingIssue] = useState<boolean>(false);
 
+  const [showUpdatePopup, setShowUpdatePopup] = useState<boolean>(false);
+  const [availableVersion, setAvailableVersion] = useState<string | null>(null);
+
   const handleBillingIssueUpgrade = async () => {
     try {
       // 1) Read user from storage
@@ -397,6 +400,15 @@ function Uploader() {
     const onMsg = (message: any, _sender: any, sendResponse: (r?: any) => void) => {
       if (message?.type === "PING") {
         sendResponse({ ok: true });
+        return;
+      }
+      if (message?.type === "SHOW_UPDATE_POPUP") {
+        // Only surface this when the extension overlay is active
+        const overlayActive = window.localStorage.getItem("gptr/active") === "true";
+        if (!overlayActive) return;
+
+        setAvailableVersion(message?.payload?.newVersion ?? null);
+        setShowUpdatePopup(true);
         return;
       }
       if (message?.type === "OPEN_POPUP") {
@@ -1058,6 +1070,70 @@ function Uploader() {
               forceDiscount
             />
           )}
+          {confirmed && (() => {
+            // Robust dark-mode detector (your storage → DOM → CSSOM → media)
+            const isDark = (() => {
+              try {
+                const stored = window.localStorage.getItem("gptr/next-theme"); // you already set this elsewhere
+                if (stored === "dark") return true;
+                if (stored === "light") return false;
+
+                const root = document.documentElement;
+                if (root.style?.colorScheme) return root.style.colorScheme === "dark";
+                if (root.classList.contains("dark")) return true;
+
+                const cs = getComputedStyle(root);
+                if (cs.colorScheme) return cs.colorScheme === "dark";
+
+                return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+              } catch {
+                return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+              }
+            })();
+
+            const textColor = isDark ? "#ffffff" : "#000000";
+
+            return (
+              <Dialog open={showUpdatePopup} onOpenChange={setShowUpdatePopup}>
+                <DialogContent
+                  onInteractOutside={(e) => e.preventDefault()}
+                  className="gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[580px] gpt:rounded-2xl"
+                >
+                  <div className="gpt:flex gpt:flex-col gpt:items-center gpt:text-center gpt:gap-3">
+                    {/* Title (forced color) */}
+                    <div
+                      style={{ color: textColor }}
+                      className="gpt:text-xl gpt:font-semibold"
+                    >
+                      Update Available
+                    </div>
+
+                    {/* Description (forced color) */}
+                    <p
+                      style={{ color: textColor }}
+                      className="gpt:text-sm gpt:leading-relaxed"
+                    >
+                      A newer version{availableVersion ? ` (${availableVersion})` : ""} is available.
+                      Click on the button below to open the page and then find the update button.
+                    </p>
+
+                    <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:w-full gpt:mt-2">
+                      <Button
+                        onClick={() => chrome.runtime.sendMessage({ type: "OPEN_EXTENSIONS_PAGE" })}
+                        className="
+                          gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full
+                          gpt:bg-gray-800 gpt:dark:bg-gray-50
+                          gpt:!text-gray-50 gpt:dark:!text-gray-800
+                        "
+                      >
+                        Update in Extensions Manager
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            );
+          })()}
           {/* NEW: Annual Upsell for subscribed users */}
           {confirmed && (
             <AnnualUpsellPopup

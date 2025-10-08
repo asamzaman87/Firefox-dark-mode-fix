@@ -21,6 +21,18 @@ async function waitForReady(tabId: number, tries = 40, delayMs = 150) {
   return false;
 }
 
+async function tryNotifyUpdate(tabId: number, version: string | null) {
+  // If the content script is ready, send immediately; otherwise stash a flag.
+  if (await waitForReady(tabId)) {
+    chrome.tabs.sendMessage(tabId, {
+      type: "SHOW_UPDATE_POPUP",
+      payload: { newVersion: version },
+    });
+  } else {
+    await chrome.storage.local.set({ pendingUpdateVersion: version || "" });
+  }
+}
+
 //listen for messages from popup and content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.type) {
@@ -36,6 +48,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             type: "OPEN_POPUP",
             payload: "VERIFY_ORIGIN",
           });
+        }
+      })();
+      break;
+    }
+    case "OPEN_EXTENSIONS_PAGE": {
+      (async () => {
+        try {
+          const browserName = detectBrowser();
+
+          if (browserName === "firefox") {
+            // Skip about:addons (often blocked). Send users to Mozilla’s official update guide.
+            await chrome.tabs.create({
+              url: "https://support.mozilla.org/en-US/kb/how-update-add-ons",
+              active: true,
+            });
+          } else {
+            // Chrome/Chromium: deep-link to this extension’s details in the manager
+            const url = `chrome://extensions/?id=${chrome.runtime.id}`;
+            await chrome.tabs.create({ url, active: true });
+          }
+        } catch {
+          // No-op: opening a normal https page should always succeed
         }
       })();
       break;
@@ -164,6 +198,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           type: "OVERLAY_PING",
           payload: "OVERLAY_PING",
         });
+
+        // NEW: if we had an update pending, show it now that the overlay is active/ready
+        (async () => {
+          const { pendingUpdateVersion } = await chrome.storage.local.get("pendingUpdateVersion");
+          if (typeof pendingUpdateVersion === "string" && pendingUpdateVersion.length) {
+            await tryNotifyUpdate(tabId, pendingUpdateVersion || null);
+            await chrome.storage.local.remove("pendingUpdateVersion");
+          }
+        })();
       }
 
       break;
@@ -578,6 +621,36 @@ chrome.runtime.onStartup?.addListener(() => {
     attachContextMenuListener();
   } catch {}
 });
+
+// Notify content when an update is available (Chrome has a newer package ready)
+chrome.runtime.onUpdateAvailable?.addListener(async (details) => {
+  try {
+    const tabs = await getGPTTabs();
+    const tabId = tabs?.[0]?.id;
+    const version = details?.version || null;
+    if (tabId) {
+      await tryNotifyUpdate(tabId, version);
+    } else {
+      await chrome.storage.local.set({ pendingUpdateVersion: version || "" });
+    }
+  } catch {}
+});
+
+// Proactively check once on startup/service worker boot (no-op if none)
+try {
+  chrome.runtime.requestUpdateCheck?.(async (status, details) => {
+    if (status === "update_available") {
+      const tabs = await getGPTTabs();
+      const tabId = tabs?.[0]?.id;
+      const version = details?.version || null;
+      if (tabId) {
+        await tryNotifyUpdate(tabId, version);
+      } else {
+        await chrome.storage.local.set({ pendingUpdateVersion: version || "" });
+      }
+    }
+  });
+} catch {}
 
 // Recreate context menus silently
 createMenus();
