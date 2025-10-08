@@ -550,6 +550,8 @@ function Uploader() {
     }
 
     setIsActive(true);
+    // remove in case it was set
+    localStorage.removeItem("gptr/equalIssue");
   }, [
     waitForElement,
     clickStopButtonIfPresent,
