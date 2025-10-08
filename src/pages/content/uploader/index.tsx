@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -23,6 +23,7 @@ import WebReaderPermissionPopup from "./webreader-permission-popup";
 import BillingIssuePopup from "./billing-issue-popup";
 import { createCheckoutSession, fetchStripeProducts } from "@/lib/utils";
 import AnnualUpsellPopup from "./annual-upsell-popup";
+import AnnouncementMessage from "./announcements-popup/announcement-message";
 
 export interface PromptProps {
   text: string | undefined
@@ -68,6 +69,16 @@ function Uploader() {
 
   const [showUpdatePopup, setShowUpdatePopup] = useState<boolean>(false);
   const [availableVersion, setAvailableVersion] = useState<string | null>(null);
+
+  // Important-announcement popup state + per-session gate
+  const [showImportantAnnouncement, setShowImportantAnnouncement] = useState<boolean>(false);
+  const [importantAnnouncementHtml, setImportantAnnouncementHtml] = useState<string>("");
+  const [importantAnnouncementTitle, setImportantAnnouncementTitle] = useState<string>("");
+  const shownImportantThisSessionRef = useRef<boolean>(false);
+
+  // 3-2-1 countdown state for the “X”
+  const [importantCloseCountdown, setImportantCloseCountdown] = useState<number>(0);
+  const [importantCanClose, setImportantCanClose] = useState<boolean>(false);
 
   const handleBillingIssueUpgrade = async () => {
     try {
@@ -131,11 +142,27 @@ function Uploader() {
     }
   };
 
-  // ---- Gating helpers for the selected-text flow ----
   const hasPendingSelectedText = useCallback(async () => {
     const { selectedText } = await chrome.storage.local.get("selectedText");
     return !!(selectedText && selectedText.length);
   }, []);
+
+  const handleImportantOpenChange = (nextOpen: boolean) => {
+    // Block closing via X/overlay until countdown is done
+    if (!nextOpen && !importantCanClose) return;
+    setShowImportantAnnouncement(nextOpen);
+  };
+
+  const importantCountdownOverlay = (!importantCanClose && showImportantAnnouncement) ? (
+    <div className="gpt:absolute gpt:top-4 gpt:right-4 gpt:z-[999]">
+      <div
+        aria-hidden="true"
+        className="gpt:flex gpt:items-center gpt:justify-center gpt:w-10 gpt:h-10 gpt:rounded-full gpt:bg-white gpt:dark:bg-gray-800 gpt:text-base gpt:text-gray-900 gpt:dark:text-gray-100 gpt:ring-2 gpt:ring-black/10 gpt:shadow-sm gpt:cursor-not-allowed gpt:select-none"
+      >
+        {importantCloseCountdown || 3}
+      </div>
+    </div>
+  ) : null;
 
   const isOverlayReady = useCallback(() => {
     // Ready when all first-run surfaces are gone
@@ -402,6 +429,36 @@ function Uploader() {
         sendResponse({ ok: true });
         return;
       }
+      if (message?.type === "GET_BANNER" && Array.isArray(message?.payload)) {
+        try {
+          const list = message.payload as Array<{
+            id: string;
+            title: string;
+            message: string;
+            important?: boolean;
+            created_on?: string | Date;
+          }>;
+          const importantOnly = list.filter(a => a?.important === true);
+
+          if (importantOnly.length && !shownImportantThisSessionRef.current) {
+            const latest = importantOnly
+              .slice()
+              .sort((a, b) => {
+                const da = new Date(a.created_on || 0).getTime();
+                const db = new Date(b.created_on || 0).getTime();
+                return db - da;
+              })[0];
+
+            setImportantAnnouncementTitle(latest.title || "Announcement");
+            setImportantAnnouncementHtml(latest.message || "");
+            setShowImportantAnnouncement(true);
+            shownImportantThisSessionRef.current = true; // mark as shown for this session
+          }
+        } catch {
+          // no-op
+        }
+        return;
+      }
       if (message?.type === "SHOW_UPDATE_POPUP") {
         // Only surface this when the extension overlay is active
         const overlayActive = window.localStorage.getItem("gptr/active") === "true";
@@ -433,6 +490,27 @@ function Uploader() {
     chrome.runtime.onMessage.addListener(onMsg);
     return () => chrome.runtime.onMessage.removeListener(onMsg);
   }, []);
+
+  useEffect(() => {
+    if (!showImportantAnnouncement) return;
+
+    setImportantCanClose(false);
+    setImportantCloseCountdown(3);
+
+    const id = setInterval(() => {
+      setImportantCloseCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(id);
+          setImportantCanClose(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [showImportantAnnouncement]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -564,6 +642,8 @@ function Uploader() {
     setIsActive(true);
     // remove in case it was set
     localStorage.removeItem("gptr/equalIssue");
+    // reset flag for important announcements
+    shownImportantThisSessionRef.current = false;
   }, [
     waitForElement,
     clickStopButtonIfPresent,
@@ -1020,6 +1100,41 @@ function Uploader() {
               )}
             </>
           )}
+          {confirmed && (() => {
+            // Robust dark-mode detector (same as update popup)
+            const textColor = getIsDarkMode() ? "#ffffff" : "#000000";
+
+            return (
+              <Dialog open={showImportantAnnouncement} onOpenChange={handleImportantOpenChange}>
+                <DialogContent
+                  onInteractOutside={(e) => e.preventDefault()}
+                  className="gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[680px] gpt:rounded-2xl gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:text-center gpt:py-10 gpt:px-6"
+                >
+                  {/* Countdown pill overlays X spot while locked */}
+                  {importantCountdownOverlay}
+
+                  <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:w-full gpt:max-w-[560px]">
+                    {/* Title (forced color) */}
+                    <h2
+                      style={{ color: textColor }}
+                      className="gpt:text-2xl gpt:font-semibold gpt:mt-2 gpt:leading-snug"
+                    >
+                      {importantAnnouncementTitle}
+                    </h2>
+
+                    {/* Body (forced color) */}
+                    <div
+                      style={{ color: textColor }}
+                      className="gpt:font-medium gpt:leading-relaxed gpt:text-base gpt:mt-2 gpt:max-w-[520px] gpt:mx-auto"
+                    >
+                      <AnnouncementMessage message={importantAnnouncementHtml} />
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            );
+          })()}
+
           { confirmed && showPinTutorial && (
             <PinTutorialPopUp
               open={showPinTutorial}
@@ -1071,27 +1186,7 @@ function Uploader() {
             />
           )}
           {confirmed && (() => {
-            // Robust dark-mode detector (your storage → DOM → CSSOM → media)
-            const isDark = (() => {
-              try {
-                const stored = window.localStorage.getItem("gptr/next-theme"); // you already set this elsewhere
-                if (stored === "dark") return true;
-                if (stored === "light") return false;
-
-                const root = document.documentElement;
-                if (root.style?.colorScheme) return root.style.colorScheme === "dark";
-                if (root.classList.contains("dark")) return true;
-
-                const cs = getComputedStyle(root);
-                if (cs.colorScheme) return cs.colorScheme === "dark";
-
-                return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-              } catch {
-                return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-              }
-            })();
-
-            const textColor = isDark ? "#ffffff" : "#000000";
+            const textColor = getIsDarkMode() ? "#ffffff" : "#000000";
 
             return (
               <Dialog open={showUpdatePopup} onOpenChange={setShowUpdatePopup}>

@@ -26,6 +26,7 @@ interface Announcement {
   title: string;
   message: string;
   extension: string;
+  important?: boolean;
   created_on: Date;
   updated_on: Date;
 }

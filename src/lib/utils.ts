@@ -8,6 +8,30 @@ import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-t
 import { pdf } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 
+export const getIsDarkMode = (): boolean => {
+  try {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      // Background/service worker: pick a harmless default; you can also read chrome.storage here if you want.
+      console.warn("getIsDarkMode: no window or document");
+      return true;
+    }
+
+    const stored = window.localStorage.getItem("gptr/next-theme");
+    if (stored === "dark") return true;
+    if (stored === "light") return false;
+
+    const root = document.documentElement;
+    if ((root.style as any)?.colorScheme) return root.style.colorScheme === "dark";
+    if (root.classList.contains("dark")) return true;
+
+    const cs = getComputedStyle(root) as any;
+    if (cs?.colorScheme) return cs.colorScheme === "dark";
+
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+  } catch {
+    return false;
+  }
+};
 // LocalStorage list so Uploader can also clean these up
 const LS_CHATS_TO_DELETE = "gptr/chatsToDelete";
 export const readChatsToDelete = (): string[] => {

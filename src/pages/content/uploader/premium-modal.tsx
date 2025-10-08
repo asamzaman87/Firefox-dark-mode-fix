@@ -14,6 +14,7 @@ import {
   detectBrowser,
   fetchStripeProducts,
   formatPriceFromStripePrice,
+  getIsDarkMode,
   toAnnualPriceId,
 } from "../../../lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -90,28 +91,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
   // ADD: countdown gating for the X when forceDiscount is true
   const [closeCountdown, setCloseCountdown] = useState<number>(0);
   const [canClose,       setCanClose]       = useState<boolean>(!forceDiscount);
-  // Force-correct price color in light/dark (same logic as update popup)
-  const isDark = (() => {
-    try {
-      const stored = window.localStorage.getItem("gptr/next-theme");
-      if (stored === "dark") return true;
-      if (stored === "light") return false;
-
-      const root = document.documentElement;
-      if (root.style?.colorScheme) return root.style.colorScheme === "dark";
-      if (root.classList.contains("dark")) return true;
-
-      const cs = getComputedStyle(root);
-      if ((cs as any).colorScheme) return (cs as any).colorScheme === "dark";
-
-      return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-    } catch {
-      return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
-    }
-  })();
-
-  const priceTextColor = isDark ? "#ffffff" : "#000000";
-
+  const priceTextColor = getIsDarkMode() ? "#ffffff" : "#000000";
 
   // ADD: kick off a 3s countdown only when forced discount modal is opened
   useEffect(() => {
