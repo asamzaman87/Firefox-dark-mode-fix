@@ -269,6 +269,7 @@ function Uploader() {
     }
     if (!isActive && wasActive.current) {
       restoreRootInfo();
+      localStorage.removeItem("gptr/equalIssue");
       (async () => {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
@@ -365,7 +366,7 @@ function Uploader() {
         window.location.href.startsWith("https://chatgpt.com") &&
         !isOpening.current
       ) {
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 1000));
         window.location.href = `${window.location.origin}/?model=auto`;
       }
     })();

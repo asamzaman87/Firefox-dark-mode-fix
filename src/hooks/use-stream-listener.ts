@@ -451,10 +451,14 @@ const useStreamListener = (
             return;
         }
         
-        if (comparisonActual !== comparisonExpected) {
+        if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
             console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
-            await retryFlow(chunkNdx, conversationId, convKey);
-            return;
+            if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
+                localStorage.setItem("gptr/equalIssue", "true");
+            } else {
+                await retryFlow(chunkNdx, conversationId, convKey);
+                return;
+            }
         } 
         
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {

@@ -492,9 +492,12 @@ const useAudioUrl = (isDownload: boolean) => {
                 setOpen(true);
             }, 3000);
         }
-        if (blobs.length === chunks.length && !isDownload && blobs.length > 0 && !showCompletionToast.current) {
-            showCompletionToast.current = true;
-            toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
+        if (blobs.length === chunks.length && blobs.length > 0) {
+            if (!isDownload && !showCompletionToast.current) {
+                showCompletionToast.current = true;
+                toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
+            }
+            localStorage.removeItem("gptr/equalIssue");
         }
     }, [chunks, blobs, isDownload]);
     

@@ -225,6 +225,7 @@ export async function deleteChatAndCreateNew(
   createChat: boolean = true,
   chatId?: string
 ): Promise<Response | void> {
+  if (LOCAL_LOGS) return;
   let storedChatId =
     window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
   if (chatId) {
