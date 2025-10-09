@@ -1266,7 +1266,7 @@ function Uploader() {
                       className="gpt:text-sm gpt:leading-relaxed"
                     >
                       A newer version{availableVersion ? ` (${availableVersion})` : ""} is available.
-                      Click on the button below to open the page and then find the update button.
+                      Click on the button below to open the page and then find the update button. Make sure to refresh this page after the update.
                     </p>
 
                     <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:w-full gpt:mt-2">
