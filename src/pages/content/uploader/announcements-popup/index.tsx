@@ -27,6 +27,7 @@ interface Announcement {
   message: string;
   extension: string;
   important?: boolean;
+  only_chrome?: boolean;
   created_on: Date;
   updated_on: Date;
 }

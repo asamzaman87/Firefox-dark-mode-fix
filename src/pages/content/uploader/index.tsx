@@ -8,7 +8,7 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { DISCOUNT_FREQUENCY, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
@@ -74,7 +74,6 @@ function Uploader() {
   const [showImportantAnnouncement, setShowImportantAnnouncement] = useState<boolean>(false);
   const [importantAnnouncementHtml, setImportantAnnouncementHtml] = useState<string>("");
   const [importantAnnouncementTitle, setImportantAnnouncementTitle] = useState<string>("");
-  const shownImportantThisSessionRef = useRef<boolean>(false);
 
   // 3-2-1 countdown state for the “X”
   const [importantCloseCountdown, setImportantCloseCountdown] = useState<number>(0);
@@ -422,6 +421,34 @@ function Uploader() {
     setShowPinTutorial(isPinTutorialAcknowledged !== "true");
   }, []);
 
+  // Tiny fast hash for content fingerprint
+  const hashString = (s: string) => {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+    return (h >>> 0).toString(36); // short, stable string
+  };
+
+  const fpAnnouncement = (a: {
+    id?: string;
+    title?: string;
+    message?: string;
+    created_on?: string | Date;
+  }) => {
+    // Identity component: prefer server id; else created_on ISO
+    const idPart =
+      a?.id && typeof a.id === "string"
+        ? `id:${a.id}`
+        : `c:${a?.created_on ? new Date(a.created_on).toISOString() : ""}`;
+
+    // Content component: normalized title + message
+    const content = `${(a?.title || "").trim()}|${(a?.message || "").trim()}`;
+    const contentHash = hashString(content);
+
+    // Single merged fingerprint (identity + content)
+    return `${idPart}|h:${contentHash}`;
+  };
+
+
   // 2b) ALWAYS register a message listener
   useEffect(() => {
     const onMsg = (message: any, _sender: any, sendResponse: (r?: any) => void) => {
@@ -430,33 +457,65 @@ function Uploader() {
         return;
       }
       if (message?.type === "GET_BANNER" && Array.isArray(message?.payload)) {
-        try {
-          const list = message.payload as Array<{
-            id: string;
-            title: string;
-            message: string;
-            important?: boolean;
-            created_on?: string | Date;
-          }>;
-          const importantOnly = list.filter(a => a?.important === true);
+        (async () => {
+          try {
+            const list = message.payload as Array<{
+              id?: string;
+              title?: string;
+              message?: string;
+              important?: boolean;
+              only_chrome?: boolean;
+              created_on?: string | Date;
+            }>;
 
-          if (importantOnly.length && !shownImportantThisSessionRef.current) {
-            const latest = importantOnly
-              .slice()
+            // 1) find the latest important (single item)
+            const latestImportant = list
+              .filter(a => a?.important === true)
               .sort((a, b) => {
                 const da = new Date(a.created_on || 0).getTime();
                 const db = new Date(b.created_on || 0).getTime();
                 return db - da;
               })[0];
 
-            setImportantAnnouncementTitle(latest.title || "Announcement");
-            setImportantAnnouncementHtml(latest.message || "");
+            if (!latestImportant) return; // no important items at all
+
+            // 2) Firefox suppression if flagged as chrome-only
+            const isFirefox = detectBrowser() === "firefox";
+            const isFirefoxBlocked = latestImportant.only_chrome === true && isFirefox;
+            if (isFirefoxBlocked) return;
+
+            // 3) Decide using merged fingerprint + cooldown
+            const currentFP = fpAnnouncement(latestImportant);
+            const { lastImportantSeenFP, lastImportantSeenAt } =
+              await chrome.storage.local.get(["lastImportantSeenFP", "lastImportantSeenAt"]);
+
+            let shouldShow = false;
+
+            if (lastImportantSeenFP !== currentFP) {
+              // New identity or same identity but content changed → show immediately
+              shouldShow = true;
+            } else {
+              // Same fingerprint → apply 30-min cooldown
+              const last = typeof lastImportantSeenAt === "number" ? lastImportantSeenAt : 0;
+              if (Date.now() - last >= IMPORTANT_COOLDOWN_MS) {
+                shouldShow = true;
+              }
+            }
+
+            if (!shouldShow) return;
+
+            // 4) Show and persist the merged fingerprint + timestamp
+            setImportantAnnouncementTitle(latestImportant.title || "Announcement");
+            setImportantAnnouncementHtml(latestImportant.message || "");
             setShowImportantAnnouncement(true);
-            shownImportantThisSessionRef.current = true; // mark as shown for this session
+            await chrome.storage.local.set({
+              lastImportantSeenFP: currentFP,
+              lastImportantSeenAt: Date.now(),
+            });
+          } catch {
+            // no-op
           }
-        } catch {
-          // no-op
-        }
+        })();
         return;
       }
       if (message?.type === "SHOW_UPDATE_POPUP") {
@@ -642,8 +701,6 @@ function Uploader() {
     setIsActive(true);
     // remove in case it was set
     localStorage.removeItem("gptr/equalIssue");
-    // reset flag for important announcements
-    shownImportantThisSessionRef.current = false;
   }, [
     waitForElement,
     clickStopButtonIfPresent,
