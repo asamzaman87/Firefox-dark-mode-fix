@@ -317,11 +317,13 @@ const useStreamListener = (
             // this is done to make sure the next injection proceeds successfully
             try {
                 await Promise.race([
-                    waitForElement("[data-testid='composer-speech-button']", 5000),
-                    waitForElement("[data-testid='send-button']", 5000),
+                    waitForElement("[data-testid='composer-speech-button']", 12000),
+                    waitForElement("[data-testid='send-button']", 12000),
                 ]);
             } catch {
-                console.warn("No resume button appeared within 5s");
+                console.warn("No resume button appeared within 12s");
+                await retryFlow(chunkNdx, conversationId);
+                return;
             }
         }
         

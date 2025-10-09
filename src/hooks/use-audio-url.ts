@@ -84,8 +84,8 @@ const useAudioUrl = (isDownload: boolean) => {
         sendWaitCancelRef.current = null;
 
         const clickAndWatch = (btn: HTMLButtonElement) => {
-            btn.click();
             try { localStorage.setItem("gptr/sended", "true"); } catch {}
+            btn.click();
             // success path: no more waiting → clear any cancel hook just in case
             sendWaitCancelRef.current?.();
             sendWaitCancelRef.current = null;

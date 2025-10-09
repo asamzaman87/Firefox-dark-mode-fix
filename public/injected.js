@@ -241,6 +241,10 @@ window.fetch = async (...args) => {
 
     //read the stream to get the message id and conversation id
     if (hasConversationEndpoint && args[1]?.method === 'POST') {
+        if (!localStorage.getItem("gptr/sended")) {
+          console.warn("[injected.js] Returning early since no gptr/sended found");
+          return response;
+        }
         if (args[1]?.body) {
             try {
                 localStorage.removeItem("gptr/sended");
