@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "1.9.6",
+  "version": "1.9.7",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -58,7 +58,9 @@
         "extension-guide.png",
         "pdf.worker.js",
         "injected.js",
-        "webreader.png"
+        "webreader.png",
+        "upload-docs-chrome.png",
+        "upload-docs-firefox.png"
       ],
       "matches": ["https://chatgpt.com/*"]
     },

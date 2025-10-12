@@ -163,7 +163,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             }
             prevVal = value;
             // → once we’ve passed the threshold, notify the hook
-            if (((normalizeAlphaNumeric(assistant).length >= threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
+            if (((normalizeAlphaNumeric(assistant).length > threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
                 // immediately tell the server to stop sending more SSE
                 if (LOCAL_LOGS) console.log("[loopThroughReaderToExtractMessageId] Sending stop_conversation SSE for messageId:", messageId);
                 return { messageId, conversationId, createTime, text, assistant, stopConvo, target };

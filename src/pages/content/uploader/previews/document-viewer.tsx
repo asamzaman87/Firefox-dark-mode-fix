@@ -99,10 +99,23 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
 
     const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-    // 1) Strict search from floorK
-    let from = clamp(floorK, 0, haystack.length);
-    let idx = haystack.indexOf(needle, from);
-    if (idx >= 0) return { idx, usedNeedleLen: needle.length };
+    // 1) Strict search nearest to floorK (prefer closest occurrence, not just the first overall)
+    const from = clamp(floorK, 0, haystack.length);
+    const idxAfter = haystack.indexOf(needle, from);
+    const idxBefore = haystack.lastIndexOf(needle, from);
+
+    if (idxAfter >= 0 || idxBefore >= 0) {
+      let idx = -1;
+      if (idxAfter >= 0 && idxBefore >= 0) {
+        // choose whichever start index is closer to 'from'
+        const dAfter = Math.abs(idxAfter - from);
+        const dBefore = Math.abs(from - idxBefore);
+        idx = dAfter <= dBefore ? idxAfter : idxBefore;
+      } else {
+        idx = idxAfter >= 0 ? idxAfter : idxBefore;
+      }
+      return { idx, usedNeedleLen: needle.length };
+    }
 
     // 2) Windowed search, exponentially expanding around floorK
     for (let span = initial; span <= Math.max(backLimit, fwdLimit); span *= 2) {
