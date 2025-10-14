@@ -339,6 +339,10 @@ const useStreamListener = (
         }
         if (stopConvo) {
             console.warn ('[handleConvStream] stopConvo detected');
+            localStorage.setItem(
+                "gptr/abortCount",
+                String((Number(localStorage.getItem("gptr/abortCount")) || 1) + 1)
+            );
             await retryFlow(chunkNdx, conversationId);
             return;
         }
@@ -498,6 +502,8 @@ const useStreamListener = (
             await retryFlow(chunkNdx, conversationId, convKey);
             return;
         }
+
+        localStorage.setItem("gptr/abortCount", "1");
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine

@@ -37,6 +37,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
+    const retryCountRef = useRef<number>(0);
 
 
     const setPreviewHtmlSource = useCallback((html?: string | null) => {
@@ -365,36 +366,50 @@ const useAudioUrl = (isDownload: boolean) => {
                     // If flag is gone, the send succeeded and someone cleared it → stop.
                     if (!flag) {
                         sendWatchdogStopRef.current();
+                        retryCountRef.current = 0;
                         return;
                     }
 
-                    // If 5s elapsed and flag still present → clear + retry inject once.
+                    // If threshold elapsed and flag still present → clear + retry inject once.
                     const elapsed = Date.now() - start;
-                    if (elapsed >= 8000) {
-                        console.log("[startSendWatchdog] Flag still present after 8s, retrying...");
+                    const thresholdMs = 3_500 + retryCountRef.current * 1_500;
+                    if (elapsed >= thresholdMs) {
+                        console.log("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
                         localStorage.removeItem("gptr/sended");
                         sendWatchdogStopRef.current();
                         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
                         if (stopButton) {
                             stopButton.click();
                         }
-                        await new Promise<void>(async (resolve) => {
-                            const newChatBtn = document.querySelector<HTMLButtonElement>(
-                                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                            );
-                            if (newChatBtn) {
-                                addChatToDeleteLS(); 
-                                newChatBtn.click();
-                                // wait briefly for the new chat URL
-                                for (let i = 0; i < 10; i++) {
-                                    await new Promise((r) => setTimeout(r, 200));
-                                    const urlChat = window.location.href;
-                                    if (urlChat === "https://chatgpt.com/") break;
+                        if (thresholdMs >= 10_000) {
+                            toast({
+                                description:
+                                    "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",
+                                style: TOAST_STYLE_CONFIG,
+                                duration: 30000,
+                            });
+                            return;
+                        } else {
+                            // increment retry count for next attempt
+                            retryCountRef.current += 1;
+                            await new Promise<void>(async (resolve) => {
+                                const newChatBtn = document.querySelector<HTMLButtonElement>(
+                                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                                );
+                                if (newChatBtn) {
+                                    addChatToDeleteLS(); 
+                                    newChatBtn.click();
+                                    // wait briefly for the new chat URL
+                                    for (let i = 0; i < 10; i++) {
+                                        await new Promise((r) => setTimeout(r, 200));
+                                        const urlChat = window.location.href;
+                                        if (urlChat === "https://chatgpt.com/") break;
+                                    }
                                 }
-                            }
-                            resolve();
-                        });
-                        injectPrompt(payload.text, payload.id, payload.ndx);
+                                resolve();
+                            });
+                            injectPrompt(payload.text, payload.id, payload.ndx);
+                        }
                     }
                 } catch {
                     // On storage error, stop to avoid looping.
@@ -528,6 +543,7 @@ const useAudioUrl = (isDownload: boolean) => {
     };
 
     const reset = () => {
+        retryCountRef.current = 0;
         sendWaitCancelRef.current = null;
         showCompletionToast.current = false;
         setAudioUrls([]);
