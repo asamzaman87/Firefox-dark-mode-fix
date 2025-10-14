@@ -74,14 +74,15 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const readResult = await reader.read();
             done = readResult.done;
             const value = readResult.value;
-            // if we haven’t received any new assistant text in 6 s, trigger abort
-            if (Date.now() - lastProgress > 6_000 && !done) {
-                console.log("No stream progress for 6s—aborting");
+            // if we haven’t received any new assistant text in 5 s, trigger abort
+            if (Date.now() - lastProgress >= 5_000 && !done) {
+                console.log("No stream progress for 5s—aborting");
                 shouldAbortStream = true;
             }
   
             if (shouldAbortStream || localStorage.getItem("gptr/abort") === "true") {
                 if (LOCAL_LOGS) console.log("[Injected.js] Aborting stream loop");
+                if (localStorage.getItem("gptr/abort") !== "true") stopConvo = true;
                 localStorage.setItem('gptr/abort', 'false');
                 shouldAbortStream = false;
                 return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
@@ -242,7 +243,9 @@ window.fetch = async (...args) => {
     //read the stream to get the message id and conversation id
     if (hasConversationEndpoint && args[1]?.method === 'POST') {
         if (!localStorage.getItem("gptr/sended")) {
-          console.warn("[injected.js] Returning early since no gptr/sended found");
+          if (localStorage.getItem("gptr/active") === "true") {
+            console.warn("[injected.js] Returning early since no gptr/sended found");
+          }
           return response;
         }
         if (args[1]?.body) {

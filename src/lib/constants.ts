@@ -154,3 +154,4 @@ export const SCHEDULED_ANNUAL_AT   = "gptr/scheduledSwitchToAnnualAt";
 export const SCHEDULED_199_FLAG = "gptr/scheduledDowngradeTo199";
 export const SCHEDULED_199_AT   = "gptr/scheduledDowngradeTo199At";
 export const IMPORTANT_COOLDOWN_MS = 30 * 60 * 1000;
+export const SAFEST_MODEL = "gpt-5-instant";

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CHUNK_TO_PAUSE_ON, FORWARD_REWIND_TIME, GAIN_MULTIPLIER, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, SAFEST_MODEL, FORWARD_REWIND_TIME, GAIN_MULTIPLIER, LOADING_TIMEOUT, LOADING_TIMEOUT_FOR_DOWNLOAD, PLAY_RATE_STEP, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAudioUrl from "./use-audio-url";
 import useAuthToken from "./use-auth-token";
@@ -877,7 +877,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         firefoxBufferNum.current = 0;
         if (!isTextToSpeech) {
           // eslint-disable-next-line no-self-assign
-          window.location.href = `${window.location.origin}/?model=auto`; // Reset the page to clear any state
+          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`; // Reset the page to clear any state
         }
     }, [seekAudio, resetAudioUrl, isBackPressed])
 

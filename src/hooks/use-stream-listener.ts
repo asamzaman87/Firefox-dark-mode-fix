@@ -306,27 +306,6 @@ const useStreamListener = (
             console.warn("[handleConvStream] chunkNdx is null");
             return;
         }
-        if (!stopFlow.current && chunkNdx !== nextChunkRef.current - 1) {
-            // if its not part of the stop flow or the main flow then force it to be on the main flow
-            console.warn("[handleConvStream] Chunk fund to be in neither stop or main flow, retrying:", chunkNdx);
-            await retryFlow(nextChunkRef.current - 1, conversationId); // convKey optional
-            return;
-        }
-        if (audioIssueStop.current === false) {
-            // wait for the speech button in chrome and send in firefox after stopping
-            // this is done to make sure the next injection proceeds successfully
-            try {
-                await Promise.race([
-                    waitForElement("[data-testid='composer-speech-button']", 12000),
-                    waitForElement("[data-testid='send-button']", 12000),
-                ]);
-            } catch {
-                console.warn("No resume button appeared within 12s");
-                await retryFlow(chunkNdx, conversationId);
-                return;
-            }
-        }
-        
         if (stopFlow.current) audioIssueStop.current = false;
         if (audioIssueStop.current) {
             // Since we stopped the current chunkNdx, it will need to be re-injected
@@ -351,6 +330,49 @@ const useStreamListener = (
             audioIssueStop.current = false;
             stopFlow.current = true;
             return;
+        }
+        if (!stopFlow.current && chunkNdx !== nextChunkRef.current - 1) {
+            // if its not part of the stop flow or the main flow then force it to be on the main flow
+            console.warn("[handleConvStream] Chunk fund to be in neither stop or main flow, retrying:", chunkNdx);
+            await retryFlow(nextChunkRef.current - 1, conversationId);
+            return;
+        }
+        if (stopConvo) {
+            console.warn ('[handleConvStream] stopConvo detected');
+            await retryFlow(chunkNdx, conversationId);
+            return;
+        }
+
+        // define needed consts
+        const actual = assistant ? assistant : target;
+        const comparisonActual = normalizeAlphaNumeric(actual);
+        const comparisonExpected = target;
+        // console.log('This is the actual message: ', comparisonActual);
+        // console.log('This is the expected message: ', comparisonExpected);
+        
+
+        // ——— copyright/inappropriateness detection ———
+        if (
+            actual.length < 80 &&
+            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
+        ) {
+            if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
+                console.warn("[handleConvStream] Text is being deemed as inappropriate by ChatGPT due to copyright or language issues.");
+                await retryFlow(chunkNdx, conversationId);
+                return;
+            }
+            handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
+            return;
+        }
+        
+        if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
+            console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
+            if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
+                localStorage.setItem("gptr/equalIssue", "true");
+            } else {
+                await retryFlow(chunkNdx, conversationId);
+                return;
+            }
         }
 
         // Compute the last conversation turn element and ensure it's an assistant turn.
@@ -384,7 +406,7 @@ const useStreamListener = (
             lastTurnEl = await poll<HTMLElement>(() => {
                 const el = getLastTurn();
                 return el && el.getAttribute("data-turn") === "assistant" ? el : null;
-            }, 3000, 100);
+            }, 5000, 100);
             if (!lastTurnEl) {
                 console.warn("[handleConvStream] No assistant turn appeared within 3s; retrying…");
                 await retryFlow(chunkNdx, conversationId); // convKey optional
@@ -431,38 +453,52 @@ const useStreamListener = (
         localStorage.setItem("gptr/pendingDelete", currentChatIdRef.current);
         const convKey = `${conversationId}:${messageId}`;
         registerPending(conversationId, convKey);
-    
-        // define needed consts
-        const actual = assistant ? assistant : target;
-        const comparisonActual = normalizeAlphaNumeric(actual);
-        const comparisonExpected = target;
-        // console.log('This is the actual message: ', comparisonActual);
-        // console.log('This is the expected message: ', comparisonExpected);
-        
 
-        // ——— copyright/inappropriateness detection ———
-        if (
-            actual.length < 80 &&
-            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
-        ) {
-            if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
-                await retryFlow(chunkNdx, conversationId, convKey);
-                return;
+        let waitTime = 10000;
+        // —— Wait together for send/composer/suffix using the resolved domMessageId ——
+        try {
+            const comparisonSuffix = normalizeAlphaNumeric(comparisonExpected).slice(-10);
+            const targetSelector = `[data-message-id='${domMessageId}']`;
+
+            // Promise that resolves when suffix appears in the specific assistant message
+            const suffixPromise = new Promise<void>((resolve) => {
+                const check = async () => {
+                    const end = Date.now() + waitTime;
+                    while (Date.now() < end) {
+                        const el = document.querySelector<HTMLElement>(targetSelector);
+                        if (el) {
+                            const text = normalizeAlphaNumeric(el.textContent || "");
+                            if (text.includes(comparisonSuffix)) {
+                                if (LOCAL_LOGS)console.log('SUFFIX WON THE RACE');
+                                resolve();
+                                return;
+                            }
+                        }
+                        await new Promise(r => setTimeout(r, 100));
+                    }
+                };
+                check();
+            });
+
+            // Promise for the composer button
+            const composerPromise = waitForElement("[data-testid='composer-speech-button']", waitTime);
+            // Promise for the send button
+            const sendPromise = waitForElement("[data-testid='send-button']", waitTime);
+
+            // Race all three at once
+            await Promise.race([composerPromise, sendPromise, suffixPromise]);
+
+            // Click stop button if suffixPromise wins the race
+            const stopBtn = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
+            if (stopBtn) {
+                stopBtn.click();
             }
-            handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
+        } catch {
+            console.warn("No trigger (button or suffix) appeared within", waitTime);
+            await retryFlow(chunkNdx, conversationId, convKey);
             return;
         }
-        
-        if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
-            console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
-            if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
-                localStorage.setItem("gptr/equalIssue", "true");
-            } else {
-                await retryFlow(chunkNdx, conversationId, convKey);
-                return;
-            }
-        } 
-        
+
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine
             if (token) {

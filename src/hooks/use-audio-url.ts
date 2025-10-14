@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { addChatToDeleteLS, Chunk, cleanAudioBuffer, computeNoiseFloor, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
+import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -262,6 +262,9 @@ const useAudioUrl = (isDownload: boolean) => {
                 }
                 resolve();
             });
+        }
+        if (window.location.href === "https://chatgpt.com/" && detectBrowser() !== 'firefox') {
+            await choosePreferredModel();
         }
         await waitForEditor();
         if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);

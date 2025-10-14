@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
@@ -350,7 +350,7 @@ export const getGPTTabs = async () => {
 export const switchToActiveTab = async () => {
   const activeTab = await getGPTTabs();
   if (!activeTab?.length || !activeTab[0].id) {
-    const tab = await chrome.tabs.create({ url: "https://chatgpt.com/?model=auto" });
+    const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
     if (tab.id) {
       await chrome.tabs.update(tab.id, { active: true });
       return tab.id + "::new_tab";
@@ -467,6 +467,15 @@ export const formatSeconds = (s: number): string => {
   return h === 0 ? `${mm}:${ss}` : `${hh}:${mm}:${ss}`;
 };
 
+export const isPremium = () => {
+  const plusDiv = document.querySelector('div.truncate[dir="auto"]');
+  if (!plusDiv || plusDiv.textContent.trim() !== "Plus") {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 export async function getToken(): Promise<string> {
   const { jwtToken, jwtTokenExpiry } = await chrome.storage.local.get([
     "jwtToken",
@@ -543,6 +552,151 @@ export async function secureFetch(
   }
   return data;
 }
+
+export const choosePreferredModel = async (): Promise<boolean> => {
+  try {
+    // only for premium users
+    if (!isPremium()) {
+      if (LOCAL_LOGS) console.log("[choosePreferredModel] Not a plus user");
+      return true;
+    }
+    // 1) Get the switcher button
+    const btn = (await waitForElement(
+      '[data-testid="model-switcher-dropdown-button"]',
+      2500
+    )) as HTMLButtonElement;
+
+    if ((btn.getAttribute("aria-label") || btn.textContent || "").toLowerCase().includes("instant")) {
+      if (LOCAL_LOGS) console.log("[choosePreferredModel] instant model already chosen");
+      return true;
+    }
+
+    // Helper to open and wait for aria-expanded="true"
+    const openAndAwaitExpanded = async () => {
+      btn.click();
+      btn.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      // Some Radix menus toggle expanded a tick later; also allow keyboard open.
+      await waitForElement(
+        `#${CSS.escape(btn.id)}[aria-expanded="true"]`,
+        2500
+      );
+    };
+
+    await openAndAwaitExpanded();
+
+    // 2) Wait for the Radix menu. Use multiple robust selectors.
+    const menu = (await waitForElement(
+      [
+        // Open Radix menu content
+        '[role="menu"][data-state="open"]',
+        // Common Radix content hooks
+        '[data-radix-popper-content-wrapper] [role="menu"]',
+        '[data-radix-menu-content]',
+        '[data-radix-dropdown-menu-content]',
+      ],
+      2500
+    )) as HTMLElement;
+
+    const isDisabled = (el: HTMLElement) =>
+      el.getAttribute("aria-disabled") === "true" ||
+      el.hasAttribute("data-disabled") ||
+      el.getAttribute("tabindex") === "-1";
+
+    // 3) Prefer Instant → Auto using concrete test IDs, then fallbacks
+    const selectorsInOrder = [
+      '[data-testid="model-switcher-gpt-5_instant"]',
+      '[data-testid="model-switcher-gpt-5_auto"]',
+      // Any *_instant / *_auto entries within the open menu
+      '[role="menu"] [data-testid$="_instant"]',
+      '[role="menu"] [data-testid$="_auto"]',
+    ];
+
+    let target: HTMLElement | undefined;
+    for (const sel of selectorsInOrder) {
+      const el = menu.querySelector<HTMLElement>(sel);
+      if (el && !isDisabled(el)) {
+        target = el;
+        break;
+      }
+    }
+
+    if (!target) {
+      const items = Array.from(
+        menu.querySelectorAll<HTMLElement>(
+          [
+            '[role="menuitem"]',
+            'button[role="menuitem"]',
+            '[data-testid*="model"]',
+            'button',
+          ].join(",")
+        )
+      );
+      const findBy = (needle: string) =>
+        items.find(
+          (el) =>
+            !isDisabled(el) &&
+            (el.textContent || "").toLowerCase().includes(needle)
+        );
+      target = findBy("instant") || findBy("auto");
+    }
+
+    if (!target) return false;
+
+    // Determine WHICH option we intend to lock in (personalized)
+    const targetSig =
+      (target.getAttribute("data-testid") || target.textContent || "").toLowerCase();
+    const intendedKeyword = targetSig.includes("instant") ? "instant" : "auto";
+
+    // 4) Click and verify model
+    target.scrollIntoView({ block: "nearest" });
+    target.click();
+
+    // SMART lock-in (no hardcoded sleep): only succeed when the *intended* option is active
+    const isIntendedSelected = () => {
+      // A) Some selected item in the menu matches our intended keyword
+      const selectedMatching =
+        !!menu.querySelector(
+          [
+            `[role="menuitemradio"][aria-checked="true"]`,
+            `[data-state="checked"]`,
+          ].join(",")
+        ) &&
+        Array.from(
+          menu.querySelectorAll<HTMLElement>(
+            `[role="menuitemradio"][aria-checked="true"], [data-state="checked"]`
+          )
+        ).some((el) => {
+          const sig =
+            (el.getAttribute("data-testid") || el.textContent || "").toLowerCase();
+          return sig.includes(intendedKeyword);
+        });
+
+      // B) The switcher button label reflects the intended keyword
+      const label = (btn.getAttribute("aria-label") || btn.textContent || "").toLowerCase();
+      const buttonMatches = label.includes(intendedKeyword);
+
+      return (
+        selectedMatching ||
+        buttonMatches
+      );
+    };
+
+    const start = Date.now();
+    const timeoutMs = 5000;
+    while (!isIntendedSelected()) {
+      await new Promise((r) => setTimeout(r, 120));
+      if (Date.now() - start > timeoutMs) {
+        throw new Error(`Model "${intendedKeyword}" did not lock in within timeout`);
+      }
+    }
+
+    if (LOCAL_LOGS) console.log(`[choosePreferredModel] Successfully locked in model "${intendedKeyword}"`);
+    return true;
+  } catch (err) {
+    console.error("choosePreferredModel failed:", err);
+    return false;
+  }
+};
 
 export const waitForElement = (
   selector: string | string[],

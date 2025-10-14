@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { DISCOUNT_FREQUENCY, SAFEST_MODEL, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -303,7 +303,7 @@ function Uploader() {
         const res = await deleteChatAndCreateNew();
         if (res?.ok) {
           await new Promise(r => setTimeout(r, 1000));
-          window.location.href = `${window.location.origin}/?model=auto`;
+          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
         }
       })();
     }
@@ -396,7 +396,7 @@ function Uploader() {
         !isOpening.current
       ) {
         await new Promise(r => setTimeout(r, 1000));
-        window.location.href = `${window.location.origin}/?model=auto`;
+        window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
       }
     })();
   }, [isAuthenticated]);
@@ -634,11 +634,19 @@ function Uploader() {
   }
 
   const isBadModel = () => {
+    if (detectBrowser() !== "firefox" || !isPremium()) return false
+    if (document.querySelector('button[id^="radix-_r_56_"]')) {
+      return true;
+    }
     const isNotSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
     // if the user has not used a model before, check if the model switcher is present on the dom
     const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
     if (modelSwitcher) {
       const ariaLabel = modelSwitcher.getAttribute("aria-label") || "";
+      if (!ariaLabel.toLowerCase().includes("instant") && localStorage.getItem("gptr/badModel") !== "true") {
+        localStorage.setItem("gptr/badModel", "true");
+        return true;
+      }
       if (ariaLabel.toLowerCase().includes("thinking")) {
         return true;
       }
@@ -688,7 +696,7 @@ function Uploader() {
 
     // clear out any leftover speech-mode UI
     addTextToInputAndOpen("");
-
+    // toast for bad model
     if (isBadModel()) {
       toast({
         description:
@@ -697,7 +705,7 @@ function Uploader() {
         style: TOAST_STYLE_CONFIG,
       });
     }
-
+    // open the popup
     setIsActive(true);
     // remove in case it was set
     localStorage.removeItem("gptr/equalIssue");
@@ -755,17 +763,17 @@ function Uploader() {
         }
 
         window.localStorage.removeItem("gptr/redirect-to-login");
-
         if (isBadModel()) {
           document.cookie =
             "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           document.cookie =
             "oai-last-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           window.localStorage.setItem("gptr/reloadDone", "true");
-          window.location.href = `${window.location.origin}/?model=auto`;
+          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
           return;
+        } else {
+          localStorage.removeItem("gptr/badModel");
         }
-
         await triggerPromptFlow();
         window.localStorage.removeItem("gptr/reloadDone");
 
@@ -802,7 +810,7 @@ function Uploader() {
         }
 
         if (prevHasSub === false && effectiveIsSubscribed === true) {
-          toast({description: "Welcome! You have successfully subscribed to GPT Reader. 🥳", style: TOAST_STYLE_CONFIG_INFO, duration: 10000});
+          toast({description: "Welcome! Thank you for being a paying member. 🥳", style: TOAST_STYLE_CONFIG_INFO, duration: 10000});
         }
 
         setIsSubscribed(effectiveIsSubscribed);
