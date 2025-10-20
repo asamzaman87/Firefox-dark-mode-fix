@@ -243,6 +243,9 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+        if (localStorage.getItem("gptr/active") !== "true") {
+            return;
+        }
         const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
         if (stopButton) {
             stopButton.click();
@@ -263,9 +266,6 @@ const useAudioUrl = (isDownload: boolean) => {
                 }
                 resolve();
             });
-        }
-        if (window.location.href === "https://chatgpt.com/" && detectBrowser() !== 'firefox') {
-            await choosePreferredModel();
         }
         await waitForEditor();
         if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);

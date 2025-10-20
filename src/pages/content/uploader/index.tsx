@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, SAFEST_MODEL, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { choosePreferredModel, cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -312,12 +312,11 @@ function Uploader() {
       restoreRootInfo();
       localStorage.removeItem("gptr/root-info");
 
-      const storedChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1];
+      const storedChatId = localStorage.getItem("gptr/pendingDelete");
 
       // If overlay is active, queue the current chat and try to delete it now (fire-and-forget)
       if (isActive && storedChatId) {
         event.preventDefault();
-        localStorage.setItem("gptr/pendingDelete", storedChatId);
         // delete current chat (best-effort; browser may ignore async on unload)
         deleteChatAndCreateNew(false, storedChatId);
       }
@@ -633,28 +632,6 @@ function Uploader() {
     }
   }
 
-  const isBadModel = () => {
-    if (detectBrowser() !== "firefox" || !isPremium()) return false
-    if (document.querySelector('button[id^="radix-_r_56_"]')) {
-      return true;
-    }
-    const isNotSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
-    // if the user has not used a model before, check if the model switcher is present on the dom
-    const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
-    if (modelSwitcher) {
-      const ariaLabel = modelSwitcher.getAttribute("aria-label") || "";
-      if (!ariaLabel.toLowerCase().includes("instant") && localStorage.getItem("gptr/badModel") !== "true") {
-        localStorage.setItem("gptr/badModel", "true");
-        return true;
-      }
-      if (ariaLabel.toLowerCase().includes("thinking")) {
-        return true;
-      }
-      return isNotSupportedModel(modelSwitcher.innerHTML);
-    }
-    return false
-  };
-
   // ─── extract the entire sequence into one reusable function ───
   const triggerPromptFlow = useCallback(async () => {
     await waitForElement(["[data-testid='create-new-chat-button']", "[aria-label='New chat']"], 5000)
@@ -696,15 +673,6 @@ function Uploader() {
 
     // clear out any leftover speech-mode UI
     addTextToInputAndOpen("");
-    // toast for bad model
-    if (isBadModel()) {
-      toast({
-        description:
-          "GPT Reader advises you to select the GPT-4 based models for best results. The current chosen model may be too slow.",
-        duration: 5000,
-        style: TOAST_STYLE_CONFIG,
-      });
-    }
     // open the popup
     setIsActive(true);
     // remove in case it was set
@@ -714,7 +682,6 @@ function Uploader() {
     clickStopButtonIfPresent,
     addTextToInputAndOpen,
     isSendButtonPresentOnDom,
-    isBadModel,
     toast,
     setIsActive,
   ]);
@@ -763,18 +730,9 @@ function Uploader() {
         }
 
         window.localStorage.removeItem("gptr/redirect-to-login");
-        if (isBadModel()) {
-          document.cookie =
-            "oai-is-specific-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          document.cookie =
-            "oai-last-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          window.localStorage.setItem("gptr/reloadDone", "true");
-          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
-          return;
-        } else {
-          localStorage.removeItem("gptr/badModel");
-        }
+        await choosePreferredModel();
         await triggerPromptFlow();
+        isOpeningInProgress.current = false;
         window.localStorage.removeItem("gptr/reloadDone");
 
         const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;

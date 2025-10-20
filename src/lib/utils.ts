@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX, MODELS_TO_WARN } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
@@ -553,149 +553,87 @@ export async function secureFetch(
   return data;
 }
 
-export const choosePreferredModel = async (): Promise<boolean> => {
-  try {
-    // only for premium users
-    if (!isPremium()) {
-      if (LOCAL_LOGS) console.log("[choosePreferredModel] Not a plus user");
-      return true;
-    }
-    // 1) Get the switcher button
-    const btn = (await waitForElement(
-      '[data-testid="model-switcher-dropdown-button"]',
-      2500
-    )) as HTMLButtonElement;
-
-    if ((btn.getAttribute("aria-label") || btn.textContent || "").toLowerCase().includes("instant")) {
-      if (LOCAL_LOGS) console.log("[choosePreferredModel] instant model already chosen");
-      return true;
-    }
-
-    // Helper to open and wait for aria-expanded="true"
-    const openAndAwaitExpanded = async () => {
-      btn.click();
-      btn.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
-      // Some Radix menus toggle expanded a tick later; also allow keyboard open.
-      await waitForElement(
-        `#${CSS.escape(btn.id)}[aria-expanded="true"]`,
-        2500
-      );
-    };
-
-    await openAndAwaitExpanded();
-
-    // 2) Wait for the Radix menu. Use multiple robust selectors.
-    const menu = (await waitForElement(
-      [
-        // Open Radix menu content
-        '[role="menu"][data-state="open"]',
-        // Common Radix content hooks
-        '[data-radix-popper-content-wrapper] [role="menu"]',
-        '[data-radix-menu-content]',
-        '[data-radix-dropdown-menu-content]',
-      ],
-      2500
-    )) as HTMLElement;
-
-    const isDisabled = (el: HTMLElement) =>
-      el.getAttribute("aria-disabled") === "true" ||
-      el.hasAttribute("data-disabled") ||
-      el.getAttribute("tabindex") === "-1";
-
-    // 3) Prefer Instant → Auto using concrete test IDs, then fallbacks
-    const selectorsInOrder = [
-      '[data-testid="model-switcher-gpt-5_instant"]',
-      '[data-testid="model-switcher-gpt-5_auto"]',
-      // Any *_instant / *_auto entries within the open menu
-      '[role="menu"] [data-testid$="_instant"]',
-      '[role="menu"] [data-testid$="_auto"]',
-    ];
-
-    let target: HTMLElement | undefined;
-    for (const sel of selectorsInOrder) {
-      const el = menu.querySelector<HTMLElement>(sel);
-      if (el && !isDisabled(el)) {
-        target = el;
-        break;
-      }
-    }
-
-    if (!target) {
-      const items = Array.from(
-        menu.querySelectorAll<HTMLElement>(
-          [
-            '[role="menuitem"]',
-            'button[role="menuitem"]',
-            '[data-testid*="model"]',
-            'button',
-          ].join(",")
-        )
-      );
-      const findBy = (needle: string) =>
-        items.find(
-          (el) =>
-            !isDisabled(el) &&
-            (el.textContent || "").toLowerCase().includes(needle)
-        );
-      target = findBy("instant") || findBy("auto");
-    }
-
-    if (!target) return false;
-
-    // Determine WHICH option we intend to lock in (personalized)
-    const targetSig =
-      (target.getAttribute("data-testid") || target.textContent || "").toLowerCase();
-    const intendedKeyword = targetSig.includes("instant") ? "instant" : "auto";
-
-    // 4) Click and verify model
-    target.scrollIntoView({ block: "nearest" });
-    target.click();
-
-    // SMART lock-in (no hardcoded sleep): only succeed when the *intended* option is active
-    const isIntendedSelected = () => {
-      // A) Some selected item in the menu matches our intended keyword
-      const selectedMatching =
-        !!menu.querySelector(
-          [
-            `[role="menuitemradio"][aria-checked="true"]`,
-            `[data-state="checked"]`,
-          ].join(",")
-        ) &&
-        Array.from(
-          menu.querySelectorAll<HTMLElement>(
-            `[role="menuitemradio"][aria-checked="true"], [data-state="checked"]`
-          )
-        ).some((el) => {
-          const sig =
-            (el.getAttribute("data-testid") || el.textContent || "").toLowerCase();
-          return sig.includes(intendedKeyword);
-        });
-
-      // B) The switcher button label reflects the intended keyword
-      const label = (btn.getAttribute("aria-label") || btn.textContent || "").toLowerCase();
-      const buttonMatches = label.includes(intendedKeyword);
-
-      return (
-        selectedMatching ||
-        buttonMatches
-      );
-    };
-
-    const start = Date.now();
-    const timeoutMs = 5000;
-    while (!isIntendedSelected()) {
-      await new Promise((r) => setTimeout(r, 120));
-      if (Date.now() - start > timeoutMs) {
-        throw new Error(`Model "${intendedKeyword}" did not lock in within timeout`);
-      }
-    }
-
-    if (LOCAL_LOGS) console.log(`[choosePreferredModel] Successfully locked in model "${intendedKeyword}"`);
+export const isBadModel = () => {
+  if (!isPremium()) return false
+  if (document.querySelector('button[id^="radix-_r_56_"]')) {
     return true;
-  } catch (err) {
-    console.error("choosePreferredModel failed:", err);
-    return false;
   }
+  const isNotSupportedModel = (models: string | string[]) => MODELS_TO_WARN.some((model) => models.includes(model));
+  // if the user has not used a model before, check if the model switcher is present on the dom
+  const modelSwitcher = document.querySelector('[data-testid="model-switcher-dropdown-button"]') as HTMLButtonElement;
+  if (modelSwitcher) {
+    const ariaLabel = modelSwitcher.getAttribute("aria-label") || "";
+    if (!ariaLabel.toLowerCase().includes("instant") && localStorage.getItem("gptr/badModel") !== "true") {
+      localStorage.setItem("gptr/badModel", "true");
+      return true;
+    }
+    if (ariaLabel.toLowerCase().includes("thinking")) {
+      return true;
+    }
+    return isNotSupportedModel(modelSwitcher.innerHTML);
+  }
+  return false
+};
+
+export const choosePreferredModel = async () => {
+  // only for premium users
+  if (!isPremium()) {
+    if (LOCAL_LOGS) console.log("[choosePreferredModel] Not a plus user");
+    return true;
+  }
+  // ─────────────────────────────────────────────────────────────
+  // Call user_last_used_model_config with retries (best-effort)
+  // Keep early-returns above intact (non-plus / already instant).
+  // ─────────────────────────────────────────────────────────────
+  const fetchAuthToken = (): Promise<string | null> =>
+    new Promise((resolve) => {
+      const handler = (e: Event) => {
+        window.removeEventListener("AUTH_RECEIVED", handler as any);
+        const { accessToken } = (e as CustomEvent<{ accessToken: string }>).detail || {};
+        resolve(accessToken ?? null);
+      };
+      window.addEventListener("AUTH_RECEIVED", handler as any, { once: true });
+      // Another part of the extension should respond to this with AUTH_RECEIVED
+      window.dispatchEvent(new Event("GET_TOKEN"));
+      // Absolute cap in case nobody responds
+      setTimeout(() => {
+        try { window.removeEventListener("AUTH_RECEIVED", handler as any); } catch {}
+        resolve(null);
+      }, 3000);
+    });
+
+  const callLastUsedModelConfig = async () => {
+    const token = await fetchAuthToken();
+    if (!token) {
+      if (LOCAL_LOGS) console.warn("[choosePreferredModel] No auth token; skipping last_used_model_config call");
+      return;
+    }
+    const url =
+      `https://chatgpt.com/backend-api/settings/user_last_used_model_config?model_slug=${SAFEST_MODEL}`;
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch(url, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          // parse defensively and ignore contents
+          try { await res.json(); } catch {}
+          if (LOCAL_LOGS) console.log("[choosePreferredModel] last_used_model_config succeeded");
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      } catch (err) {
+        if (attempt === maxAttempts) {
+          console.warn("[choosePreferredModel] last_used_model_config failed after 3 attempts:", err);
+          return;
+        }
+        await new Promise(r => setTimeout(r, 300 * attempt)); // light backoff
+      }
+    }
+  };
+  await callLastUsedModelConfig();
 };
 
 export const waitForElement = (
