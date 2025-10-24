@@ -36,24 +36,25 @@ export function ThemeProvider({
     if (localStorage.getItem('gptr/active') !== 'true') {
       return
     }
-
+    let theme_color = "light";
+    
     // console.log('this is the theme being set', theme);
 
     root.classList.remove("light", "dark")
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
+    // if (theme === "system") {
+    //   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+    //     .matches
+    //     ? "dark"
+    //     : "light"
 
-      root.classList.add(systemTheme)
-      root.style["colorScheme"] = systemTheme
-      return
-    }
+    //   root.classList.add(systemTheme)
+    //   root.style["colorScheme"] = systemTheme
+    //   return
+    // }
 
-    root.classList.add(theme)
-    root.style["colorScheme"] = theme
+    root.classList.add(theme_color)
+    root.style["colorScheme"] = theme_color
   }, [theme])
 
   const value = {
