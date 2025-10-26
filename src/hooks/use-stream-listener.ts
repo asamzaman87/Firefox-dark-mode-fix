@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
 import useVoice from "./use-voice";
-import { addChatToDeleteLS, Chunk, deleteChatAndCreateNew, handleError, normalizeAlphaNumeric, removeChatFromDeleteLS, waitForElement } from "@/lib/utils";
+import { addChatToDeleteLS, Chunk, collectChatsAboveTopChat, deleteChatAndCreateNew, handleError, maybeDeleteChat, normalizeAlphaNumeric, removeChatFromDeleteLS, waitForElement } from "@/lib/utils";
 import useFormat from "./use-format";
 import { usePremiumModal } from "@/context/premium-modal";
 const MAX_RETRIES = 4; 
@@ -49,7 +49,7 @@ const useStreamListener = (
         set.add(convKey);
     };
 
-    const completePending = (chatId: string, convKey: string) => {
+    const completePending = async (chatId: string, convKey: string) => {
         const set = chatToPendingRef.current.get(chatId);
         if (set) {
             set.delete(convKey);
@@ -57,26 +57,11 @@ const useStreamListener = (
                 chatToPendingRef.current.delete(chatId);
                 // not the current chat? try to delete now (fallback to LS)
                 if (chatId !== currentChatIdRef.current) {
-                    maybeDeleteChat(chatId);
+                    await maybeDeleteChat(chatId);
                 }
             }
         }
     };
-
-    // Use shared util; no duplicate delete logic here
-    const maybeDeleteChat = async (chatId: string) => {
-        try {
-            const res = await deleteChatAndCreateNew(false, chatId);
-            if (res?.ok) {
-                removeChatFromDeleteLS(chatId);
-            } else {
-                addChatToDeleteLS(chatId);
-            }
-        } catch {
-            addChatToDeleteLS(chatId);
-        }
-    };
-
     
     const setVoices = (voice: string) => {
         handleVoiceChange(voice);
@@ -89,11 +74,7 @@ const useStreamListener = (
     }
 
     const retryFlow = useCallback(
-        async (failedChunkNdx: number, conversationId?: string, convKey?: string) => {
-            if (conversationId && convKey) {
-                completePending(conversationId, convKey);
-            }
-
+        async (failedChunkNdx: number) => {
             if (failedChunkNdx < 0 || failedChunkNdx >= chunkRef.current.length) {
                 if (LOCAL_LOGS) console.log("[retryFlow] invalid chunk index", failedChunkNdx);
                 return;
@@ -112,15 +93,13 @@ const useStreamListener = (
                 return;
             }
 
-            // record current chat so it can be cleaned later
-            const prevChatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] || null;
-
             // open a new chat (do not delete old one here)
             await new Promise<void>(async (resolve) => {
                 const newChatBtn = document.querySelector<HTMLButtonElement>(
                     "[data-testid='create-new-chat-button'], [aria-label='New chat']"
                 );
                 if (newChatBtn) {
+                    await collectChatsAboveTopChat(false);
                     newChatBtn.click();
                     // wait briefly for the new chat URL
                     for (let i = 0; i < 10; i++) {
@@ -141,9 +120,6 @@ const useStreamListener = (
                 duration: 10000
             });
             injectPrompt(text, id, promptNdx.current);
-
-            // queue old chat for deletion
-            if (prevChatId) addChatToDeleteLS(prevChatId);
         },
         [chunkRef, injectPrompt, toast]
     );
@@ -199,7 +175,7 @@ const useStreamListener = (
 
             if (response.status === 404) {
                 const start = Date.now();
-                while (Date.now() - start < 1500) {
+                while (Date.now() - start < 3000) {
                     await new Promise((r) => setTimeout(r, 300));
                     response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
                     if (response.status === 200) break;
@@ -245,7 +221,6 @@ const useStreamListener = (
                 return next;
             });
 
-            completePending(conversationId, convKey);
             setIsFetching(false);
 
             try {
@@ -283,6 +258,8 @@ const useStreamListener = (
                 console.log('gptr/abort SET FOR CHUNK NUMBER:', chunkNumber);
             }
             return;
+        } finally {
+            await completePending(conversationId, convKey);
         }
     }, [token, retryFlow, isDownload, isSubscribed]);
 
@@ -302,6 +279,30 @@ const useStreamListener = (
                 console.log("[handleConvStream] Encountered a retry type button");
             }
         }
+        if (!conversationId) {
+            // try immediate match first
+            conversationId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
+
+            // if still empty, wait up to 5s (poll every 100 ms)
+            if (!conversationId) {
+                const start = Date.now();
+                while (!conversationId && Date.now() - start < 5000) {
+                    await new Promise((r) => setTimeout(r, 100));
+                    conversationId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
+                }
+            }
+
+            if (conversationId) {
+                addChatToDeleteLS(conversationId);
+            } else {
+                console.warn("[handleConvStream] Could not find conversation ID");
+            }
+        }
+        currentChatIdRef.current = conversationId;
+        // if (chunkNdx % 2 == 0 && !didIt.current.has(chunkNdx)) {
+        //     didIt.current.add(chunkNdx);
+        //     await retryFlow(chunkNdx);
+        // }
         if (chunkNdx === null) {
             console.warn("[handleConvStream] chunkNdx is null");
             return;
@@ -334,7 +335,7 @@ const useStreamListener = (
         if (!stopFlow.current && chunkNdx !== nextChunkRef.current - 1) {
             // if its not part of the stop flow or the main flow then force it to be on the main flow
             console.warn("[handleConvStream] Chunk fund to be in neither stop or main flow, retrying:", chunkNdx);
-            await retryFlow(nextChunkRef.current - 1, conversationId);
+            await retryFlow(nextChunkRef.current - 1);
             return;
         }
         if (stopConvo) {
@@ -343,7 +344,7 @@ const useStreamListener = (
                 "gptr/abortCount",
                 String((Number(localStorage.getItem("gptr/abortCount")) || 1) + 1)
             );
-            await retryFlow(chunkNdx, conversationId);
+            await retryFlow(chunkNdx);
             return;
         }
 
@@ -362,7 +363,7 @@ const useStreamListener = (
         ) {
             if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
                 console.warn("[handleConvStream] Text is being deemed as inappropriate by ChatGPT due to copyright or language issues.");
-                await retryFlow(chunkNdx, conversationId);
+                await retryFlow(chunkNdx);
                 return;
             }
             handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
@@ -374,7 +375,7 @@ const useStreamListener = (
             if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
                 localStorage.setItem("gptr/equalIssue", "true");
             } else {
-                await retryFlow(chunkNdx, conversationId);
+                await retryFlow(chunkNdx);
                 return;
             }
         }
@@ -413,7 +414,7 @@ const useStreamListener = (
             }, 5000, 100);
             if (!lastTurnEl) {
                 console.warn("[handleConvStream] No assistant turn appeared within 3s; retrying…");
-                await retryFlow(chunkNdx, conversationId); // convKey optional
+                await retryFlow(chunkNdx);
                 return;
             }
         }
@@ -430,7 +431,7 @@ const useStreamListener = (
             domMessageId = await poll<string>(() => findFirstMessageId(), 3000, 100);
             if (!domMessageId) {
                 console.warn("[handleConvStream] No message id found within 3s; retrying…");
-                await retryFlow(chunkNdx, conversationId); // convKey optional
+                await retryFlow(chunkNdx);
                 return;
             }
         }
@@ -441,22 +442,16 @@ const useStreamListener = (
             messageId = domMessageId;
         }
 
-        // make sure we have the right conversation id
-        let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
-        let urlConvId = convMatch?.[1] ?? "";
-        if (!urlConvId) {
-            console.warn("Couldn't find conversation id in url");
-        }
-        if (urlConvId && urlConvId !== conversationId && uuidRe.test(urlConvId)) {
-            console.warn("Got the wrong conversation id. Falling back to id in url");
-            conversationId = urlConvId;
-        }
-
-        // mark the current chat so we never delete it here
-        currentChatIdRef.current = conversationId;
-        localStorage.setItem("gptr/pendingDelete", currentChatIdRef.current);
-        const convKey = `${conversationId}:${messageId}`;
-        registerPending(conversationId, convKey);
+        // // make sure we have the right conversation id
+        // let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
+        // let urlConvId = convMatch?.[1] ?? "";
+        // if (!urlConvId) {
+        //     console.warn("Couldn't find conversation id in url");
+        // }
+        // if (urlConvId && urlConvId !== conversationId && uuidRe.test(urlConvId)) {
+        //     console.warn("Got the wrong conversation id. Falling back to id in url");
+        //     conversationId = urlConvId;
+        // }
 
         let waitTime = 10000;
         // —— Wait together for send/composer/suffix using the resolved domMessageId ——
@@ -499,7 +494,7 @@ const useStreamListener = (
             }
         } catch {
             console.warn("No trigger (button or suffix) appeared within", waitTime);
-            await retryFlow(chunkNdx, conversationId, convKey);
+            await retryFlow(chunkNdx);
             return;
         }
 
@@ -537,6 +532,8 @@ const useStreamListener = (
                 if (LOCAL_LOGS) console.log(`[Audio Prefetch] Prefetching audio for chunk ${chunkNdx}`);
                 (async () => {
                     try {
+                        const convKey = `${conversationId}:${messageId}`;
+                        registerPending(conversationId, convKey);
                         const audioUrl = await fetchAndDecodeAudio(
                             `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${storedFormat}`,
                             +chunkNdx,

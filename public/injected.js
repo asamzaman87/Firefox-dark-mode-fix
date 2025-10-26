@@ -27,6 +27,20 @@ function normalizeAlphaNumeric(str) {
   // This will keep all Unicode letters and digits
   return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
 }
+
+const LS_CHATS_TO_DELETE = "gptr/chatsToDelete";
+const readChatsToDelete = () => {
+    try { return JSON.parse(localStorage.getItem(LS_CHATS_TO_DELETE) || "[]"); } catch { return []; }
+};
+const writeChatsToDelete = (ids) => {
+    localStorage.setItem(LS_CHATS_TO_DELETE, JSON.stringify([...new Set(ids)]));
+};
+const addChatToDeleteLS = (chatId) => {
+    const list = readChatsToDelete();
+    if (!list.includes(chatId) && chatId) {
+      writeChatsToDelete([...list, chatId]);
+    }
+};
   
 const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let messageId = "";
@@ -160,7 +174,10 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 const rawMesssageId = messageIdMatch.length > 1 ? messageIdMatch[messageIdMatch.length - 1] : messageIdMatch[0];
                 messageId = rawMesssageId.replace(/"/g, "").replace(/id: /g, "");
             }
-            if (conversationIdMatch) conversationId = conversationIdMatch[1];
+            if (conversationIdMatch) {
+              conversationId = conversationIdMatch[1];
+              addChatToDeleteLS(conversationId);
+            }
             if (createTimeMatch) createTime = createTimeMatch[1];
 
             if (messageId && conversationId && createTime) {
@@ -261,6 +278,7 @@ window.fetch = async (...args) => {
                 const firstMsg = req.messages?.[0]?.content?.parts?.[0] || "";
                 const m = firstMsg.match(/^\[(\d+)\]/);
                 sentChunkNumber = m ? Number(m[1]) : null;
+                if (sentChunkNumber === null) return response;
                 if (LOCAL_LOGS) console.log("[injected.js] Recieved chunk number:", sentChunkNumber);
             } catch (_err) {
                 if (url.endsWith('/conversation')) {

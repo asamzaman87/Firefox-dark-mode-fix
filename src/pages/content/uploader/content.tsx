@@ -427,7 +427,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 return setShowDownloadCancelConfirmation(true);
             // delete the old ChatGPT conversation if we have one
             removeAllListeners();
-            deleteChatAndCreateNew();
             setIsViewingText(false);
             stopMic();
             resetMic();

@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, SAFEST_MODEL, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { choosePreferredModel, cn, deleteChatAndCreateNew, detectBrowser, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { choosePreferredModel, cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, maybeDeleteChat, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -299,26 +299,43 @@ function Uploader() {
     if (!isActive && wasActive.current) {
       restoreRootInfo();
       localStorage.removeItem("gptr/equalIssue");
+      localStorage.removeItem("gptr/reloadDone");
+      const newChatBtn = document.querySelector<HTMLButtonElement>(
+          "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+      );
+      if (newChatBtn) {
+        newChatBtn.click();
+      }
       (async () => {
-        const res = await deleteChatAndCreateNew();
-        if (res?.ok) {
-          await new Promise(r => setTimeout(r, 1000));
+        await collectChatsAboveTopChat();
+        const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+        const initialLength = list.length;
+        try {
+          if (Array.isArray(list) && list.length) {
+            for (const id of list) {
+              await maybeDeleteChat(id);
+            }
+          }
+        } catch {
+          // ignore
+        }
+        await new Promise(r => setTimeout(r, 1500));
+        const finalList = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+        const finalLength = finalList.length;
+        if (initialLength != finalLength) {
           window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
         }
       })();
     }
-    const handleUnload = (event: BeforeUnloadEvent) => {
+    const handleUnload = async (event: BeforeUnloadEvent) => {
       if (!isAuthenticated) return;
       restoreRootInfo();
       localStorage.removeItem("gptr/root-info");
+      localStorage.removeItem("gptr/top-chat");
 
-      const storedChatId = localStorage.getItem("gptr/pendingDelete");
-
-      // If overlay is active, queue the current chat and try to delete it now (fire-and-forget)
-      if (isActive && storedChatId) {
+      // If overlay is active, buy as much time as possible
+      if (isActive) {
         event.preventDefault();
-        // delete current chat (best-effort; browser may ignore async on unload)
-        deleteChatAndCreateNew(false, storedChatId);
       }
 
       // Also try to delete any leftover chats we scheduled in LS (except current if active)
@@ -326,8 +343,7 @@ function Uploader() {
         const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
         if (Array.isArray(list) && list.length) {
           for (const id of list) {
-            if (isActive && storedChatId && id === storedChatId) continue;
-            deleteChatAndCreateNew(false, id);
+            await maybeDeleteChat(id);
           }
         }
       } catch {
@@ -345,22 +361,10 @@ function Uploader() {
   // Refresh at most once after any successful delete, matching your existing refresh rules.
   useEffect(() => {
     if (!isAuthenticated) return;
+    localStorage.removeItem("gptr/top-chat");
 
     (async () => {
       let shouldRefresh = false;
-
-      // 1) Handle the "current" chat saved on unload
-      const pendingId = localStorage.getItem("gptr/pendingDelete");
-      if (pendingId) {
-        try {
-          const res = await deleteChatAndCreateNew(false, pendingId);
-          if (res?.ok) shouldRefresh = true;
-        } catch {
-          // ignore; leave it to LS if needed later
-        } finally {
-          localStorage.removeItem("gptr/pendingDelete");
-        }
-      }
 
       // 2) Drain the bulk list of chats to delete
       try {
@@ -369,8 +373,6 @@ function Uploader() {
         if (Array.isArray(list) && list.length) {
           const remaining: string[] = [];
           for (const id of list) {
-            // If the bulk list also contained the same pendingId, skip (already processed above)
-            if (id === pendingId) continue;
             try {
               const res = await deleteChatAndCreateNew(false, id);
               if (res?.ok) {
@@ -392,10 +394,11 @@ function Uploader() {
       if (
         shouldRefresh &&
         window.location.href.startsWith("https://chatgpt.com") &&
-        !isOpening.current
+        !isOpening.current &&
+        localStorage.getItem("gptr/active") !== "true"
       ) {
-        await new Promise(r => setTimeout(r, 1000));
-        window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+        await new Promise(r => setTimeout(r, 1500));
+        window.location.href = window.location.href;
       }
     })();
   }, [isAuthenticated]);
@@ -732,6 +735,7 @@ function Uploader() {
         window.localStorage.removeItem("gptr/redirect-to-login");
         await choosePreferredModel();
         await triggerPromptFlow();
+        await fetchAndStoreTopChat();
         isOpeningInProgress.current = false;
         window.localStorage.removeItem("gptr/reloadDone");
 
@@ -1036,11 +1040,13 @@ function Uploader() {
     // chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
     window.localStorage.setItem("gptr/active", String(isActive)); //set overlay state to storage
     if (isActive) {
-      const root = document.documentElement;
-      let theme_color = "light";
-      root.classList.remove("light", "dark")
-      root.classList.add(theme_color)
-      root.style["colorScheme"] = theme_color
+      if (detectBrowser() === "firefox") {
+        const root = document.documentElement;
+        let theme_color = "light";
+        root.classList.remove("light", "dark")
+        root.classList.add(theme_color)
+        root.style["colorScheme"] = theme_color
+      }
       //set active overlay count
       const aoc = window.localStorage.getItem("gptr/aoc");
       const count = aoc ? +aoc : 0;

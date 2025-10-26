@@ -43,10 +43,12 @@ export const writeChatsToDelete = (ids: string[]) => {
 export const addChatToDeleteLS = (chatId?: string) => {
     if (!chatId) chatId = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/)?.[1] ?? "";
     const list = readChatsToDelete();
-    if (!list.includes(chatId)) writeChatsToDelete([...list, chatId]);
+    if (!list.includes(chatId) && chatId) {
+      writeChatsToDelete([...list, chatId]);
+    }
 };
 export const removeChatFromDeleteLS = (chatId: string) => {
-    writeChatsToDelete(readChatsToDelete().filter(id => id !== chatId));
+  writeChatsToDelete(readChatsToDelete().filter(id => id !== chatId));
 };
 
 export type Chunk = { id: string; text: string, messageId?: string, completed: boolean, isPlaying?: boolean };
@@ -240,6 +242,147 @@ export function normalizeAlphaNumeric(str: string) {
   return str.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
 }
 
+export const maybeDeleteChat = async (chatId: string) => {
+    try {
+        const res = await deleteChatAndCreateNew(false, chatId);
+        if (res?.ok) {
+            removeChatFromDeleteLS(chatId);
+        } else {
+            addChatToDeleteLS(chatId);
+        }
+    } catch {
+        addChatToDeleteLS(chatId);
+    }
+};
+
+export async function fetchAndStoreTopChat() {
+  const LS_KEY = "gptr/top-chat";
+
+  return new Promise<string | void>((resolve) => {
+    const handleAuth = async (e: Event) => {
+      window.removeEventListener("AUTH_RECEIVED", handleAuth);
+      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
+
+      if (!token) {
+        console.error("[fetchAndStoreTopChat] Missing access token");
+        return resolve();
+      }
+
+      try {
+        const res = await fetch(
+          "https://chatgpt.com/backend-api/conversations?offset=0&limit=1&order=updated&is_archived=false&is_starred=false",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("[fetchAndStoreTopChat] Failed to fetch:", res.status);
+          return resolve();
+        }
+
+        const data = await res.json();
+        const topChatId = data?.items?.[0]?.id;
+
+        if (topChatId) {
+          localStorage.setItem(LS_KEY, topChatId);
+          if (LOCAL_LOGS) console.log("[fetchAndStoreTopChat] Stored top chat ID:", topChatId);
+          resolve(topChatId);
+        } else {
+          console.warn("[fetchAndStoreTopChat] No chat items found");
+          resolve();
+        }
+      } catch (err) {
+        console.error("[fetchAndStoreTopChat] Error fetching chat:", err);
+        resolve();
+      }
+    };
+
+    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
+    window.dispatchEvent(new Event("GET_TOKEN"));
+  });
+}
+
+export async function collectChatsAboveTopChat(deleteFlag: boolean = true) {
+  const LS_TOP_KEY = "gptr/top-chat";
+  const LS_DELETE_KEY = "gptr/chatsToDelete";
+
+  const topChatId = localStorage.getItem(LS_TOP_KEY);
+  if (!topChatId) {
+    console.warn("[collectChatsAboveTopChat] No top chat stored yet.");
+    return;
+  }
+
+  return new Promise<void>((resolve) => {
+    const handleAuth = async (e: Event) => {
+      window.removeEventListener("AUTH_RECEIVED", handleAuth);
+      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
+
+      if (!token) {
+        console.error("[collectChatsAboveTopChat] Missing access token");
+        return resolve();
+      }
+
+      try {
+        const res = await fetch(
+          "https://chatgpt.com/backend-api/conversations?offset=0&limit=28&order=updated&is_archived=false&is_starred=false",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("[collectChatsAboveTopChat] Fetch failed:", res.status);
+          return resolve();
+        }
+
+        const data = await res.json();
+        const items: { id: string }[] = data?.items ?? [];
+        if (!items.length) {
+          console.warn("[collectChatsAboveTopChat] No conversations found.");
+          return resolve();
+        }
+
+        const topIndex = items.findIndex(item => item.id === topChatId);
+        if (topIndex === -1) {
+          console.warn("[collectChatsAboveTopChat] Top chat not found in response.");
+          return resolve();
+        }
+
+        // All conversations above (newer) than topChatId
+        const idsToDelete = items.slice(0, topIndex).map(item => item.id);
+
+        if (idsToDelete.length) {
+          const existing = JSON.parse(localStorage.getItem(LS_DELETE_KEY) || "[]");
+          const merged = Array.from(new Set([...existing, ...idsToDelete]));
+          localStorage.setItem(LS_DELETE_KEY, JSON.stringify(merged));
+          if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] Added chats to delete list:", idsToDelete);
+        } else {
+          if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] No newer chats found above top chat.");
+        }
+
+        resolve();
+      } catch (err) {
+        console.error("[collectChatsAboveTopChat] Error fetching chats:", err);
+        resolve();
+      } finally {
+        if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+      }
+    };
+
+    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
+    window.dispatchEvent(new Event("GET_TOKEN"));
+  });
+}
+
 /**
  * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
  * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
@@ -262,6 +405,7 @@ export async function deleteChatAndCreateNew(
       window.removeEventListener("AUTH_RECEIVED", handleAuth);
       const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
       if (!token) {
+        console.error("Failed to delete chat: no token");
         return resolve();
       }
 
