@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
+import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, maybeDeleteChat, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -516,6 +516,20 @@ const useAudioUrl = (isDownload: boolean) => {
                 toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
             }
             localStorage.removeItem("gptr/equalIssue");
+            (async () => {
+                // Also try to delete any leftover chats we scheduled in LS (except current if active)
+                await collectChatsAboveTopChat();
+                try {
+                    const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+                    if (Array.isArray(list) && list.length) {
+                        for (const id of list) {
+                            await maybeDeleteChat(id);
+                        }
+                    }
+                } catch {
+                // ignore
+                }
+            })();
         }
     }, [chunks, blobs, isDownload]);
     

@@ -309,7 +309,6 @@ function Uploader() {
       (async () => {
         await collectChatsAboveTopChat();
         const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
-        const initialLength = list.length;
         try {
           if (Array.isArray(list) && list.length) {
             for (const id of list) {
@@ -320,11 +319,7 @@ function Uploader() {
           // ignore
         }
         await new Promise(r => setTimeout(r, 1500));
-        const finalList = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
-        const finalLength = finalList.length;
-        if (initialLength != finalLength) {
-          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
-        }
+        window.location.href = window.location.href;
       })();
     }
     const handleUnload = async (event: BeforeUnloadEvent) => {

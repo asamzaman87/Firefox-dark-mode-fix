@@ -175,8 +175,8 @@ const useStreamListener = (
 
             if (response.status === 404) {
                 const start = Date.now();
-                while (Date.now() - start < 3000) {
-                    await new Promise((r) => setTimeout(r, 300));
+                while (Date.now() - start < 5000) {
+                    await new Promise((r) => setTimeout(r, 500));
                     response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
                     if (response.status === 200) break;
                 }
