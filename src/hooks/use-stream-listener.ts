@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { makeVoicesMock } from "@/lib/utils";
 import { useState, useRef, useCallback } from "react";
 
 const useStreamListener = (
@@ -21,8 +22,15 @@ const useStreamListener = (
   const [blobs, setBlobs] = useState<{ chunkNumber: number; blob: Blob }[]>([]);
   const promptNdx = useRef<number>(0);
   const isVoiceLoading = false;
-  const voices: any[] = [];
-  const setVoices = (_voice: string) => {};
+  const voices = makeVoicesMock([], "alloy");
+    const setVoices = (v: any) => {
+    if (Array.isArray(v)) {
+        voices.list.splice(0, voices.list.length, ...v);
+    } else if (typeof v === "string") {
+        voices.selected = v;
+    }
+    };
+
 
   // Dummy callbacks to mimic structure
   const reset = useCallback(() => {

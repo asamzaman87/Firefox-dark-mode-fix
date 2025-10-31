@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from "react";
+import { makeVoicesMock } from "@/lib/utils";
 
 const useAudioUrl = (isDownload: boolean) => {
   const [audioUrls, setAudioUrls] = useState<string[]>([]);
@@ -7,7 +8,14 @@ const useAudioUrl = (isDownload: boolean) => {
   const [text, setText] = useState("");
   const [progress, setProgress] = useState(0);
   const [chunks, setChunks] = useState<any[]>([]);
-  const [voices, setVoices] = useState<any[]>([]);
+  const voices = makeVoicesMock([], "alloy");
+  const setVoices = (v: any) => {
+    if (Array.isArray(v)) {
+        voices.list.splice(0, voices.list.length, ...v);
+    } else if (typeof v === "string") {
+        voices.selected = v;
+    }
+  };
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
   const [isPromptingPaused, setIsPromptingPaused] = useState(false);
   const [wasPromptStopped, setWasPromptStopped] = useState<"LOADING" | "PAUSED" | "INIT">("INIT");

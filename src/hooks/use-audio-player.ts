@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { makeVoicesMock } from "@/lib/utils";
 import { useState, useCallback } from "react";
 
 const useAudioPlayer = (isDownload: boolean) => {
@@ -9,6 +10,15 @@ const useAudioPlayer = (isDownload: boolean) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playRate, setPlayRate] = useState(1);
   const [volume, setVolume] = useState(0.5);
+  const voices = makeVoicesMock([], "alloy");
+  const setVoices = (v: any) => {
+    if (Array.isArray(v)) {
+      voices.list.splice(0, voices.list.length, ...v);
+    } else if (typeof v === "string") {
+      voices.selected = v;
+    }
+  };
+
   const [progress, setProgress] = useState(0);
 
   // Dummy functions

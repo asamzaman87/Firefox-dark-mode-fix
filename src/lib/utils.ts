@@ -383,6 +383,23 @@ export async function collectChatsAboveTopChat(deleteFlag: boolean = true) {
   });
 }
 
+// shared helper you can paste into each mock file:
+export function makeVoicesMock(initialList: string[] = [], initialSelected = "alloy") {
+  const list = [...initialList];
+  const obj: any = {
+    list,
+    selected: initialSelected,
+    // array-like conveniences
+    get length() { return this.list.length; },
+    map: (fn: any) => list.map(fn),
+    forEach: (fn: any) => list.forEach(fn),
+    at: (i: number) => list[i],
+    [Symbol.iterator]: function* () { yield* list; },
+  };
+  return obj;
+}
+
+
 /**
  * Finds the current chatʼs ID from the URL, sends a PATCH to mark it “is_visible: false,” 
  * then clicks “New Chat.” Assumes that somewhere else in the page you’re listening for
