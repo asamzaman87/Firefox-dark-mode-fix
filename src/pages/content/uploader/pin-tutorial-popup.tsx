@@ -44,10 +44,10 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
   const tutorialSteps: TutorialStep[] = [
     {
       title:
-        "For quick access to GPT Reader & Transcriber, we recommend pinning the extension",
+        "For quick access to Fix this & Transcriber, we recommend pinning the extension",
       description: isFirefox
-        ? "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader & Transcriber extension and click on the settings icon and then select the pin option"
-        : "To pin the extension, click on puzzle icon on your toolbar, then find the GPT Reader & Transcriber extension and click on the pin icon next to it",
+        ? "To pin the extension, click on puzzle icon on your toolbar, then find the Fix this & Transcriber extension and click on the settings icon and then select the pin option"
+        : "To pin the extension, click on puzzle icon on your toolbar, then find the Fix this & Transcriber extension and click on the pin icon next to it",
       imageUrl: isFirefox ? FIREFOX_PIN : CHROME_PIN,
       altText: "Pin Extension Image",
     },
@@ -88,7 +88,7 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
 
         <div className="gpt:w-full gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
           <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
-            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />
+            <img src={LOGO} alt="Fix this Logo" className="gpt:size-12" />
             <h1 className="gpt:text-xl gpt:font-medium">Important Information</h1>
             <Carousel className="gpt:w-full">
               <CarouselContent>

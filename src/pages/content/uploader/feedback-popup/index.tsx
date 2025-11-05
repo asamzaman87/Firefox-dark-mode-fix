@@ -39,7 +39,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
                 feedback: `Rating: ${values.rating} \n Comment: ${values.comments}`,
                 email: values.email || null,
                 browser,
-                extension: isTextToSpeech ? "GPT-Reader" : "GPT Transcriber",
+                extension: isTextToSpeech ? "fix-this" : "GPT Transcriber",
             }),
         }).then(() => {
             if (values.rating === 5) {

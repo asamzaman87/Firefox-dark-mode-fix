@@ -10,7 +10,7 @@ const render = (state: boolean) => {
   if (state) return; //return if shadow root is already present
 
   const div = document.createElement('div');
-  div.id = '__gpt-reader-shadow';
+  div.id = '__fix-this-shadow';
   document.body.appendChild(div);
 
   //resolve over flow issue on firefox/chrome
@@ -18,7 +18,7 @@ const render = (state: boolean) => {
   document.body.className = `overflow-hidden ${bodyClassName}`;
   document.body.appendChild(div);
 
-  const rootContainer = document.querySelector('#__gpt-reader-shadow');
+  const rootContainer = document.querySelector('#__fix-this-shadow');
   if (!rootContainer) throw new Error("Can't find Content root element");
 
   const root = createRoot(rootContainer);
@@ -35,14 +35,14 @@ const render = (state: boolean) => {
 }
 
 //observes the shadow root of the extension and renders the component if it is not present
-observeElement("div#__gpt-reader-shadow", render);
+observeElement("div#__fix-this-shadow", render);
 
 // ensure an immediate first‐pass render
 render(false);
 
 // polling fallback (tries every 500ms until it sees your container)
 const __gptReaderPoll = setInterval(() => {
-  if (!document.querySelector('#__gpt-reader-shadow')) {
+  if (!document.querySelector('#__fix-this-shadow')) {
     render(false);
   } else {
     clearInterval(__gptReaderPoll);

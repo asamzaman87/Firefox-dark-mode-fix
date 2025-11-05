@@ -78,9 +78,9 @@ export default function Popup(): JSX.Element {
       {/* <div className={gpt:"absolute gpt:top-4 gpt:left-4 gpt:size-max"}>
         <FeedbackPopup />
       </div> */}
-      <div className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2 gpt:font-medium gpt:text-lg"><img src={logo} alt="GPT Reader Logo" className="gpt:size-10" />GPT Reader</div>
+      <div className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2 gpt:font-medium gpt:text-lg"><img src={logo} alt="Fix this Logo" className="gpt:size-10" />Fix this</div>
       {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">{isActive ? "Active" : "Activate"}</Button>}
-      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Login to use GPT Reader</Button>}
+      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Login to use Fix this</Button>}
       {!isValidUrl && <Button onClick={switchToActiveTab} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Click here to go to ChatGPT</Button>}
     </div>
   );

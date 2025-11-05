@@ -73,7 +73,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
-    const [timerLeft, setTimerLeft] = useState<number>(0);
+    const [timerLeft, setTimerLeft] = useState<number>(0); 
     // const [downloadDelay, setDownloadDelay] = useState<number>(0);
     const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const {isTextToSpeech, setMode} = useSpeechMode();
@@ -415,7 +415,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         if (isTextToSpeech) {
             if (isDownload && localStorage.getItem("gptr/download") === "true") return setShowDownloadCancelConfirmation(true);
             // delete the old ChatGPT conversation if we have one
-            toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
+            toast({ description: 'Fix this Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
             localStorage.setItem("gptr/reloadDone", "true");
             await new Promise(resolve => setTimeout(resolve, 400));
             window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
@@ -687,7 +687,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const handleDownload = useCallback(() => {
       if (isTextToSpeech) {
         // Timer completed, proceed with download
-        const fileName = title ?? "gpt-reader-audio.aac";
+        const fileName = title ?? "fix-this-audio.aac";
         downloadCombinedFile(fileName);
       }
     }, [isSubscribed, timerComplete, title, blobs, isTextToSpeech]);
@@ -708,7 +708,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const onDownloadCancel = useCallback(async () => {
         if (isTextToSpeech) {
             if (!isCancelDownloadConfirmation) {
-                toast({ description: 'GPT Reader Alert: Clicking on the cancel button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
+                toast({ description: 'Fix this Alert: Clicking on the cancel button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
                 await new Promise(resolve => setTimeout(resolve, 400));
                 localStorage.setItem("gptr/reloadDone", "true");
                 window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;

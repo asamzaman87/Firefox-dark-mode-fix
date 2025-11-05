@@ -22,7 +22,7 @@ chrome.storage.local.get("fromExtensionRedirect", (res) => {
     // Create image element
     const image = document.createElement("img");
     image.src = chrome.runtime.getURL("logo-128.png");
-    image.alt = "gpt reader logo";
+    image.alt = "Fix this logo";
     image.style.cssText = `
       width: 28px;
       height: 28px;
@@ -30,7 +30,7 @@ chrome.storage.local.get("fromExtensionRedirect", (res) => {
 
     // Create text element
     const text = document.createElement("div");
-    text.textContent = "Continue signing in to use GPT Reader & Transcriber";
+    text.textContent = "Continue signing in to use Fix this & Transcriber";
 
     // Append image and text to banner
     banner.appendChild(image);

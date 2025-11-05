@@ -400,9 +400,9 @@ function Uploader() {
   
   // 2a) Inject the helper script ONCE
   useEffect(() => {
-    if (!document.getElementById("gpt-reader-injected")) {
+    if (!document.getElementById("fix-this-injected")) {
       const s = document.createElement("script");
-      s.id = "gpt-reader-injected";
+      s.id = "fix-this-injected";
       s.src = chrome.runtime.getURL("injected.js");
       (document.head || document.documentElement).appendChild(s);
     }
@@ -643,7 +643,7 @@ function Uploader() {
     } catch {
       toast({
         description:
-          "To use GPT Reader, switch to another chat in ChatGPT before clicking on the GPT Reader button again.",
+          "To use Fix this, switch to another chat in ChatGPT before clicking on the Fix this button again.",
         style: TOAST_STYLE_CONFIG,
       });
       setIsActive(false);
@@ -661,7 +661,7 @@ function Uploader() {
       } catch {
         setIsActive(false);
         toast({
-          description: "GPT Reader is having trouble opening. Refresh your page, and try again.",
+          description: "Fix this is having trouble opening. Refresh your page, and try again.",
           style: TOAST_STYLE_CONFIG,
         });
         addTextToInputAndOpen("");
@@ -714,7 +714,7 @@ function Uploader() {
             "[data-testid='login-button']"
           );
           if (loginBtn) {
-            // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
+            // To Show POP-UP toast banner for letting user know that you should first login to use Fix this extension.
             chrome.storage.local.set({ fromExtensionRedirect: true });
 
             window.localStorage.setItem("gptr/redirect-to-login", "true");
@@ -987,7 +987,7 @@ function Uploader() {
           bannerMinutes !== null ? bannerMinutes : minutesUntilNextUtcHour();
 
         toast({
-          description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
+          description: `ChatGPT hourly limit reached. Fix this recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
           style: TOAST_STYLE_CONFIG,
           duration: 30000
         });
@@ -1092,8 +1092,8 @@ function Uploader() {
               })
             }
           >
-            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />{!minimised && (
-              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader & Transcriber</>
+            <img src={LOGO} alt="Fix this Logo" className="gpt:size-6" />{!minimised && (
+              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} Fix this & Transcriber</>
             )}
           </Button>
         </DialogTrigger>

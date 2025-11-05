@@ -53,7 +53,7 @@ const TrialGiftPopUp: FC<TrialGiftProps> = ({ open, onClose, trialEndsAt, ...pro
 
         <div className="gpt:w-full gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
           <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:text-justify">
-            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />
+            <img src={LOGO} alt="Fix this Logo" className="gpt:size-12" />
 
             <h1 className="gpt:text-xl gpt:font-medium gpt:text-center">
               🎁 Enjoy Your 24-Hour Premium Trial 🎁

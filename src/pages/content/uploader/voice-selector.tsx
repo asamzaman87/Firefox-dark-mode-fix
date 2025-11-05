@@ -177,7 +177,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
       if (voice.premium && !isSubscribed) {
         toast({
           description:
-            "You have chosen a premium voice as a free user. GPT Reader allows you to listen to its sample voice but any attempt to listen or download while having it selected will result in a pop-up asking for you to upgrade your membership",
+            "You have chosen a premium voice as a free user. Fix this allows you to listen to its sample voice but any attempt to listen or download while having it selected will result in a pop-up asking for you to upgrade your membership",
           style: TOAST_STYLE_CONFIG_INFO,
         });
       }

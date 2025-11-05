@@ -108,8 +108,8 @@ export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#f
 export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chatgpt.com"];
 export const MATCH_URLS = ["https://chatgpt.com/*"];
-export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
-export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
+export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com";
+export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com";
 export const YOUTUBE_FAQ_VIDEO = "https://youtu.be/zhiRjPAtOHI";
 export const MAX_SLIDER_VALUE = 2;
 export const MIN_SLIDER_VALUE = 0.5;
@@ -126,26 +126,26 @@ export const STEP_VOLUME_VALUE = 5;
 export const VOLUME_TICKS_TO_DISPLAY = [0, 50, 100];
 export const FORWARD_REWIND_TIME = 10; //seconds
 export const MALE_VOICES = ["orbit", "breeze", "cove", "ember", "fathom"];
-export const REVIEWS_CHROME = "https://chromewebstore.google.com/detail/gpt-reader-free-ai-text-t/aeggkceabpfajnglgaeadofdmeboimml/reviews";
-export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/gpt-reader";
+export const REVIEWS_CHROME = "https://chromewebstore.google.com";
+export const REVIEWS_FIREFOX = "https://addons.mozilla.org";
 // export const BACKEND_URI = "http://localhost:3000/api" //for local testing
-// GPT Reader uses its own backend to get live announcements as well as to store user feedback
-export const BACKEND_URI = "https://www.readeon.com/api"
+// Fix this uses its own backend to get live announcements as well as to store user feedback
+export const BACKEND_URI = "https://www.youthought.com"
 export const BANNER_POLLING_TIME_INTERVAL = 20000;
 export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;
 export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;
-export const DISCOUNT_PRICE_ID = "price_1RdmRQLARZb1bIqHtbAKpKA7"; // 2 a month
-export const FIRST_DISCOUNT_PRICE_ID = "price_1S6qdOLARZb1bIqHixjkvhwc"; // 3 a month
-export const ORIGINAL_PRICE_ID = "price_1RokrdLARZb1bIqHJf3nXvxX"; // 5 a month
+export const DISCOUNT_PRICE_ID = "price_1"; // 2 a month
+export const FIRST_DISCOUNT_PRICE_ID = "price_1"; // 3 a month
+export const ORIGINAL_PRICE_ID = "price_1"; // 5 a month
 export const FREE_DOWNLOAD_CHUNKS = 3;
 export const DISCOUNT_FREQUENCY = 5; // for free users
 export const GAIN_MULTIPLIER = 2.5;
-export const DISCOUNT_PRICE_ANNUAL_ID = "price_1S9fjNLARZb1bIqHz4A65VlC"; // 19.99 a year
-export const FIRST_DISCOUNT_PRICE_ANNUAL_ID = "price_1S9fjgLARZb1bIqHFyucGuH5"; // 29.99 a year
-export const ORIGINAL_PRICE_ANNUAL_ID = "price_1S9fk2LARZb1bIqH8tCt1IoE"; // 49.99 a year 
+export const DISCOUNT_PRICE_ANNUAL_ID = "price_1"; // 19.99 a year
+export const FIRST_DISCOUNT_PRICE_ANNUAL_ID = "price_1"; // 29.99 a year
+export const ORIGINAL_PRICE_ANNUAL_ID = "price_1"; // 49.99 a year 
 export const SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY = 10;
 // Track when user has chosen to switch to Annual (but switch isn’t effective yet)
 export const SCHEDULED_ANNUAL_FLAG = "gptr/scheduledSwitchToAnnual";

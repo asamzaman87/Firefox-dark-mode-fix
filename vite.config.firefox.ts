@@ -12,7 +12,7 @@ export default mergeConfig(
       crx({
         manifest: {
           ...baseManifest,
-          "name": "GPT Reader: Free AI Text to Speech (TTS)",
+          "name": "Fix this: Free AI Text to Speech (TTS)",
           "browser_specific_settings": {
             "gecko": {
               "id": "democraticdeveloper@gmail.com"

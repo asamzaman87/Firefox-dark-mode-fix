@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "2.0.1",
+  "version": "1.0.0",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -57,7 +57,6 @@
         "firefox-pin.png",
         "extension-guide.png",
         "pdf.worker.js",
-        "injected.js",
         "webreader.png",
         "upload-docs-chrome.png",
         "upload-docs-firefox.png"

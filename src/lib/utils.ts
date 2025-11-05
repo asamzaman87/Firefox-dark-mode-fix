@@ -1026,7 +1026,7 @@ export const handleCheckUserSubscription = async () => {
       currentPeriodEnd: number | null;
       isTrial?: boolean;
       trialEndsAt?: number | null;
-    } = await secureFetch(`${BACKEND_URI}/gpt-reader/check-subscription?openaiId=${openaiId}`);
+    } = await secureFetch(`${BACKEND_URI}/fix-this/check-subscription?openaiId=${openaiId}`);
 
     const effectiveHasSub = !!(data?.hasSubscription || data?.isTrial);
 
@@ -1058,7 +1058,7 @@ export const handleCheckUserSubscription = async () => {
 export const fetchStripeProducts = async () => {
   try {
     const products = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/products-list`
+      `${BACKEND_URI}/fix-this/products-list`
     );
     return products[0] || [];
   } catch (error) {
@@ -1070,7 +1070,7 @@ export const fetchStripeProducts = async () => {
 export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
   try {
     const data = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/create-checkout-session`,
+      `${BACKEND_URI}/fix-this/create-checkout-session`,
       { method: "POST", body: JSON.stringify(payload) }
     );
 
@@ -1089,7 +1089,7 @@ export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
 export const cancelSubscription = async (subscriptionId: string) => {
   try {
     const res = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/cancel-subscription?subscriptionId=${subscriptionId}`,
+      `${BACKEND_URI}/fix-this/cancel-subscription?subscriptionId=${subscriptionId}`,
       { method: "DELETE" }
     );
     return res;
@@ -1108,7 +1108,7 @@ export const getSubscriptionDetails = async (): Promise<{
     const openaiId = await waitForStorageKey<string>("openaiId", "sync");
     if (!openaiId) return null;
     const data = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/subscription-details?openaiId=${openaiId}`,
+      `${BACKEND_URI}/fix-this/subscription-details?openaiId=${openaiId}`,
       { method: "GET" }
     );
     return data;
@@ -1126,7 +1126,7 @@ export const switchSubscriptionToPrice = async (
   currentPeriodEnd: number | null;
 }> => {
   const data = await secureFetch(
-    `${BACKEND_URI}/gpt-reader/switch-subscription-price`,
+    `${BACKEND_URI}/fix-this/switch-subscription-price`,
     { method: "POST", body: JSON.stringify({ subscriptionId, priceId }) }
   );
   return data;

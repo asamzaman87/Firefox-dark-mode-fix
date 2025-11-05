@@ -36,7 +36,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
       <div className="gpt:w-full gpt:max-w-screen-xl gpt:min-h-[70vh] gpt:max-h-[94vh] gpt:rounded-2xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow gpt:px-6 gpt:py-6 gpt:flex gpt:flex-col gpt:gap-5">
         {/* Top title */}
         <header className="gpt:flex gpt:flex-col gpt:items-center gpt:text-center gpt:gap-2">
-          <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-12" />
+          <img src={LOGO} alt="Fix this Logo" className="gpt:size-12" />
           <h1 className="gpt:text-xl gpt:md:text-2xl gpt:font-medium">{title}</h1>
         </header>
 
@@ -47,7 +47,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
             <div className="gpt:w-full gpt:h-full gpt:rounded-xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-white dark:bg-gray-900 gpt:p-3 gpt:flex gpt:items-center gpt:justify-center">
               <img
                 src={GUIDE_IMG_WEB}
-                alt="Select text or full page to send to GPT Reader"
+                alt="Select text or full page to send to Fix this"
                 className="gpt:w-full gpt:h-full gpt:object-contain gpt:max-h-[64vh] md:gpt:max-h-[70vh]"
               />
             </div>

@@ -44,15 +44,15 @@ const Announcements = () => {
   const FALLBACK_ANNOUNCEMENTS: Announcement[] = [
     {
       id: "3",
-      title: "GPT Reader Tip 2",
-      message: "GPT Reader automatically downloads audio for you if you choose to listen to audio, make use of that as you wish by clicking on the cloud button at the top next to the title",
+      title: "Fix this Tip 2",
+      message: "Fix this automatically downloads audio for you if you choose to listen to audio, make use of that as you wish by clicking on the cloud button at the top next to the title",
       extension: "your-extension-name",
       created_on: new Date("2025-05-11"),
       updated_on: new Date("2025-05-11"),
     },
     {
       id: "2",
-      title: "GPT Reader Tip",
+      title: "Fix this Tip",
       message: "If you find yourself having issues, then click on the back button, upload your text, and try again.",
       extension: "your-extension-name",
       created_on: new Date("2025-05-10"),

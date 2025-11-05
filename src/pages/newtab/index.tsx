@@ -5,7 +5,7 @@ import '@pages/newtab/index.css';
 import '@assets/styles/tailwind.css';
 
 function init() {
-  const rootContainer = document.querySelector("#__gpt-reader-shadow");
+  const rootContainer = document.querySelector("#__fix-this-shadow");
   if (!rootContainer) throw new Error("Can't find Newtab root element");
   const root = createRoot(rootContainer);
   root.render(<Newtab />);

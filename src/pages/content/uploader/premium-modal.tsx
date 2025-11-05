@@ -377,7 +377,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
               {forceDiscount
                 ? discountPercentCopy
                 : chrome.i18n.getMessage("premium_description") ||
-                  "Upgrade your GPT Reader & Transcriber plan to access now"}
+                  "Upgrade your Fix this & Transcriber plan to access now"}
             </span>
           </DialogTitle>
           <DialogDescription className={cn("gpt:text-center", { "sr-only": reason === "" })}>

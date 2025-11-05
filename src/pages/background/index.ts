@@ -359,7 +359,7 @@ const showNotificationFallback = async (source: string) => {
     const notificationOptions = {
       type: "basic" as const,
       iconUrl: LOGO,
-      title: "GPT Reader",
+      title: "Fix this",
       message: "Click here to open ChatGPT and use the extension.",
       priority: 2,
       // Only add buttons for Chrome/Chromium browsers
@@ -428,7 +428,7 @@ const handleGetBannerPolling = async () => {
     try {
       // Used to fetch user announcements
       const banner = await secureFetch(
-        `${BACKEND_URI}/gpt-reader/v2/banner`
+        `${BACKEND_URI}/fix-this/v2/banner`
       );
       const { data } = banner;
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER", payload: data });
@@ -448,7 +448,7 @@ const handleGetBannerCount = async () => {
     // Get the count for notification purposes
     try {
       const banner = await secureFetch(
-        `${BACKEND_URI}/gpt-reader/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
+        `${BACKEND_URI}/fix-this/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
       );
       const { count } = banner;
       chrome.tabs.sendMessage(tabId, { type: "GET_BANNER_COUNT", payload: count });
@@ -512,7 +512,7 @@ function createMenus() {
     // Create the parent
     chrome.contextMenus.create({
       id: "gptReaderParent",
-      title: "Read Aloud Using GPT Reader",
+      title: "Read Aloud Using Fix this",
       contexts: ["selection", "page"], // show when either context is valid
     });
 
@@ -520,7 +520,7 @@ function createMenus() {
     chrome.contextMenus.create({
       id: "customContextMenu",
       parentId: "gptReaderParent",
-      title: "Send selected text to GPT Reader",
+      title: "Send selected text to Fix this",
       contexts: ["selection"],
     });
 
@@ -528,7 +528,7 @@ function createMenus() {
     chrome.contextMenus.create({
       id: "customContextMenuAll",
       parentId: "gptReaderParent",
-      title: "Send all text on current page to GPT Reader",
+      title: "Send all text on current page to Fix this",
       contexts: ["page", "selection"],
     });
   });
