@@ -75,7 +75,7 @@
     "message": "Avbryt nedladdning"
   },
   "accuracy_warning": {
-    "message": "GPT Reader kanske inte är 100 % korrekt. Om du märker skillnader, stäng fönstret och starta en ny ChatGPT-chatt."
+    "message": "Fix this kanske inte är 100 % korrekt. Om du märker skillnader, stäng fönstret och starta en ny ChatGPT-chatt."
   },
   "playback_speed": {
     "message": "Uppspelningshastighet"
@@ -117,10 +117,10 @@
     "message": "Är du säker"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader-notis"
+    "message": "Fix this-notis"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader delar upp långa texter i mindre delar och skickar dem till ChatGPT. Du kan tillfälligt nå en gräns. Om så, vänta en timme."
+    "message": "Fix this delar upp långa texter i mindre delar och skickar dem till ChatGPT. Du kan tillfälligt nå en gräns. Om så, vänta en timme."
   },
   "acknowledge_and_accept": {
     "message": "Genom att fortsätta godkänner du detta."
@@ -138,7 +138,7 @@
     "message": "Du verkar vara offline! Kontrollera nätverket och försök igen!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader tar längre tid än vanligt. Stäng fönstret för att kontrollera fel. GPT-4 rekommenderas."
+    "message": "Fix this tar längre tid än vanligt. Stäng fönstret för att kontrollera fel. GPT-4 rekommenderas."
   },
   "voice_selector_description": {
     "message": "Välj bland olika ChatGPT-förbättrade röster. Gör valet innan du laddar upp texten."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Förenkla läsning av långa dokument med GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT visar kanske ett fel eller du nådde en gräns. Kolla deras webbplats."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader-logga"
+    "message": "Fix this-logga"
   },
   "login_to_use": {
     "message": "Logga in för att använda"

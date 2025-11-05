@@ -75,7 +75,7 @@
     "message": "Tühista allalaadimine"
   },
   "accuracy_warning": {
-    "message": "GPT Readeri loodud heli ei pruugi olla 100% täpne. Kui märkate erinevusi, sulgege aken, avage uus ChatGPT vestlus ja proovige uuesti."
+    "message": "Fix thisi loodud heli ei pruugi olla 100% täpne. Kui märkate erinevusi, sulgege aken, avage uus ChatGPT vestlus ja proovige uuesti."
   },
   "playback_speed": {
     "message": "Taasesituse kiirus"
@@ -117,10 +117,10 @@
     "message": "Olete kindel"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader teade"
+    "message": "Fix this teade"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader jagab pika teksti väikesteks osadeks ja saadab need ChatGPT-le. Võite ajutiselt jõuda limiidini. Sel juhul oodake umbes tund."
+    "message": "Fix this jagab pika teksti väikesteks osadeks ja saadab need ChatGPT-le. Võite ajutiselt jõuda limiidini. Sel juhul oodake umbes tund."
   },
   "acknowledge_and_accept": {
     "message": "Jätkates kinnitate ja nõustute sellega."
@@ -138,7 +138,7 @@
     "message": "Paistab, et olete võrguühenduseta! Kontrollige võrku ja proovige uuesti!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader töötab tavalisest aeglasemalt. Vigade kontrollimiseks sulgege aken. Soovitatav on GPT-4."
+    "message": "Fix this töötab tavalisest aeglasemalt. Vigade kontrollimiseks sulgege aken. Soovitatav on GPT-4."
   },
   "voice_selector_description": {
     "message": "Valige mitmesuguste ChatGPT täiustatud häälte hulgast. Valik tehke enne teksti üleslaadimist."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Lihtsusta pikkade dokumentide lugemist GPT abil"
@@ -189,7 +189,7 @@
     "message": "ChatGPT võib kuvada tõrget või olete jõudnud limiidini. Kontrollige nende saiti."
   },
   "gpt_reader_logo": {
-    "message": "GPT Readeri logo"
+    "message": "Fix thisi logo"
   },
   "login_to_use": {
     "message": "Sisselogimine vajalik"

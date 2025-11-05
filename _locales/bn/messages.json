@@ -75,7 +75,7 @@
     "message": "ডাউনলোড বাতিল"
   },
   "accuracy_warning": {
-    "message": "GPT Reader অডিও সম্পূর্ণ নির্ভুল নাও হতে পারে। ভুল দেখলে নতুন ChatGPT চ্যাট খুলে আবার চেষ্টা করুন।"
+    "message": "Fix this অডিও সম্পূর্ণ নির্ভুল নাও হতে পারে। ভুল দেখলে নতুন ChatGPT চ্যাট খুলে আবার চেষ্টা করুন।"
   },
   "playback_speed": {
     "message": "প্লেব্যাক গতি"
@@ -117,10 +117,10 @@
     "message": "আপনি কি নিশ্চিত"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader নোটিশ"
+    "message": "Fix this নোটিশ"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader বড় টেক্সটকে ছোট অংশে ভাগ করে ChatGPT তে পাঠায়। ব্যবহার বেশি হলে সাময়িকভাবে লিমিটে পৌঁছতে পারেন। এক ঘণ্টা অপেক্ষা করে আবার চেষ্টা করুন।"
+    "message": "Fix this বড় টেক্সটকে ছোট অংশে ভাগ করে ChatGPT তে পাঠায়। ব্যবহার বেশি হলে সাময়িকভাবে লিমিটে পৌঁছতে পারেন। এক ঘণ্টা অপেক্ষা করে আবার চেষ্টা করুন।"
   },
   "acknowledge_and_accept": {
     "message": "চালিয়ে গেলে, আপনি এটি মেনে নিচ্ছেন।"
@@ -138,7 +138,7 @@
     "message": "আপনি অফলাইন! নেটওয়ার্ক সংযোগ পরীক্ষা করে আবার চেষ্টা করুন!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে। সম্ভবত ত্রুটি আছে। GPT-4 মডেল ব্যবহার করুন।"
+    "message": "Fix this স্বাভাবিকের চেয়ে বেশি সময় নিচ্ছে। সম্ভবত ত্রুটি আছে। GPT-4 মডেল ব্যবহার করুন।"
   },
   "voice_selector_description": {
     "message": "ChatGPT-এর উন্নত ভয়েস থেকে পছন্দ করুন। টেক্সট আপলোডের আগে ভয়েস নির্বাচন করুন।"
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "GPT দিয়ে দীর্ঘ ডকুমেন্ট সহজে পড়ুন"
@@ -189,7 +189,7 @@
     "message": "সম্ভবত ChatGPT ত্রুটি দিচ্ছে বা সীমা অতিক্রম হয়েছে। বিস্তারিত জানতে সাইট দেখুন।"
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader লোগো"
+    "message": "Fix this লোগো"
   },
   "login_to_use": {
     "message": "ব্যবহারের জন্য লগইন করুন"

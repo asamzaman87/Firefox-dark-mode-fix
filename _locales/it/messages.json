@@ -75,7 +75,7 @@
     "message": "Annulla download"
   },
   "accuracy_warning": {
-    "message": "GPT Reader potrebbe non essere al 100% accurato. Se noti differenze, chiudi la finestra e avvia una nuova chat ChatGPT."
+    "message": "Fix this potrebbe non essere al 100% accurato. Se noti differenze, chiudi la finestra e avvia una nuova chat ChatGPT."
   },
   "playback_speed": {
     "message": "Velocità di riproduzione"
@@ -117,10 +117,10 @@
     "message": "Sei sicuro"
   },
   "gpt_reader_notice": {
-    "message": "Avviso GPT Reader"
+    "message": "Avviso Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader suddivide il testo lungo in parti più piccole e le invia a ChatGPT. Potresti raggiungere un limite temporaneo. Se succede, attendi circa un'ora."
+    "message": "Fix this suddivide il testo lungo in parti più piccole e le invia a ChatGPT. Potresti raggiungere un limite temporaneo. Se succede, attendi circa un'ora."
   },
   "acknowledge_and_accept": {
     "message": "Continuando, accetti questo come parte dell'uso dell'estensione."
@@ -138,7 +138,7 @@
     "message": "Sembra che tu sia offline! Controlla la connessione e riprova!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader sta impiegando più tempo del solito. Chiudi la finestra per controllare errori. Consigliato GPT-4."
+    "message": "Fix this sta impiegando più tempo del solito. Chiudi la finestra per controllare errori. Consigliato GPT-4."
   },
   "voice_selector_description": {
     "message": "Scegli fra le voci ChatGPT migliorate. Seleziona prima di caricare il testo."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Semplifica la lettura di documenti lunghi con GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT potrebbe mostrare un errore o hai raggiunto il limite. Controlla il loro sito."
   },
   "gpt_reader_logo": {
-    "message": "Logo GPT Reader"
+    "message": "Logo Fix this"
   },
   "login_to_use": {
     "message": "Accedi per usare"

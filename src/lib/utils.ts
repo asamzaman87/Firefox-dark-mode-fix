@@ -1570,7 +1570,7 @@ export async function transcribeWithFallback(
     } else {
       toast({
         description:
-          "Remember: GPT Transcriber can hallucinate so make sure to review the transcription!",
+          "Remember: Fix this can hallucinate so make sure to review the transcription!",
         style: TOAST_STYLE_CONFIG_INFO,
       });
       return "";

@@ -75,7 +75,7 @@
     "message": "בטל הורדה"
   },
   "accuracy_warning": {
-    "message": "ייתכן ש-GPT Reader לא יהיה מדויק ב-100%. אם אתה מבחין בשוני, סגור את החלון, פתח צ'אט ChatGPT חדש ונסה שוב."
+    "message": "ייתכן ש-Fix this לא יהיה מדויק ב-100%. אם אתה מבחין בשוני, סגור את החלון, פתח צ'אט ChatGPT חדש ונסה שוב."
   },
   "playback_speed": {
     "message": "מהירות השמעה"
@@ -117,10 +117,10 @@
     "message": "האם אתה בטוח"
   },
   "gpt_reader_notice": {
-    "message": "הערת GPT Reader"
+    "message": "הערת Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader מחלק טקסט ארוך לחלקים קטנים ושולח ל-ChatGPT. ייתכן שתגיע זמנית למגבלה. אם כן, המתן כשעה."
+    "message": "Fix this מחלק טקסט ארוך לחלקים קטנים ושולח ל-ChatGPT. ייתכן שתגיע זמנית למגבלה. אם כן, המתן כשעה."
   },
   "acknowledge_and_accept": {
     "message": "בהמשך, אתה מאשר ומקבל זאת כחלק מהשימוש בתוסף."
@@ -138,7 +138,7 @@
     "message": "נראה שאתה לא מקוון! בדוק את החיבור ונסה שוב!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader איטי מהרגיל. סגור את החלון כדי לבדוק שגיאה. מומלץ GPT-4."
+    "message": "Fix this איטי מהרגיל. סגור את החלון כדי לבדוק שגיאה. מומלץ GPT-4."
   },
   "voice_selector_description": {
     "message": "בחר מתוך מגוון קולות משופרים של ChatGPT. בחר לפני העלאת הטקסט."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "פשט את הקריאה של מסמכים ארוכים בעזרת GPT"
@@ -189,7 +189,7 @@
     "message": "ייתכן ש-ChatGPT מציג שגיאה או שהגעת למגבלה. בדוק באתר."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader לוגו"
+    "message": "Fix this לוגו"
   },
   "login_to_use": {
     "message": "התחבר כדי להשתמש"

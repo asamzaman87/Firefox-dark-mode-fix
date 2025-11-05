@@ -75,7 +75,7 @@
     "message": "Download abbrechen"
   },
   "accuracy_warning": {
-    "message": "GPT Reader kann Audio erzeugen, das nicht 100 % korrekt ist. Falls Abweichungen auftreten, schließen Sie das Fenster, starten Sie einen neuen ChatGPT-Chat und versuchen Sie es erneut."
+    "message": "Fix this kann Audio erzeugen, das nicht 100 % korrekt ist. Falls Abweichungen auftreten, schließen Sie das Fenster, starten Sie einen neuen ChatGPT-Chat und versuchen Sie es erneut."
   },
   "playback_speed": {
     "message": "Wiedergabegeschwindigkeit"
@@ -117,10 +117,10 @@
     "message": "Sind Sie sicher"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader Hinweis"
+    "message": "Fix this Hinweis"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader teilt längere Texte in kleinere Abschnitte auf und sendet sie an ChatGPT. Möglicherweise erreichen Sie kurzzeitig ein Limit. Wenn dies passiert, warten Sie etwa eine Stunde."
+    "message": "Fix this teilt längere Texte in kleinere Abschnitte auf und sendet sie an ChatGPT. Möglicherweise erreichen Sie kurzzeitig ein Limit. Wenn dies passiert, warten Sie etwa eine Stunde."
   },
   "acknowledge_and_accept": {
     "message": "Mit dem Fortfahren erkennen Sie dies an und akzeptieren es."
@@ -138,7 +138,7 @@
     "message": "Sie scheinen offline zu sein! Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader benötigt länger als üblich. Schließen Sie das Fenster, um nach Fehlern zu sehen. GPT-4 wird empfohlen."
+    "message": "Fix this benötigt länger als üblich. Schließen Sie das Fenster, um nach Fehlern zu sehen. GPT-4 wird empfohlen."
   },
   "voice_selector_description": {
     "message": "Wählen Sie aus verschiedenen verbesserten ChatGPT-Stimmen. Wählen Sie die Stimme vor dem Hochladen des Textes."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Vereinfachen Sie das Lesen langer Dokumente mit GPT"
@@ -189,7 +189,7 @@
     "message": "Möglicherweise zeigt ChatGPT einen Fehler oder Sie haben Ihr Limit erreicht. Prüfen Sie deren Seite."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader Logo"
+    "message": "Fix this Logo"
   },
   "login_to_use": {
     "message": "Anmelden, um zu verwenden"

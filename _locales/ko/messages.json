@@ -75,7 +75,7 @@
     "message": "다운로드 취소"
   },
   "accuracy_warning": {
-    "message": "GPT Reader가 생성하는 오디오는 100% 정확하지 않을 수 있습니다. 차이가 보이면 창을 닫고 새 ChatGPT 대화를 시작하세요."
+    "message": "Fix this가 생성하는 오디오는 100% 정확하지 않을 수 있습니다. 차이가 보이면 창을 닫고 새 ChatGPT 대화를 시작하세요."
   },
   "playback_speed": {
     "message": "재생 속도"
@@ -117,10 +117,10 @@
     "message": "확실하신가요"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader 알림"
+    "message": "Fix this 알림"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader는 긴 텍스트를 작은 단위로 나누어 ChatGPT에 전송합니다. 일시적으로 제한에 도달할 수 있습니다. 그 경우 약 한 시간 기다려주세요."
+    "message": "Fix this는 긴 텍스트를 작은 단위로 나누어 ChatGPT에 전송합니다. 일시적으로 제한에 도달할 수 있습니다. 그 경우 약 한 시간 기다려주세요."
   },
   "acknowledge_and_accept": {
     "message": "계속하면 이 조건을 인정하고 수락하는 것으로 간주됩니다."
@@ -138,7 +138,7 @@
     "message": "오프라인 상태로 보입니다! 네트워크 연결을 확인하고 다시 시도하세요!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader의 응답이 평소보다 느립니다. 창을 닫고 오류를 확인하세요. GPT-4 권장."
+    "message": "Fix this의 응답이 평소보다 느립니다. 창을 닫고 오류를 확인하세요. GPT-4 권장."
   },
   "voice_selector_description": {
     "message": "ChatGPT가 향상한 여러 음성 중에서 선택하세요. 텍스트 업로드 전 선택이 필요합니다."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "GPT로 긴 문서 읽기를 간소화하세요"
@@ -189,7 +189,7 @@
     "message": "ChatGPT가 오류를 표시하거나 제한에 도달한 것 같습니다. 해당 사이트를 확인하세요."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader 로고"
+    "message": "Fix this 로고"
   },
   "login_to_use": {
     "message": "사용하려면 로그인하세요"

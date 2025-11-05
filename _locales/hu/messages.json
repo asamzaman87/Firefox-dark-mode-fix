@@ -75,7 +75,7 @@
     "message": "Letöltés megszakítása"
   },
   "accuracy_warning": {
-    "message": "A GPT Reader által létrehozott hang nem feltétlenül 100% pontos. Ha eltérést látsz, zárd be az ablakot, nyiss új ChatGPT-csevegést, és próbáld újra."
+    "message": "A Fix this által létrehozott hang nem feltétlenül 100% pontos. Ha eltérést látsz, zárd be az ablakot, nyiss új ChatGPT-csevegést, és próbáld újra."
   },
   "playback_speed": {
     "message": "Lejátszási sebesség"
@@ -117,10 +117,10 @@
     "message": "Biztos vagy benne"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader figyelmeztetés"
+    "message": "Fix this figyelmeztetés"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "A GPT Reader hosszú szöveget kisebb részekre bont, és elküldi ChatGPT-nek. Ideiglenesen elérheted a limitet. Ha ez történik, várj kb. egy órát."
+    "message": "A Fix this hosszú szöveget kisebb részekre bont, és elküldi ChatGPT-nek. Ideiglenesen elérheted a limitet. Ha ez történik, várj kb. egy órát."
   },
   "acknowledge_and_accept": {
     "message": "A folytatással elfogadod ezt a feltételt."
@@ -138,7 +138,7 @@
     "message": "Úgy tűnik, offline vagy! Ellenőrizd a hálózatot, és próbáld újra!"
   },
   "slow_response_warning": {
-    "message": "A GPT Reader lassabb a szokásosnál. Zárd be az ablakot a hibakereséshez. Ajánlott a GPT-4."
+    "message": "A Fix this lassabb a szokásosnál. Zárd be az ablakot a hibakereséshez. Ajánlott a GPT-4."
   },
   "voice_selector_description": {
     "message": "Válassz a ChatGPT által javított hangok közül. Feltöltés előtt dönts."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Egyszerűsítsd a hosszú dokumentumok olvasását a GPT segítségével"
@@ -189,7 +189,7 @@
     "message": "Lehet, hogy a ChatGPT hibát jelez, vagy elérted a limitet. Nézd meg az oldalukat."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader logó"
+    "message": "Fix this logó"
   },
   "login_to_use": {
     "message": "Jelentkezz be a használathoz"

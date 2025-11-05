@@ -75,7 +75,7 @@
     "message": "لغو دانلود"
   },
   "accuracy_warning": {
-    "message": "GPT Reader ممکن است صدایی کاملاً دقیق تولید نکند. در صورت مشاهده تفاوت، پنجره را ببندید و گفتگوی جدید ChatGPT را آغاز کنید."
+    "message": "Fix this ممکن است صدایی کاملاً دقیق تولید نکند. در صورت مشاهده تفاوت، پنجره را ببندید و گفتگوی جدید ChatGPT را آغاز کنید."
   },
   "playback_speed": {
     "message": "سرعت پخش"
@@ -117,10 +117,10 @@
     "message": "آیا مطمئن هستید"
   },
   "gpt_reader_notice": {
-    "message": "اطلاعیه GPT Reader"
+    "message": "اطلاعیه Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader متن‌های طولانی را به بخش‌های کوچک تقسیم کرده و به ChatGPT می‌فرستد. ممکن است موقتاً به محدودیت برسید. در این صورت، حدود یک ساعت صبر کنید."
+    "message": "Fix this متن‌های طولانی را به بخش‌های کوچک تقسیم کرده و به ChatGPT می‌فرستد. ممکن است موقتاً به محدودیت برسید. در این صورت، حدود یک ساعت صبر کنید."
   },
   "acknowledge_and_accept": {
     "message": "با ادامه کار، شما این را تأیید و قبول می‌کنید."
@@ -138,7 +138,7 @@
     "message": "به نظر می‌رسد آفلاین هستید! اتصال خود را بررسی کرده و دوباره تلاش کنید!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader کندتر از حد معمول است. برای بررسی خطا پنجره را ببندید. GPT-4 توصیه می‌شود."
+    "message": "Fix this کندتر از حد معمول است. برای بررسی خطا پنجره را ببندید. GPT-4 توصیه می‌شود."
   },
   "voice_selector_description": {
     "message": "از میان صداهای بهبودیافته ChatGPT انتخاب کنید. قبل از آپلود متن، صدا را انتخاب کنید."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "مطالعه اسناد طولانی را با GPT ساده کنید"
@@ -189,7 +189,7 @@
     "message": "ممکن است ChatGPT خطا نشان دهد یا به محدودیت رسیده‌اید. وب‌سایت آن‌ها را بررسی کنید."
   },
   "gpt_reader_logo": {
-    "message": "لوگوی GPT Reader"
+    "message": "لوگوی Fix this"
   },
   "login_to_use": {
     "message": "برای استفاده وارد شوید"

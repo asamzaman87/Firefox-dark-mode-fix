@@ -1,6 +1,6 @@
 {
   "extensionName": {
-    "message": "ChatGPT Reader at Transcriber: Libreng AI text-to-speech at speech-to-text"
+    "message": "ChatFix this at Transcriber: Libreng AI text-to-speech at speech-to-text"
   },
   "extensionDescription": {
     "message": "Libreng AI para sa text-to-speech (tts) at speech-to-text (stt) gamit ang ChatGPT. Makinig sa natural na boses o mag-transcribe ng audio agad."
@@ -75,7 +75,7 @@
     "message": "Kanselahin ang Pag-download"
   },
   "accuracy_warning": {
-    "message": "Maaaring hindi 100% tumpak ang audio na ginawa ng GPT Reader. Kung may napansing pagkakaiba, isara ang overlay at gumawa ng bagong ChatGPT chat."
+    "message": "Maaaring hindi 100% tumpak ang audio na ginawa ng Fix this. Kung may napansing pagkakaiba, isara ang overlay at gumawa ng bagong ChatGPT chat."
   },
   "playback_speed": {
     "message": "Bilis ng Pag-play"
@@ -117,10 +117,10 @@
     "message": "Sigurado ka ba"
   },
   "gpt_reader_notice": {
-    "message": "Paunawa ng GPT Reader"
+    "message": "Paunawa ng Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "Hinahati ng GPT Reader ang mahabang teksto sa maliliit na bahagi at ipinapadala sa ChatGPT. Maaaring pansamantalang maabot mo ang limit. Maghintay ng mga isang oras kung mangyari."
+    "message": "Hinahati ng Fix this ang mahabang teksto sa maliliit na bahagi at ipinapadala sa ChatGPT. Maaaring pansamantalang maabot mo ang limit. Maghintay ng mga isang oras kung mangyari."
   },
   "acknowledge_and_accept": {
     "message": "Sa pagpapatuloy, kinikilala mo at tinatanggap ito."
@@ -138,7 +138,7 @@
     "message": "Mukhang offline ka! Suriin ang network at subukang muli!"
   },
   "slow_response_warning": {
-    "message": "Mas matagal ang GPT Reader kaysa sa karaniwan. Isara ang overlay para tingnan ang error. Inirerekomenda ang GPT-4."
+    "message": "Mas matagal ang Fix this kaysa sa karaniwan. Isara ang overlay para tingnan ang error. Inirerekomenda ang GPT-4."
   },
   "voice_selector_description": {
     "message": "Pumili mula sa iba't ibang ChatGPT-enhanced na boses. Gawin ang pagpili bago i-upload ang teksto."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Pasimplehin ang pagbabasa ng mahahabang dokumento gamit ang GPT"
@@ -189,7 +189,7 @@
     "message": "Maaaring may error sa ChatGPT o naabot mo na ang limit. Tingnan ang kanilang site."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader Logo"
+    "message": "Fix this Logo"
   },
   "login_to_use": {
     "message": "Mag-login para magamit"

@@ -75,7 +75,7 @@
     "message": "ダウンロードをキャンセル"
   },
   "accuracy_warning": {
-    "message": "GPT Readerの音声は完全に正確ではない可能性があります。差異を感じた場合、ウィンドウを閉じ、新たにChatGPTチャットを開いて再試行してください。"
+    "message": "Fix thisの音声は完全に正確ではない可能性があります。差異を感じた場合、ウィンドウを閉じ、新たにChatGPTチャットを開いて再試行してください。"
   },
   "playback_speed": {
     "message": "再生速度"
@@ -117,10 +117,10 @@
     "message": "よろしいですか"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader通知"
+    "message": "Fix this通知"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Readerは長文を小分割しChatGPTに送信します。一時的に上限に達することがあります。発生した場合は約1時間お待ちください。"
+    "message": "Fix thisは長文を小分割しChatGPTに送信します。一時的に上限に達することがあります。発生した場合は約1時間お待ちください。"
   },
   "acknowledge_and_accept": {
     "message": "続行することで、これを承認し受け入れたとみなします。"
@@ -138,7 +138,7 @@
     "message": "オフラインのようです！ネットワークを確認して再試行してください！"
   },
   "slow_response_warning": {
-    "message": "GPT Readerの応答が通常より遅いです。エラー確認のためウィンドウを閉じてください。GPT-4推奨。"
+    "message": "Fix thisの応答が通常より遅いです。エラー確認のためウィンドウを閉じてください。GPT-4推奨。"
   },
   "voice_selector_description": {
     "message": "ChatGPT強化音声の中から選択。テキストをアップロードする前に選んでください。"
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "GPTで長文ドキュメントの読書を簡単に"
@@ -189,7 +189,7 @@
     "message": "ChatGPTがエラーを表示するか、上限に達した可能性があります。サイトを確認してください。"
   },
   "gpt_reader_logo": {
-    "message": "GPT Readerロゴ"
+    "message": "Fix thisロゴ"
   },
   "login_to_use": {
     "message": "使用するにはログインしてください"

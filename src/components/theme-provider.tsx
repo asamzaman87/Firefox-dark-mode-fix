@@ -38,7 +38,8 @@ export function ThemeProvider({
       return
     }
     let theme_color = "light";
-    const notFirefox = detectBrowser() !== "firefox";
+    // const notFirefox = detectBrowser() !== "firefox";
+    const notFirefox = true;
     if (notFirefox) {
       theme_color = theme
     }

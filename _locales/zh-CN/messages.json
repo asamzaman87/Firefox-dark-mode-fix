@@ -75,7 +75,7 @@
     "message": "取消下载"
   },
   "accuracy_warning": {
-    "message": "GPT Reader生成的音频可能并非完全准确。如发现差异，请关闭界面，新开ChatGPT对话再试。"
+    "message": "Fix this生成的音频可能并非完全准确。如发现差异，请关闭界面，新开ChatGPT对话再试。"
   },
   "playback_speed": {
     "message": "播放速度"
@@ -117,10 +117,10 @@
     "message": "你确定吗"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader通知"
+    "message": "Fix this通知"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader将长文本分段发送到ChatGPT，可能会暂时达到限额。若发生，请等待约一小时后重试。"
+    "message": "Fix this将长文本分段发送到ChatGPT，可能会暂时达到限额。若发生，请等待约一小时后重试。"
   },
   "acknowledge_and_accept": {
     "message": "继续即表示您承认并接受此情况。"
@@ -138,7 +138,7 @@
     "message": "您似乎离线！请检查网络后再试！"
   },
   "slow_response_warning": {
-    "message": "GPT Reader响应比平时慢。关闭界面查看错误。建议使用GPT-4。"
+    "message": "Fix this响应比平时慢。关闭界面查看错误。建议使用GPT-4。"
   },
   "voice_selector_description": {
     "message": "选择ChatGPT增强语音。请在上传文本前完成选择。"
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "用GPT简化阅读长文档"
@@ -189,7 +189,7 @@
     "message": "ChatGPT可能出错或您已超限，请查看其网站。"
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader标志"
+    "message": "Fix this标志"
   },
   "login_to_use": {
     "message": "登录以使用"

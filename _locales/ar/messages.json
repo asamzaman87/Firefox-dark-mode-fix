@@ -75,7 +75,7 @@
     "message": "إلغاء التنزيل"
   },
   "accuracy_warning": {
-    "message": "قد ينتج GPT Reader صوتًا غير دقيق تمامًا. إن لاحظت اختلافًا، أغلق النافذة وافتح محادثة ChatGPT جديدة وحاول مجددًا."
+    "message": "قد ينتج Fix this صوتًا غير دقيق تمامًا. إن لاحظت اختلافًا، أغلق النافذة وافتح محادثة ChatGPT جديدة وحاول مجددًا."
   },
   "playback_speed": {
     "message": "سرعة التشغيل"
@@ -117,10 +117,10 @@
     "message": "هل أنت متأكد"
   },
   "gpt_reader_notice": {
-    "message": "إشعار GPT Reader"
+    "message": "إشعار Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "يقوم GPT Reader بتقسيم النص الكبير إلى أجزاء صغيرة وإرسالها إلى ChatGPT. قد تصل إلى حد مؤقت. إذا حدث ذلك، انتظر ساعة تقريبًا."
+    "message": "يقوم Fix this بتقسيم النص الكبير إلى أجزاء صغيرة وإرسالها إلى ChatGPT. قد تصل إلى حد مؤقت. إذا حدث ذلك، انتظر ساعة تقريبًا."
   },
   "acknowledge_and_accept": {
     "message": "بالمتابعة، أنت تقر وتقبل ذلك كجزء من استخدام الإضافة."
@@ -138,7 +138,7 @@
     "message": "يبدو أنك غير متصل بالإنترنت! تحقق من الشبكة وحاول مرة أخرى!"
   },
   "slow_response_warning": {
-    "message": "يستغرق GPT Reader وقتًا أطول من المعتاد. أغلق النافذة للتحقق من الخطأ. يوصى باستخدام GPT-4. غيّر النموذج بإغلاق النافذة والنقر أعلى اليسار."
+    "message": "يستغرق Fix this وقتًا أطول من المعتاد. أغلق النافذة للتحقق من الخطأ. يوصى باستخدام GPT-4. غيّر النموذج بإغلاق النافذة والنقر أعلى اليسار."
   },
   "voice_selector_description": {
     "message": "اختر من مجموعة أصوات ChatGPT المحسّنة. يجب الاختيار قبل رفع النص."
@@ -174,7 +174,7 @@
     "message": "بدون عنوان.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "بسط قراءة المستندات الطويلة باستخدام GPT"
@@ -189,7 +189,7 @@
     "message": "يبدو أن ChatGPT يعرض خطأ أو أنك بلغت الحد. تحقق من موقع ChatGPT للمزيد."
   },
   "gpt_reader_logo": {
-    "message": "شعار GPT Reader"
+    "message": "شعار Fix this"
   },
   "login_to_use": {
     "message": "تسجيل الدخول للاستخدام"

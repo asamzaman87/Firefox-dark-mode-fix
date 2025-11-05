@@ -75,7 +75,7 @@
     "message": "Zrušiť sťahovanie"
   },
   "accuracy_warning": {
-    "message": "GPT Reader nemusí byť 100 % presný. Ak si všimneš rozdiely, zatvor okno a začni nový ChatGPT chat."
+    "message": "Fix this nemusí byť 100 % presný. Ak si všimneš rozdiely, zatvor okno a začni nový ChatGPT chat."
   },
   "playback_speed": {
     "message": "Rýchlosť prehrávania"
@@ -117,10 +117,10 @@
     "message": "Si si istý"
   },
   "gpt_reader_notice": {
-    "message": "Oznámenie GPT Reader"
+    "message": "Oznámenie Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader rozdeľuje dlhý text na menšie časti a posiela ich do ChatGPT. Môžeš dočasne dosiahnuť limit. Ak áno, počkaj asi hodinu."
+    "message": "Fix this rozdeľuje dlhý text na menšie časti a posiela ich do ChatGPT. Môžeš dočasne dosiahnuť limit. Ak áno, počkaj asi hodinu."
   },
   "acknowledge_and_accept": {
     "message": "Pokračovaním to berieš na vedomie a súhlasíš."
@@ -138,7 +138,7 @@
     "message": "Vyzerá to, že si offline! Skontroluj sieť a skús znova!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader je pomalší než obvykle. Zavri okno a skontroluj chyby. Odporúča sa GPT-4."
+    "message": "Fix this je pomalší než obvykle. Zavri okno a skontroluj chyby. Odporúča sa GPT-4."
   },
   "voice_selector_description": {
     "message": "Vyber si z vylepšených ChatGPT hlasov. Urob to pred nahraním textu."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Zjednoduš čítanie dlhých dokumentov pomocou GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT môže zobrazovať chybu alebo si dosiahol limit. Skontroluj ich stránku."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader logo"
+    "message": "Fix this logo"
   },
   "login_to_use": {
     "message": "Prihlás sa na používanie"

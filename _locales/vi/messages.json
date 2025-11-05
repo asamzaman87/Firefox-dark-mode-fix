@@ -75,7 +75,7 @@
     "message": "Hủy Tải xuống"
   },
   "accuracy_warning": {
-    "message": "GPT Reader có thể tạo âm thanh không hoàn toàn chính xác. Nếu thấy khác biệt, đóng cửa sổ và mở cuộc trò chuyện ChatGPT mới."
+    "message": "Fix this có thể tạo âm thanh không hoàn toàn chính xác. Nếu thấy khác biệt, đóng cửa sổ và mở cuộc trò chuyện ChatGPT mới."
   },
   "playback_speed": {
     "message": "Tốc độ phát"
@@ -117,10 +117,10 @@
     "message": "Bạn có chắc không"
   },
   "gpt_reader_notice": {
-    "message": "Thông báo GPT Reader"
+    "message": "Thông báo Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader chia văn bản dài thành đoạn nhỏ và gửi đến ChatGPT. Bạn có thể tạm thời chạm giới hạn. Nếu thế, hãy đợi khoảng một giờ."
+    "message": "Fix this chia văn bản dài thành đoạn nhỏ và gửi đến ChatGPT. Bạn có thể tạm thời chạm giới hạn. Nếu thế, hãy đợi khoảng một giờ."
   },
   "acknowledge_and_accept": {
     "message": "Tiếp tục nghĩa là bạn xác nhận và chấp nhận điều này."
@@ -138,7 +138,7 @@
     "message": "Có vẻ bạn đang ngoại tuyến! Kiểm tra kết nối và thử lại!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader đang phản hồi chậm hơn bình thường. Đóng cửa sổ để kiểm tra lỗi. Khuyến nghị GPT-4."
+    "message": "Fix this đang phản hồi chậm hơn bình thường. Đóng cửa sổ để kiểm tra lỗi. Khuyến nghị GPT-4."
   },
   "voice_selector_description": {
     "message": "Chọn trong số các giọng ChatGPT được cải thiện. Thực hiện trước khi tải văn bản."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Đơn giản hóa việc đọc tài liệu dài với GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT có thể hiển thị lỗi hoặc bạn đã đạt giới hạn. Hãy kiểm tra trang của họ."
   },
   "gpt_reader_logo": {
-    "message": "Logo GPT Reader"
+    "message": "Logo Fix this"
   },
   "login_to_use": {
     "message": "Đăng nhập để sử dụng"

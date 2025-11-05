@@ -75,7 +75,7 @@
     "message": "Annuler le téléchargement"
   },
   "accuracy_warning": {
-    "message": "GPT Reader peut produire un audio qui n'est pas 100% exact. Si vous remarquez des écarts, fermez la fenêtre, lancez un nouveau chat ChatGPT et réessayez."
+    "message": "Fix this peut produire un audio qui n'est pas 100% exact. Si vous remarquez des écarts, fermez la fenêtre, lancez un nouveau chat ChatGPT et réessayez."
   },
   "playback_speed": {
     "message": "Vitesse de lecture"
@@ -117,10 +117,10 @@
     "message": "Êtes-vous sûr"
   },
   "gpt_reader_notice": {
-    "message": "Note GPT Reader"
+    "message": "Note Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader divise les textes longs en segments et les envoie à ChatGPT. Vous pourriez temporairement atteindre une limite. Si c'est le cas, attendez environ une heure."
+    "message": "Fix this divise les textes longs en segments et les envoie à ChatGPT. Vous pourriez temporairement atteindre une limite. Si c'est le cas, attendez environ une heure."
   },
   "acknowledge_and_accept": {
     "message": "En continuant, vous reconnaissez et acceptez cela dans le cadre de l'extension."
@@ -138,7 +138,7 @@
     "message": "Il semble que vous soyez hors ligne ! Vérifiez votre connexion et réessayez !"
   },
   "slow_response_warning": {
-    "message": "GPT Reader prend plus de temps que d'habitude. Fermez la fenêtre pour vérifier l'erreur. GPT-4 est recommandé."
+    "message": "Fix this prend plus de temps que d'habitude. Fermez la fenêtre pour vérifier l'erreur. GPT-4 est recommandé."
   },
   "voice_selector_description": {
     "message": "Choisissez parmi plusieurs voix ChatGPT améliorées. Sélectionnez avant de télécharger le texte."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Simplifiez la lecture de longs documents avec GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT affiche peut-être une erreur ou vous avez atteint la limite. Consultez leur site."
   },
   "gpt_reader_logo": {
-    "message": "Logo GPT Reader"
+    "message": "Logo Fix this"
   },
   "login_to_use": {
     "message": "Connectez-vous pour utiliser"

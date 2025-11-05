@@ -75,7 +75,7 @@
     "message": "Otkaži preuzimanje"
   },
   "accuracy_warning": {
-    "message": "GPT Reader možda neće biti 100% točan. Ako vidite razlike, zatvorite prozor, pokrenite novi ChatGPT chat i pokušajte opet."
+    "message": "Fix this možda neće biti 100% točan. Ako vidite razlike, zatvorite prozor, pokrenite novi ChatGPT chat i pokušajte opet."
   },
   "playback_speed": {
     "message": "Brzina reprodukcije"
@@ -117,10 +117,10 @@
     "message": "Jeste li sigurni"
   },
   "gpt_reader_notice": {
-    "message": "Obavijest GPT Reader"
+    "message": "Obavijest Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader razbija dugačak tekst u manje dijelove i šalje ih ChatGPT-u. Možda nakratko dosegnete limit. Ako se to dogodi, pričekajte oko sat vremena."
+    "message": "Fix this razbija dugačak tekst u manje dijelove i šalje ih ChatGPT-u. Možda nakratko dosegnete limit. Ako se to dogodi, pričekajte oko sat vremena."
   },
   "acknowledge_and_accept": {
     "message": "Nastavkom potvrđujete i prihvaćate ove uvjete."
@@ -138,7 +138,7 @@
     "message": "Izgleda da ste izvan mreže! Provjerite vezu i pokušajte ponovo!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader radi sporije nego inače. Zatvorite prozor radi provjere pogreške. Preporučuje se GPT-4."
+    "message": "Fix this radi sporije nego inače. Zatvorite prozor radi provjere pogreške. Preporučuje se GPT-4."
   },
   "voice_selector_description": {
     "message": "Odaberite između poboljšanih ChatGPT glasova. Učinite to prije prijenosa teksta."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Pojednostavite čitanje dugačkih dokumenata uz GPT"
@@ -189,7 +189,7 @@
     "message": "Moguće da ChatGPT prikazuje grešku ili ste dosegli limit. Provjerite njihovu stranicu."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader logo"
+    "message": "Fix this logo"
   },
   "login_to_use": {
     "message": "Prijavite se za korištenje"

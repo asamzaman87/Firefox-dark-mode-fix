@@ -75,7 +75,7 @@
     "message": "डाउनलोड रद्द करा"
   },
   "accuracy_warning": {
-    "message": "GPT Reader ने तयार केलेला आवाज 100% अचूक नसू शकतो. जर फरक जाणवला तर विंडो बंद करून नवीन ChatGPT चॅट सुरू करा."
+    "message": "Fix this ने तयार केलेला आवाज 100% अचूक नसू शकतो. जर फरक जाणवला तर विंडो बंद करून नवीन ChatGPT चॅट सुरू करा."
   },
   "playback_speed": {
     "message": "प्लेबॅक गती"
@@ -117,10 +117,10 @@
     "message": "तुम्हाला खात्री आहे"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader नोटीस"
+    "message": "Fix this नोटीस"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader लांब मजकूर छोटे भाग करून ChatGPT ला पाठवतो. कधी कधी तात्पुरते लिमिट गाठू शकता. तसे झाल्यास, सुमारे 1 तास थांबा."
+    "message": "Fix this लांब मजकूर छोटे भाग करून ChatGPT ला पाठवतो. कधी कधी तात्पुरते लिमिट गाठू शकता. तसे झाल्यास, सुमारे 1 तास थांबा."
   },
   "acknowledge_and_accept": {
     "message": "पुढे जाताना तुम्ही हे मान्य करता."
@@ -138,7 +138,7 @@
     "message": "तुम्ही ऑफलाईन दिसत आहात! कृपया नेटवर्क तपासा आणि पुन्हा प्रयत्न करा!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader सामान्यपेक्षा जास्त वेळ घेत आहे. चूक तपासण्यासाठी विंडो बंद करा. GPT-4 वापरण्याची शिफारस."
+    "message": "Fix this सामान्यपेक्षा जास्त वेळ घेत आहे. चूक तपासण्यासाठी विंडो बंद करा. GPT-4 वापरण्याची शिफारस."
   },
   "voice_selector_description": {
     "message": "ChatGPT ने सुधारलेल्या आवाजांपैकी निवडा. मजकूर अपलोड करण्याआधी निवड करा."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "GPT वापरून लांब दस्तावेजांचे वाचन सुलभ करा"
@@ -189,7 +189,7 @@
     "message": "शायद ChatGPT एरर दाखवत आहे किंवा तुम्ही लिमिट गाठली आहे. त्यांच्या साइटवर तपासा."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader लोगो"
+    "message": "Fix this लोगो"
   },
   "login_to_use": {
     "message": "वापरण्यासाठी लॉगिन करा"

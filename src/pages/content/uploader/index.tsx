@@ -1035,13 +1035,13 @@ function Uploader() {
     // chrome.runtime.sendMessage({ type: "UPDATE_BADGE_STATE", state: isActive });
     window.localStorage.setItem("gptr/active", String(isActive)); //set overlay state to storage
     if (isActive) {
-      if (detectBrowser() === "firefox") {
-        const root = document.documentElement;
-        let theme_color = "light";
-        root.classList.remove("light", "dark")
-        root.classList.add(theme_color)
-        root.style["colorScheme"] = theme_color
-      }
+      // if (detectBrowser() === "firefox") {
+      //   const root = document.documentElement;
+      //   let theme_color = "light";
+      //   root.classList.remove("light", "dark")
+      //   root.classList.add(theme_color)
+      //   root.style["colorScheme"] = theme_color
+      // }
       //set active overlay count
       const aoc = window.localStorage.getItem("gptr/aoc");
       const count = aoc ? +aoc : 0;

@@ -75,7 +75,7 @@
     "message": "Cancel·la la descàrrega"
   },
   "accuracy_warning": {
-    "message": "GPT Reader pot generar àudio no 100% exacte. Si notes diferències, tanca la finestra i inicia un nou xat de ChatGPT i prova de nou."
+    "message": "Fix this pot generar àudio no 100% exacte. Si notes diferències, tanca la finestra i inicia un nou xat de ChatGPT i prova de nou."
   },
   "playback_speed": {
     "message": "Velocitat de reproducció"
@@ -117,10 +117,10 @@
     "message": "Estàs segur?"
   },
   "gpt_reader_notice": {
-    "message": "Avís de GPT Reader"
+    "message": "Avís de Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader processa textos llargs en trossos i els envia a ChatGPT. Podries arribar al límit temporalment. Si passa, espera una hora."
+    "message": "Fix this processa textos llargs en trossos i els envia a ChatGPT. Podries arribar al límit temporalment. Si passa, espera una hora."
   },
   "acknowledge_and_accept": {
     "message": "En continuar, reconeixes i acceptes això."
@@ -138,7 +138,7 @@
     "message": "Sembla que estàs fora de línia! Comprova la teva connexió i torna-ho a provar!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader està trigant més del normal. Tanca la finestra per comprovar l'error. Es recomana fer servir GPT-4."
+    "message": "Fix this està trigant més del normal. Tanca la finestra per comprovar l'error. Es recomana fer servir GPT-4."
   },
   "voice_selector_description": {
     "message": "Tria entre diverses veus millorades de ChatGPT. Selecciona la veu abans de pujar el text."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Simplifica la lectura de documents llargs amb GPT"
@@ -189,7 +189,7 @@
     "message": "Sembla que ChatGPT mostra un error o has arribat al límit. Consulta el seu lloc web."
   },
   "gpt_reader_logo": {
-    "message": "Logotip GPT Reader"
+    "message": "Logotip Fix this"
   },
   "login_to_use": {
     "message": "Inicia sessió per utilitzar"

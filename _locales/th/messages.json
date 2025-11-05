@@ -75,7 +75,7 @@
     "message": "ยกเลิกการดาวน์โหลด"
   },
   "accuracy_warning": {
-    "message": "GPT Reader อาจไม่ถูกต้อง 100%. หากพบความแตกต่าง ให้ปิดหน้าต่างแล้วเริ่ม ChatGPT ใหม่"
+    "message": "Fix this อาจไม่ถูกต้อง 100%. หากพบความแตกต่าง ให้ปิดหน้าต่างแล้วเริ่ม ChatGPT ใหม่"
   },
   "playback_speed": {
     "message": "ความเร็วในการเล่น"
@@ -117,10 +117,10 @@
     "message": "คุณแน่ใจหรือ"
   },
   "gpt_reader_notice": {
-    "message": "ประกาศ GPT Reader"
+    "message": "ประกาศ Fix this"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader จะแบ่งข้อความยาวเป็นส่วนเล็ก ๆ และส่งไปยัง ChatGPT บางครั้งคุณอาจถึงขีดจำกัดชั่วคราว หากเกิดขึ้น โปรดรอประมาณ 1 ชั่วโมง"
+    "message": "Fix this จะแบ่งข้อความยาวเป็นส่วนเล็ก ๆ และส่งไปยัง ChatGPT บางครั้งคุณอาจถึงขีดจำกัดชั่วคราว หากเกิดขึ้น โปรดรอประมาณ 1 ชั่วโมง"
   },
   "acknowledge_and_accept": {
     "message": "เมื่อดำเนินการต่อ แสดงว่าคุณรับทราบและยอมรับสิ่งนี้"
@@ -138,7 +138,7 @@
     "message": "ดูเหมือนคุณออฟไลน์! กรุณาตรวจสอบเครือข่ายและลองอีกครั้ง!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader ใช้เวลานานกว่าปกติ ปิดหน้าต่างเพื่อตรวจสอบข้อผิดพลาด แนะนำ GPT-4"
+    "message": "Fix this ใช้เวลานานกว่าปกติ ปิดหน้าต่างเพื่อตรวจสอบข้อผิดพลาด แนะนำ GPT-4"
   },
   "voice_selector_description": {
     "message": "เลือกจากเสียง ChatGPT ที่ได้รับการปรับปรุง โปรดเลือกก่อนอัปโหลดข้อความ"
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "ทำให้การอ่านเอกสารยาวง่ายขึ้นด้วย GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT อาจแสดงข้อผิดพลาดหรือคุณถึงขีดจำกัด ตรวจสอบเว็บไซต์"
   },
   "gpt_reader_logo": {
-    "message": "โลโก้ GPT Reader"
+    "message": "โลโก้ Fix this"
   },
   "login_to_use": {
     "message": "เข้าสู่ระบบเพื่อใช้งาน"

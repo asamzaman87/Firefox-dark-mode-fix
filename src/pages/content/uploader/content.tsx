@@ -765,7 +765,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       } else {
         toast({
           description:
-            "If you are having trouble using GPT Transcriber, then refresh your page, re-open the extension, and try again.",
+            "If you are having trouble using Fix this, then refresh your page, re-open the extension, and try again.",
           duration: 6000,
           variant: "default",
           style: TOAST_STYLE_CONFIG_INFO,

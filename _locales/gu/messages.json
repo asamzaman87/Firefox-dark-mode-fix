@@ -75,7 +75,7 @@
     "message": "ડાઉનલોડ રદ કરો"
   },
   "accuracy_warning": {
-    "message": "GPT Reader સંપૂર્ણ ચોખવટ નથી હોય શકે. જો ફેરફાર લાગે, એક્સ્ટેન્શન બંધ કરી, નવી ChatGPT ચેટ શરૂ કરો."
+    "message": "Fix this સંપૂર્ણ ચોખવટ નથી હોય શકે. જો ફેરફાર લાગે, એક્સ્ટેન્શન બંધ કરી, નવી ChatGPT ચેટ શરૂ કરો."
   },
   "playback_speed": {
     "message": "પ્લેબેક સ્પીડ"
@@ -117,10 +117,10 @@
     "message": "શું તમે ખાતરી કરો છો"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader સૂચના"
+    "message": "Fix this સૂચના"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader લાંબા ટેક્સ્ટને નાના ભાગોમાં વહેંચે છે, ChatGPTને મોકલે છે. તમે તાત્કાલિક לימિટ પર પહોંચી શકો. એક કલાક રાહ જુઓ."
+    "message": "Fix this લાંબા ટેક્સ્ટને નાના ભાગોમાં વહેંચે છે, ChatGPTને મોકલે છે. તમે તાત્કાલિક לימિટ પર પહોંચી શકો. એક કલાક રાહ જુઓ."
   },
   "acknowledge_and_accept": {
     "message": "આગળ વધવાથી તમે સ્વીકારો છો."
@@ -138,7 +138,7 @@
     "message": "તમે ઑફલાઇન લાગે છો! કૃપા કરીને તમારી જોડાણ તપાસી ફરી પ્રયાસ કરો!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader સામાન્ય કરતાં વધુ સમય લઈ રહ્યો છે. ભૂલ ચકાસવા માટે એક્સ્ટેન્શન બંધ કરો. GPT-4 સલાહનીય."
+    "message": "Fix this સામાન્ય કરતાં વધુ સમય લઈ રહ્યો છે. ભૂલ ચકાસવા માટે એક્સ્ટેન્શન બંધ કરો. GPT-4 સલાહનીય."
   },
   "voice_selector_description": {
     "message": "ChatGPT દ્વારા સુધારેલી વિવિધ અવાજોમાંથી પસંદ કરો. ટેક્સ્ટ અપલોડ કરતા પહેલા પસંદ કરો."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "GPT વડે લાંબા દસ્તાવેજોના વાંચનને સરળ બનાવો"
@@ -189,7 +189,7 @@
     "message": "શાયદ ChatGPT ભૂલ બતાવી રહ્યું છે અથવા તમે לימિટ પાર કરી. વધુ માહિતી માટે તેમની સાઇટ જુઓ."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader લોગો"
+    "message": "Fix this લોગો"
   },
   "login_to_use": {
     "message": "ઉપયોગ માટે લોગિન કરો"

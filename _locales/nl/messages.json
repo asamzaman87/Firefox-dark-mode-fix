@@ -75,7 +75,7 @@
     "message": "Annuleer download"
   },
   "accuracy_warning": {
-    "message": "GPT Reader kan audio genereren die niet 100% accuraat is. Zie je verschillen, sluit de overlay, start een nieuwe ChatGPT-chat en probeer opnieuw."
+    "message": "Fix this kan audio genereren die niet 100% accuraat is. Zie je verschillen, sluit de overlay, start een nieuwe ChatGPT-chat en probeer opnieuw."
   },
   "playback_speed": {
     "message": "Afspelsnelheid"
@@ -117,10 +117,10 @@
     "message": "Weet je het zeker"
   },
   "gpt_reader_notice": {
-    "message": "GPT Reader-melding"
+    "message": "Fix this-melding"
   },
   "gpt_reader_chunk_explanation": {
-    "message": "GPT Reader breekt lange tekst op in kleinere stukken en stuurt die naar ChatGPT. Je kunt tijdelijk een limiet bereiken. Wacht ongeveer een uur als dat gebeurt."
+    "message": "Fix this breekt lange tekst op in kleinere stukken en stuurt die naar ChatGPT. Je kunt tijdelijk een limiet bereiken. Wacht ongeveer een uur als dat gebeurt."
   },
   "acknowledge_and_accept": {
     "message": "Door te doorgaan erken en accepteer je dit."
@@ -138,7 +138,7 @@
     "message": "Je lijkt offline te zijn! Controleer je netwerk en probeer opnieuw!"
   },
   "slow_response_warning": {
-    "message": "GPT Reader duurt langer dan normaal. Sluit de overlay om fouten te checken. GPT-4 wordt aanbevolen."
+    "message": "Fix this duurt langer dan normaal. Sluit de overlay om fouten te checken. GPT-4 wordt aanbevolen."
   },
   "voice_selector_description": {
     "message": "Kies uit diverse verbeterde ChatGPT-stemmen. Maak je keuze voor je tekst uploadt."
@@ -174,7 +174,7 @@
     "message": "Untitled.txt"
   },
   "gpt_reader": {
-    "message": "GPT Reader"
+    "message": "Fix this"
   },
   "simplify_reading": {
     "message": "Vereenvoudig het lezen van lange documenten met GPT"
@@ -189,7 +189,7 @@
     "message": "ChatGPT toont mogelijk een fout of je limiet is bereikt. Bekijk de site."
   },
   "gpt_reader_logo": {
-    "message": "GPT Reader-logo"
+    "message": "Fix this-logo"
   },
   "login_to_use": {
     "message": "Inloggen om te gebruiken"
