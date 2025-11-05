@@ -793,7 +793,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           >
             {/* Mode Toggle - Prominently placed at top center */}
             {showToggle && (
-              <div className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-4 gpt:bg-transparent gpt:border gpt:border-gray-500 dark:border-gray-700 dark:bg-gray-800 gpt:rounded-xl gpt:p-3 gpt:mt-10 gpt:mb-2 gpt:shadow-md">
+              <div className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-4 gpt:bg-transparent gpt:border gpt:border-gray-500 gpt:dark:border-gray-700 gpt:dark:bg-gray-800 gpt:rounded-xl gpt:p-3 gpt:mt-10 gpt:mb-2 gpt:shadow-md">
                 <div className="gpt:flex gpt:items-center gpt:gap-3">
                   <Mic
                     className={`gpt:w-5 gpt:h-5 ${
@@ -817,7 +817,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   checked={isTextToSpeech}
                   onCheckedChange={handleToggle}
                   className="gpt:data-[state=checked]:bg-green-600 gpt:data-[state=unchecked]:bg-blue-600"
-                  thumbClassName="gpt:bg-white dark:bg-gray-100"
+                  thumbClassName="gpt:bg-white gpt:dark:bg-gray-100"
                 />
 
                 <div className="gpt:flex gpt:items-center gpt:gap-3">
@@ -873,7 +873,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             cy="18"
                             r="16"
                             fill="none"
-                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 dark:text-gray-100"
+                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 gpt:dark:text-gray-100"
                             strokeWidth="2"
                           ></circle>
                           <circle
@@ -881,7 +881,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             cy="18"
                             r="16"
                             fill="none"
-                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 dark:text-gray-700"
+                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 gpt:dark:text-gray-700"
                             strokeWidth="2"
                             strokeDasharray="100"
                             strokeDashoffset={progress}
@@ -891,7 +891,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                       </div>
                     </PopoverTrigger>
                   )}
-                  <PopoverContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                  <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                     <div className="gpt:flex gpt:flex-col gpt:gap-2">
                       <p className="gpt:text-wrap">
                         {chrome.i18n.getMessage("download_confirm")}
@@ -899,7 +899,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                       <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
                         <Button
                           variant="ghost"
-                          className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                          className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                           onClick={() => {
                             handleDownload();
                             setIsDownloadConfirmationOpen(false);
@@ -909,7 +909,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                         </Button>
                         <Button
                           variant="ghost"
-                          className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                          className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                           onClick={() => setIsDownloadConfirmationOpen(false)}
                         >
                           {chrome.i18n.getMessage("no")}
@@ -953,7 +953,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               <Button
                 variant="ghost"
                 onClick={havingIssueHandler}
-                className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
               >
                 <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
               </Button>
@@ -966,7 +966,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                       "Consider upgrading your membership to enjoy premium features now!"
                     )
                   }
-                  className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                  className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                   aria-haspopup="dialog"
                 >
                   <Crown /> Upgrade Membership
@@ -1008,7 +1008,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               title={chrome.i18n.getMessage("back")}
               size={"icon"}
               onClick={onBackClick}
-              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:font-medium gpt:absolute gpt:top-4 gpt:left-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6"
+              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:font-medium gpt:absolute gpt:top-4 gpt:left-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6"
             >
               <ArrowLeft />
               <span className="gpt:sr-only">
@@ -1138,7 +1138,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                     variant="ghost"
                     onPointerDown={(e) => e.preventDefault()} // stops Radix from toggling
                     onClick={onLocateClick}
-                    className="gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
+                    className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
                     title="Locate Audio"
                   >
                     <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
@@ -1148,7 +1148,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
                 <PopoverContent
                   align="end"
-                  className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:w-auto gpt:min-w-0 gpt:px-2 gpt:py-2"
+                  className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:w-auto gpt:min-w-0 gpt:px-2 gpt:py-2"
                   onInteractOutside={() => {           
                     setLocateOpen(false);
                     setLocateCtaOpen(false);
@@ -1197,13 +1197,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             }
                           }}
                           placeholder="Search text…"
-                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 dark:border-gray-600 gpt:bg-white dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
+                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
                         />
                         <Button variant="ghost" onClick={prevMatch} className="gpt:px-3">Prev</Button>
                         <Button variant="ghost" onClick={nextMatch} className="gpt:px-3">Next</Button>
                       </div>
 
-                      <div className="gpt:flex gpt:items-center gpt:justify-between gpt:text-xs gpt:text-gray-600 dark:text-gray-300">
+                      <div className="gpt:flex gpt:items-center gpt:justify-between gpt:text-xs gpt:text-gray-600 gpt:dark:text-gray-300">
                         <span>
                           {searchMatches.length ? `${searchSel + 1} / ${searchMatches.length}` : "0 / 0"}
                         </span>

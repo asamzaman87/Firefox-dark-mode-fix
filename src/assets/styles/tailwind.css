@@ -26,13 +26,26 @@
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%}
+    --chart-5: 27 87% 67%;
+    
+    /* Gray colors for light mode */
+    --gpt-color-gray-50: #f9fafb;
+    --gpt-color-gray-100: #f3f4f6;
+    --gpt-color-gray-200: #e5e7eb;
+    --gpt-color-gray-300: #d1d5db;
+    --gpt-color-gray-400: #9ca3af;
+    --gpt-color-gray-500: #6b7280;
+    --gpt-color-gray-600: #4b5563;
+    --gpt-color-gray-700: #374151;
+    --gpt-color-gray-800: #1f2937;
+    --gpt-color-gray-900: #111827;
+  }
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 0 0% 9.8%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 0 0% 9.8%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 9.8%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 0 0% 9%;
@@ -51,7 +64,19 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
+    
+    /* Gray colors for dark mode - custom values */
+    --gpt-color-gray-50: #f9fafb;
+    --gpt-color-gray-100: #f3f4f6;
+    --gpt-color-gray-200: #e5e7eb;
+    --gpt-color-gray-300: #d1d5db;
+    --gpt-color-gray-400: #9ca3af;
+    --gpt-color-gray-500: #6b7280;
+    --gpt-color-gray-600: #4b5563;
+    --gpt-color-gray-700: #2a2a2a;
+    --gpt-color-gray-800: #191919;
+    --gpt-color-gray-900: #0d0d0d;
   }
 }
 @layer base {

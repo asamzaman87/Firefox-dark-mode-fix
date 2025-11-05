@@ -13,10 +13,10 @@ const buttonVariants = cva(
         destructive:
           "gpt:bg-destructive gpt:text-destructive-foreground hover:gpt:bg-destructive/90",
         outline:
-          "gpt:border gpt:border-input gpt:bg-background gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 dark:hover:text-gray-100",
+          "gpt:border gpt:border-input gpt:bg-background gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 gpt:dark:hover:text-gray-100",
         secondary:
           "gpt:bg-secondary gpt:text-secondary-foreground hover:gpt:bg-secondary/80",
-        ghost: "gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-gray-100",
+        ghost: "gpt:text-primary hover:gpt:bg-gray-100 hover:gpt:text-gray-700 gpt:dark:hover:bg-gray-700 gpt:dark:hover:text-gray-100",
         link: "gpt:text-primary gpt:underline-offset-4 hover:gpt:underline",
       },
       size: {

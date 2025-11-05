@@ -166,12 +166,12 @@ const Announcements = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+          className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
           onClick={handleAnnouncementClick}
         >
           <Megaphone className="gpt:-rotate-12" />
           {count > 0 ? (
-            <Badge className="gpt:text-white gpt:bg-red-600 dark:bg-red-500 gpt:absolute gpt:-top-1.5 gpt:left-1/2 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center">
+            <Badge className="gpt:text-white gpt:bg-red-600 gpt:dark:bg-red-500 gpt:absolute gpt:-top-1.5 gpt:left-1/2 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center">
               {count}
             </Badge>
           ) : null}
@@ -181,7 +181,7 @@ const Announcements = () => {
         onInteractOutside={(e) => {
           e.preventDefault(); //prevents mask click close
         }}
-        className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw] gpt:max-h-[80dvh] gpt:w-screen gpt:overflow-hidden gpt:gap-4"
+        className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border-none gpt:min-w-[50dvw] gpt:max-h-[80dvh] gpt:w-screen gpt:overflow-hidden gpt:gap-4"
       >
         <DialogHeader>
           <DialogTitle className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
@@ -190,7 +190,7 @@ const Announcements = () => {
               variant="ghost"
               size="icon"
               onClick={getAnnouncements}
-              className="gpt:font-medium hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-180 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+              className="gpt:font-medium hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-180 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
             >
               <RefreshCwIcon />
             </Button>
@@ -218,7 +218,7 @@ const Announcements = () => {
                       <span className="gpt:w-full gpt:text-justify gpt:font-semibold gpt:max-w-[70dvw] gpt:truncate" title={item.title}>
                           {item.title}
                         </span>
-                      <span className="gpt:text-gray-600 dark:text-gray-500 gpt:font-medium gpt:text-sm gpt:w-full gpt:text-start">
+                      <span className="gpt:text-gray-600 gpt:dark:text-gray-500 gpt:font-medium gpt:text-sm gpt:w-full gpt:text-start">
                         {new Date(item.created_on).toLocaleDateString()}
                       </span>
                     </span>

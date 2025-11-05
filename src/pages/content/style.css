@@ -4,6 +4,12 @@
 
 @theme{
     --animate-heartbeat: heartbeat 1.5s ease-in-out infinite;
+    
+    /* Custom gray colors for dark mode - override Tailwind defaults */
+    --color-gray-700: #2a2a2a;
+    --color-gray-800: #191919;
+    --color-gray-900: #0d0d0d;
+    
     @keyframes heartbeat {
         0%, 100% {
           transform: scale(1);

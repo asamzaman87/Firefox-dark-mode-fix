@@ -1,5 +1,4 @@
 import { THEME_STORAGE_KEY } from "@/lib/constants"
-import { detectBrowser } from "@/lib/utils"
 import { createContext, useContext, useEffect, useState } from "react"
 
 export type Theme = "dark" | "light" | "system"
@@ -37,16 +36,11 @@ export function ThemeProvider({
     if (localStorage.getItem('gptr/active') !== 'true') {
       return
     }
-    let theme_color = "light";
-    // const notFirefox = detectBrowser() !== "firefox";
-    const notFirefox = true;
-    if (notFirefox) {
-      theme_color = theme
-    }
+    const theme_color = theme;
     // console.log('this is the theme being set', theme);
 
     root.classList.remove("light", "dark")
-    if (theme === "system" && notFirefox) {
+    if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"

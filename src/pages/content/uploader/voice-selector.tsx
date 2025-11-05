@@ -205,7 +205,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
             onClick={onClick}
             className={cn(
                 "gpt:w-max gpt:inline-flex gpt:items-center gpt:justify-evenly gpt:gap-2 gpt:py-1 gpt:px-2 gpt:text-sm gpt:font-medium",
-                "gpt:rounded-full gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-500 dark:border-gray-700 gpt:shadow-sm",
+                "gpt:rounded-full gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-500 gpt:dark:border-gray-700 gpt:shadow-sm",
                 "gpt:transition-transform gpt:hover:scale-105 gpt:active:scale-95 gpt:hover:cursor-pointer",
                 "gpt:aria-disabled:cursor-not-allowed"
             )}
@@ -233,7 +233,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         );
 
     return (
-        <div className="gpt:p-1.5 gpt:mx-auto gpt:flex gpt:items-center gpt:justify-center gpt:gap-2 gpt:border gpt:border-gray-500 dark:border-gray-700 gpt:rounded-full">
+        <div className="gpt:p-1.5 gpt:mx-auto gpt:flex gpt:items-center gpt:justify-center gpt:gap-2 gpt:border gpt:border-gray-500 gpt:dark:border-gray-700 gpt:rounded-full">
             <Trigger onClick={() => isPlaying ? stop() : preview()}>
                 {!isPlaying && <PlayCircle className={"gpt:size-4"} onClick={preview} />}
                 {isPlaying && <StopCircle className="gpt:size-4" onClick={stop} />}
@@ -245,19 +245,19 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                         <UserCircle2Icon className="gpt:size-4" /> {selectedLabel} <ChevronDown className={cn("gpt:size-4", { "gpt:rotate-180": open })} />
                     </Trigger>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                <DropdownMenuContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                     <div
                         ref={listRef}
                         className="gpt:relative gpt:max-h-72 gpt:w-full gpt:overflow-y-auto gpt:pr-1"
                     >
                         {allVoices.map((voice, i, arr) => (
                             <>
-                                <DropdownMenuItem className="gpt:flex-col gpt:items-start gpt:justify-between gpt:cursor-pointer gpt:disabled:cursor-not-allowed gpt:hover:bg-gray-200 dark:hover:bg-gray-700 gpt:rounded gpt:gap-1" disabled={selected === voice.voice} key={voice.voice} onClick={() => onDropItemSelect(voice)}>
+                                <DropdownMenuItem className="gpt:flex-col gpt:items-start gpt:justify-between gpt:cursor-pointer gpt:disabled:cursor-not-allowed gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700 gpt:rounded gpt:gap-1" disabled={selected === voice.voice} key={voice.voice} onClick={() => onDropItemSelect(voice)}>
                                     <div className="gpt:flex gpt:justify-between gpt:items-center gpt:w-full gpt:gap-2">
-                                        <span className="gpt:inline-flex gpt:gap-1 gpt:items-center gpt:justify-start">{selected === voice.voice && (<Check className="gpt:w-4 gpt:h-4 gpt:text-gray-600 dark:text-gray-300" />)}
+                                        <span className="gpt:inline-flex gpt:gap-1 gpt:items-center gpt:justify-start">{selected === voice.voice && (<Check className="gpt:w-4 gpt:h-4 gpt:text-gray-600 gpt:dark:text-gray-300" />)}
                                             {voice.voice.charAt(0).toUpperCase() + voice.voice.slice(1)}
                                             {voice.gender &&
-                                                <Badge className={cn("gpt:text-xs gpt:font-medium gpt:rounded-full gpt:text-white", { "gpt:bg-blue-800 dark:bg-blue-700": voice.gender === chrome.i18n.getMessage("male"), "gpt:bg-pink-700 dark:bg-pink-800": voice.gender === chrome.i18n.getMessage("female") })}>
+                                                <Badge className={cn("gpt:text-xs gpt:font-medium gpt:rounded-full gpt:text-white", { "gpt:bg-blue-800 gpt:dark:bg-blue-700": voice.gender === chrome.i18n.getMessage("male"), "gpt:bg-pink-700 gpt:dark:bg-pink-800": voice.gender === chrome.i18n.getMessage("female") })}>
                                                     {voice.gender}
                                                 </Badge>}
                                         </span>
@@ -269,14 +269,14 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                                             PRO
                                         </Badge>}
                                     </div>
-                                    {voice.description && <p className="gpt:text-xs gpt:text-gray-500 dark:text-gray-400">{voice.description}</p>}
+                                    {voice.description && <p className="gpt:text-xs gpt:text-gray-500 gpt:dark:text-gray-400">{voice.description}</p>}
                                 </DropdownMenuItem>
-                                {i === arr.length - 1 ? null : <DropdownMenuSeparator className="gpt:bg-gray-200 dark:bg-gray-700" />}
+                                {i === arr.length - 1 ? null : <DropdownMenuSeparator className="gpt:bg-gray-200 gpt:dark:bg-gray-700" />}
                             </>
                         ))}
                         {showScrollHint && (
                             <div className="gpt:pointer-events-none gpt:absolute gpt:bottom-2 gpt:left-1/2 gpt:-translate-x-1/2 gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
-                                <span className="gpt:text-sm gpt:font-semibold gpt:px-2 gpt:py-0.5 gpt:rounded-md gpt:bg-white/80 dark:gpt:bg-black/70 gpt:whitespace-nowrap">
+                                <span className="gpt:text-sm gpt:font-semibold gpt:px-2 gpt:py-0.5 gpt:rounded-md gpt:bg-white/80 gpt:dark:bg-black/70 gpt:whitespace-nowrap">
                                     <span className="gpt:text-red-500 gpt:animate-pulse">Scroll down</span>
                                 </span>
                                 <ArrowDown className="gpt:size-8 gpt:animate-bounce gpt:text-red-500" />
@@ -293,7 +293,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                         <ChevronDown className="gpt:size-4" />
                     </Trigger>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                <DropdownMenuContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                     {FILE_TYPES.map((fmt) => (
                         <DropdownMenuItem
                             key={fmt}
@@ -303,7 +303,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                                     toast({ description: 'Warning: the OPUS format will give you an audio player in the extension without the ability to skip forwards or backwards', style: TOAST_STYLE_CONFIG_INFO });
                                 }
                             }}
-                            className="gpt:cursor-pointer gpt:hover:bg-gray-200 dark:hover:bg-gray-700 gpt:rounded"
+                            className="gpt:cursor-pointer gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700 gpt:rounded"
                         >
                             {fmt}
                         </DropdownMenuItem>
@@ -311,8 +311,8 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                 </DropdownMenuContent>
             </DropdownMenu>
             <Popover>
-                <PopoverTrigger><Info className="gpt:cursor-pointer gpt:size-5 gpt:text-gray-600 dark:text-gray-100" /></PopoverTrigger>
-                <PopoverContent className="gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+                <PopoverTrigger><Info className="gpt:cursor-pointer gpt:size-5 gpt:text-gray-600 gpt:dark:text-gray-100" /></PopoverTrigger>
+                <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                     <p className="gpt:text-wrap gpt:text-left gpt:font-medium gpt:text-sm">{chrome.i18n.getMessage('voice_selector_description')}</p>
                 </PopoverContent>
             </Popover>
