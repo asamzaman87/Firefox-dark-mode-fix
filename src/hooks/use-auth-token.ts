@@ -31,7 +31,7 @@ const useAuthToken = () => {
     const updateTheToken = async (token: string, userId: string, userData: UserType) => {
         setToken(token);
         setUserId(userId);
-        setIsAuthenticated(!!token);
+        setIsAuthenticated(true);
         localStorage.setItem("gptr/auth", String(!!token));
         const hashToken = await createHash(token);
         if (userData) {
@@ -85,6 +85,7 @@ const useAuthToken = () => {
     };
 
     useEffect(() => {
+        setIsAuthenticated(true);
         const id = setInterval(() => {
             if (!signedOutRef.current) {
                 window.dispatchEvent(getTokenEvent());

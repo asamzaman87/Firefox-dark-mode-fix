@@ -38,7 +38,7 @@ export default function Popup(): JSX.Element {
       if (msg.type === "STATUS") {
         setIsActive(msg.message);
         chrome.storage.local.get("isAuthenticated", (result) => {
-          setIsAuthenticated(result.isAuthenticated);
+          setIsAuthenticated(true);
         });
       }
     });
@@ -79,8 +79,7 @@ export default function Popup(): JSX.Element {
         <FeedbackPopup />
       </div> */}
       <div className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2 gpt:font-medium gpt:text-lg"><img src={logo} alt="Fix this Logo" className="gpt:size-10" />Fix this</div>
-      {isAuthenticated && isValidUrl && <Button disabled={isActive} onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">{isActive ? "Active" : "Activate"}</Button>}
-      {!isAuthenticated && isValidUrl && <Button onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Login to use Fix this</Button>}
+      {isValidUrl && <Button disabled={isActive} onClick={onClick} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">{isActive ? "Active" : "Activate"}</Button>}
       {!isValidUrl && <Button onClick={switchToActiveTab} className="gpt:text-xl gpt:rounded-lg gpt:bg-black gpt:text-white">Click here to go to ChatGPT</Button>}
     </div>
   );
