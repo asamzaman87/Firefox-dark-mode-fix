@@ -18,7 +18,7 @@ const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "gpt:z-50 gpt:overflow-hidden gpt:rounded-md gpt:bg-primary gpt:px-3 gpt:py-1.5 gpt:text-xs gpt:text-primary-foreground gpt:animate-in gpt:fade-in-0 gpt:zoom-in-95 data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=closed]:gpt:gpt:zoom-out-95 data-[side=bottom]:gpt:gpt:slide-in-from-top-2 data-[side=left]:gpt:gpt:slide-in-from-right-2 data-[side=right]:gpt:gpt:slide-in-from-left-2 data-[side=top]:gpt:gpt:slide-in-from-bottom-2",
+        "gpt:z-50 gpt:overflow-hidden gpt:rounded-md gpt:bg-primary gpt:px-3 gpt:py-1.5 gpt:text-xs gpt:text-primary-foreground gpt:animate-in gpt:fade-in-0 gpt:zoom-in-95 data-[state=closed]:gpt:animate-out data-[state=closed]:gpt:fade-out-0 data-[state=closed]:gpt:zoom-out-95 data-[side=bottom]:gpt:slide-in-from-top-2 data-[side=left]:gpt:slide-in-from-right-2 data-[side=right]:gpt:slide-in-from-left-2 data-[side=top]:gpt:slide-in-from-bottom-2",
         className
       )}
       {...props}

@@ -213,7 +213,7 @@ const PdfViewer: FC<PdfViewerProps> = ({
   return (
     <div className='gpt:flex gpt:flex-row gpt:justify-center gpt:items-center gpt:gap-2 gpt:size-full'>
       <Button
-        className="hover:gpt:scale-115 active:gpt:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
+        className="gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
         variant={"ghost"}
         size={"icon"}
         disabled={pageNumber <= 1}
@@ -256,7 +256,7 @@ const PdfViewer: FC<PdfViewerProps> = ({
       </div>
 
       <Button
-        className="hover:gpt:scale-115 active:gpt:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
+        className="gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
         variant={"ghost"}
         size={"icon"}
         disabled={pageNumber >= numPages}

@@ -193,7 +193,7 @@ const Player: FC<PlayerBackupProps> = ({
               disabled={currentTime === 0}
               size={"icon"}
               variant="ghost"
-              className="gpt:hover:scale-115 gpt:active:scale-105 active:gpt:-rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
+              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:active:-rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
             >
               <RewindIcon/>
             </Button>
@@ -225,7 +225,7 @@ const Player: FC<PlayerBackupProps> = ({
               disabled={currentTime === duration}
               size={"icon"}
               variant="ghost"
-              className="hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
+              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:active:rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
             >
               <FastForwardIcon />
             </Button>

@@ -420,7 +420,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                         "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
                         billingInterval === "month"
                           ? "gpt:bg-gray-900 gpt:text-white gpt:dark:bg-gray-100 gpt:dark:text-gray-900"
-                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 hover:gpt:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
+                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 gpt:hover:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
                       )}
                       role="tab"
                       aria-selected={billingInterval === "month"}
@@ -435,7 +435,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                         "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
                         billingInterval === "year"
                           ? "gpt:bg-gray-900 gpt:text-white gpt:dark:bg-gray-100 gpt:dark:text-gray-900"
-                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 hover:gpt:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
+                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 gpt:hover:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
                       )}
                       role="tab"
                       aria-selected={billingInterval === "year"}

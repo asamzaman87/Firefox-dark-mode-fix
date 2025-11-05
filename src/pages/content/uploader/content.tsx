@@ -1197,7 +1197,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                             }
                           }}
                           placeholder="Search text…"
-                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
+                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none gpt:focus:ring-2 gpt:focus:ring-blue-500"
                         />
                         <Button variant="ghost" onClick={prevMatch} className="gpt:px-3">Prev</Button>
                         <Button variant="ghost" onClick={nextMatch} className="gpt:px-3">Next</Button>

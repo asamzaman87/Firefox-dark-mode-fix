@@ -24,7 +24,7 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
           <h1 className="gpt:text-xl gpt:font-medium">
             {chrome.i18n.getMessage("gpt_reader_notice")}
           </h1>
-          <p className="dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
+          <p className="gpt:dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
             {chrome.i18n.getMessage("gpt_reader_chunk_explanation")}
           </p>
           <p className="gpt:font-medium">

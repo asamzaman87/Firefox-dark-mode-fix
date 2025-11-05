@@ -60,7 +60,7 @@ const InputForm: FC<InputFormProps> = ({ onSubmit }) => {
                         <FormItem className="gpt:w-full">
                             <FormLabel>{chrome.i18n.getMessage('text')}</FormLabel>
                             <FormControl>
-                                <Textarea className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none" {...field} />
+                                <Textarea className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] gpt:focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none" {...field} />
                             </FormControl>
                             <FormMessage className="gpt:text-red-600" />
                         </FormItem>

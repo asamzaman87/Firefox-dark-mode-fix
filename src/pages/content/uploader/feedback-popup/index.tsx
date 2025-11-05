@@ -80,7 +80,7 @@ const FeedbackPopup: FC<FeedbackPopupProps> = ({ ...props }) => {
     return (
         <Dialog open={open} onOpenChange={onOpenChange} {...props}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
+                <Button variant="ghost" size="icon" className="gpt:hover:scale-115 gpt:active:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
                     <MessageSquareHeartIcon />
                 </Button>
             </DialogTrigger>

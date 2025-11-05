@@ -65,8 +65,8 @@ const DownloadOrListen: FC<InputPopupProps> = ({ onSubmit, ...props }) => {
                 onClick={() => onSubmit(option.value)}
                 key={index}
                 className={cn(
-                  "group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 gpt:dark:hover:border-gray-200 hover:border-gray-700 gpt:p-5 gpt:text-center gpt:transition hover:bg-gray-200 gpt:dark:hover:bg-gray-700",
-                  "gpt:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  "group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 gpt:dark:hover:border-gray-200 gpt:hover:border-gray-700 gpt:p-5 gpt:text-center gpt:transition gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700",
+                  "gpt:ring-offset-background gpt:focus-visible:outline-none gpt:focus-visible:ring-2 gpt:focus-visible:ring-ring gpt:focus-visible:ring-offset-2"
                 )}
               >
                 <div className="gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-2 gpt:sm:px-5 gpt:cursor-pointer">

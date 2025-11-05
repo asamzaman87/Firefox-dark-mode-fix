@@ -166,7 +166,7 @@ const Announcements = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+          className="gpt:relative gpt:hover:scale-115 gpt:active:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
           onClick={handleAnnouncementClick}
         >
           <Megaphone className="gpt:-rotate-12" />
@@ -190,7 +190,7 @@ const Announcements = () => {
               variant="ghost"
               size="icon"
               onClick={getAnnouncements}
-              className="gpt:font-medium hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-180 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+              className="gpt:font-medium gpt:hover:scale-115 gpt:active:scale-105 gpt:active:rotate-180 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
             >
               <RefreshCwIcon />
             </Button>
