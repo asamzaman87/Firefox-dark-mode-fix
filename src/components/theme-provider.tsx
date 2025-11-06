@@ -15,7 +15,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "light",
   setTheme: () => null,
 }
 
@@ -23,7 +23,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = THEME_STORAGE_KEY,
   ...props
 }: ThemeProviderProps) {
@@ -33,26 +33,53 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = document.documentElement;
-    if (localStorage.getItem('gptr/active') !== 'true') {
-      return
-    }
-    const theme_color = theme;
-    // console.log('this is the theme being set', theme);
-
-    root.classList.remove("light", "dark")
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      root.style["colorScheme"] = systemTheme
-      return
-    }
     
-    root.classList.add(theme_color)
-    root.style["colorScheme"] = theme_color
+    const applyTheme = () => {
+      const isActive = localStorage.getItem('gptr/active') === 'true';
+      
+      if (!isActive) {
+        // Extension not active - don't modify ChatGPT's page theme
+        return;
+      }
+      
+      const theme_color = theme;
+      // console.log('this is the theme being set', theme);
+
+      root.classList.remove("light", "dark")
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light"
+
+        root.classList.add(systemTheme)
+        root.style["colorScheme"] = systemTheme
+        return
+      }
+      
+      root.classList.add(theme_color)
+      root.style["colorScheme"] = theme_color
+    };
+    
+    // Apply theme immediately
+    applyTheme();
+    
+    // Listen for storage changes (when extension becomes active)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gptr/active') {
+        applyTheme();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also poll for active state changes (for same-tab updates)
+    const interval = setInterval(applyTheme, 500);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, [theme])
 
   const value = {

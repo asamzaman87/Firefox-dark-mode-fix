@@ -1,24 +1,14 @@
 import { Moon, Sun } from "lucide-react"
 
-import { Theme, useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
-import { useEffect } from "react"
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme()
 
-    useEffect(() => {
-        const gptrTheme = localStorage.getItem("gptr/next-theme") ?? "system";
-        setTheme(gptrTheme as Theme);
-        return () => {
-            const theme = localStorage.getItem("theme") ?? "system";
-            setTheme(theme as Theme)
-        }
-    }, []);
-
     const toggleTheme = () => {
-        localStorage.setItem("gptr/next-theme", theme === "light" ? "dark" : "light")
-        setTheme(theme === "light" ? "dark" : "light")
+        const newTheme = theme === "light" ? "dark" : "light";
+        setTheme(newTheme);
     }
 
     return (

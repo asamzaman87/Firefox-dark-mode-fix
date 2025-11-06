@@ -19,15 +19,14 @@ export const getIsDarkMode = (): boolean => {
     const stored = window.localStorage.getItem("gptr/next-theme");
     if (stored === "dark") return true;
     if (stored === "light") return false;
+    
+    // If theme is "system" or not set, check system preference
+    if (!stored || stored === "system") {
+      return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+    }
 
-    const root = document.documentElement;
-    if ((root.style as any)?.colorScheme) return root.style.colorScheme === "dark";
-    if (root.classList.contains("dark")) return true;
-
-    const cs = getComputedStyle(root) as any;
-    if (cs?.colorScheme) return cs.colorScheme === "dark";
-
-    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+    // Don't read ChatGPT's page theme - use extension's own preference
+    return false;
   } catch {
     return false;
   }
@@ -979,7 +978,7 @@ export function restoreRootInfo() {
     if (rootInfo.colorScheme) {
       root.style.colorScheme = rootInfo.colorScheme;
     }
-    localStorage.setItem('gptr/next-theme', rootInfo.colorScheme);
+    // Don't overwrite extension theme when restoring ChatGPT's page state
   } catch (err) {
     console.error("Could not parse saved root info:", err);
   }

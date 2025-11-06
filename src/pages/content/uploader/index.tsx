@@ -906,7 +906,7 @@ function Uploader() {
           colorScheme: root.style.colorScheme || "",
         };
         localStorage.setItem("gptr/root-info", JSON.stringify(info));
-        localStorage.setItem("gptr/next-theme", root.style.colorScheme || "");
+        // Don't overwrite extension theme with ChatGPT's colorScheme
         // console.log("Stored root COLOR", root.style.colorScheme);
       }
     };
