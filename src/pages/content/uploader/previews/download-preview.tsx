@@ -53,7 +53,7 @@ const DocumentPreview: FC<{ html?: string; text?: string }> = ({ html, text }) =
       <div
         ref={divRef}
         className="
-          gpt:p-10 gpt:mb-32 gpt:bg-white dark:bg-black gpt:min-h-full gpt:h-max gpt:rounded gpt:drop-shadow
+          gpt:p-10 gpt:mb-32 gpt:bg-white gpt:dark:bg-black gpt:min-h-full gpt:h-max gpt:rounded gpt:drop-shadow
           gpt:break-words
           gpt:[&_pre]:max-w-full gpt:[&_pre]:overflow-x-auto gpt:[&_pre]:whitespace-pre-wrap gpt:[&_pre]:break-words
           gpt:[&_code]:whitespace-pre-wrap gpt:[&_code]:break-words
@@ -151,7 +151,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         )}
 
         {!hasError && (
-          <p className="gpt:text-sm gpt:text-gray-700 dark:text-gray-400">
+          <p className="gpt:text-sm gpt:text-gray-700 gpt:dark:text-gray-400">
             {progress === 100
               ? `${chrome.i18n.getMessage("full_download_note")}`
               : `${chrome.i18n.getMessage("please_wait_file_downloading")}`}
@@ -170,7 +170,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
       <div className="gpt:relative gpt:size-full gpt:overflow-y-auto">
         <span
           className={cn(
-            "gpt:z-[1] gpt:rounded-full gpt:text-sm gpt:px-4 gpt:py-2 gpt:text-white dark:text-black gpt:bg-gray-800 dark:bg-gray-100 gpt:absolute gpt:top-4 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-2 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
+            "gpt:z-[1] gpt:rounded-full gpt:text-sm gpt:px-4 gpt:py-2 gpt:text-white gpt:dark:text-black gpt:bg-gray-800 gpt:dark:bg-gray-100 gpt:absolute gpt:top-4 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-2 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
             { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": hasContent }
           )}
         >
@@ -178,7 +178,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         </span>
         <span
           className={cn(
-            "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:text-center gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white dark:text-black gpt:bg-gray-800 dark:bg-gray-100 gpt:absolute gpt:top-1/2 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-12 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
+            "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:text-center gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white gpt:dark:text-black gpt:bg-gray-800 gpt:dark:bg-gray-100 gpt:absolute gpt:top-1/2 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-12 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
             { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": hasContent }
           )}
         >
@@ -202,32 +202,32 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                  className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                 >
                   <X />
                   {chrome.i18n.getMessage("cancel")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="gpt:relative gpt:p-4 gpt:w-max gpt:flex gpt:flex-col gpt:gap-8 gpt:justify-center gpt:bg-gray-100 dark:bg-gray-800 gpt:border gpt:border-gray-200 dark:border-gray-700">
+              <PopoverContent className="gpt:relative gpt:p-4 gpt:w-max gpt:flex gpt:flex-col gpt:gap-8 gpt:justify-center gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                 <header className="gpt:flex gpt:flex-col gpt:gap-2">
                   <h4 className="gpt:text-lg gpt:font-medium gpt:leading-none gpt:text-wrap">
                     {chrome.i18n.getMessage("cancel_download_confirmation_title")}
                   </h4>
-                  <p className="gpt:text-sm gpt:font-medium gpt:text-gray-600 dark:text-gray-400 gpt:sr-only">
+                  <p className="gpt:text-sm gpt:font-medium gpt:text-gray-600 gpt:dark:text-gray-400 gpt:sr-only">
                     {chrome.i18n.getMessage("cancel_download_confirmation_sr")}
                   </p>
                 </header>
                 <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
                   <Button
                     variant="ghost"
-                    className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                    className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                     onClick={() => toggleConfirmation(false)}
                   >
                     {chrome.i18n.getMessage("continue_download")}
                   </Button>
                   <Button
                     variant="ghost"
-                    className="gpt:flex-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                    className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
                     onClick={onCancel}
                   >
                     {chrome.i18n.getMessage("cancel_download")}
@@ -239,7 +239,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
           {progress > 0 && (
             <Button
               variant="ghost"
-              className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+              className="gpt:w-full gpt:sm:w-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
               onClick={onDownload}
             >
               <DownloadCloud /> {chrome.i18n.getMessage("download")}
@@ -248,7 +248,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         </div>
 
         {progress > 0 && (
-          <p className="gpt:text-center gpt:font-medium gpt:text-gray-800 dark:text-gray-200">
+          <p className="gpt:text-center gpt:font-medium gpt:text-gray-800 gpt:dark:text-gray-200">
             {chrome.i18n.getMessage("note_partial_audio")}
           </p>
         )}

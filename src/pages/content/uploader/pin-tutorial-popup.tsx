@@ -77,7 +77,7 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
           e.preventDefault();
         }}
         // closeButton={false}
-        className="gpt:bg-gray-50 dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] gpt:sm:w-[95vw] gpt:sm:max-w-[620px] gpt:md:w-[80vw] gpt:md:max-w-[750px] lg:gpt:w-[60vw] lg:gpt:max-w-[800px] xl:gpt:max-w-[900px] gpt:rounded-2xl"
+        className="gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:border-none gpt:w-[95vw] gpt:max-w-[95vw] gpt:sm:w-[95vw] gpt:sm:max-w-[620px] gpt:md:w-[80vw] gpt:md:max-w-[750px] lg:gpt:w-[60vw] lg:gpt:max-w-[800px] xl:gpt:max-w-[900px] gpt:rounded-2xl"
       >
         <DialogHeader className={"gpt:sr-only"}>
           <DialogTitle className="gpt:inline-flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-2">
@@ -98,7 +98,7 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
                     className="gpt:flex gpt:flex-col gpt:items-center gpt:text-center"
                   >
                     <div className="gpt:flex gpt:flex-col gpt:gap-4">
-                      <p className="gpt:text-lg dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
+                      <p className="gpt:text-lg gpt:dark:text-gray-200 gpt:text-gray-600 gpt:leading-loose">
                         {step.title}
                       </p>
                       <div className="gpt:rounded-md gpt:overflow-hidden gpt:border gpt:border-muted gpt:aspect-[16/10] gpt:w-full gpt:max-w-lg gpt:mx-auto">
@@ -117,8 +117,8 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="gpt:ml-8 dark:hover:gpt:bg-gray-600" />
-              <CarouselNext className="gpt:mr-8 dark:hover:gpt:bg-gray-600" />
+              <CarouselPrevious className="gpt:ml-8 gpt:dark:hover:bg-gray-600" />
+              <CarouselNext className="gpt:mr-8 gpt:dark:hover:bg-gray-600" />
             </Carousel>
           </section>
 
@@ -126,7 +126,7 @@ const PinTutorialPopUp: FC<PinTutorialProps> = ({
             <Button
               variant={"ghost"}
               size={"lg"}
-              className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+              className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
               onClick={() => handlePinTutorialAcknowledged(true)}
             >
               Okay

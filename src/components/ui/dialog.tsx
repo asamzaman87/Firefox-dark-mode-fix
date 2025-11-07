@@ -20,7 +20,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "gpt:fixed gpt:inset-0 gpt:z-50 gpt:bg-black/80 data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0",
+      "gpt:fixed gpt:inset-0 gpt:z-50 gpt:bg-black/80 data-[state=open]:gpt:animate-in data-[state=closed]:gpt:animate-out data-[state=closed]:gpt:fade-out-0 data-[state=open]:gpt:fade-in-0",
       className
     )}
     {...props}
@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "gpt:fixed gpt:left-[50%] gpt:top-[50%] gpt:z-50 gpt:grid gpt:w-full gpt:max-w-lg gpt:translate-x-[-50%] gpt:translate-y-[-50%] gpt:gap-4 gpt:border gpt:bg-background gpt:p-6 gpt:shadow-lg gpt:duration-200 data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0 data-[state=closed]:gpt:gpt:zoom-out-95 data-[state=open]:gpt:gpt:zoom-in-95 data-[state=closed]:gpt:gpt:slide-out-to-left-1/2 data-[state=closed]:gpt:gpt:slide-out-to-top-[48%] data-[state=open]:gpt:gpt:slide-in-from-left-1/2 data-[state=open]:gpt:gpt:slide-in-from-top-[48%] gpt:rounded-none",
+        "gpt:fixed gpt:left-[50%] gpt:top-[50%] gpt:z-50 gpt:grid gpt:w-full gpt:max-w-lg gpt:translate-x-[-50%] gpt:translate-y-[-50%] gpt:gap-4 gpt:border gpt:bg-background gpt:p-6 gpt:shadow-lg gpt:duration-200 data-[state=open]:gpt:animate-in data-[state=closed]:gpt:animate-out data-[state=closed]:gpt:fade-out-0 data-[state=open]:gpt:fade-in-0 data-[state=closed]:gpt:zoom-out-95 data-[state=open]:gpt:zoom-in-95 data-[state=closed]:gpt:slide-out-to-left-1/2 data-[state=closed]:gpt:slide-out-to-top-[48%] data-[state=open]:gpt:slide-in-from-left-1/2 data-[state=open]:gpt:slide-in-from-top-[48%] gpt:rounded-none",
         className
       )}
       {...props}
@@ -49,7 +49,7 @@ const DialogContent = React.forwardRef<
       {children}
       {closeButton &&
         <DialogPrimitive.Close className="gpt:cursor-pointer gpt:absolute gpt:right-4 gpt:top-4">
-          <Button variant="ghost" size="icon" className="gpt:hover:scale-115 gpt:active:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
+          <Button variant="ghost" size="icon" className="gpt:hover:scale-115 gpt:active:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">
             <X />
             <span className="gpt:sr-only">{chrome.i18n.getMessage("close")}</span>
           </Button>

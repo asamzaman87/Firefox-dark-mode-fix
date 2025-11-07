@@ -906,7 +906,7 @@ function Uploader() {
           colorScheme: root.style.colorScheme || "",
         };
         localStorage.setItem("gptr/root-info", JSON.stringify(info));
-        localStorage.setItem("gptr/next-theme", root.style.colorScheme || "");
+        // Don't overwrite extension theme with ChatGPT's colorScheme
         // console.log("Stored root COLOR", root.style.colorScheme);
       }
     };
@@ -1086,7 +1086,7 @@ function Uploader() {
             size="lg"
             onMouseOver={() => setMinimised(false)}
             onMouseOut={() => setMinimised(true)}
-            className={cn("gpt:shadow-md gpt:absolute gpt:flex gpt:justify-center gpt:items-center z-[101] gpt:top-60 gpt:right-0 gpt:rounded-l-full! dark:border-gray-700 dark:bg-gray-900 bg-gray-100 gpt:border-gray-200  gpt:p-2 gpt:border gpt:border-r-0  gpt:transition-all",
+            className={cn("gpt:shadow-md gpt:absolute gpt:flex gpt:justify-center gpt:items-center z-[101] gpt:top-60 gpt:right-0 gpt:rounded-l-full! gpt:dark:border-gray-700 gpt:dark:bg-gray-900 gpt:bg-gray-100 gpt:border-gray-200  gpt:p-2 gpt:border gpt:border-r-0  gpt:transition-all",
               {
                 "gpt:!z-[50]": isActive || isOverlayFallback,
               })
@@ -1101,7 +1101,7 @@ function Uploader() {
           onInteractOutside={(e: Event) => {
             e.preventDefault(); //prevents mask click close
           }}
-          className={cn("gpt:bg-gray-100 dark:bg-gray-800 gpt:max-w-screen gpt:h-full gpt:border-none gpt:flex gpt:flex-col gpt:gap-4", prompts?.length && "gpt:pb-0")}
+          className={cn("gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:max-w-screen gpt:h-full gpt:border-none gpt:flex gpt:flex-col gpt:gap-4", prompts?.length && "gpt:pb-0")}
         >
           {showWebReaderPerm && (
             <WebReaderPermissionPopup

@@ -33,13 +33,13 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "focus-visible:gpt:gpt:border-ring focus-visible:gpt:gpt:ring-ring/50 gpt:flex gpt:flex-1 gpt:items-start gpt:justify-between gpt:gap-4 gpt:rounded-md gpt:py-4 gpt:text-left gpt:text-sm gpt:font-medium gpt:transition-all gpt:outline-none hover:gpt:gpt:underline focus-visible:gpt:gpt:ring-[3px] disabled:gpt:gpt:pointer-events-none disabled:gpt:gpt:opacity-50 [&[data-state=open]>svg]:rotate-180",
+          "gpt:focus-visible:gpt:border-ring gpt:focus-visible:gpt:ring-ring/50 gpt:flex gpt:flex-1 gpt:items-start gpt:justify-between gpt:gap-4 gpt:rounded-md gpt:py-4 gpt:text-left gpt:text-sm gpt:font-medium gpt:transition-all gpt:outline-none gpt:hover:gpt:underline gpt:focus-visible:gpt:ring-[3px] gpt:disabled:pointer-events-none gpt:disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
           className
         )}
         {...props}
       >
         {children}
-        <ChevronDownIcon id="test" className="dark:text-white gpt:text-black gpt:pointer-events-none gpt:size-4 gpt:shrink-0 gpt:translate-y-0.5 gpt:transition-transform gpt:duration-200" />
+        <ChevronDownIcon id="test" className="gpt:dark:text-white gpt:text-black gpt:pointer-events-none gpt:size-4 gpt:shrink-0 gpt:translate-y-0.5 gpt:transition-transform gpt:duration-200" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )

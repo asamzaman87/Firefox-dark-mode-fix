@@ -93,13 +93,13 @@ const Player: FC<PlayerBackupProps> = ({
 
   if (minimized) {
     return (
-      <div className="gpt:fixed gpt:bottom-4 gpt:left-4 gpt:z-50 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:rounded-2xl gpt:py-3 gpt:px-4 gpt:shadow">
+      <div className="gpt:fixed gpt:bottom-4 gpt:left-4 gpt:z-50 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:rounded-2xl gpt:py-3 gpt:px-4 gpt:shadow">
         <div className="gpt:w-full gpt:flex gpt:items-center gpt:gap-2">
           <Button
             onClick={handlePlayPause}
             size={"icon"}
             variant="ghost"
-            className="gpt:hover:scale-115 gpt:active:scale-105 gpt:size-10 gpt:transition-all gpt:[&_svg]:size-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
+            className="gpt:hover:scale-115 gpt:active:scale-105 gpt:size-10 gpt:transition-all gpt:[&_svg]:size-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
           >
             {!showLoader && isPaused && !playbackEnded && (
               <>
@@ -139,7 +139,7 @@ const Player: FC<PlayerBackupProps> = ({
     >
       <div
         className={cn(
-          "gpt:mx-auto gpt:size-max gpt:flex gpt:flex-col gpt:justify-evenly gpt:items-center gpt:gap-0.5 gpt:p-2.5 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow gpt:rounded-xl gpt:relative",
+          "gpt:mx-auto gpt:size-max gpt:flex gpt:flex-col gpt:justify-evenly gpt:items-center gpt:gap-0.5 gpt:p-2.5 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:shadow gpt:rounded-xl gpt:relative",
           {"gpt:pt-5 gpt:px-7.5 gpt:pb-2.5": !areSeekControlsAvailable},
           {"gpt:p-2.5": areSeekControlsAvailable},
         )}
@@ -158,7 +158,7 @@ const Player: FC<PlayerBackupProps> = ({
                 size="icon"
                 onClick={() => setMinimized(true)}
                 aria-label="Minimize player"
-                className="gpt:size-7 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
+                className="gpt:size-7 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
               >
                 <Minus className="gpt:h-5 gpt:w-5" />
               </Button>
@@ -171,7 +171,7 @@ const Player: FC<PlayerBackupProps> = ({
               size="icon"
               onClick={() => setMinimized(true)}
               aria-label="Minimize player"
-              className="gpt:absolute gpt:right-1 gpt:top-1 gpt:w-6 gpt:h-5 gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
+              className="gpt:absolute gpt:right-1 gpt:top-1 gpt:w-6 gpt:h-5 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
             >
               <Minus className="gpt:h-5 gpt:w-5" />
             </Button>
@@ -193,7 +193,7 @@ const Player: FC<PlayerBackupProps> = ({
               disabled={currentTime === 0}
               size={"icon"}
               variant="ghost"
-              className="gpt:hover:scale-115 gpt:active:scale-105 active:gpt:-rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
+              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:active:-rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
             >
               <RewindIcon/>
             </Button>
@@ -202,7 +202,7 @@ const Player: FC<PlayerBackupProps> = ({
             onClick={handlePlayPause}
             size={"icon"}
             variant="ghost"
-            className="gpt:hover:scale-115 gpt:active:scale-105 gpt:size-14 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
+            className="gpt:hover:scale-115 gpt:active:scale-105 gpt:size-14 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
           >
             {!showLoader && isPaused && !playbackEnded && (
               <>
@@ -225,7 +225,7 @@ const Player: FC<PlayerBackupProps> = ({
               disabled={currentTime === duration}
               size={"icon"}
               variant="ghost"
-              className="hover:gpt:scale-115 active:gpt:scale-105 active:gpt:rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
+              className="gpt:hover:scale-115 gpt:active:scale-105 gpt:active:rotate-12 gpt:transition-all gpt:[&_svg]:size-6 gpt:rounded-full"
             >
               <FastForwardIcon />
             </Button>

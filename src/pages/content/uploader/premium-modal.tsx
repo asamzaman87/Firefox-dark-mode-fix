@@ -406,9 +406,9 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                   <div
                     className={cn(
                       "gpt:inline-flex gpt:overflow-hidden gpt:rounded-full",
-                      "gpt:bg-white dark:gpt:bg-gray-900",
-                      "gpt:border gpt:border-gray-300 dark:gpt:border-gray-700",
-                      "gpt:shadow-sm gpt:ring-1 gpt:ring-gray-200 dark:gpt:ring-gray-800"
+                      "gpt:bg-white gpt:dark:bg-gray-900",
+                      "gpt:border gpt:border-gray-300 gpt:dark:border-gray-700",
+                      "gpt:shadow-sm gpt:ring-1 gpt:ring-gray-200 gpt:dark:ring-gray-800"
                     )}
                     role="tablist"
                     aria-label="Billing interval"
@@ -419,8 +419,8 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                       className={cn(
                         "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
                         billingInterval === "month"
-                          ? "gpt:bg-gray-900 gpt:text-white dark:gpt:bg-gray-100 dark:gpt:text-gray-900"
-                          : "gpt:bg-transparent gpt:text-gray-800 dark:gpt:text-gray-200 hover:gpt:bg-gray-50 dark:hover:gpt:bg-gray-800/50"
+                          ? "gpt:bg-gray-900 gpt:text-white gpt:dark:bg-gray-100 gpt:dark:text-gray-900"
+                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 gpt:hover:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
                       )}
                       role="tab"
                       aria-selected={billingInterval === "month"}
@@ -434,8 +434,8 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                       className={cn(
                         "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
                         billingInterval === "year"
-                          ? "gpt:bg-gray-900 gpt:text-white dark:gpt:bg-gray-100 dark:gpt:text-gray-900"
-                          : "gpt:bg-transparent gpt:text-gray-800 dark:gpt:text-gray-200 hover:gpt:bg-gray-50 dark:hover:gpt:bg-gray-800/50"
+                          ? "gpt:bg-gray-900 gpt:text-white gpt:dark:bg-gray-100 gpt:dark:text-gray-900"
+                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 gpt:hover:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
                       )}
                       role="tab"
                       aria-selected={billingInterval === "year"}

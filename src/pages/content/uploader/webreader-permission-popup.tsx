@@ -33,7 +33,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
       </DialogHeader>
 
       {/* Taller layout to avoid vertical squeeze */}
-      <div className="gpt:w-full gpt:max-w-screen-xl gpt:min-h-[70vh] gpt:max-h-[94vh] gpt:rounded-2xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:shadow gpt:px-6 gpt:py-6 gpt:flex gpt:flex-col gpt:gap-5">
+      <div className="gpt:w-full gpt:max-w-screen-xl gpt:min-h-[70vh] gpt:max-h-[94vh] gpt:rounded-2xl gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:shadow gpt:px-6 gpt:py-6 gpt:flex gpt:flex-col gpt:gap-5">
         {/* Top title */}
         <header className="gpt:flex gpt:flex-col gpt:items-center gpt:text-center gpt:gap-2">
           <img src={LOGO} alt="Fix this Logo" className="gpt:size-12" />
@@ -44,7 +44,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
         <div className="gpt:grid gpt:grid-cols-2 gpt:gap-3 gpt:flex-1">
           {/* Left container */}
           <div className="gpt:flex gpt:items-center gpt:justify-center">
-            <div className="gpt:w-full gpt:h-full gpt:rounded-xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-white dark:bg-gray-900 gpt:p-3 gpt:flex gpt:items-center gpt:justify-center">
+            <div className="gpt:w-full gpt:h-full gpt:rounded-xl gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-white gpt:dark:bg-gray-900 gpt:p-3 gpt:flex gpt:items-center gpt:justify-center">
               <img
                 src={GUIDE_IMG_WEB}
                 alt="Select text or full page to send to Fix this"
@@ -55,7 +55,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
 
           {/* Right container */}
           <div className="gpt:flex gpt:items-center gpt:justify-center">
-            <div className="gpt:w-full gpt:h-full gpt:rounded-xl gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-white dark:bg-gray-900 gpt:p-3 gpt:flex gpt:items-center gpt:justify-center">
+            <div className="gpt:w-full gpt:h-full gpt:rounded-xl gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-white gpt:dark:bg-gray-900 gpt:p-3 gpt:flex gpt:items-center gpt:justify-center">
               <img
                 src={uploadImage}
                 alt={isFirefox ? "Upload documents in Firefox" : "Upload documents in Chrome"}
@@ -69,7 +69,7 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
         <footer className="gpt:flex gpt:justify-center">
           <Button
             variant="ghost"
-            className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800"
+            className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
             onClick={onPrimary}
           >
             {primaryLabel}
