@@ -25,7 +25,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "gpt:flex gpt:cursor-default gpt:gap-2 gpt:select-none gpt:items-center gpt:rounded-sm gpt:px-2 gpt:py-1.5 gpt:text-sm gpt:outline-none focus:gpt:gpt:bg-accent data-[state=open]:gpt:gpt:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "gpt:flex gpt:cursor-default gpt:gap-2 gpt:select-none gpt:items-center gpt:rounded-sm gpt:px-2 gpt:py-1.5 gpt:text-sm gpt:outline-none gpt:focus:bg-accent gpt:data-[state=open]:bg-accent [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
       inset && "gpt:pl-8",
       className
     )}
@@ -45,7 +45,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "gpt:z-50 gpt:min-w-[8rem] gpt:overflow-hidden gpt:rounded-md gpt:border gpt:bg-popover gpt:p-1 gpt:text-popover-foreground gpt:shadow-lg data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0 data-[state=closed]:gpt:gpt:zoom-out-95 data-[state=open]:gpt:gpt:zoom-in-95 data-[side=bottom]:gpt:gpt:slide-in-from-top-2 data-[side=left]:gpt:gpt:slide-in-from-right-2 data-[side=right]:gpt:gpt:slide-in-from-left-2 data-[side=top]:gpt:gpt:slide-in-from-bottom-2",
+      "gpt:z-50 gpt:min-w-[8rem] gpt:overflow-hidden gpt:rounded-md gpt:border gpt:bg-popover gpt:p-1 gpt:text-popover-foreground gpt:shadow-lg gpt:data-[state=open]:animate-in gpt:data-[state=closed]:animate-out gpt:data-[state=closed]:fade-out-0 gpt:data-[state=open]:fade-in-0 gpt:data-[state=closed]:zoom-out-95 gpt:data-[state=open]:zoom-in-95 gpt:data-[side=bottom]:slide-in-from-top-2 gpt:data-[side=left]:slide-in-from-right-2 gpt:data-[side=right]:slide-in-from-left-2 gpt:data-[side=top]:slide-in-from-bottom-2",
       className
     )}
     {...props}
@@ -64,7 +64,7 @@ const DropdownMenuContent = React.forwardRef<
       sideOffset={sideOffset}
       className={cn(
         "gpt:z-50 gpt:min-w-[8rem] gpt:overflow-hidden gpt:rounded-md gpt:border gpt:bg-popover gpt:p-1 gpt:text-popover-foreground gpt:shadow-md",
-        "data-[state=open]:gpt:gpt:animate-in data-[state=closed]:gpt:gpt:animate-out data-[state=closed]:gpt:gpt:fade-out-0 data-[state=open]:gpt:gpt:fade-in-0 data-[state=closed]:gpt:gpt:zoom-out-95 data-[state=open]:gpt:gpt:zoom-in-95 data-[side=bottom]:gpt:gpt:slide-in-from-top-2 data-[side=left]:gpt:gpt:slide-in-from-right-2 data-[side=right]:gpt:gpt:slide-in-from-left-2 data-[side=top]:gpt:gpt:slide-in-from-bottom-2",
+        "gpt:data-[state=open]:animate-in gpt:data-[state=closed]:animate-out gpt:data-[state=closed]:fade-out-0 gpt:data-[state=open]:fade-in-0 gpt:data-[state=closed]:zoom-out-95 gpt:data-[state=open]:zoom-in-95 gpt:data-[side=bottom]:slide-in-from-top-2 gpt:data-[side=left]:slide-in-from-right-2 gpt:data-[side=right]:slide-in-from-left-2 gpt:data-[side=top]:slide-in-from-bottom-2",
         className
       )}
       {...props}
@@ -82,7 +82,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:gap-2 gpt:rounded-sm gpt:px-2 gpt:py-1.5 gpt:text-sm gpt:outline-none gpt:transition-colors focus:gpt:gpt:bg-accent focus:gpt:gpt:text-accent-foreground data-[disabled]:gpt:gpt:pointer-events-none data-[disabled]:gpt:gpt:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0",
+      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:gap-2 gpt:rounded-sm gpt:px-2 gpt:py-1.5 gpt:text-sm gpt:outline-none gpt:transition-colors gpt:focus:bg-accent gpt:focus:text-accent-foreground gpt:data-[disabled]:pointer-events-none gpt:data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0",
       inset && "gpt:pl-8",
       className
     )}
@@ -98,7 +98,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:rounded-sm gpt:py-1.5 gpt:pl-8 gpt:pr-2 gpt:text-sm gpt:outline-none gpt:transition-colors focus:gpt:gpt:bg-accent focus:gpt:gpt:text-accent-foreground data-[disabled]:gpt:gpt:pointer-events-none data-[disabled]:gpt:gpt:opacity-50",
+      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:rounded-sm gpt:py-1.5 gpt:pl-8 gpt:pr-2 gpt:text-sm gpt:outline-none gpt:transition-colors gpt:focus:bg-accent gpt:focus:text-accent-foreground gpt:data-[disabled]:pointer-events-none gpt:data-[disabled]:opacity-50",
       className
     )}
     checked={checked}
@@ -122,7 +122,7 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:rounded-sm gpt:py-1.5 gpt:pl-8 gpt:pr-2 gpt:text-sm gpt:outline-none gpt:transition-colors focus:gpt:gpt:bg-accent focus:gpt:gpt:text-accent-foreground data-[disabled]:gpt:gpt:pointer-events-none data-[disabled]:gpt:gpt:opacity-50",
+      "gpt:relative gpt:flex gpt:cursor-default gpt:select-none gpt:items-center gpt:rounded-sm gpt:py-1.5 gpt:pl-8 gpt:pr-2 gpt:text-sm gpt:outline-none gpt:transition-colors gpt:focus:bg-accent gpt:focus:text-accent-foreground gpt:data-[disabled]:pointer-events-none gpt:data-[disabled]:opacity-50",
       className
     )}
     {...props}

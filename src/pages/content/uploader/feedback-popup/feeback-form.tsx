@@ -62,7 +62,7 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                     render={({ field }) => (
                         <FormItem className="gpt:w-full">
                             <FormControl>
-                            <Input className="gpt:border gpt:border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gpt:rounded gpt:focus:border-gray-200 dark:focus:border-gray-700 gpt:outline-none gpt:focus-visible:ring-offset-2"  placeholder={"Enter your email"} type="email"  {...field} />     
+                            <Input className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:rounded gpt:focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none gpt:focus-visible:ring-offset-2"  placeholder={"Enter your email"} type="email"  {...field} />     
                             </FormControl>
                             <FormMessage className="gpt:text-red-600" />
                         </FormItem>
@@ -73,13 +73,13 @@ const FeedbackForm: FC<FeedbackFormProps> = ({ onSubmit, loading }) => {
                     render={({ field }) => (
                         <FormItem className="gpt:w-full">
                             <FormControl>
-                            <Textarea className="gpt:border gpt:border-gray-200 dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] gpt:focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none"  placeholder={chrome.i18n.getMessage("feedback_question")}  {...field} />     
+                            <Textarea className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:resize-none gpt:rounded gpt:min-h-[50dvh] gpt:focus:border-gray-200 gpt:dark:focus:border-gray-700 gpt:outline-none"  placeholder={chrome.i18n.getMessage("feedback_question")}  {...field} />     
                             </FormControl>
                             <FormMessage className="gpt:text-red-600" />
                         </FormItem>
                     )} />
                 <DialogFooter>
-                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"}  className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">{loading ? <Loader2Icon className="gpt:animate-spin gpt:size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
+                    <Button disabled={loading} type="submit" size={"lg"} variant={"outline"}  className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all">{loading ? <Loader2Icon className="gpt:animate-spin gpt:size-4" /> : chrome.i18n.getMessage("submit_feedback")}</Button>
                 </DialogFooter>
             </form>
         </Form>

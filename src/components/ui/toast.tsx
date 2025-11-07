@@ -62,7 +62,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "gpt:inline-flex gpt:h-8 gpt:shrink-0 gpt:items-center gpt:justify-center gpt:rounded-md gpt:border gpt:bg-transparent gpt:px-3 gpt:text-sm gpt:font-medium gpt:transition-colors hover:gpt:bg-secondary focus:gpt:outline-none focus:gpt:ring-1 focus:gpt:ring-ring disabled:gpt:pointer-events-none disabled:gpt:opacity-50 group-[.destructive]:gpt:border-muted/40 group-[.destructive]:hover:gpt:border-destructive/30 group-[.destructive]:hover:gpt:bg-destructive group-[.destructive]:hover:gpt:text-destructive-foreground group-[.destructive]:focus:gpt:ring-destructive",
+      "gpt:inline-flex gpt:h-8 gpt:shrink-0 gpt:items-center gpt:justify-center gpt:rounded-md gpt:border gpt:bg-transparent gpt:px-3 gpt:text-sm gpt:font-medium gpt:transition-colors gpt:hover:bg-secondary gpt:focus:outline-none gpt:focus:ring-1 gpt:focus:ring-ring gpt:disabled:pointer-events-none gpt:disabled:opacity-50 group-[.destructive]:gpt:border-muted/40 group-[.destructive]:gpt:hover:border-destructive/30 group-[.destructive]:gpt:hover:bg-destructive group-[.destructive]:gpt:hover:text-destructive-foreground group-[.destructive]:gpt:focus:ring-destructive",
       className
     )}
     {...props}
@@ -78,7 +78,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "gpt:absolute gpt:right-1 gpt:top-1 gpt:rounded-md gpt:text-foreground/50 gpt:transition-opacity hover:gpt:text-foreground focus:gpt:outline-none focus:gpt:ring-1 group-[.destructive]:gpt:text-red-300 group-[.destructive]:hover:gpt:text-red-50 group-[.destructive]:focus:gpt:ring-red-400 group-[.destructive]:focus:gpt:ring-offset-red-600",
+      "gpt:absolute gpt:right-1 gpt:top-1 gpt:rounded-md gpt:text-foreground/50 gpt:transition-opacity gpt:hover:text-foreground gpt:focus:outline-none gpt:focus:ring-1 group-[.destructive]:gpt:text-red-300 group-[.destructive]:gpt:hover:text-red-50 group-[.destructive]:gpt:focus:ring-red-400 group-[.destructive]:gpt:focus:ring-offset-red-600",
       className
     )}
     toast-close=""

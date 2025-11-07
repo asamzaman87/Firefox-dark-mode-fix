@@ -102,7 +102,7 @@ const StayOfferPopup: FC<{
           <Button
             variant="ghost"
             onClick={onCancelAnyway}
-            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700"
+            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
           >
             <AlertTriangle className="gpt:mr-2 gpt:h-4 gpt:w-4 gpt:text-red-600" />
             Actually cancel
@@ -148,7 +148,7 @@ const AlreadySwitchedPopup: FC<{
           <Button
             variant="ghost"
             onClick={onKeep}
-            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700"
+            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
           >
             Keep the $1.99 plan
           </Button>
@@ -678,7 +678,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                 setShowAlreadyAnnualDialog(false);
                 setIsOpen(false);
               }}
-              className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700"
+              className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
             >
               Keep Annual switch
             </Button>

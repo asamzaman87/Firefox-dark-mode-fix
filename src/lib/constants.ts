@@ -1,6 +1,6 @@
 import { Accept } from "react-dropzone";
 
-export const THEME_STORAGE_KEY = "gptr/theme";
+export const THEME_STORAGE_KEY = "gptr/next-theme";
 export const MAX_FILES = 1;
 export const ACCEPTED_FILE_TYPES: Accept = {
   "application/pdf": [],

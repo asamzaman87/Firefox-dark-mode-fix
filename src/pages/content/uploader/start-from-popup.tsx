@@ -174,7 +174,7 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
           e.preventDefault();
         }}
         className="
-          gpt:bg-gray-100 dark:bg-gray-900
+          gpt:bg-gray-100 gpt:dark:bg-gray-900
           gpt:border-none
           gpt:w-[95vw] gpt:max-w-[95vw]
           gpt:sm:w-[95vw] gpt:sm:max-w-[620px]
@@ -194,7 +194,7 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
 
         <div className="gpt:w-full gpt:flex gpt:flex-col gpt:gap-6 gpt:justify-center gpt:items-center">
           <section className="gpt:flex gpt:flex-col gpt:justify-center gpt:items-center gpt:gap-4 gpt:w-full">
-            <h1 className="gpt:text-xl gpt:font-medium gpt:text-center gpt:text-gray-900 dark:text-gray-100">
+            <h1 className="gpt:text-xl gpt:font-medium gpt:text-center gpt:text-gray-900 gpt:dark:text-gray-100">
               Select a starting point
             </h1>
 
@@ -210,10 +210,10 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
                 className="
                   gpt:flex-1 gpt:h-9 gpt:px-3
                   gpt:rounded-full
-                  gpt:border gpt:border-gray-500 dark:border-gray-700
-                  gpt:bg-gray-100 dark:bg-gray-800
-                  gpt:text-sm gpt:text-gray-900 dark:text-gray-100
-                  placeholder:gpt:text-gray-500 dark:placeholder:text-gray-400
+                  gpt:border gpt:border-gray-500 gpt:dark:border-gray-700
+                  gpt:bg-gray-100 gpt:dark:bg-gray-800
+                  gpt:text-sm gpt:text-gray-900 gpt:dark:text-gray-100
+                  placeholder:gpt:text-gray-500 gpt:dark:placeholder:text-gray-400
                 "
               />
             </div>
@@ -222,8 +222,8 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
             <div
               className="
                 gpt:w-full gpt:max-w-[720px]
-                gpt:border gpt:border-gray-500 dark:border-gray-700
-                gpt:bg-gray-100 dark:bg-gray-800
+                gpt:border gpt:border-gray-500 gpt:dark:border-gray-700
+                gpt:bg-gray-100 gpt:dark:bg-gray-800
                 gpt:rounded-lg gpt:p-2
               "
             >
@@ -240,29 +240,29 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
                     <button
                       className={cn(
                         "gpt:w-full gpt:text-left gpt:px-3 gpt:py-2 gpt:rounded gpt:cursor-pointer",
-                        "gpt:hover:bg-gray-200 dark:hover:bg-gray-700",
+                        "gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700",
                         it.id === selected?.id &&
-                          "gpt:bg-gray-200 dark:bg-gray-700 gpt:border gpt:border-gray-200 dark:border-gray-700"
+                          "gpt:bg-gray-200 gpt:dark:bg-gray-700 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
                       )}
                       onClick={() => setSelectedId(it.id)}
                     >
-                      <div className="gpt:text-sm gpt:font-medium gpt:text-gray-900 dark:text-gray-100">
+                      <div className="gpt:text-sm gpt:font-medium gpt:text-gray-900 gpt:dark:text-gray-100">
                         {it.label}
                       </div>
                       {it.previewHTML && (
                         <div
-                          className="gpt:mt-1 gpt:text-xs gpt:text-gray-700 dark:text-gray-300 gpt:line-clamp-3"
+                          className="gpt:mt-1 gpt:text-xs gpt:text-gray-700 gpt:dark:text-gray-300 gpt:line-clamp-3"
                           dangerouslySetInnerHTML={{ __html: it.previewHTML }}
                         />
                       )}
                     </button>
                     {idx < items.length - 1 && (
-                      <div className="gpt:h-px gpt:bg-gray-200 dark:bg-gray-700" />
+                      <div className="gpt:h-px gpt:bg-gray-200 gpt:dark:bg-gray-700" />
                     )}
                   </div>
                 ))}
                 {items.length === 0 && (
-                  <div className="gpt:text-sm gpt:text-center gpt:py-6 gpt:text-gray-600 dark:text-gray-400">
+                  <div className="gpt:text-sm gpt:text-center gpt:py-6 gpt:text-gray-600 gpt:dark:text-gray-400">
                     No matches
                   </div>
                 )}
@@ -277,9 +277,9 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
               size="lg"
               className="
                 gpt:rounded-full
-                gpt:border gpt:border-gray-500 dark:border-gray-700
-                gpt:bg-gray-100 dark:bg-gray-800
-                gpt:text-gray-900 dark:text-gray-100
+                gpt:border gpt:border-gray-500 gpt:dark:border-gray-700
+                gpt:bg-gray-100 gpt:dark:bg-gray-800
+                gpt:text-gray-900 gpt:dark:text-gray-100
                 gpt:[&_svg]:size-6 gpt:transition-all
               "
               onClick={() => onConfirm({ startAt: 0, matchLength: 0 })}
@@ -291,9 +291,9 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
               size="lg"
               className="
                 gpt:rounded-full
-                gpt:border gpt:border-gray-500 dark:border-gray-700
-                gpt:bg-gray-100 dark:bg-gray-800
-                gpt:text-gray-900 dark:text-gray-100
+                gpt:border gpt:border-gray-500 gpt:dark:border-gray-700
+                gpt:bg-gray-100 gpt:dark:bg-gray-800
+                gpt:text-gray-900 gpt:dark:text-gray-100
                 gpt:[&_svg]:size-6 gpt:transition-all
                 aria-disabled:opacity-50 aria-disabled:cursor-not-allowed
               "

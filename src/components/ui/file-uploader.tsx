@@ -208,8 +208,8 @@ export function FileUploader(props: FileUploaderProps) {
             {...getRootProps()}
             onClick={() => triggerPremium(open)}
             className={cn(
-              "group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 hover:border-gray-700 dark:hover:border-gray-200 gpt:px-5 gpt:py-2.5 gpt:text-center gpt:transition hover:bg-gray-200 dark:hover:bg-gray-700 gpt:bg-opacity-15",
-              "gpt:ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "group gpt:relative gpt:grid gpt:size-full gpt:cursor-pointer gpt:place-items-center gpt:rounded-2xl gpt:border-2 gpt:border-dashed gpt:border-gray-500 gpt:hover:border-gray-700 gpt:dark:hover:border-gray-200 gpt:px-5 gpt:py-2.5 gpt:text-center gpt:transition gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700",
+              "gpt:ring-offset-background gpt:focus-visible:outline-none gpt:focus-visible:ring-2 gpt:focus-visible:ring-ring gpt:focus-visible:ring-offset-2",
               isDragActive && "gpt:border-green-300 gpt:bg-green-100",
               isDisabled && "gpt:pointer-events-none gpt:opacity-60",
               className

@@ -184,7 +184,7 @@ const AnnualUpsellPopup: FC<Props> = ({ open, onOpenChange }) => {
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 dark:border-gray-700"
+            className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
           >
             Not now
           </Button>
