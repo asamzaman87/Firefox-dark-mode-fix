@@ -69,9 +69,12 @@ const WebReaderPermissionPopup: FC<WebReaderPermissionPopupProps> = ({ onPrimary
         <footer className="gpt:flex gpt:justify-center">
           <Button
             variant="ghost"
-            className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800"
+            className="gpt:border-2 gpt:border-blue-500 gpt:dark:border-blue-400
+                        gpt:bg-gray-50 gpt:dark:bg-gray-800
+                        gpt:px-8 gpt:py-4 gpt:text-lg gpt:font-semibold
+                        gpt:transition-colors gpt:hover:bg-gray-100 gpt:dark:hover:bg-gray-700"
             onClick={onPrimary}
-          >
+            >
             {primaryLabel}
           </Button>
         </footer>

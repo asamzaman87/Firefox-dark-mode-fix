@@ -318,8 +318,10 @@ function Uploader() {
         } catch {
           // ignore
         }
-        await new Promise(r => setTimeout(r, 1500));
-        window.location.href = window.location.href;
+        if (list.length) {
+          await new Promise(r => setTimeout(r, 1500));
+          window.location.href = window.location.href;
+        }
       })();
     }
     const handleUnload = async (event: BeforeUnloadEvent) => {
@@ -720,6 +722,12 @@ function Uploader() {
             window.localStorage.setItem("gptr/redirect-to-login", "true");
             chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
             loginBtn?.click();
+            toast({
+              description:
+                "Continue logging in to use the ChatGPT Reader & Transcriber extension.",
+              style: TOAST_STYLE_CONFIG_INFO,
+              duration: 20000,
+            })
           } else {
             //send message to background to try again if user is not authorised and login btn not present
             chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
@@ -934,6 +942,8 @@ function Uploader() {
   useEffect(() => {
     if (!isActive) return; // do nothing when overlay is closed
 
+    let hasFired = false; // ensure we only show once
+
     const minutesUntilNextUtcHour = () => {
       const now = new Date();
       const nextHourUtc = new Date(Date.UTC(
@@ -947,61 +957,92 @@ function Uploader() {
     };
 
     const findLimitBannerMinutes = (): number | null => {
-      // Look for the new banner text:
-      // "You've reached your message limit." and nearby "try again in 24 minutes"
       const candidates = Array.from(document.querySelectorAll<HTMLElement>('h3,div,p,span'));
 
+      // Find the header saying "You've reached your message limit"
       const header = candidates.find(el =>
         (el.textContent || '').toLowerCase().includes("you've reached your message limit")
       );
 
       if (!header) return null;
 
-      // Search the closest container text for "try again in <n> minute"
-      const scopeText =
-        (header.closest('aside,div')?.textContent ||
-          header.parentElement?.textContent ||
-          header.textContent ||
-          '').toLowerCase();
+      // Collect surrounding DOM content
+      const scope = new Set<HTMLElement>();
+      scope.add(header);
 
-      const match = scopeText.match(/try again in\s+(\d+)\s+minutes?/);
-      if (match && match[1]) {
-        const mins = parseInt(match[1], 10);
-        if (!Number.isNaN(mins)) return mins;
+      if (header.parentElement) scope.add(header.parentElement);
+
+      header.parentElement?.childNodes.forEach(n => {
+        if (n instanceof HTMLElement) scope.add(n);
+      });
+
+      const aside = header.closest('aside,section,div');
+      if (aside) scope.add(aside as HTMLElement);
+
+      const combinedText = Array.from(scope)
+        .map(el => el.textContent || '')
+        .join(' ')
+        .toLowerCase();
+
+      // Match all known minute formats
+      const patterns = [
+        /try again in\s+(\d+)\s+minutes?/,
+        /try again in\s+(\d+)\s+mins?/,
+        /in\s+(\d+)\s+minutes?/,
+        /in\s+(\d+)\s+mins?/,
+        /retry in\s+(\d+)\s+mins?/
+      ];
+
+      for (const re of patterns) {
+        const match = combinedText.match(re);
+        if (match && match[1]) {
+          const mins = parseInt(match[1], 10);
+          if (!Number.isNaN(mins)) return mins;
+        }
       }
 
-      return null; // found the banner, but no explicit minute count
+      return null;
     };
 
-    const intervalId = setInterval(() => {
-      // Detector #1 (existing): presence of retry/regenerate button
+    const checkRateLimit = () => {
+      if (hasFired) return; // prevent repeats
+
+      // Detector #1: Retry / Regenerate button exists
       const retryBtn = document.querySelector<HTMLButtonElement>(
         '[data-testid*="retry"], [data-testid*="regenerate"]'
       );
 
-      // Detector #2 (new): the banner shown in your screenshot
+      // Detector #2: New UI banner detection
       const bannerMinutes = findLimitBannerMinutes();
 
       if (retryBtn || bannerMinutes !== null) {
         const minutesLeft =
           bannerMinutes !== null ? bannerMinutes : minutesUntilNextUtcHour();
 
+        hasFired = true; // lock future triggers
+
         toast({
-          description: `ChatGPT hourly limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
+          description: `ChatGPT rate limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
           style: TOAST_STYLE_CONFIG,
-          duration: 30000
+          duration: 60000 // 60 seconds
         });
 
-        // If retry/regenerate is present, click it to clear state like before
+        // Clear chat state like before if retry button exists
         if (retryBtn) retryBtn.click();
-      }
-    }, 60_000);
 
-    // Cleanup: stop polling as soon as `isActive` flips false or component unmounts
+        clearInterval(intervalId); // stop polling permanently
+      }
+    };
+
+    // Run immediately, then every 60s
+    checkRateLimit();
+    const intervalId = setInterval(checkRateLimit, 60_000);
+
     return () => {
       clearInterval(intervalId);
     };
   }, [isActive]);
+
 
   // Hide ChatGPT's fetch/limit toasts
   useEffect(() => {

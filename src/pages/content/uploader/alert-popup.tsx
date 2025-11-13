@@ -33,7 +33,15 @@ const AlertPopup: FC<AlertPopupProps> = ({ setConfirmed }) => {
         </section>
 
         <footer className="gpt:flex gpt:items-end gpt:justify-center gpt:gap-4">
-          <Button variant={"ghost"} className="gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all" onClick={() => setConfirmed(true)}>
+          <Button
+            variant="ghost"
+            className="gpt:border-2 gpt:border-blue-500 gpt:dark:border-blue-400
+                      gpt:bg-gray-50 gpt:dark:bg-gray-800
+                      gpt:[&_svg]:size-6 gpt:transition-colors
+                      gpt:px-8 gpt:py-4 gpt:text-lg gpt:font-semibold
+                      gpt:hover:bg-gray-100 gpt:dark:hover:bg-gray-700"
+            onClick={() => setConfirmed(true)}
+          >
             {chrome.i18n.getMessage("continue")}
           </Button>
           {/* <Button className="gpt:rounded-lg gpt:text-lg" size={"lg"} variant={"outline"} onClick={() => setConfirmed(false)}>No</Button> */}
