@@ -38,9 +38,14 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
   // NOTE: make ref nullable; reset to null instead of undefined
   const cleanupRef = useRef<(() => void) | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastUserScrollTimeRef = useRef<number>(0);
+  const isAutoScrollingRef = useRef<boolean>(false);
+  const allowScrollRef = useRef<boolean>(false);
+  const lastScrollTopRef = useRef<number>(0);
+  const isRevertingScrollRef = useRef<boolean>(false);
 
   // Center an element inside *our* scroll container (never the page)
-  // Only scroll if the target is not fully within view.
+  // Our auto-scroll always happens - never blocked by user scroll timing.
   const centerInContainer = (target: HTMLElement) => {
     const el = containerRef.current;
     if (!el || !target) return { dispose: () => {} };
@@ -52,9 +57,24 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
       const fullyInView = tRect.top >= elRect.top && tRect.bottom <= elRect.bottom;
       if (fullyInView) return; // already visible → do not scroll
 
+      // Mark that we're allowing this scroll (our intentional auto-scroll)
+      // Our auto-scroll should ALWAYS happen, regardless of user scroll timing
+      isAutoScrollingRef.current = true;
+      allowScrollRef.current = true;
+      
       const delta =
         tRect.top + el.scrollTop - (elRect.top + (el.clientHeight / 2 - tRect.height / 2));
-      el.scrollTop = Math.max(0, delta);
+      const newScrollTop = Math.max(0, delta);
+      el.scrollTop = newScrollTop;
+      lastScrollTopRef.current = newScrollTop;
+      
+      // Reset flags after a brief delay to allow scroll events to settle
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          isAutoScrollingRef.current = false;
+          allowScrollRef.current = false;
+        });
+      });
     };
 
     // initial + next frame (post layout), mirroring old behavior
@@ -443,6 +463,129 @@ const DocumentViewer: FC<DocumentViewerProps> = ({
     highlightDurationMs,
   ]);
 
+
+  // Block all unauthorized programmatic scrolling (only allow our intentional auto-scroll)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Track scroll position to detect unauthorized changes
+    lastScrollTopRef.current = container.scrollTop;
+
+    const handleUserInteraction = () => {
+      // These events are always user-initiated - allow scrolling
+      lastUserScrollTimeRef.current = Date.now();
+      lastScrollTopRef.current = container.scrollTop;
+      allowScrollRef.current = true;
+      // Clear the allow flag after a longer window to allow continuous scrolling
+      setTimeout(() => {
+        if (!isAutoScrollingRef.current) {
+          allowScrollRef.current = false;
+        }
+      }, 300);
+    };
+
+    const handleScroll = () => {
+      // Ignore scroll events while we're reverting (to prevent loops)
+      if (isRevertingScrollRef.current) {
+        return;
+      }
+
+      const currentScrollTop = container.scrollTop;
+      const timeSinceUserInteraction = Date.now() - lastUserScrollTimeRef.current;
+      const scrollChanged = currentScrollTop !== lastScrollTopRef.current;
+      const scrollDelta = Math.abs(currentScrollTop - lastScrollTopRef.current);
+      
+      // Update last scroll position if this is our authorized scroll or user scroll
+      // Allow scrolling if:
+      // 1. We explicitly allow it (our auto-scroll)
+      // 2. User interacted recently (within 300ms) 
+      // 3. Small scroll delta suggests continuation of user scrolling (within 500ms and delta < 100px)
+      const isLikelyUserScroll = allowScrollRef.current || 
+                                 isAutoScrollingRef.current || 
+                                 timeSinceUserInteraction < 300 ||
+                                 (timeSinceUserInteraction < 500 && scrollDelta < 100);
+      
+      if (isLikelyUserScroll) {
+        lastScrollTopRef.current = currentScrollTop;
+        // Extend the user interaction window if scrolling continues
+        if (!isAutoScrollingRef.current && timeSinceUserInteraction < 500) {
+          lastUserScrollTimeRef.current = Date.now();
+        }
+        return;
+      }
+      
+      // If scroll changed without authorization and no recent user interaction, block it
+      if (scrollChanged && timeSinceUserInteraction > 500) {
+        // Revert to last authorized position
+        allowScrollRef.current = false;
+        isRevertingScrollRef.current = true;
+        container.scrollTop = lastScrollTopRef.current;
+        // Clear revert flag after scroll settles
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isRevertingScrollRef.current = false;
+          });
+        });
+      } else {
+        lastScrollTopRef.current = currentScrollTop;
+      }
+    };
+
+    // Use a small interval to catch programmatic scrolls that might bypass event listeners
+    const scrollWatchInterval = setInterval(() => {
+      if (!container || isRevertingScrollRef.current) return;
+      const currentScrollTop = container.scrollTop;
+      const timeSinceUserInteraction = Date.now() - lastUserScrollTimeRef.current;
+      const scrollDelta = Math.abs(currentScrollTop - lastScrollTopRef.current);
+      
+      // If scroll position changed without our authorization and no recent user interaction, revert it
+      // Only block if:
+      // 1. Not our authorized scroll
+      // 2. Not our auto-scrolling
+      // 3. More than 500ms since user interaction (longer window)
+      // 4. OR large scroll delta (>100px) which suggests programmatic jump, not continuous user scroll
+      const isUnauthorizedScroll = !allowScrollRef.current && 
+                                   !isAutoScrollingRef.current && 
+                                   currentScrollTop !== lastScrollTopRef.current &&
+                                   (timeSinceUserInteraction > 500 || scrollDelta > 100);
+      
+      if (isUnauthorizedScroll) {
+        isRevertingScrollRef.current = true;
+        container.scrollTop = lastScrollTopRef.current;
+        // Clear revert flag after scroll settles
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isRevertingScrollRef.current = false;
+          });
+        });
+      } else if (currentScrollTop !== lastScrollTopRef.current) {
+        // Update our tracking if it's an authorized scroll
+        lastScrollTopRef.current = currentScrollTop;
+      }
+    }, 50);
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    container.addEventListener('wheel', handleUserInteraction, { passive: true });
+    container.addEventListener('touchmove', handleUserInteraction, { passive: true });
+    container.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    container.addEventListener('mousedown', handleUserInteraction, { passive: true });
+    container.addEventListener('keydown', (e) => {
+      // Allow scrolling via keyboard (arrow keys, page up/down, etc.)
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Space'].includes(e.key)) {
+        handleUserInteraction();
+      }
+    }, { passive: true });
+
+    return () => {
+      clearInterval(scrollWatchInterval);
+      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('wheel', handleUserInteraction);
+      container.removeEventListener('touchmove', handleUserInteraction);
+      container.removeEventListener('touchstart', handleUserInteraction);
+      container.removeEventListener('mousedown', handleUserInteraction);
+    };
+  }, []);
 
   return (
     <div 

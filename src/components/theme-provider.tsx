@@ -33,38 +33,84 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = document.documentElement;
+    let isApplying = false; // Flag to prevent recursive loops
     
     const applyTheme = () => {
       const isActive = localStorage.getItem('gptr/active') === 'true';
       
-      if (!isActive) {
-        // Extension not active - don't modify ChatGPT's page theme
+      if (!isActive || isApplying) {
         return;
       }
       
-      const theme_color = theme;
-      // console.log('this is the theme being set', theme);
-
-      root.classList.remove("light", "dark")
+      // Determine the actual theme to apply
+      let targetTheme: "light" | "dark";
       if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        targetTheme = window.matchMedia("(prefers-color-scheme: dark)")
           .matches
           ? "dark"
           : "light"
-
-        root.classList.add(systemTheme)
-        root.style["colorScheme"] = systemTheme
-        return
+      } else {
+        targetTheme = theme;
       }
       
-      root.classList.add(theme_color)
-      root.style["colorScheme"] = theme_color
+      // Check if already correctly applied
+      const hasLight = root.classList.contains("light");
+      const hasDark = root.classList.contains("dark");
+      const currentColorScheme = root.style.colorScheme;
+      
+      const isCorrectlyApplied = 
+        (targetTheme === "light" && hasLight && currentColorScheme === "light") ||
+        (targetTheme === "dark" && hasDark && currentColorScheme === "dark");
+      
+      if (isCorrectlyApplied) {
+        return;
+      }
+
+      // Apply the theme
+      isApplying = true;
+      root.classList.remove("light", "dark")
+      root.classList.add(targetTheme)
+      root.style["colorScheme"] = targetTheme
+      // Use requestAnimationFrame to reset flag after DOM update
+      requestAnimationFrame(() => {
+        isApplying = false;
+      });
     };
     
-    // Apply theme immediately
+    // Apply theme immediately when theme state changes
     applyTheme();
     
-    // Listen for storage changes (when extension becomes active)
+    // Watch for classList changes (when ChatGPT tries to revert our theme)
+    const classObserver = new MutationObserver(() => {
+      // Only reapply if we detect the theme was changed away from what we want
+      const isActive = localStorage.getItem('gptr/active') === 'true';
+      if (isActive && !isApplying) {
+        const hasLight = root.classList.contains("light");
+        const hasDark = root.classList.contains("dark");
+        let targetTheme: "light" | "dark";
+        if (theme === "system") {
+          targetTheme = window.matchMedia("(prefers-color-scheme: dark)")
+            .matches ? "dark" : "light"
+        } else {
+          targetTheme = theme;
+        }
+        
+        const shouldHaveLight = targetTheme === "light";
+        const shouldHaveDark = targetTheme === "dark";
+        
+        // If ChatGPT changed it to something different, reapply
+        if ((shouldHaveLight && !hasLight) || (shouldHaveDark && !hasDark)) {
+          applyTheme();
+        }
+      }
+    });
+    
+    classObserver.observe(root, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    
+    // Listen for storage changes (when extension becomes active) - only from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'gptr/active') {
         applyTheme();
@@ -73,12 +119,9 @@ export function ThemeProvider({
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also poll for active state changes (for same-tab updates)
-    const interval = setInterval(applyTheme, 500);
-    
     return () => {
+      classObserver.disconnect();
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, [theme])
 

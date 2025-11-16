@@ -39,7 +39,7 @@ const PlayRateSlider: FC<PlayRateSliderProps> = ({ disabled, playRate, setPlayRa
           {playRate}x
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="gpt:w-max gpt:px-4 gpt:rounded-xl gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:shadow">
+      <PopoverContent className="gpt:w-auto gpt:min-w-[500px] gpt:px-6 gpt:py-4 gpt:rounded-xl gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:shadow">
         <Slider
           denoter="x"
           ticks={TICKS_TO_DISPLAY}

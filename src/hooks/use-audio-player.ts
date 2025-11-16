@@ -71,7 +71,7 @@ const useAudioPlayer = (isDownload: boolean) => {
     const chunkBoundariesRef = useRef<Array<{chunkNumber: number; endTime: number}>>([]);
     const pendingRef = useRef<Array<{chunkNumber: number; buffer: ArrayBuffer}>>([]);
     const MAX_RATE_FREE = 1.5;
-    const MAX_RATE_PREMIUM = 2;
+    const MAX_RATE_PREMIUM = 4;
     const { isSubscribed } = usePremiumModal();
     /** Returns the 1-based chunk index containing time t */
     const getChunkAtTime = (t: number): number => {
@@ -197,7 +197,7 @@ const useAudioPlayer = (isDownload: boolean) => {
         if (!chunks.length) return;
         const savedRate = parseFloat(localStorage.getItem(LS_KEYS.rate) || "");
         const max = isSubscribed ? MAX_RATE_PREMIUM : MAX_RATE_FREE;
-        if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= MAX_RATE_PREMIUM) {
+        if (!Number.isNaN(savedRate) && savedRate >= 0.5 && savedRate <= 4) {
           setPlayRate(Math.min(savedRate, max));
         }
         const savedVol = parseFloat(localStorage.getItem(LS_KEYS.vol) || "");
@@ -1144,7 +1144,7 @@ const useAudioPlayer = (isDownload: boolean) => {
             setPlayRate(1);
             return;
         }
-        if (playRate === 2) {
+        if (playRate >= 4) {
             setPlayRate(0.5);
             return;
         }

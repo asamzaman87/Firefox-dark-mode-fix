@@ -3,6 +3,7 @@ import {
   DOMAINS,
   FEEDBACK_GOOGLE_FORM,
   LISTENERS,
+  SAFEST_MODEL,
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
@@ -279,33 +280,130 @@ chrome.tabs.onActivated.addListener(async () => {
 });
 
 //switch to gpt when extension is installed
-chrome.runtime.onInstalled.addListener(async () => {
-  
-  const manifest = chrome.runtime.getManifest();
-  
-  const currentVersion = manifest.version;
-  // Should switch to an explicit read, so for first time users the popup is always opened correctly
-  const stored = await chrome.storage.sync.get("version");
-  const previousVersion = stored.version;
+chrome.runtime.onInstalled.addListener(async (details) => {
+  try {
+    const manifest = chrome.runtime.getManifest();
+    
+    const currentVersion = manifest.version;
+    // Should switch to an explicit read, so for first time users the popup is always opened correctly
+    const stored = await chrome.storage.sync.get("version");
+    const previousVersion = stored.version;
 
-  //update to latest version and return to prevent opening popup (indicates on update)
-  if (previousVersion) {
-    await chrome.storage.sync.set({ version: currentVersion });
-    return;
-  }
+    //update to latest version and return to prevent opening popup (indicates on update)
+    if (previousVersion) {
+      await chrome.storage.sync.set({ version: currentVersion });
+      return;
+    }
 
-  //if version not set yet, set it to current version and continue to opening popup
-  await chrome.storage.sync.set({ version: currentVersion }); //to persist on update to sent message to avoid opening popup on update
+    //if version not set yet, set it to current version and continue to opening popup
+    await chrome.storage.sync.set({ version: currentVersion }); //to persist on update to sent message to avoid opening popup on update
 
-  const tabId = await switchToActiveTab();
-  if (tabId) {
-    const id = typeof tabId === "string" ? +tabId.split("::")[0] : tabId; //type is string if new tab was created
+    // Try to switch to/create ChatGPT tab with retry logic
+    let tabId: number | string | undefined;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (!tabId && attempts < maxAttempts) {
+      try {
+        tabId = await switchToActiveTab();
+        if (tabId) break;
+        
+        // If switchToActiveTab failed, try creating a new tab directly
+        attempts++;
+        if (attempts < maxAttempts) {
+          // Wait a bit before retry
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      } catch (error) {
+        console.error("Error in switchToActiveTab attempt:", attempts + 1, error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+    }
+
+    // If still no tab, try creating one directly as last resort
+    if (!tabId) {
+      try {
+        const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+        if (tab.id) {
+          await chrome.tabs.update(tab.id, { active: true });
+          tabId = tab.id + "::new_tab";
+        }
+      } catch (error) {
+        console.error("Failed to create ChatGPT tab:", error);
+        await showNotificationFallback("install");
+        return;
+      }
+    }
+
+    if (!tabId) {
+      await showNotificationFallback("install");
+      return;
+    }
+
     chrome.storage.local.set({ origin: true });
-    await chrome.tabs.reload(id); //reload tab to update the content
-  } else {
-    await showNotificationFallback("install");
-  }
 
+    // A new ChatGPT tab was created (tabId is a "123::new_tab" string)
+    if (typeof tabId === "string") {
+      const numericId = +tabId.split("::")[0];
+
+      // wait until the tab's status === "complete", then send the popup message
+      const listener = (
+        updatedTabId: number,
+        info: chrome.tabs.TabChangeInfo
+      ) => {
+        if (updatedTabId === numericId && info.status === "complete") {
+          chrome.tabs.onUpdated.removeListener(listener);
+          (async () => {
+            if (await waitForReady(numericId)) {
+              chrome.tabs.sendMessage(numericId, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+            }
+          })();
+        }
+      };
+      chrome.tabs.onUpdated.addListener(listener);
+      return;
+    }
+
+    // Existing ChatGPT tab – reload it and wait for it to be ready
+    const id = tabId;
+    try {
+      await chrome.tabs.reload(id);
+      
+      // Wait for tab to finish reloading
+      const reloadListener = (
+        updatedTabId: number,
+        info: chrome.tabs.TabChangeInfo
+      ) => {
+        if (updatedTabId === id && info.status === "complete") {
+          chrome.tabs.onUpdated.removeListener(reloadListener);
+          (async () => {
+            if (await waitForReady(id)) {
+              chrome.tabs.sendMessage(id, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+            }
+          })();
+        }
+      };
+      chrome.tabs.onUpdated.addListener(reloadListener);
+    } catch (error) {
+      console.error("Failed to reload tab:", error);
+      // If reload fails, try sending message anyway (tab might already be ready)
+      if (await waitForReady(id)) {
+        chrome.tabs.sendMessage(id, { type: "OPEN_POPUP", payload: "ORIGIN_VERIFIED" });
+      }
+    }
+  } catch (error) {
+    console.error("Error in onInstalled handler:", error);
+    // Last resort: try to open ChatGPT directly
+    try {
+      await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+    } catch (createError) {
+      console.error("Failed to create ChatGPT tab as fallback:", createError);
+      await showNotificationFallback("install");
+    }
+  }
 });
 
 // click on extension icon to switch to gpt

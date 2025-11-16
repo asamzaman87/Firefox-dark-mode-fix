@@ -111,10 +111,10 @@ export const MATCH_URLS = ["https://chatgpt.com/*"];
 export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
 export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
 export const YOUTUBE_FAQ_VIDEO = "https://youtu.be/zhiRjPAtOHI";
-export const MAX_SLIDER_VALUE = 2;
+export const MAX_SLIDER_VALUE = 4;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;
-export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2];
+export const TICKS_TO_DISPLAY = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
 export const MODELS_TO_WARN = ["o1", "o2", "o3", "o4", "o5", "o6", "o7"];
 export const CHUNK_TO_PAUSE_ON = 12; //end of chunk
 export const LOADING_TIMEOUT = 60000;
