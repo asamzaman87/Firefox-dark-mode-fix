@@ -8,6 +8,7 @@ import { useToast } from "./use-toast";
 import useFormat from "./use-format";
 import { useSpeechMode } from "../context/speech-mode";
 import { usePremiumModal } from "@/context/premium-modal";
+import { isPremium } from "@/lib/utils";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
@@ -1234,8 +1235,9 @@ const useAudioPlayer = (isDownload: boolean) => {
 
     const showInfoToast = (
         duration: number = 70000,
-        description: string = chrome.i18n.getMessage("accuracy_warning")
+        description: string = "GPT Reader Note: Do not choose the 'thinking' based GPT models since they have a slow output speed!"
     ) => {
+        if (!isPremium()) return;
         const { id } = toast({
             description,
             style: { ...TOAST_STYLE_CONFIG_INFO, fontWeight: "600" },

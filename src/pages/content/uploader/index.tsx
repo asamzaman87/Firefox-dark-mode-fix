@@ -736,7 +736,7 @@ function Uploader() {
         }
 
         window.localStorage.removeItem("gptr/redirect-to-login");
-        await choosePreferredModel();
+        // await choosePreferredModel();
         await triggerPromptFlow();
         await fetchAndStoreTopChat();
         isOpeningInProgress.current = false;
