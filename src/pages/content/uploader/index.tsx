@@ -1034,9 +1034,9 @@ function Uploader() {
       }
     };
 
-    // Run immediately, then every 60s
+    // Run immediately, then every 10s
     checkRateLimit();
-    const intervalId = setInterval(checkRateLimit, 60_000);
+    const intervalId = setInterval(checkRateLimit, 10_000);
 
     return () => {
       clearInterval(intervalId);
