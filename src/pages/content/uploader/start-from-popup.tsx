@@ -10,6 +10,8 @@ interface StartFromPopUpProps extends Omit<DialogProps, "onOpenChange"> {
   source: "pdf" | "docx" | "text";
   fullText: string;
   initialSelectedId?: string;
+  /** Optional: offset from last session to continue from */
+  lastSessionOffset?: number;
   /** Return a character offset + optional match length (for highlight) */
   onConfirm: (args: { startAt: number; matchLength?: number }) => void;
   /** Close handler for the surrounding dialog */
@@ -60,6 +62,7 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
   fullText,
   initialSelectedId,
   source,
+  lastSessionOffset,
   ...props
 }) => {
   const [q, setQ] = useState("");
@@ -271,7 +274,27 @@ const StartFromPopUp: FC<StartFromPopUpProps> = ({
           </section>
 
           {/* Footer buttons */}
-          <footer className="gpt:flex gpt:items-end gpt:justify-center gpt:gap-4">
+          <footer className="gpt:flex gpt:items-end gpt:justify-center gpt:gap-4 gpt:flex-wrap">
+            {lastSessionOffset !== undefined && lastSessionOffset > 0 && (
+              <Button
+                variant="ghost"
+                size="lg"
+                className="
+                  gpt:rounded-full
+                  gpt:border gpt:border-gray-500 gpt:dark:border-gray-700
+                  gpt:bg-gray-100 gpt:dark:bg-gray-800
+                  gpt:text-gray-900 gpt:dark:text-gray-100
+                  gpt:[&_svg]:size-6 gpt:transition-all
+                "
+                onClick={() => {
+                  // Use a small preview length for highlighting
+                  const previewLen = Math.min(220, Math.max(0, fullText.length - lastSessionOffset));
+                  onConfirm({ startAt: lastSessionOffset, matchLength: previewLen });
+                }}
+              >
+                Continue from last session
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="lg"

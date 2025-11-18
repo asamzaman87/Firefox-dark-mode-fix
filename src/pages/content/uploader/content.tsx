@@ -44,6 +44,7 @@ interface ContentProps {
       source: "pdf" | "docx" | "text";
       onConfirm: (args: { startAt: number; matchLength?: number }) => void;
       fullText: string;
+      lastSessionOffset?: number;
     }) => void;
 }
 
@@ -90,6 +91,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [lastInputWasFile, setLastInputWasFile] = useState<boolean>(false);
     const [scrollToOffset, setScrollToOffset] = useState<number | null>(null);
     const fileReader = useFileReader();
+    // Document ID for tracking last session position
+    const documentIdRef = useRef<string | null>(null);
 
     const [highlightLen, setHighlightLen] = useState<number>(0);
     const [highlightActive, setHighlightActive] = useState<boolean>(false);
@@ -167,16 +170,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       applyHighlightAt(start, maxLen);
     };
 
-    const locateNow = useCallback(() => {
-      if (!chunks.length) {
-        toast({
-          description: "Nothing is playing yet. You can still search in the text.",
-          style: TOAST_STYLE_CONFIG_INFO,
-          duration: 3500,
-        });
-        // No auto-open; user must click again to open the search
-        return;
-      }
+    // Helper function to calculate current position (same logic as locateNow)
+    // Can work even when paused (uses currentPlayTime which persists)
+    const calculateCurrentPosition = useCallback((): number | null => {
+      if (!chunks.length || currentPlayTime < 0) return null;
 
       const n = getChunkAtTime(currentPlayTime); // 1-based
       const tStart = getChunkStartTime(n);
@@ -189,11 +186,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       const p = clamp01((currentPlayTime - tStart) / Math.max(0.001, tEnd - tStart));
       const posInChunk = Math.min(chunkLen, Math.max(0, Math.round(p * chunkLen)));
 
-      // Center is the precise doc offset where we think the audio is
-      const centerOffset = sessionBaseOffsetRef.current + getChunkStartOffset(n) + posInChunk;
-
-      lastLocateOffsetRef.current = centerOffset;
-      applyLocateWindowAtCenter(centerOffset);
+      // Calculate the precise doc offset where we think the audio is
+      return sessionBaseOffsetRef.current + getChunkStartOffset(n) + posInChunk;
     }, [
       chunks,
       currentPlayTime,
@@ -201,7 +195,29 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       getChunkStartTime,
       getChunkStartOffset,
       playTimeDuration,
+    ]);
+
+    const locateNow = useCallback(() => {
+      if (!chunks.length) {
+        toast({
+          description: "Nothing is playing yet. You can still search in the text.",
+          style: TOAST_STYLE_CONFIG_INFO,
+          duration: 3500,
+        });
+        // No auto-open; user must click again to open the search
+        return;
+      }
+
+      const centerOffset = calculateCurrentPosition();
+      if (centerOffset === null) return;
+
+      lastLocateOffsetRef.current = centerOffset;
+      applyLocateWindowAtCenter(centerOffset);
+    }, [
+      chunks,
+      calculateCurrentPosition,
       applyLocateWindowAtCenter,
+      toast,
     ]);
 
     const onLocateClick = useCallback(() => {
@@ -255,6 +271,114 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setSearchSel(0);
       }
     }, [searchQuery, sourcePlain, locateOpen]);
+
+    // Helper function to manage position storage with 10-document limit
+    const savePositionWithLimit = useCallback((documentId: string, offset: number) => {
+      const MAX_TRACKED_DOCUMENTS = 10;
+      const POSITION_PREFIX = "gptr/lastPosition/";
+      const storageKey = `${POSITION_PREFIX}${documentId}`;
+      
+      try {
+        // Check if this document already has a saved position
+        const existingSaved = localStorage.getItem(storageKey);
+        const isExistingDocument = existingSaved !== null;
+
+        // Get all position keys from localStorage
+        const allKeys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(POSITION_PREFIX)) {
+            allKeys.push(key);
+          }
+        }
+
+        // Only enforce limit if we're adding a NEW document (not updating existing)
+        if (!isExistingDocument && allKeys.length >= MAX_TRACKED_DOCUMENTS) {
+          // Get all positions with their timestamps
+          const positionsWithTimestamps: Array<{ key: string; timestamp: number }> = [];
+          for (const key of allKeys) {
+            try {
+              const saved = localStorage.getItem(key);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && typeof parsed.timestamp === 'number') {
+                  positionsWithTimestamps.push({ key, timestamp: parsed.timestamp });
+                }
+              }
+            } catch (e) {
+              // Skip invalid entries
+            }
+          }
+
+          // Sort by timestamp (oldest first)
+          positionsWithTimestamps.sort((a, b) => a.timestamp - b.timestamp);
+
+          // Remove the oldest entry to make room for the new one
+          if (positionsWithTimestamps.length > 0) {
+            localStorage.removeItem(positionsWithTimestamps[0].key);
+          }
+        }
+
+        // Save/update the position
+        localStorage.setItem(storageKey, JSON.stringify({
+          offset,
+          timestamp: Date.now(),
+        }));
+      } catch (e) {
+        // Ignore storage errors (e.g., quota exceeded)
+      }
+    }, []);
+
+    // Track position every 5 seconds while playing and save to localStorage
+    // Separate effect for interval (only depends on isPlaying state, not currentPlayTime)
+    useEffect(() => {
+      if (!isTextToSpeech || isDownload || !chunks.length || !documentIdRef.current) {
+        return;
+      }
+
+      // Save position function
+      const savePosition = () => {
+        const position = calculateCurrentPosition();
+        if (position !== null && documentIdRef.current) {
+          savePositionWithLimit(documentIdRef.current, position);
+        }
+      };
+
+      // Save position every 5 seconds while playing
+      let intervalId: NodeJS.Timeout | null = null;
+      
+      if (isPlaying) {
+        // Save immediately when playback starts
+        savePosition();
+        // Then save every 5 seconds
+        intervalId = setInterval(savePosition, 5000);
+      }
+
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }, [isTextToSpeech, isDownload, isPlaying, chunks.length, calculateCurrentPosition, savePositionWithLimit]);
+
+    // Separate effect to save position when paused/stopped (depends on currentPlayTime)
+    useEffect(() => {
+      if (!isTextToSpeech || isDownload || !chunks.length || !documentIdRef.current || isPlaying || currentPlayTime <= 0) {
+        return;
+      }
+
+      // Save position when playback stops/pauses (to capture final position)
+      const pauseTimeoutId = setTimeout(() => {
+        const position = calculateCurrentPosition();
+        if (position !== null && documentIdRef.current) {
+          savePositionWithLimit(documentIdRef.current, position);
+        }
+      }, 100); // Small delay to ensure currentPlayTime is updated
+
+      return () => {
+        clearTimeout(pauseTimeoutId);
+      };
+    }, [isTextToSpeech, isDownload, isPlaying, chunks.length, currentPlayTime, calculateCurrentPosition, savePositionWithLimit]);
 
     const jumpToMatch = useCallback(
       (nextIdx: number) => {
@@ -505,12 +629,19 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             const f = files[0];
             const type = f.type;
 
+          // Generate document ID from file name and size
+          const generateDocumentId = (file: File): string => {
+            return `${file.name}_${file.size}`;
+          };
+
           const setup = (st: StructuredText) => {
             setTitle(f.name);
             setStructured(st);
             setFileExtractedText(st.fullText);
             setShowDownloadOrListen(true);
             setPreviewHtmlSource(st.fullHtml ?? undefined);
+            // Store document ID for position tracking
+            documentIdRef.current = generateDocumentId(f);
           };
 
           (async () => {
@@ -581,7 +712,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       setPastedText(raw);
       setFileExtractedText(st.fullText);
       setShowDownloadOrListen(true);
-      setPreviewHtmlSource(st.fullHtml ?? undefined);  
+      setPreviewHtmlSource(st.fullHtml ?? undefined);
+      // For pasted text, use title + text length as document ID
+      documentIdRef.current = `pasted_${t}_${raw.length}`;
     };
 
     const listenOrDownloadAudioFrom = useCallback(async (startAt: number) => {
@@ -617,11 +750,29 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
       // Only show the page picker for **uploaded files** (not pasted/typed text)
       if (lastInputWasFile && structured && structured.sections.length > 0) {
+        // Get last session position from localStorage
+        let lastSessionOffset: number | undefined;
+        if (documentIdRef.current) {
+          try {
+            const storageKey = `gptr/lastPosition/${documentIdRef.current}`;
+            const saved = localStorage.getItem(storageKey);
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed && typeof parsed.offset === 'number' && parsed.offset >= 0 && parsed.offset < structured.fullText.length) {
+                lastSessionOffset = parsed.offset;
+              }
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+
         // Ask parent (index.tsx) to open the StartFromPopUp
         onOpenStartFrom({
           sections: structured.sections,
           source: structured.source,
           fullText: structured.fullText,
+          lastSessionOffset,
           onConfirm: ({ startAt, matchLength }) => {
             const shouldFlash =
               lastActionRef.current === "LISTEN" &&

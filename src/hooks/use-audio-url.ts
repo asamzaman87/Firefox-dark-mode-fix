@@ -505,7 +505,7 @@ const useAudioUrl = (isDownload: boolean) => {
                     "Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
                 );
                 setReason(
-                    "Free users can only download around 2500 characters at a time. Please upgrade to download without limits!"
+                    "Free users can only download around 2500 characters at a time. You will need to upgrade to download without limits, but you can still download what has been processed so far!"
                 );
                 setOpen(true);
             }, 3000);

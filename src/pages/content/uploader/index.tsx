@@ -61,6 +61,7 @@ function Uploader() {
   const [startFromSections, setStartFromSections] = useState<SectionIndex[]>([]);
   const [startFromSource, setStartFromSource] = useState<"pdf" | "docx" | "text">("text");
   const [startFromFullText, setStartFromFullText] = useState<string>("");
+  const [startFromLastSessionOffset, setStartFromLastSessionOffset] = useState<number | undefined>(undefined);
   const startFromConfirmOffsetRef = useRef<(args: { startAt: number; matchLength?: number }) => void>(() => {});
   const deferredSelectedPingRef = useRef<boolean>(false);
 
@@ -1159,11 +1160,12 @@ function Uploader() {
                   onOverlayOpenChange={onOpenChange}
                   setPrompts={setPrompts}
                   prompts={prompts}
-                  onOpenStartFrom={({ sections, source, fullText, onConfirm }) => {
+                  onOpenStartFrom={({ sections, source, fullText, lastSessionOffset, onConfirm }) => {
                     setStartFromSections(sections);
                     setStartFromSource(source);
                     setStartFromFullText(fullText);
                     startFromConfirmOffsetRef.current = onConfirm;
+                    setStartFromLastSessionOffset(lastSessionOffset);
                     setStartFromOpen(true);
                   }}
                 />
@@ -1311,6 +1313,7 @@ function Uploader() {
             sections={startFromSections}
             source={startFromSource}
             fullText={startFromFullText}
+            lastSessionOffset={startFromLastSessionOffset}
             onConfirm={(args) => {
               setStartFromOpen(false);
               startFromConfirmOffsetRef.current?.(args);
