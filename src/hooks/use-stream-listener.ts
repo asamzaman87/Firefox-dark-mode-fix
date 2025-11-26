@@ -453,7 +453,12 @@ const useStreamListener = (
         //     conversationId = urlConvId;
         // }
 
-        let waitTime = 10000;
+        // Get wait time from localStorage, default to 15 seconds (15000ms)
+        const INITIAL_WAIT_TIME = 15000;
+        const WAIT_TIME_INCREMENT = 10000;
+        const storedWaitTime = localStorage.getItem("gptr/waitTime");
+        let waitTime = storedWaitTime ? parseInt(storedWaitTime, 10) : INITIAL_WAIT_TIME;
+        
         // —— Wait together for send/composer/suffix using the resolved domMessageId ——
         try {
             const comparisonSuffix = normalizeAlphaNumeric(comparisonExpected).slice(-10);
@@ -494,9 +499,23 @@ const useStreamListener = (
             }
         } catch {
             console.warn("No trigger (button or suffix) appeared within", waitTime);
-            await retryFlow(chunkNdx);
-            return;
+            // If wait time is already 25 seconds or more, just stop and don't retry
+            if (waitTime >= 25_000) {
+                const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
+                if (stopButton) {
+                    stopButton.click();
+                }
+            } else {
+                // Increase wait time for next attempt
+                const newWaitTime = waitTime + WAIT_TIME_INCREMENT;
+                localStorage.setItem("gptr/waitTime", String(newWaitTime));
+                await retryFlow(chunkNdx);
+                return;
+            }
         }
+
+        // Success - reset wait time to initial value
+        localStorage.setItem("gptr/waitTime", String(INITIAL_WAIT_TIME));
 
         localStorage.setItem("gptr/abortCount", "1");
 
