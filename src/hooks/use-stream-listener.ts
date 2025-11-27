@@ -413,7 +413,7 @@ const useStreamListener = (
                 return el && el.getAttribute("data-turn") === "assistant" ? el : null;
             }, 5000, 100);
             if (!lastTurnEl) {
-                console.warn("[handleConvStream] No assistant turn appeared within 3s; retrying…");
+                console.warn("[handleConvStream] No assistant turn appeared within 5s; retrying…");
                 await retryFlow(chunkNdx);
                 return;
             }
@@ -453,12 +453,7 @@ const useStreamListener = (
         //     conversationId = urlConvId;
         // }
 
-        // Get wait time from localStorage, default to 15 seconds (15000ms)
-        const INITIAL_WAIT_TIME = 15000;
-        const WAIT_TIME_INCREMENT = 10000;
-        const storedWaitTime = localStorage.getItem("gptr/waitTime");
-        let waitTime = storedWaitTime ? parseInt(storedWaitTime, 10) : INITIAL_WAIT_TIME;
-        
+        let waitTime = 10000;
         // —— Wait together for send/composer/suffix using the resolved domMessageId ——
         try {
             const comparisonSuffix = normalizeAlphaNumeric(comparisonExpected).slice(-10);
@@ -491,31 +486,14 @@ const useStreamListener = (
 
             // Race all three at once
             await Promise.race([composerPromise, sendPromise, suffixPromise]);
-
-            // Click stop button if suffixPromise wins the race
-            const stopBtn = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-            if (stopBtn) {
-                stopBtn.click();
-            }
         } catch {
             console.warn("No trigger (button or suffix) appeared within", waitTime);
-            // If wait time is already 25 seconds or more, just stop and don't retry
-            if (waitTime >= 25_000) {
-                const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
-                if (stopButton) {
-                    stopButton.click();
-                }
-            } else {
-                // Increase wait time for next attempt
-                const newWaitTime = waitTime + WAIT_TIME_INCREMENT;
-                localStorage.setItem("gptr/waitTime", String(newWaitTime));
-                await retryFlow(chunkNdx);
-                return;
-            }
         }
 
-        // Success - reset wait time to initial value
-        localStorage.setItem("gptr/waitTime", String(INITIAL_WAIT_TIME));
+        const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
+        if (stopButton) {
+            stopButton.click();
+        }
 
         localStorage.setItem("gptr/abortCount", "1");
 
