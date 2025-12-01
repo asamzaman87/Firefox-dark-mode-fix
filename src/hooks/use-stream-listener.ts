@@ -453,7 +453,7 @@ const useStreamListener = (
         //     conversationId = urlConvId;
         // }
 
-        let waitTime = 10000;
+        let waitTime = 5000;
         // —— Wait together for send/composer/suffix using the resolved domMessageId ——
         try {
             const comparisonSuffix = normalizeAlphaNumeric(comparisonExpected).slice(-10);

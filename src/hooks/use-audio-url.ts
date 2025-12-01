@@ -372,7 +372,7 @@ const useAudioUrl = (isDownload: boolean) => {
 
                     // If threshold elapsed and flag still present → clear + retry inject once.
                     const elapsed = Date.now() - start;
-                    const thresholdMs = 5_000 + retryCountRef.current * 2_000;
+                    const thresholdMs = 3_500 + retryCountRef.current * 1_500;
                     if (elapsed >= thresholdMs) {
                         console.log("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
                         localStorage.removeItem("gptr/sended");
@@ -381,7 +381,7 @@ const useAudioUrl = (isDownload: boolean) => {
                         if (stopButton) {
                             stopButton.click();
                         }
-                        if (thresholdMs >= 13_000) {
+                        if (thresholdMs >= 10_000) {
                             toast({
                                 description:
                                     "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",

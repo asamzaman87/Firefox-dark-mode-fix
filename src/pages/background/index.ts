@@ -22,7 +22,41 @@ async function waitForReady(tabId: number, tries = 40, delayMs = 150) {
   return false;
 }
 
+/**
+ * Compare two semantic version strings
+ * Returns true if newVersion is newer than currentVersion
+ */
+function isNewerVersion(newVersion: string | null, currentVersion: string): boolean {
+  if (!newVersion) return false;
+  if (newVersion === currentVersion) return false;
+  
+  const newParts = newVersion.split('.').map(Number);
+  const currParts = currentVersion.split('.').map(Number);
+  
+  // Ensure both arrays have the same length by padding with 0s
+  const maxLength = Math.max(newParts.length, currParts.length);
+  while (newParts.length < maxLength) newParts.push(0);
+  while (currParts.length < maxLength) currParts.push(0);
+  
+  for (let i = 0; i < maxLength; i++) {
+    if (newParts[i] > currParts[i]) return true;
+    if (newParts[i] < currParts[i]) return false;
+  }
+  return false;
+}
+
 async function tryNotifyUpdate(tabId: number, version: string | null) {
+  // Get current installed version
+  const manifest = chrome.runtime.getManifest();
+  const currentVersion = manifest.version;
+  
+  // Only show update popup if the new version is actually newer
+  if (!isNewerVersion(version, currentVersion)) {
+    // Clear any stale pending update version
+    await chrome.storage.local.remove("pendingUpdateVersion");
+    return;
+  }
+  
   // If the content script is ready, send immediately; otherwise stash a flag.
   if (await waitForReady(tabId)) {
     chrome.tabs.sendMessage(tabId, {
@@ -204,7 +238,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         (async () => {
           const { pendingUpdateVersion } = await chrome.storage.local.get("pendingUpdateVersion");
           if (typeof pendingUpdateVersion === "string" && pendingUpdateVersion.length) {
-            await tryNotifyUpdate(tabId, pendingUpdateVersion || null);
+            // Verify the pending version is still newer before showing
+            const manifest = chrome.runtime.getManifest();
+            const currentVersion = manifest.version;
+            if (isNewerVersion(pendingUpdateVersion, currentVersion)) {
+              await tryNotifyUpdate(tabId, pendingUpdateVersion || null);
+            }
+            // Always clear pending version after checking (whether shown or not)
             await chrome.storage.local.remove("pendingUpdateVersion");
           }
         })();
