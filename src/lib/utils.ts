@@ -934,12 +934,13 @@ export function restoreRootInfo() {
 }
 
 
-function waitForStorageKey<T>(
+async function waitForStorageKey<T>(
   key: string,
   storageArea: "sync" | "local" = "sync",
   timeoutMs = 3000,
   intervalMs = 100
 ): Promise<T | null> {
+  if (key === "openaiId") await waitForAuthToken(10000);
   return new Promise((resolve) => {
     const start = Date.now();
 
