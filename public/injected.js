@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+// Mark injected.js as ready as soon as the script loads
+window.__gptReaderInjectedReady = true;
+
 const isFirefox = typeof InstallTrigger !== 'undefined'
   || /firefox/i.test(navigator.userAgent);
 
@@ -236,6 +239,16 @@ window.fetch = async (...args) => {
     const isEventStream = contentType.includes("event-stream");
 
     const isVoicesEndpoint = url.includes(VOICES_ENDPOINT);
+    
+    // Check for 401/403 responses which indicate expired token
+    // Invalidate cache immediately if token is expired
+    if (response.status === 401 || response.status === 403) {
+      // Only invalidate if this is a backend-api call (not other endpoints)
+      if (url.includes('backend-api/')) {
+        console.warn("Token expired (401/403), invalidating cache");
+        invalidateTokenCache();
+      }
+    }
 
     //getting the access token
     if (response && url.endsWith('backend-api/me') && args[0].method === "GET") {
@@ -344,72 +357,405 @@ window.fetch = async (...args) => {
     return response;
 };
 
-window.addEventListener("GET_TOKEN", () => {
-  const session = window.__reactRouterContext
-    ?.state
-    ?.loaderData
-    ?.root
-    ?.clientBootstrap
-    ?.session;
+// Cache for session token to prevent spamming the endpoint
+let cachedSessionToken = null;
+let cachedSessionExpiry = 0;
+const SESSION_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes
+const STORAGE_KEY_TOKEN = "gptr/cachedSessionToken";
+const STORAGE_KEY_EXPIRY = "gptr/cachedSessionExpiry";
+
+// Load cached token from storage on init
+// Note: injected.js runs in page context, so chrome API may not be available
+// We'll use localStorage as fallback
+(async () => {
+  try {
+    // Try chrome.storage.local first (if available in content script context)
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      const stored = await chrome.storage.local.get([STORAGE_KEY_TOKEN, STORAGE_KEY_EXPIRY]);
+      if (stored[STORAGE_KEY_TOKEN] && stored[STORAGE_KEY_EXPIRY] && Date.now() < stored[STORAGE_KEY_EXPIRY]) {
+        cachedSessionToken = stored[STORAGE_KEY_TOKEN];
+        cachedSessionExpiry = stored[STORAGE_KEY_EXPIRY];
+        window.__gptReaderCachedToken = cachedSessionToken.accessToken;
+        return;
+      }
+    }
+    
+    // Fallback to localStorage (available in page context)
+    try {
+      const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+      const storedExpiry = localStorage.getItem(STORAGE_KEY_EXPIRY);
+      if (storedToken && storedExpiry && Date.now() < Number(storedExpiry)) {
+        cachedSessionToken = JSON.parse(storedToken);
+        cachedSessionExpiry = Number(storedExpiry);
+        window.__gptReaderCachedToken = cachedSessionToken.accessToken;
+      }
+    } catch (e) {
+      // ignore localStorage load errors in production
+    }
+  } catch (e) {
+    // ignore cache load errors in production
+  }
+})();
+
+// Function to invalidate cache (call when token expires)
+function invalidateTokenCache() {
+  cachedSessionToken = null;
+  cachedSessionExpiry = 0;
+  window.__gptReaderCachedToken = null;
+  // Try chrome.storage.local first
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.remove([STORAGE_KEY_TOKEN, STORAGE_KEY_EXPIRY]).catch(() => {});
+  }
+  // Also clear localStorage
+  try {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_EXPIRY);
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+}
+
+window.addEventListener("GET_TOKEN", async () => {
+  // Return cached token if still valid
+  const now = Date.now();
+  if (cachedSessionToken && now < cachedSessionExpiry) {
+    window.dispatchEvent(
+      new CustomEvent("AUTH_RECEIVED", {
+        detail: {
+          accessToken: cachedSessionToken.accessToken,
+          userId: cachedSessionToken.userId,
+          userData: cachedSessionToken.userData,
+        },
+      }),
+    );
+    return;
+  }
+
+  // Prevent concurrent requests
+  if (window.__gptReaderFetchingSession) {
+    // Wait for the ongoing request
+    const checkInterval = setInterval(() => {
+      if (!window.__gptReaderFetchingSession) {
+        clearInterval(checkInterval);
+        if (cachedSessionToken && Date.now() < cachedSessionExpiry) {
+          window.dispatchEvent(
+            new CustomEvent("AUTH_RECEIVED", {
+              detail: {
+                accessToken: cachedSessionToken.accessToken,
+                userId: cachedSessionToken.userId,
+                userData: cachedSessionToken.userData,
+              },
+            }),
+          );
+        }
+      }
+    }, 100);
+    return;
+  }
+
+  window.__gptReaderFetchingSession = true;
+
+  try {
+    const res = await fetch('/api/auth/session?unstable_client=true', {
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      console.warn("Failed to fetch session:", res.status);
+      // If session fetch fails, invalidate cache to force fresh fetch next time
+      invalidateTokenCache();
+      window.__gptReaderFetchingSession = false;
+      return;
+    }
+
+    const session = await res.json();
+
   if (!session?.accessToken) {
-    console.warn("No access token found");
+      console.warn("No access token on session");
+      // If no token in session, invalidate cache to force fresh fetch next time
+      invalidateTokenCache();
+      window.__gptReaderFetchingSession = false;
     return;
   }
 
   const { accessToken, user } = session;
-  window.dispatchEvent(new CustomEvent("AUTH_RECEIVED", {
-    detail: {
+
+    // Cache the token
+    cachedSessionToken = {
       accessToken,
       userId: user?.id,
-      userData: user
+      userData: user,
+    };
+    cachedSessionExpiry = now + SESSION_CACHE_DURATION;
+
+    // Store in chrome.storage.local for persistence (if available)
+    // Also store in localStorage as fallback for page context
+    try {
+      // Try chrome.storage.local first (if available)
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        const storageData = {
+          "gptr/cachedSessionToken": cachedSessionToken,
+          "gptr/cachedSessionExpiry": cachedSessionExpiry,
+        };
+        await chrome.storage.local.set(storageData);
+      }
+      
+      // Also store in localStorage (available in page context)
+      try {
+        localStorage.setItem(STORAGE_KEY_TOKEN, JSON.stringify(cachedSessionToken));
+        localStorage.setItem(STORAGE_KEY_EXPIRY, String(cachedSessionExpiry));
+      } catch (e) {
+        // ignore localStorage write errors in production
+      }
+    } catch (e) {
+      // ignore storage errors in production
     }
-  }));
+
+    // Also store in window for GET_VOICES and STOP_CONVERSATION
+    window.__gptReaderCachedToken = accessToken;
+
+    window.dispatchEvent(
+      new CustomEvent("AUTH_RECEIVED", {
+        detail: {
+          accessToken,
+          userId: user?.id,
+          userData: user,
+        },
+      }),
+    );
+  } catch (err) {
+    console.error("Error fetching session for token", err);
+  } finally {
+    window.__gptReaderFetchingSession = false;
+  }
 });
 
 window.addEventListener("GET_VOICES", async () => {
-  const session = window.__reactRouterContext
-    ?.state
-    ?.loaderData
-    ?.root
-    ?.clientBootstrap
-    ?.session;
-  if (!session?.accessToken) {
-    console.warn("No access token found");
+  try {
+    // Check cache first (12 hour cache)
+    const CACHE_KEY = "gptr/cachedVoices";
+    const CACHE_EXPIRY_KEY = "gptr/cachedVoicesExpiry";
+    const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    
+    try {
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      const cachedExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+      if (cachedData && cachedExpiry && Date.now() < Number(cachedExpiry)) {
+        const data = JSON.parse(cachedData);
+        window.dispatchEvent(new CustomEvent("VOICES", { detail: data }));
+        return;
+      }
+    } catch (e) {
+      // ignore cache read errors
+    }
+    
+    // Check window cache first
+    let accessToken = window.__gptReaderCachedToken;
+    
+    // Check chrome.storage.local if not in window (if available)
+    if (!accessToken && typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      try {
+        const stored = await chrome.storage.local.get(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]);
+        if (stored["gptr/cachedSessionToken"]?.accessToken && 
+            stored["gptr/cachedSessionExpiry"] && 
+            Date.now() < stored["gptr/cachedSessionExpiry"]) {
+          accessToken = stored["gptr/cachedSessionToken"].accessToken;
+          window.__gptReaderCachedToken = accessToken;
+        }
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+    
+    // Check localStorage as fallback
+    if (!accessToken) {
+      try {
+        const storedToken = localStorage.getItem("gptr/cachedSessionToken");
+        const storedExpiry = localStorage.getItem("gptr/cachedSessionExpiry");
+        if (storedToken && storedExpiry && Date.now() < Number(storedExpiry)) {
+          const tokenData = JSON.parse(storedToken);
+          accessToken = tokenData.accessToken;
+          window.__gptReaderCachedToken = accessToken;
+        }
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+
+    // If still no token, wait for GET_TOKEN to complete (with timeout)
+    if (!accessToken) {
+      accessToken = await new Promise((resolve) => {
+        const handler = (e) => {
+          const ce = e.detail;
+          window.removeEventListener("AUTH_RECEIVED", handler);
+          resolve(ce?.accessToken || null);
+        };
+        window.addEventListener("AUTH_RECEIVED", handler, { once: true });
+        window.dispatchEvent(new Event("GET_TOKEN"));
+        
+        // Timeout after 10 seconds to prevent indefinite waiting
+        setTimeout(() => {
+          window.removeEventListener("AUTH_RECEIVED", handler);
+          resolve(null);
+        }, 10000);
+      });
+    }
+
+    if (!accessToken) {
+      // No token available; dispatch empty event
+      // Dispatch empty voices event to prevent indefinite waiting
+      window.dispatchEvent(new CustomEvent("VOICES", { detail: { voices: [], selected: null } }));
     return;
   }
 
-  const res  = await fetch(
+    let res = await fetch(
     "https://chatgpt.com/backend-api/settings/voices",
-    { headers: { "Authorization": `Bearer ${session.accessToken}` } }
+      { headers: { "Authorization": `Bearer ${accessToken}` } }
   );
+    
+    // Handle 401/403 - token expired, refresh and retry
+    if (res.status === 401 || res.status === 403) {
+      // token expired, refresh and retry once
+      invalidateTokenCache();
+      // Get fresh token
+      const freshToken = await new Promise((resolve) => {
+        const handler = (e) => {
+          const ce = e.detail;
+          window.removeEventListener("AUTH_RECEIVED", handler);
+          resolve(ce?.accessToken || null);
+        };
+        window.addEventListener("AUTH_RECEIVED", handler, { once: true });
+        window.dispatchEvent(new Event("GET_TOKEN"));
+        setTimeout(() => {
+          window.removeEventListener("AUTH_RECEIVED", handler);
+          resolve(null);
+        }, 10000);
+      });
+      if (freshToken) {
+        res = await fetch(
+          "https://chatgpt.com/backend-api/settings/voices",
+          { headers: { "Authorization": `Bearer ${freshToken}` } }
+        );
+      }
+    }
+    
+    if (!res.ok) {
+      window.dispatchEvent(new CustomEvent("VOICES", { detail: { voices: [], selected: null } }));
+      return;
+    }
   const data = await res.json();
+  
+  // Cache the response for 12 hours
+  try {
+    const expiry = Date.now() + CACHE_DURATION;
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(CACHE_EXPIRY_KEY, String(expiry));
+  } catch (e) {
+    // ignore cache write errors
+  }
+  
   window.dispatchEvent(new CustomEvent("VOICES", { detail: data }));
+  } catch (err) {
+    window.dispatchEvent(new CustomEvent("VOICES", { detail: { voices: [], selected: null } }));
+  }
 });
 
 window.addEventListener("STOP_CONVERSATION", async (e) => {
-  const session = window.__reactRouterContext
-    ?.state
-    ?.loaderData
-    ?.root
-    ?.clientBootstrap
-    ?.session;
-  if (!session?.accessToken) {
-    console.warn("No access token found");
+  // Wait for token to be available
+  const waitForToken = async () => {
+    // Check window cache first
+    if (window.__gptReaderCachedToken) {
+      return window.__gptReaderCachedToken;
+    }
+
+    // Check chrome.storage.local (if available)
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      try {
+        const stored = await chrome.storage.local.get(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]);
+        if (stored["gptr/cachedSessionToken"]?.accessToken && 
+            stored["gptr/cachedSessionExpiry"] && 
+            Date.now() < stored["gptr/cachedSessionExpiry"]) {
+          const token = stored["gptr/cachedSessionToken"].accessToken;
+          window.__gptReaderCachedToken = token;
+          return token;
+        }
+      } catch (e) {
+        console.warn("Failed to check chrome.storage.local for token:", e);
+      }
+    }
+    
+    // Check localStorage as fallback
+    try {
+      const storedToken = localStorage.getItem("gptr/cachedSessionToken");
+      const storedExpiry = localStorage.getItem("gptr/cachedSessionExpiry");
+      if (storedToken && storedExpiry && Date.now() < Number(storedExpiry)) {
+        const tokenData = JSON.parse(storedToken);
+        const token = tokenData.accessToken;
+        window.__gptReaderCachedToken = token;
+        return token;
+      }
+    } catch (e) {
+      console.warn("Failed to check localStorage for token:", e);
+    }
+
+    // Wait for GET_TOKEN to complete
+    return new Promise((resolve) => {
+      const handler = (e) => {
+        const ce = e.detail;
+        window.removeEventListener("AUTH_RECEIVED", handler);
+        resolve(ce?.accessToken || null);
+      };
+      window.addEventListener("AUTH_RECEIVED", handler, { once: true });
+      window.dispatchEvent(new Event("GET_TOKEN"));
+      
+      setTimeout(() => {
+        window.removeEventListener("AUTH_RECEIVED", handler);
+        resolve(null);
+      }, 30000);
+    });
+  };
+
+  const accessToken = await waitForToken();
+
+  if (!accessToken) {
+    console.warn("No access token found for stop conversation");
     return;
   }
 
   const { conversation_id } = e.detail;
-  const res = await fetch(
+  let res = await fetch(
     "https://chatgpt.com/backend-api/stop_conversation",
     {
       method: "POST",
       headers: {
         "Content-Type":  "application/json",
-        "Authorization": `Bearer ${session.accessToken}`
+        "Authorization": `Bearer ${accessToken}`
       },
       body: JSON.stringify({ conversation_id })
     }
   );
+  
+  // Handle 401/403 - token expired, refresh and retry
+  if (res.status === 401 || res.status === 403) {
+    console.warn("[STOP_CONVERSATION] Token expired (401/403), refreshing token and retrying");
+    invalidateTokenCache();
+    // Get fresh token
+    const freshToken = await waitForToken();
+    if (freshToken) {
+      res = await fetch(
+        "https://chatgpt.com/backend-api/stop_conversation",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":  "application/json",
+            "Authorization": `Bearer ${freshToken}`
+          },
+          body: JSON.stringify({ conversation_id })
+        }
+      );
+    }
+  }
+  
   const data = await res.json();
   window.dispatchEvent(new CustomEvent("CONVERSATION_STOPPED", { detail: data }));
 });

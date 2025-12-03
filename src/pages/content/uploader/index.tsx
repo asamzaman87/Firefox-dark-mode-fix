@@ -711,35 +711,47 @@ function Uploader() {
           setIsOverlayFallback(true);
           return;
         }
-        //redirect to login if click on button if not authorised
-        if (!isAuthenticated) {
-          const loginBtn: HTMLButtonElement | null = document.querySelector(
-            "[data-testid='login-button']"
-          );
-          if (loginBtn) {
-            // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
-            chrome.storage.local.set({ fromExtensionRedirect: true });
+        // Allow overlay to open even without auth token for faster opening
+        // But redirect to login if login button exists and user is not authenticated
+        const loginBtn: HTMLButtonElement | null = document.querySelector(
+          "[data-testid='login-button']"
+        );
+        if (loginBtn) {
+          // To Show POP-UP toast banner for letting user know that you should first login to use GPT reader extension.
+          chrome.storage.local.set({ fromExtensionRedirect: true });
 
-            window.localStorage.setItem("gptr/redirect-to-login", "true");
-            chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
-            loginBtn?.click();
-            toast({
-              description:
-                "Continue logging in to use the ChatGPT Reader & Transcriber extension.",
-              style: TOAST_STYLE_CONFIG_INFO,
-              duration: 20000,
-            })
-          } else {
-            //send message to background to try again if user is not authorised and login btn not present
-            chrome.runtime.sendMessage({ type: "NO_AUTH_TRY_AGAIN" });
-          }
-          return;
+          window.localStorage.setItem("gptr/redirect-to-login", "true");
+          chrome.runtime.sendMessage({ type: "SET_ORIGIN" }); //indicate to background script that open is triggered from the reader button
+          loginBtn?.click();
+          toast({
+            description:
+              "Continue logging in to use the ChatGPT Reader & Transcriber extension.",
+            style: TOAST_STYLE_CONFIG_INFO,
+            duration: 20000,
+          })
+          return; // Don't open overlay if redirecting to login
         }
 
         window.localStorage.removeItem("gptr/redirect-to-login");
         // await choosePreferredModel();
         await triggerPromptFlow();
-        await fetchAndStoreTopChat();
+        
+        // Parallelize independent API calls for better performance
+        const prev = await chrome.storage.local.get("hasSubscription");
+        const prevHasSub = prev?.hasSubscription ?? false;
+        
+        const [_, effectiveIsSubscribed] = await Promise.all([
+          fetchAndStoreTopChat(), // ChatGPT API call
+          // Subscription check - can run in parallel
+          detectBrowser() === "firefox"
+            ? new Promise<boolean>((resolve) => {
+                chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
+                  resolve(response);
+                });
+              })
+            : handleCheckUserSubscription()
+        ]);
+        
         isOpeningInProgress.current = false;
         window.localStorage.removeItem("gptr/reloadDone");
 
@@ -753,21 +765,6 @@ function Uploader() {
           chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
         } else {
           autoOpen.current = false;
-        }
-
-        let effectiveIsSubscribed = false;
-
-        const prev = await chrome.storage.local.get("hasSubscription");
-        const prevHasSub = prev?.hasSubscription ?? false;
-
-        if (detectBrowser() === "firefox") {
-          effectiveIsSubscribed = await new Promise<boolean>((resolve) => {
-            chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
-              resolve(response);
-            });
-          });
-        } else {
-          effectiveIsSubscribed = await handleCheckUserSubscription();
         }
 
         if (prevHasSub === true && effectiveIsSubscribed === false) {
@@ -878,7 +875,7 @@ function Uploader() {
   );
   
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // Allow opening on success redirect even without waiting for auth
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const sessionId = params.get("session_id");
@@ -886,11 +883,11 @@ function Uploader() {
       onOpenChange(true);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [isAuthenticated]);
+  }, []); // Remove isAuthenticated dependency to open faster
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
+    // Allow auto-open even without auth for faster opening
+    // Auth will be checked in the background
     const run = async () => {
       const reloaded =
         window.localStorage.getItem("gptr/reloadDone") === "true";
@@ -903,7 +900,7 @@ function Uploader() {
     };
 
     run();
-  }, [isAuthenticated]);
+  }, []); // Remove isAuthenticated dependency to allow opening without waiting for auth
 
   useEffect(() => {
     const root = document.documentElement;
@@ -1135,7 +1132,15 @@ function Uploader() {
             }
           >
             <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />{!minimised && (
-              <> {!isAuthenticated && chrome.i18n.getMessage("login_to_use")} {isAuthenticated && chrome.i18n.getMessage("activate")} GPT Reader & Transcriber</>
+              <> {(() => {
+                const loginBtn = document.querySelector("[data-testid='login-button']");
+                // Show "Activate" if we have token OR no login button exists
+                // Only show "Login" if no token AND login button exists
+                if (!isAuthenticated && loginBtn) {
+                  return chrome.i18n.getMessage("login_to_use");
+                }
+                return chrome.i18n.getMessage("activate");
+              })()} GPT Reader & Transcriber</>
             )}
           </Button>
         </DialogTrigger>

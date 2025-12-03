@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import useAuthToken from "./use-auth-token";
-import { cleanAudioBuffer, encodeWav, transcribeWithFallback } from "@/lib/utils";
+import { cleanAudioBuffer, encodeWav, transcribeWithFallback, waitForAuthToken } from "@/lib/utils";
 import { useToast } from "./use-toast";
 
 const CHUNK_INTERVAL_MS = 20000;
@@ -70,11 +70,18 @@ const useWhisperTranscription = () => {
 
       // 2) Use your fallback routine instead of direct fetch
       try {
+        // Wait for token if not available
+        const authToken = token || await waitForAuthToken();
+        if (!authToken) {
+          console.error("Authentication token not available for transcription");
+          setLoading(false);
+          return;
+        }
         const text = await transcribeWithFallback(
           uploadBlob,
           "live_chunk",
           0,
-          token,
+          authToken,
           audioContextRef.current!
         );
         if (text) setFinalText((prev) => `${prev} ${text}`.trim());

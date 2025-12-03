@@ -1,4 +1,5 @@
 import { FREE_DOWNLOAD_CHUNKS, LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
+import { waitForAuthToken } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
 import { useToast } from "./use-toast";
@@ -135,25 +136,9 @@ const useStreamListener = (
             // ——— ensure we have a valid token ———
             let authToken = token;
             if (!authToken) {
-                window.dispatchEvent(new Event("GET_TOKEN"));
-                authToken = await Promise.race<string | null>([
-                    new Promise((resolve) => {
-                        const handler = (e: Event) => {
-                            const ce = e as CustomEvent<{ accessToken: string }>;
-                            window.removeEventListener("AUTH_RECEIVED", handler);
-                            resolve(ce.detail.accessToken);
-                        };
-                        window.addEventListener("AUTH_RECEIVED", handler, { once: true });
-                    }),
-                    new Promise<null>((_, reject) =>
-                        setTimeout(() => reject(new Error("Token request timed out")), 15000)
-                    ),
-                ]).catch(() => {
-                    handleErrorWithNoFetch("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
-                    return null;
-                });
+                authToken = await waitForAuthToken(15000);
                 if (!authToken) {
-                    console.error("[fetchAndDecodeAudio] cannot fetch token");
+                    handleErrorWithNoFetch("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
                     return;
                 }
             }
@@ -171,6 +156,32 @@ const useStreamListener = (
                 if (!response) {
                     throw new Error("Cannot fetch audio");
                 }
+            }
+
+            // Handle 401/403 - token expired, refresh and retry
+            if (response.status === 401 || response.status === 403) {
+                console.warn("[fetchAndDecodeAudio] Token expired (401/403), refreshing token and retrying");
+                // Invalidate token cache
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent("TOKEN_EXPIRED"));
+                    // Clear cached token
+                    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                        chrome.storage.local.remove(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]).catch(() => {});
+                    }
+                    try {
+                        localStorage.removeItem("gptr/cachedSessionToken");
+                        localStorage.removeItem("gptr/cachedSessionExpiry");
+                    } catch {}
+                    (window as any).__gptReaderCachedToken = null;
+                }
+                // Get fresh token
+                const freshToken = await waitForAuthToken(10000);
+                if (!freshToken) {
+                    handleErrorWithNoFetch("GPT Reader is having issues finding the audio. Please refresh the page and try again.");
+                    return;
+                }
+                // Retry with fresh token
+                response = await fetch(url, { headers: { "authorization": `Bearer ${freshToken}` } });
             }
 
             if (response.status === 404) {

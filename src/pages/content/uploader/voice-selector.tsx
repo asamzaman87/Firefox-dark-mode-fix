@@ -37,14 +37,61 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     // Fire GET_VOICES once on mount if the list is empty (covers inline usage)
     useEffect(() => {
         if (!loading && voice.voices.length === 0) {
-            window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+            // Wait for injected.js to be ready before dispatching
+            const waitAndDispatch = async () => {
+                // Wait for injected.js to be ready (max 5 seconds)
+                const waitForInjected = (): Promise<boolean> => {
+                    return new Promise((resolve) => {
+                        if ((window as any).__gptReaderInjectedReady) {
+                            resolve(true);
+                            return;
+                        }
+                        const checkInterval = setInterval(() => {
+                            if ((window as any).__gptReaderInjectedReady) {
+                                clearInterval(checkInterval);
+                                resolve(true);
+                            }
+                        }, 100);
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            resolve(false);
+                        }, 5000);
+                    });
+                };
+                await waitForInjected();
+                window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+            };
+            waitAndDispatch();
         }
     }, []);
 
     // Fire GET_VOICES whenever the dropdown opens and voices are still empty
     useEffect(() => {
         if (open && voice.voices.length === 0) {
-            window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+            // Wait for injected.js to be ready before dispatching
+            const waitAndDispatch = async () => {
+                const waitForInjected = (): Promise<boolean> => {
+                    return new Promise((resolve) => {
+                        if ((window as any).__gptReaderInjectedReady) {
+                            resolve(true);
+                            return;
+                        }
+                        const checkInterval = setInterval(() => {
+                            if ((window as any).__gptReaderInjectedReady) {
+                                clearInterval(checkInterval);
+                                resolve(true);
+                            }
+                        }, 100);
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            resolve(false);
+                        }, 5000);
+                    });
+                };
+                await waitForInjected();
+                window.dispatchEvent(new CustomEvent(LISTENERS.GET_VOICES));
+            };
+            waitAndDispatch();
         }
     }, [open, voice.voices.length]);
 
@@ -215,9 +262,29 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     )
 
     //if voices not present then fetch them on modal open (happens when user start a new conversation)
-    const onOpenChange = (open: boolean) => {
+    const onOpenChange = async (open: boolean) => {
         setOpen(open)
         if (open && voice.voices.length === 0) {
+            // Wait for injected.js to be ready before dispatching
+            const waitForInjected = (): Promise<boolean> => {
+                return new Promise((resolve) => {
+                    if ((window as any).__gptReaderInjectedReady) {
+                        resolve(true);
+                        return;
+                    }
+                    const checkInterval = setInterval(() => {
+                        if ((window as any).__gptReaderInjectedReady) {
+                            clearInterval(checkInterval);
+                            resolve(true);
+                        }
+                    }, 100);
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        resolve(false);
+                    }, 5000);
+                });
+            };
+            await waitForInjected();
             const voicesEvent = new CustomEvent(LISTENERS.GET_VOICES);
             window.dispatchEvent(voicesEvent);
         }

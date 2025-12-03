@@ -109,7 +109,6 @@ export function formatBytes(
 export const waitForPrepareChat = (): Promise<{ event: string; data: any }[]> =>
   new Promise(resolve => {
     const handler = (e: CustomEvent) => {
-      console.log('PREPARE_RECEIVED in utils');
       window.removeEventListener("PREPARE_RECEIVED", handler as any);
       resolve(e.detail);
     };
@@ -257,53 +256,44 @@ export const maybeDeleteChat = async (chatId: string) => {
 export async function fetchAndStoreTopChat() {
   const LS_KEY = "gptr/top-chat";
 
-  return new Promise<string | void>((resolve) => {
-    const handleAuth = async (e: Event) => {
-      window.removeEventListener("AUTH_RECEIVED", handleAuth);
-      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
+  try {
+    // Wait for auth token using the same pattern as other functions
+    const token = await waitForAuthToken(10000); // 10 second timeout
+    if (!token) {
+      console.error("[fetchAndStoreTopChat] Missing access token");
+      return;
+    }
 
-      if (!token) {
-        console.error("[fetchAndStoreTopChat] Missing access token");
-        return resolve();
-      }
+    const res = await fetchWithTokenRefresh(
+      "https://chatgpt.com/backend-api/conversations?offset=0&limit=1&order=updated&is_archived=false&is_starred=false",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      },
+      token
+    );
 
-      try {
-        const res = await fetch(
-          "https://chatgpt.com/backend-api/conversations?offset=0&limit=1&order=updated&is_archived=false&is_starred=false",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-          }
-        );
+    if (!res.ok) {
+      console.error("[fetchAndStoreTopChat] Failed to fetch:", res.status);
+      return;
+    }
 
-        if (!res.ok) {
-          console.error("[fetchAndStoreTopChat] Failed to fetch:", res.status);
-          return resolve();
-        }
+    const data = await res.json();
+    const topChatId = data?.items?.[0]?.id;
 
-        const data = await res.json();
-        const topChatId = data?.items?.[0]?.id;
-
-        if (topChatId) {
-          localStorage.setItem(LS_KEY, topChatId);
-          if (LOCAL_LOGS) console.log("[fetchAndStoreTopChat] Stored top chat ID:", topChatId);
-          resolve(topChatId);
-        } else {
-          console.warn("[fetchAndStoreTopChat] No chat items found");
-          resolve();
-        }
-      } catch (err) {
-        console.error("[fetchAndStoreTopChat] Error fetching chat:", err);
-        resolve();
-      }
-    };
-
-    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
-    window.dispatchEvent(new Event("GET_TOKEN"));
-  });
+    if (topChatId) {
+      localStorage.setItem(LS_KEY, topChatId);
+      if (LOCAL_LOGS) console.log("[fetchAndStoreTopChat] Stored top chat ID:", topChatId);
+      return topChatId;
+    } else {
+      console.warn("[fetchAndStoreTopChat] No chat items found");
+    }
+  } catch (err) {
+    console.error("[fetchAndStoreTopChat] Error fetching chat:", err);
+  }
 }
 
 export async function collectChatsAboveTopChat(deleteFlag: boolean = true) {
@@ -316,70 +306,65 @@ export async function collectChatsAboveTopChat(deleteFlag: boolean = true) {
     return;
   }
 
-  return new Promise<void>((resolve) => {
-    const handleAuth = async (e: Event) => {
-      window.removeEventListener("AUTH_RECEIVED", handleAuth);
-      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
+  try {
+    // Wait for auth token using the same pattern as other functions
+    const token = await waitForAuthToken(10000); // 10 second timeout
+    if (!token) {
+      console.error("[collectChatsAboveTopChat] Missing access token");
+      if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+      return;
+    }
 
-      if (!token) {
-        console.error("[collectChatsAboveTopChat] Missing access token");
-        return resolve();
-      }
+    const res = await fetchWithTokenRefresh(
+      "https://chatgpt.com/backend-api/conversations?offset=0&limit=28&order=updated&is_archived=false&is_starred=false",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      },
+      token
+    );
 
-      try {
-        const res = await fetch(
-          "https://chatgpt.com/backend-api/conversations?offset=0&limit=28&order=updated&is_archived=false&is_starred=false",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-          }
-        );
+    if (!res.ok) {
+      console.error("[collectChatsAboveTopChat] Fetch failed:", res.status);
+      if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+      return;
+    }
 
-        if (!res.ok) {
-          console.error("[collectChatsAboveTopChat] Fetch failed:", res.status);
-          return resolve();
-        }
+    const data = await res.json();
+    const items: { id: string }[] = data?.items ?? [];
+    if (!items.length) {
+      console.warn("[collectChatsAboveTopChat] No conversations found.");
+      if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+      return;
+    }
 
-        const data = await res.json();
-        const items: { id: string }[] = data?.items ?? [];
-        if (!items.length) {
-          console.warn("[collectChatsAboveTopChat] No conversations found.");
-          return resolve();
-        }
+    const topIndex = items.findIndex(item => item.id === topChatId);
+    if (topIndex === -1) {
+      console.warn("[collectChatsAboveTopChat] Top chat not found in response.");
+      if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+      return;
+    }
 
-        const topIndex = items.findIndex(item => item.id === topChatId);
-        if (topIndex === -1) {
-          console.warn("[collectChatsAboveTopChat] Top chat not found in response.");
-          return resolve();
-        }
+    // All conversations above (newer) than topChatId
+    const idsToDelete = items.slice(0, topIndex).map(item => item.id);
 
-        // All conversations above (newer) than topChatId
-        const idsToDelete = items.slice(0, topIndex).map(item => item.id);
+    if (idsToDelete.length) {
+      const existing = JSON.parse(localStorage.getItem(LS_DELETE_KEY) || "[]");
+      const merged = Array.from(new Set([...existing, ...idsToDelete]));
+      localStorage.setItem(LS_DELETE_KEY, JSON.stringify(merged));
+      if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] Added chats to delete list:", idsToDelete);
+    } else {
+      if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] No newer chats found above top chat.");
+    }
 
-        if (idsToDelete.length) {
-          const existing = JSON.parse(localStorage.getItem(LS_DELETE_KEY) || "[]");
-          const merged = Array.from(new Set([...existing, ...idsToDelete]));
-          localStorage.setItem(LS_DELETE_KEY, JSON.stringify(merged));
-          if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] Added chats to delete list:", idsToDelete);
-        } else {
-          if (LOCAL_LOGS) console.log("[collectChatsAboveTopChat] No newer chats found above top chat.");
-        }
-
-        resolve();
-      } catch (err) {
-        console.error("[collectChatsAboveTopChat] Error fetching chats:", err);
-        resolve();
-      } finally {
-        if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
-      }
-    };
-
-    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
-    window.dispatchEvent(new Event("GET_TOKEN"));
-  });
+    if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+  } catch (err) {
+    console.error("[collectChatsAboveTopChat] Error fetching chats:", err);
+    if (deleteFlag) localStorage.removeItem(LS_TOP_KEY);
+  }
 }
 
 /**
@@ -399,45 +384,38 @@ export async function deleteChatAndCreateNew(
   }
   if (!storedChatId) return;
 
-  return new Promise<Response | void>((resolve) => {
-    const handleAuth = async (e: Event) => {
-      window.removeEventListener("AUTH_RECEIVED", handleAuth);
-      const { accessToken: token } = (e as CustomEvent<{ accessToken: string }>).detail;
-      if (!token) {
-        console.error("Failed to delete chat: no token");
-        return resolve();
-      }
+  try {
+    // Wait for auth token using the same pattern as other functions
+    const token = await waitForAuthToken(10000); // 10 second timeout
+    if (!token) {
+      console.error("Failed to delete chat: no token");
+      return;
+    }
 
-      try {
-        const response = await fetch(
-          `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-            body: JSON.stringify({ is_visible: false }),
-          }
-        );
+    const response = await fetchWithTokenRefresh(
+      `https://chatgpt.com/backend-api/conversation/${storedChatId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_visible: false }),
+      },
+      token
+    );
 
-        if (createChat) {
-          const newChatBtn = document.querySelector<HTMLButtonElement>(
-            "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-          );
-          newChatBtn?.click();
-        }
+    if (createChat) {
+      const newChatBtn = document.querySelector<HTMLButtonElement>(
+        "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+      );
+      newChatBtn?.click();
+    }
 
-        resolve(response);
-      } catch (err) {
-        console.error("Failed to delete chat:", err);
-        resolve();
-      }
-    };
-
-    window.addEventListener("AUTH_RECEIVED", handleAuth, { once: true });
-    window.dispatchEvent(new Event("GET_TOKEN"));
-  });
+    return response;
+  } catch (err) {
+    console.error("Failed to delete chat:", err);
+  }
 }
 
 
@@ -728,25 +706,9 @@ export const choosePreferredModel = async () => {
   // Call user_last_used_model_config with retries (best-effort)
   // Keep early-returns above intact (non-plus / already instant).
   // ─────────────────────────────────────────────────────────────
-  const fetchAuthToken = (): Promise<string | null> =>
-    new Promise((resolve) => {
-      const handler = (e: Event) => {
-        window.removeEventListener("AUTH_RECEIVED", handler as any);
-        const { accessToken } = (e as CustomEvent<{ accessToken: string }>).detail || {};
-        resolve(accessToken ?? null);
-      };
-      window.addEventListener("AUTH_RECEIVED", handler as any, { once: true });
-      // Another part of the extension should respond to this with AUTH_RECEIVED
-      window.dispatchEvent(new Event("GET_TOKEN"));
-      // Absolute cap in case nobody responds
-      setTimeout(() => {
-        try { window.removeEventListener("AUTH_RECEIVED", handler as any); } catch {}
-        resolve(null);
-      }, 3000);
-    });
-
   const callLastUsedModelConfig = async () => {
-    const token = await fetchAuthToken();
+    // Wait for auth token using the same pattern as other functions
+    const token = await waitForAuthToken(10000); // 10 second timeout
     if (!token) {
       if (LOCAL_LOGS) console.warn("[choosePreferredModel] No auth token; skipping last_used_model_config call");
       return;
@@ -756,10 +718,14 @@ export const choosePreferredModel = async () => {
     const maxAttempts = 3;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const res = await fetch(url, {
-          method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetchWithTokenRefresh(
+          url,
+          {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${token}` },
+          },
+          token
+        );
         if (res.ok) {
           // parse defensively and ignore contents
           try { await res.json(); } catch {}
@@ -1469,13 +1435,129 @@ async function splitBlobIntoParts(
   return result;
 }
 
+// Type declaration for window property
+declare global {
+  interface Window {
+    __gptReaderCachedToken?: string;
+  }
+}
+
+// Utility to wait for auth token to be available
+// Helper function to invalidate token cache and get fresh token
+async function invalidateAndRefreshToken(): Promise<string | null> {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent("TOKEN_EXPIRED"));
+    // Clear cached token
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.remove(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]).catch(() => {});
+    }
+    try {
+      localStorage.removeItem("gptr/cachedSessionToken");
+      localStorage.removeItem("gptr/cachedSessionExpiry");
+    } catch {}
+    (window as any).__gptReaderCachedToken = null;
+  }
+  // Get fresh token
+  return await waitForAuthToken(10000);
+}
+
+// Helper function to handle 401/403 and retry a fetch call
+async function fetchWithTokenRefresh(
+  url: string,
+  options: RequestInit,
+  token: string
+): Promise<Response> {
+  let response = await fetch(url, options);
+  
+  // Handle 401/403 - token expired, refresh and retry
+  if (response.status === 401 || response.status === 403) {
+    console.warn(`[fetchWithTokenRefresh] Token expired (${response.status}) for ${url}, refreshing token and retrying`);
+    const freshToken = await invalidateAndRefreshToken();
+    if (!freshToken) {
+      throw new Error("Failed to get fresh token after 401/403");
+    }
+    // Retry with fresh token
+    const newOptions = {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${freshToken}`,
+      },
+    };
+    response = await fetch(url, newOptions);
+  }
+  
+  return response;
+}
+
+export async function waitForAuthToken(timeout = 30000): Promise<string | null> {
+  // First check if token is already available in window
+  if (window.__gptReaderCachedToken) {
+    return window.__gptReaderCachedToken;
+  }
+
+  // Check chrome.storage.local for cached token (if available)
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    try {
+      const stored = await chrome.storage.local.get(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]);
+      if (stored["gptr/cachedSessionToken"]?.accessToken && 
+          stored["gptr/cachedSessionExpiry"] && 
+          Date.now() < stored["gptr/cachedSessionExpiry"]) {
+        const token = stored["gptr/cachedSessionToken"].accessToken;
+        window.__gptReaderCachedToken = token;
+        return token;
+      }
+    } catch (e) {
+      console.warn("Failed to check chrome.storage.local for token:", e);
+    }
+  }
+  
+  // Check localStorage as fallback (available in page context)
+  try {
+    const storedToken = localStorage.getItem("gptr/cachedSessionToken");
+    const storedExpiry = localStorage.getItem("gptr/cachedSessionExpiry");
+    if (storedToken && storedExpiry && Date.now() < Number(storedExpiry)) {
+      const tokenData = JSON.parse(storedToken);
+      const token = tokenData.accessToken;
+      window.__gptReaderCachedToken = token;
+      return token;
+    }
+  } catch (e) {
+    console.warn("Failed to check localStorage for token:", e);
+  }
+
+  // Dispatch GET_TOKEN and wait for AUTH_RECEIVED
+  return new Promise((resolve) => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ accessToken: string }>;
+      window.removeEventListener("AUTH_RECEIVED", handler);
+      resolve(ce.detail?.accessToken || null);
+    };
+    window.addEventListener("AUTH_RECEIVED", handler, { once: true });
+    window.dispatchEvent(new Event("GET_TOKEN"));
+    
+    // Timeout after specified duration
+    setTimeout(() => {
+      window.removeEventListener("AUTH_RECEIVED", handler);
+      resolve(null);
+    }, timeout);
+  });
+}
+
 export async function transcribeWithFallback(
   blob: Blob,
   label: string,
   depth = 0,
-  token: string,
+  token: string | null,
   audioCtx: AudioContext
 ): Promise<string> {
+  // Wait for token if not provided
+  if (!token) {
+    token = await waitForAuthToken();
+    if (!token) {
+      throw new Error("Authentication token not available");
+    }
+  }
   const MIN_TRANSCRIPT_LENGTH = 0; // You can adjust this threshold
 
   const formData = new FormData();
@@ -1489,13 +1571,17 @@ export async function transcribeWithFallback(
   );
 
   try {
-    const res = await fetch("https://chatgpt.com/backend-api/transcribe", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const res = await fetchWithTokenRefresh(
+      "https://chatgpt.com/backend-api/transcribe",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+      token
+    );
 
     if (!res.ok) throw new Error(await res.text());
     const result = await res.json();

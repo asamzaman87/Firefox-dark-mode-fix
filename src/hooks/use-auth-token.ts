@@ -86,19 +86,40 @@ const useAuthToken = () => {
 
     useEffect(() => {
         const id = setInterval(() => {
-            if (!signedOutRef.current) {
-                window.dispatchEvent(getTokenEvent());
+            if (!signedOutRef.current && !token) {
+            window.dispatchEvent(getTokenEvent());
             }
-        }, 500);
+        }, 5000);
 
-        setIntervalId(id);
-        return () => {
-            if (intervalId) clearInterval(intervalId);
-        }
-    }, []);
+        return () => clearInterval(id);
+    }, [token, getTokenEvent]);
 
     useEffect(() => {
-        window.dispatchEvent(getTokenEvent());
+        // Check storage first before dispatching GET_TOKEN
+        (async () => {
+            try {
+                const stored = await chrome.storage.local.get(["gptr/cachedSessionToken", "gptr/cachedSessionExpiry"]);
+                if (stored["gptr/cachedSessionToken"]?.accessToken && 
+                    stored["gptr/cachedSessionExpiry"] && 
+                    Date.now() < stored["gptr/cachedSessionExpiry"]) {
+                    const tokenData = stored["gptr/cachedSessionToken"];
+                    // Dispatch AUTH_RECEIVED with cached token
+                    window.dispatchEvent(new CustomEvent(LISTENERS.AUTH_RECEIVED, {
+                        detail: {
+                            accessToken: tokenData.accessToken,
+                            userId: tokenData.userId,
+                            userData: tokenData.userData,
+                        }
+                    }));
+                    return; // Don't dispatch GET_TOKEN if we have valid cached token
+                }
+            } catch (e) {
+                console.warn("Failed to check storage for cached token:", e);
+            }
+            // If no valid cached token, dispatch GET_TOKEN
+            window.dispatchEvent(getTokenEvent());
+        })();
+        
         window.addEventListener(LISTENERS.AUTH_RECEIVED, handleAuthReceived);
         window.addEventListener(LISTENERS.SIGNOUT_RECEIVED, handleSignoutReceived);
         return () => {

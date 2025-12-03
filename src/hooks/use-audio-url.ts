@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, maybeDeleteChat, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForEditor } from "@/lib/utils";
+import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, maybeDeleteChat, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForAuthToken, waitForEditor } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -216,11 +216,16 @@ const useAudioUrl = (isDownload: boolean) => {
           const wav = encodeWav(cleaned);
           // const debugUrl = URL.createObjectURL(wav)
           // console.log("🔊 Transcribing chunk:", debugUrl)
+          // Wait for token if not available
+          const authToken = token || await waitForAuthToken();
+          if (!authToken) {
+            throw new Error("Authentication token not available for transcription");
+          }
           const textChunk = await transcribeWithFallback(
             wav,
             label,
             0,
-            token!,
+            authToken,
             ctx2
           );
           results.push(textChunk);
