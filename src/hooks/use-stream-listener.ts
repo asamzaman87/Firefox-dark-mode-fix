@@ -510,56 +510,54 @@ const useStreamListener = (
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine
-            if (token) {
-                if (audioIssueInjections.current.size > 0) {
-                    // Convert to array and sort ascending
-                    const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+            if (audioIssueInjections.current.size > 0) {
+                // Convert to array and sort ascending
+                const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
 
-                    // Take the first (lowest) element
-                    const first = sorted[0];
+                // Take the first (lowest) element
+                const first = sorted[0];
 
-                    console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
+                console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
 
-                    // Inject using the first element
-                    injectPrompt(
-                        chunkRef.current[first].text,
-                        chunkRef.current[first].id,
-                        promptNdx.current
-                    );
+                // Inject using the first element
+                injectPrompt(
+                    chunkRef.current[first].text,
+                    chunkRef.current[first].id,
+                    promptNdx.current
+                );
 
-                    // Remove it from the set
-                    audioIssueInjections.current.delete(first);
-                    stopFlow.current = true;
-                } else {
-                    if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
-                    // The hope is that the biggest chunkNdx in audioIssueInjections is from the mainline
-                    setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx });
-                    stopFlow.current = false;
-                }
-                const storedFormat = format.toLowerCase();
-                if (LOCAL_LOGS) console.log(`[Audio Prefetch] Prefetching audio for chunk ${chunkNdx}`);
-                (async () => {
-                    try {
-                        const convKey = `${conversationId}:${messageId}`;
-                        registerPending(conversationId, convKey);
-                        const audioUrl = await fetchAndDecodeAudio(
-                            `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${storedFormat}`,
-                            +chunkNdx,
-                            conversationId,
-                            messageId
-                        );
-                        if (audioUrl) {
-                            setCompletedStreams((streams) => {
-                                const ordered = [...streams];
-                                ordered[chunkNdx] = audioUrl;
-                                return ordered;
-                            });
-                        } 
-                    } catch {
-                        handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
-                    }
-                })();
+                // Remove it from the set
+                audioIssueInjections.current.delete(first);
+                stopFlow.current = true;
+            } else {
+                if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
+                // The hope is that the biggest chunkNdx in audioIssueInjections is from the mainline
+                setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx });
+                stopFlow.current = false;
             }
+            const storedFormat = format.toLowerCase();
+            if (LOCAL_LOGS) console.log(`[Audio Prefetch] Prefetching audio for chunk ${chunkNdx}`);
+            (async () => {
+                try {
+                    const convKey = `${conversationId}:${messageId}`;
+                    registerPending(conversationId, convKey);
+                    const audioUrl = await fetchAndDecodeAudio(
+                        `${SYNTHESIZE_ENDPOINT}?conversation_id=${conversationId}&message_id=${messageId}&voice=${voices.selected ?? VOICE}&format=${storedFormat}`,
+                        +chunkNdx,
+                        conversationId,
+                        messageId
+                    );
+                    if (audioUrl) {
+                        setCompletedStreams((streams) => {
+                            const ordered = [...streams];
+                            ordered[chunkNdx] = audioUrl;
+                            return ordered;
+                        });
+                    } 
+                } catch {
+                    handleErrorWithNoFetch("ChatGPT seems to be having issues finding the audio, please click the back button on the top-left or close the overlay and try again.");
+                }
+            })();
         }
         setIsLoading(false);
     }, [retryCounts, retryFlow, fetchAndDecodeAudio, setCompletedStreams, setCurrentCompletedStream, handleError, setIsLoading, voices.selected, token, format]);

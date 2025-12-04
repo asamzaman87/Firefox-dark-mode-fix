@@ -202,7 +202,7 @@ function Uploader() {
   // Re-check whenever gates change (ensures auto-open after popups resolve)
   useEffect(() => {
     void maybeProceedSelectedText();
-  }, [confirmed, showWebReaderPerm, showPinTutorial, maybeProceedSelectedText]);
+  }, [confirmed, showWebReaderPerm, showPinTutorial, maybeProceedSelectedText, isActive]);
 
 
   useEffect(() => {
@@ -689,19 +689,23 @@ function Uploader() {
 
   const onOpenChange = useCallback(
     async (open: boolean) => {
+      // Allow closing immediately, no questions asked
+      if (!open) {
+        //show confirmation for cancel download if download is in progress
+        const download = window.localStorage.getItem("gptr/download");
+        if (download && download === "true") {
+          setIsCancelDownloadConfirmation(true);
+          return;
+        }
+        setIsActive(false);
+        isOpeningInProgress.current = false;
+        return;
+      }
+      
       if (isOpeningInProgress.current) return;
       isOpeningInProgress.current = true;
       try {
-        if (!open) {
-          //show confirmation for cancel download if download is in progress
-          const download = window.localStorage.getItem("gptr/download");
-          if (download && download === "true") {
-            setIsCancelDownloadConfirmation(true);
-            return;
-          }
-          setIsActive(false);
-          return;
-        } else {
+        {
           localStorage.setItem("gptr/download", "false");
         }
         isOpening.current = true;
