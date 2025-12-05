@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { DISCOUNT_FREQUENCY, SAFEST_MODEL, IMPORTANT_COOLDOWN_MS, LISTENERS, MODELS_TO_WARN, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { choosePreferredModel, cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isPremium, isWebReaderFresh, maybeDeleteChat, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, maybeDeleteChat, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -587,10 +587,11 @@ function Uploader() {
   useEffect(() => {
     //if redirection to login page is set and user is authenticated, open the overlay after 1s
     const isRedirectToLogin = window.localStorage.getItem("gptr/redirect-to-login");
-    if (isRedirectToLogin && isRedirectToLogin === "true" && isAuthenticated) {
+    const loginBtn = document.querySelector("[data-testid='login-button']");
+    if (isRedirectToLogin && isRedirectToLogin === "true" && !loginBtn) {
       chrome.runtime.sendMessage({ type: "CONTENT_LOADED" }); //indicate to background script that content is loaded
     }
-  }, [isAuthenticated, isActive]);
+  }, [isActive]);
 
   //check if the send button is present on the dom
   const isSendButtonPresentOnDom = () => {
@@ -739,6 +740,12 @@ function Uploader() {
         window.localStorage.removeItem("gptr/redirect-to-login");
         // await choosePreferredModel();
         await triggerPromptFlow();
+        
+        // Trigger web reader popup check immediately (don't wait for endpoints)
+        // Use setTimeout to ensure overlay is ready
+        setTimeout(() => {
+          void maybeProceedSelectedText();
+        }, 100);
         
         // Parallelize independent API calls for better performance
         const prev = await chrome.storage.local.get("hasSubscription");

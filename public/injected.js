@@ -416,6 +416,11 @@ function invalidateTokenCache() {
 }
 
 window.addEventListener("GET_TOKEN", async () => {
+  // If the login button is visible on page then return early
+  if (document.querySelector("[data-testid='login-button']")) {
+    return;
+  }
+  
   // Return cached token if still valid
   const now = Date.now();
   if (cachedSessionToken && now < cachedSessionExpiry) {

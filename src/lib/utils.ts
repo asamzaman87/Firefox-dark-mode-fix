@@ -968,6 +968,26 @@ export const handleCheckUserSubscription = async () => {
       return true;
     }
 
+    // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
+    const cached = await chrome.storage.local.get(["hasSubscription", "checkSubscriptionLastFetchedTime", "currentPeriodEnd"]);
+    const now = Date.now();
+    const OneHoursMs = 1 * 60 * 60 * 1000;
+    
+    if (cached.hasSubscription !== undefined && cached.checkSubscriptionLastFetchedTime) {
+      // Determine cache duration: use currentPeriodEnd if it's less than 1 hour away, otherwise 1 hour
+      let cacheDurationMs = OneHoursMs;
+      if (cached.currentPeriodEnd && typeof cached.currentPeriodEnd === 'number') {
+        const timeUntilPeriodEnd = cached.currentPeriodEnd - now;
+        if (timeUntilPeriodEnd > 0 && timeUntilPeriodEnd < OneHoursMs) {
+          cacheDurationMs = timeUntilPeriodEnd;
+        }
+      }
+      
+      if ((now - cached.checkSubscriptionLastFetchedTime) < cacheDurationMs) {
+        return !!cached.hasSubscription;
+      }
+    }
+
     const data: {
       hasSubscription: boolean;
       subscriptionId: string | null;
@@ -986,6 +1006,7 @@ export const handleCheckUserSubscription = async () => {
       currentPeriodEnd: data.currentPeriodEnd ?? null,
       isTrial: !!data?.isTrial,
       trialEndsAt: data?.trialEndsAt ?? null,
+      checkSubscriptionLastFetchedTime: now,
     });
 
     return effectiveHasSub;
@@ -1018,6 +1039,19 @@ export const fetchStripeProducts = async () => {
 
 export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
   try {
+    // Clear subscription caches when checkout session is created
+    // Wrap in Promise to ensure it completes before redirect
+    await new Promise<void>((resolve) => {
+      chrome.storage.local.remove(
+        [
+          "checkSubscriptionLastFetchedTime",
+          "subscriptionDetailsLastFetchedTime",
+          "subscriptionDetails",
+        ],
+        () => resolve()
+      );
+    });
+    
     const data = await secureFetch(
       `${BACKEND_URI}/gpt-reader/create-checkout-session`,
       { method: "POST", body: JSON.stringify(payload) }
@@ -1056,10 +1090,40 @@ export const getSubscriptionDetails = async (): Promise<{
   try {
     const openaiId = await waitForStorageKey<string>("openaiId", "sync");
     if (!openaiId) return null;
+    
+    // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
+    const cached = await chrome.storage.local.get(["subscriptionDetails", "subscriptionDetailsLastFetchedTime"]);
+    const now = Date.now();
+    const OneHoursMs = 1 * 60 * 60 * 1000;
+    
+    if (cached.subscriptionDetails && cached.subscriptionDetailsLastFetchedTime) {
+      // Determine cache duration: use currentPeriodEnd if it's less than 1 hour away, otherwise 1 hour
+      let cacheDurationMs = OneHoursMs;
+      if (cached.subscriptionDetails.currentPeriodEnd && typeof cached.subscriptionDetails.currentPeriodEnd === 'number') {
+        const timeUntilPeriodEnd = cached.subscriptionDetails.currentPeriodEnd - now;
+        if (timeUntilPeriodEnd > 0 && timeUntilPeriodEnd < OneHoursMs) {
+          cacheDurationMs = timeUntilPeriodEnd;
+        }
+      }
+      
+      if ((now - cached.subscriptionDetailsLastFetchedTime) < cacheDurationMs) {
+        return cached.subscriptionDetails;
+      }
+    }
+    
     const data = await secureFetch(
       `${BACKEND_URI}/gpt-reader/subscription-details?openaiId=${openaiId}`,
       { method: "GET" }
     );
+    
+    // Cache the result
+    if (data) {
+      await chrome.storage.local.set({
+        subscriptionDetails: data,
+        subscriptionDetailsLastFetchedTime: now,
+      });
+    }
+    
     return data;
   } catch {
     return null;

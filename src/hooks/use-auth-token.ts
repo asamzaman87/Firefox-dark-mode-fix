@@ -5,9 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const useAuthToken = () => {
     const [token, setToken] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
-    const [intervalId, setIntervalId] = useState<NodeJS.Timeout>();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const signedOutRef = useRef(false);
+    const hasClearedForCurrentLoginStateRef = useRef(false);
 
     const getTokenEvent = useCallback(() => new CustomEvent(LISTENERS.GET_TOKEN), []);
 
@@ -80,6 +80,8 @@ const useAuthToken = () => {
         setUserId(null);
         setIsAuthenticated(false);
         localStorage.removeItem("gptr/auth");
+        localStorage.removeItem("gptr/cachedSessionToken");
+        localStorage.removeItem("gptr/cachedSessionExpiry");
 
         chrome.runtime.sendMessage({ type: LISTENERS.SIGNOUT_RECEIVED });
     };
@@ -130,6 +132,65 @@ const useAuthToken = () => {
             window.removeEventListener(LISTENERS.SIGNOUT_RECEIVED, handleSignoutReceived);
         };
     }, [getTokenEvent]);
+
+    // Constantly monitor for login button appearance and clear chrome storage if it appears
+    useEffect(() => {
+        const checkLoginButton = async () => {
+            const isLoggedOut = !!document.querySelector("[data-testid='login-button']");
+
+            // If login button disappeared (user logged in), reset the flag
+            if (!isLoggedOut && hasClearedForCurrentLoginStateRef.current) {
+                hasClearedForCurrentLoginStateRef.current = false;
+                return;
+            }
+
+            // Only clear once per logout detection
+            if (!isLoggedOut || hasClearedForCurrentLoginStateRef.current) {
+                return;
+            }
+
+            try {
+                // Only fetch the keys we actually care about
+                const syncKeysToPreserve = ["version", "bannerCount", "countLastViewedOn"];
+                const localKeysToPreserve = ["origin"];
+
+                const syncData = await chrome.storage.sync.get(syncKeysToPreserve);
+                const localData = await chrome.storage.local.get(localKeysToPreserve);
+
+                // Clear sync storage, then restore preserved keys
+                await new Promise<void>((resolve) => {
+                    chrome.storage.sync.clear(() => {
+                        chrome.storage.sync.set(syncData, resolve);
+                    });
+                });
+
+                // Clear local storage, then restore preserved keys
+                await new Promise<void>((resolve) => {
+                    chrome.storage.local.clear(() => {
+                        chrome.storage.local.set(localData, resolve);
+                    });
+                });
+
+                // Also clear localStorage caches
+                localStorage.removeItem("gptr/cachedSessionToken");
+                localStorage.removeItem("gptr/cachedSessionExpiry");
+                localStorage.removeItem("gptr/auth");
+
+                if (window.__gptReaderCachedToken) {
+                    window.__gptReaderCachedToken = undefined;
+                }
+
+                // Mark cleanup done for this logout detection
+                hasClearedForCurrentLoginStateRef.current = true;
+
+            } catch (err) {
+                // Silently ignore errors
+            }
+        };
+
+        const intervalId = setInterval(checkLoginButton, 2000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     return { userId, token, isAuthenticated }
 
