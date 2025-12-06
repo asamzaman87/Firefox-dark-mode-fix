@@ -369,8 +369,8 @@ const useStreamListener = (
 
         // ——— copyright/inappropriateness detection ———
         if (
-            actual.length < 80 &&
-            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist"))
+            actual.length < 110 &&
+            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist") || actual.includes("Sorry"))
         ) {
             if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
                 console.warn("[handleConvStream] Text is being deemed as inappropriate by ChatGPT due to copyright or language issues.");
