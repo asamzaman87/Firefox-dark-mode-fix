@@ -94,7 +94,7 @@ const useAuthToken = () => {
                 if (!userId) setUserId('test');
             }
             window.dispatchEvent(getTokenEvent());
-        }, 5000);
+        }, 2500);
 
         return () => clearInterval(id);
     }, [token, getTokenEvent]);

@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, maybeDeleteChat, reconcileScheduledAnnualFlag, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
@@ -834,7 +834,7 @@ function Uploader() {
               await chrome.storage.local.get(["isTrial", "isSubscriptionCancelled"]);
             if (!trialFlag && !isSubscriptionCancelled) {
               try {
-                // Determine current plan and scheduled-annual status
+                // Determine current plan
                 let details;
                 if (detectBrowser() === "firefox") {
                   details = await new Promise<any>((resolve) => {
@@ -846,15 +846,18 @@ function Uploader() {
                   details = await getSubscriptionDetails();
                 }
                 const currentId = details?.currentPriceId ?? null;
-                const scheduledAnnual = reconcileScheduledAnnualFlag();
                 if (isAnnualPriceId(currentId)) {
                   localStorage.setItem("gptr/annualPlan", "true");
                 } else {
                   localStorage.removeItem("gptr/annualPlan");
                 }
 
-                // Only count/nudge on MONTHLY and not-scheduled-to-annual
-                if (currentId && !isAnnualPriceId(currentId) && !scheduledAnnual) {
+                // Count/nudge for MONTHLY plans (show annual + lifetime) or ANNUAL plans (show only lifetime)
+                // Exclude lifetime users from seeing any upsell popups
+                const isLifetime = details?.isLifetime === true;
+                // Count for both monthly and annual users (but not lifetime)
+                // We check details exists and isLifetime is false (or undefined, which means not lifetime)
+                if (details && !isLifetime) {
                   const { premiumOpenCount = 0 } = await chrome.storage.local.get([
                     "premiumOpenCount",
                   ]);

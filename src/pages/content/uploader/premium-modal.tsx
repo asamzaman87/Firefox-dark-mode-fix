@@ -20,7 +20,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { usePremiumModal } from "../../../context/premium-modal";
 import { useToast } from "../../../hooks/use-toast";
-import { DISCOUNT_FREQUENCY, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, ORIGINAL_PRICE_ANNUAL_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
+import { DISCOUNT_FREQUENCY, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, LIFETIME_DEAL_ID, LIFETIME_PRICE, ORIGINAL_PRICE_ANNUAL_ID, TOAST_STYLE_CONFIG } from "../../../lib/constants";
 interface PremiumModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -84,7 +84,7 @@ export interface CheckoutPayloadType {
 const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount = false }) => {
   const [product, setProduct] = useState<Product>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
+  const [billingInterval, setBillingInterval] = useState<"month" | "year" | "lifetime">("year");
   const { reason } = usePremiumModal();
   const { toast } = useToast();
   const [openCount, setOpenCount] = useState<number | undefined>(undefined);
@@ -297,6 +297,8 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           // If we can't map, fall back gracefully to monthly (no breakage)
           console.warn("No annual mapping found for", priceIdToUse);
         }
+      } else if (billingInterval === "lifetime") {
+        priceIdToUse = LIFETIME_DEAL_ID;
       }
 
       
@@ -443,17 +445,38 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
                     >
                       Annually (Save 20%)
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setBillingInterval("lifetime")}
+                      className={cn(
+                        "gpt:px-3 gpt:py-1.5 gpt:text-sm gpt:font-medium gpt:transition-colors",
+                        billingInterval === "lifetime"
+                          ? "gpt:bg-gray-900 gpt:text-white gpt:dark:bg-gray-100 gpt:dark:text-gray-900"
+                          : "gpt:bg-transparent gpt:text-gray-800 gpt:dark:text-gray-200 hover:gpt:bg-gray-50 gpt:dark:hover:bg-gray-800/50"
+                      )}
+                      role="tab"
+                      aria-selected={billingInterval === "lifetime"}
+                      aria-controls="billing-lifetime"
+                    >
+                      Lifetime Deal
+                    </button>
                   </div>
                 </div>
               )}
 
               <h3 className="gpt:font-bold gpt:text-lg gpt:mb-1">{plan.title}</h3>
               <p
-                style={{ color: priceTextColor }}
-                className="gpt:text-sm gpt:mb-4 gpt:font-semibold"
+                className={cn(
+                  "gpt:text-sm gpt:mb-4 gpt:font-semibold",
+                  getIsDarkMode() ? "gpt:text-white" : "gpt:text-black"
+                )}
               >
                 {plan.type === "premium"
-                  ? (billingInterval === "year" ? annualPriceLabel : monthlyPriceLabel)
+                  ? (billingInterval === "lifetime" 
+                      ? `USD ${LIFETIME_PRICE} One Time Payment`
+                      : billingInterval === "year" 
+                        ? annualPriceLabel 
+                        : monthlyPriceLabel)
                   : plan.price}
               </p>
 

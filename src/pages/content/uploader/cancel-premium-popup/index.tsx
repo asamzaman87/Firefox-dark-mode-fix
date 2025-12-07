@@ -20,41 +20,26 @@ import {
   DISCOUNT_PRICE_ID,
   FIRST_DISCOUNT_PRICE_ANNUAL_ID,
   FIRST_DISCOUNT_PRICE_ID,
+  LIFETIME_DEAL_ID,
+  LIFETIME_PRICE,
   ORIGINAL_PRICE_ANNUAL_ID,
   ORIGINAL_PRICE_ID,
-  SCHEDULED_199_AT,
-  SCHEDULED_199_FLAG,
   TOAST_STYLE_CONFIG,
   TOAST_STYLE_CONFIG_INFO,
 } from "@/lib/constants";
 import {
   cancelSubscription,
-  clearScheduled199Flags,
-  clearScheduledAnnualFlags,
+  createCheckoutSession,
   detectBrowser,
   fetchStripeProducts,
   getStoredValue,
   getSubscriptionDetails,
   isAnnualPriceId,
-  reconcileScheduledAnnualFlag,
   switchSubscriptionToPrice,
 } from "@/lib/utils";
 import { AlertTriangle, Crown } from "lucide-react";
 import { FC, useEffect, useMemo, useState } from "react";
 import AnnualUpsellPopup from "../annual-upsell-popup";
-
-/* Small helpers for local flag management */
-const getScheduledAt = (): number | null => {
-  const raw = window.localStorage.getItem(SCHEDULED_199_AT);
-  const n = raw ? Number(raw) : NaN;
-  return Number.isFinite(n) ? n : null;
-};
-const setScheduled = (atSec?: number | null) => {
-  window.localStorage.setItem(SCHEDULED_199_FLAG, "true");
-  if (typeof atSec === "number" && atSec > 0) {
-    window.localStorage.setItem(SCHEDULED_199_AT, String(atSec));
-  }
-};
 
 /* ──────────────────────────────────────────────────────────────────────────────
  * Popup 2: “Stay for $1.99?” (offer)
@@ -81,9 +66,7 @@ const StayOfferPopup: FC<{
             </div>
           </DialogTitle>
           <DialogDescription className="gpt:text-center gpt:text-sm gpt:mt-2">
-            Keep Premium for the rest of your current cycle, then pay{" "}
-            <strong>$1.99/month</strong> starting next billing period
-            {nextCycleDate ? ` (after ${nextCycleDate})` : ""}.
+            Switch to <strong>$1.99/month</strong> immediately and keep Premium.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,12 +117,11 @@ const AlreadySwitchedPopup: FC<{
           <DialogTitle className="gpt:text-xl gpt:font-bold gpt:text-center">
             <div className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
               <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
-              You’re already switching to $1.99
+              You're already on $1.99/month
             </div>
           </DialogTitle>
           <DialogDescription className="gpt:text-center gpt:text-sm gpt:mt-2">
-            You’ve scheduled a switch to <strong>$1.99/month</strong>
-            {nextCycleDate ? ` after ${nextCycleDate}` : ""}. Do you still want
+            You're currently paying <strong>$1.99/month</strong>. Do you still want
             to cancel now?
           </DialogDescription>
         </DialogHeader>
@@ -205,7 +187,10 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
 
   const [loading, setLoading] = useState<boolean>(false);        // for real cancel
   const [offerLoading, setOfferLoading] = useState<boolean>(false); // for switching to 1.99
-  const [showAnnualUpsell, setShowAnnualUpsell] = useState<boolean>(false); 
+  const [undoCancellation, setUndoCancellation] = useState<boolean>(false); // for undoing cancellation
+  const [showAnnualUpsell, setShowAnnualUpsell] = useState<boolean>(false);
+  const [lifetimeLoading, setLifetimeLoading] = useState<boolean>(false);
+  const [isLifetime, setIsLifetime] = useState<boolean>(false); 
 
   // For display/debug only (don’t rely on these for eligibility decisions)
   const [currentPriceId, setCurrentPriceId] = useState<string | null>(null);
@@ -256,11 +241,6 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       const { currentPeriodEnd, isSubscriptionCancelled } = (res as any)?.data || {};
       setCancelInfo({ currentPeriodEnd, isSubscriptionCancelled });
 
-      // Cancelling means the “scheduled $1.99 later” plan is obsolete
-      clearScheduled199Flags();
-
-      // Clear any scheduled-annual local flags on successful cancellation
-      clearScheduledAnnualFlags();
 
       toast({
         description: (res as any)?.message || "Cancel subscription successfully",
@@ -332,6 +312,35 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
     return () => window.clearInterval(id);
   }, [isTrial, trialEndsAt]);
 
+  // Fetch subscription details when user is subscribed to check if user is lifetime
+  // This runs early so the UI is ready when popover opens
+  useEffect(() => {
+    if (!isSubscribed) return;
+
+    (async () => {
+      try {
+        let details;
+        if (detectBrowser() === "firefox") {
+          details = await new Promise<any>((resolve) => {
+            chrome.runtime.sendMessage({ type: "GET_SUBSCRIPTION_DETAILS" }, (response) =>
+              resolve(response)
+            );
+          });
+        } else {
+          details = await getSubscriptionDetails();
+        }
+        
+        if (details) {
+          const current = details?.currentPriceId ?? null;
+          setCurrentPriceId(current);
+          setIsLifetime(details?.isLifetime === true);
+        }
+      } catch {
+        // Silent fail - don't break the UI
+      }
+    })();
+  }, [isSubscribed]);
+
   const formattedEndDate = useMemo(() => {
     return cancelInfo?.currentPeriodEnd
       ? new Date(cancelInfo.currentPeriodEnd * 1000).toLocaleDateString(
@@ -355,8 +364,13 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
     return candidates.includes(priceId);
   };
 
-  // Entry point when user clicks “Cancel Subscription”
+  // Entry point when user clicks "Cancel Subscription"
   const handleOpenCancelClick = async () => {
+    // Don't allow cancellation for lifetime users
+    if (isLifetime) {
+      return;
+    }
+
     try {
       let details;
       if (detectBrowser() === "firefox") {
@@ -370,18 +384,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       }
       const current = details?.currentPriceId ?? null;
       setCurrentPriceId(current);
-      if (isAnnualPriceId(current)) {
-        // Clean any stale local flags; user is already on annual
-        clearScheduledAnnualFlags();
-      }
-
-      // If user has scheduled a switch to ANNUAL and is not on annual yet, ask them
-      // for confirmation (like your $1.99 already-switched flow)
-      const scheduledAnnual = reconcileScheduledAnnualFlag();
-      if (scheduledAnnual && !isAnnualPriceId(current)) {
-        setShowAlreadyAnnualDialog(true); // show popup 4 (annual-specific)
-        return;
-      }
+      setIsLifetime(details?.isLifetime === true);
 
       // If backend returned the period end, update local view so the popups can reflect it
       if (typeof details?.currentPeriodEnd === "number") {
@@ -403,26 +406,9 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
         }
       }
 
-      // Reconcile scheduled flag with reality
-      let alreadyScheduled = window.localStorage.getItem(SCHEDULED_199_FLAG) === "true";
-      const at = getScheduledAt();
-      const nowSec = Math.floor(Date.now() / 1000);
-
-      // If user has already moved to $1.99 (backend truth) → clear stale flag
-      if (current === DISCOUNT_PRICE_ID) {
-        clearScheduled199Flags();
-        alreadyScheduled = false;
-      }
-
-      // If flag says scheduled but we have no timestamp or timestamp passed → clear too
-      if (alreadyScheduled && (!at || at <= nowSec)) {
-        clearScheduled199Flags();
-        alreadyScheduled = false;
-      }
-
       // Branching:
-      // A) If user previously chose $1.99 AND they’re still on 2.99/4.99 → show popup #3
-      if (alreadyScheduled && isOnPrev(current, dpid)) {
+      // A) If user is already on $1.99 → show popup #3
+      if (current === DISCOUNT_PRICE_ID) {
         setShowAlreadyDialog(true);
         return;
       }
@@ -440,7 +426,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
     }
   };
 
-  // Accept: schedule price change to $1.99 starting next cycle
+  // Accept: switch price to $1.99 immediately
   const handleAccept199 = async () => {
     setOfferLoading(true);
     try {
@@ -469,17 +455,13 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
         }));
       }
 
-      // Track locally that user accepted the $1.99 switch (for popup #3 logic)
-      setScheduled(whenFromResp ?? cancelInfo?.currentPeriodEnd ?? null);
 
       toast({
-        description: "🎉 Your plan will switch to $1.99/month starting next cycle.",
+        description: "🎉 Your plan is now $1.99/month!",
         style: TOAST_STYLE_CONFIG_INFO,
       });
       setShowOfferDialog(false);
       setIsOpen(false);
-      // User chose monthly $1.99 → clear any scheduled-annual choice
-      clearScheduledAnnualFlags();
     } catch (error) {
       console.log("Error switching price", error);
       toast({
@@ -526,13 +508,73 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                   </div>
                 </div>
               ) : cancelInfo?.isSubscriptionCancelled ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="gpt:h-5 gpt:w-5 gpt:text-orange-600" />
+                    <div>
+                      <h4 className="gpt:font-semibold gpt:text-sm">Subscription Cancelled</h4>
+                      {formattedEndDate && (
+                        <p className="gpt:text-xs">Ends on {formattedEndDate || ""}</p>
+                      )}
+                    </div>
+                  </div>
+                  <LoadingButton
+                    loading={undoCancellation}
+                    onClick={async () => {
+                      setUndoCancellation(true);
+                      try {
+                        const subscriptionId = await getStoredValue<string>("subscriptionId", "local");
+                        if (!subscriptionId) throw new Error("Missing subscriptionId");
+
+                        let res;
+                        if (detectBrowser() === "firefox") {
+                          res = await new Promise<any>((resolve) => {
+                            chrome.runtime.sendMessage(
+                              { type: "CANCEL_SUBSCRIPTION", payload: { subscriptionId, cancel: true } },
+                              (response) => resolve(response)
+                            );
+                          });
+                        } else {
+                          res = await cancelSubscription(subscriptionId, true);
+                        }
+
+                        const { currentPeriodEnd, isSubscriptionCancelled } = (res as any)?.data || {};
+                        setCancelInfo({ currentPeriodEnd, isSubscriptionCancelled: isSubscriptionCancelled ?? false });
+
+                        // Update chrome storage
+                        await chrome.storage.local.set({
+                          isSubscriptionCancelled: isSubscriptionCancelled ?? false,
+                          currentPeriodEnd: currentPeriodEnd ?? null,
+                        });
+
+                        toast({
+                          description: "✅ Subscription cancellation has been undone. Your subscription is active.",
+                          style: TOAST_STYLE_CONFIG_INFO,
+                        });
+                      } catch (error) {
+                        console.log("Error undoing cancellation", error);
+                        toast({
+                          description: "Something went wrong while undoing cancellation",
+                          style: TOAST_STYLE_CONFIG,
+                          duration: 2000,
+                        });
+                      } finally {
+                        setUndoCancellation(false);
+                      }
+                    }}
+                    className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:bg-gray-800 gpt:dark:bg-gray-50 gpt:text-gray-50 gpt:dark:text-gray-800"
+                  >
+                    Undo Cancellation
+                  </LoadingButton>
+                </div>
+              ) : isLifetime ? (
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="gpt:h-5 gpt:w-5 gpt:text-orange-600" />
+                  <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
                   <div>
-                    <h4 className="gpt:font-semibold gpt:text-sm">Subscription Cancelled</h4>
-                    {formattedEndDate && (
-                      <p className="gpt:text-xs">Ends on {formattedEndDate || ""}</p>
-                    )}
+                    <h4 className="gpt:font-semibold gpt:text-sm">Lifetime Deal</h4>
+                    <p className="gpt:text-xs gpt:text-gray-500 gpt:dark:text-gray-400">
+                      You have lifetime access
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -544,10 +586,10 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                 </div>
               )}
 
-              {!isTrial && !cancelInfo?.isSubscriptionCancelled && (
+              {!isTrial && !cancelInfo?.isSubscriptionCancelled && !isLifetime && (
                 <div className="gpt:space-y-2">
                   {/* NEW: Switch to Annual (Save 20%) — hidden if already scheduled */}
-                  {!(reconcileScheduledAnnualFlag() || isAnnualPriceId(currentPriceId) || localStorage.getItem("gptr/annualPlan") === "true") && (
+                  {!(isAnnualPriceId(currentPriceId) || localStorage.getItem("gptr/annualPlan") === "true") && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -560,6 +602,80 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                         </div>
                         <div className="gpt:text-xs gpt:text-gray-400">
                           Pay once a year and save
+                        </div>
+                      </div>
+                    </Button>
+                  )}
+
+                  {/* Switch to Lifetime Deal - hidden if already on lifetime */}
+                  {!isLifetime && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gpt:w-full gpt:justify-start gpt:text-left gpt:h-auto gpt:p-2"
+                      disabled={lifetimeLoading}
+                      onClick={async () => {
+                        setLifetimeLoading(true);
+                        try {
+                          const storageData = await new Promise<any>((resolve, reject) => {
+                            chrome.storage.sync.get(
+                              ["email", "name", "openaiId", "picture"],
+                              (result) => {
+                                if (chrome.runtime.lastError) {
+                                  return reject(chrome.runtime.lastError);
+                                }
+                                resolve(result);
+                              }
+                            );
+                          });
+                          const { email, name, openaiId, picture } = storageData;
+
+                          if (!openaiId) {
+                            toast({
+                              description: "Unable to get user information.",
+                              style: TOAST_STYLE_CONFIG,
+                            });
+                            return;
+                          }
+
+                          const payload = { openaiId, email, name, picture, priceId: LIFETIME_DEAL_ID };
+                          let sessionUrl: string;
+                          if (detectBrowser() === "firefox") {
+                            const session = await new Promise<any>((resolve) => {
+                              chrome.runtime.sendMessage(
+                                { type: "CREATE_CHECKOUT_SESSION", payload },
+                                (response) => resolve(response)
+                              );
+                            });
+                            sessionUrl = session?.url;
+                          } else {
+                            const session = await createCheckoutSession(payload);
+                            sessionUrl = session?.url;
+                          }
+
+                          if (!sessionUrl) {
+                            throw new Error("No checkout URL");
+                          }
+                          setIsOpen(false);
+                          window.open(sessionUrl, "_self");
+                        } catch (error) {
+                          console.error("Checkout error:", error);
+                          toast({
+                            description: "Something went wrong while attempting to checkout",
+                            style: TOAST_STYLE_CONFIG,
+                            duration: 5000,
+                          });
+                        } finally {
+                          setLifetimeLoading(false);
+                        }
+                      }}
+                    >
+                      <div>
+                        <div className="gpt:font-medium gpt:text-[16px]">
+                          {lifetimeLoading ? "Processing..." : "Switch to Lifetime Deal"}
+                        </div>
+                        <div className="gpt:text-xs gpt:text-gray-400">
+                          One-time payment of USD {LIFETIME_PRICE}
                         </div>
                       </div>
                     </Button>
@@ -654,6 +770,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
         onOpenChange={(open) => {
           setShowAnnualUpsell(open);
         }}
+        showConfirmationDirectly={true}
       />
 
       {/* NEW Popup 4: Already scheduled Annual → still cancel? */}
@@ -667,8 +784,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
               You’re already switching to Annual
             </DialogTitle>
             <DialogDescription className="gpt:text-center gpt:text-sm gpt:mt-2">
-              You chose to switch to the annual plan starting next cycle
-              {formattedEndDate ? ` (after ${formattedEndDate})` : ""}. Do you still want to cancel now?
+              You're currently on the annual plan. Do you still want to cancel now?
             </DialogDescription>
           </DialogHeader>
           <div className="gpt:flex gpt:flex-col gpt:gap-4 gpt:mt-2">

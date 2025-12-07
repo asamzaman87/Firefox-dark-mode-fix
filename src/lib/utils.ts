@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, SCHEDULED_199_AT, SCHEDULED_199_FLAG, SCHEDULED_ANNUAL_AT, SCHEDULED_ANNUAL_FLAG, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX, MODELS_TO_WARN } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LIFETIME_DEAL_ID, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX, MODELS_TO_WARN } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
@@ -820,6 +820,13 @@ export function isAnnualPriceId(id?: string | null): boolean {
   );
 }
 
+// Deprecated: Use details?.isLifetime from getSubscriptionDetails() instead
+// Keeping for backward compatibility but prefer using the API field
+export function isLifetimePriceId(id?: string | null): boolean {
+  if (!id) return false;
+  return id === LIFETIME_DEAL_ID;
+}
+
 /**
  * Map a known monthly priceId → its annual counterpart.
  * If `monthlyId` equals your product default, we return ORIGINAL_PRICE_ANNUAL_ID.
@@ -842,61 +849,6 @@ export function toAnnualPriceId(
   return null;
 }
 
-export function clearScheduled199Flags() {
-  try {
-    window.localStorage.removeItem(SCHEDULED_199_FLAG);
-    window.localStorage.removeItem(SCHEDULED_199_AT);
-  } catch {
-    /* no-op */
-  }
-}
-
-/** True iff a $1.99 switch is scheduled AND its effective time is in the future. Clears stale flags otherwise. */
-export function reconcileScheduled199Flag(nowSec = Math.floor(Date.now() / 1000)): boolean {
-  const flag = window.localStorage.getItem(SCHEDULED_199_FLAG) === "true";
-  if (!flag) return false;
-  const raw = window.localStorage.getItem(SCHEDULED_199_AT);
-  const at = raw ? Number(raw) : NaN;
-
-  if (!Number.isFinite(at) || at <= nowSec) {
-    clearScheduled199Flags();
-    return false;
-  }
-  return true;
-}
-
-
-export function clearScheduledAnnualFlags() {
-  try {
-    window.localStorage.removeItem(SCHEDULED_ANNUAL_FLAG);
-    window.localStorage.removeItem(SCHEDULED_ANNUAL_AT);
-  } catch {
-    /* no-op */
-  }
-}
-
-/**
- * Returns true iff an annual plan switch is scheduled AND its effective timestamp is in the future.
- * If timestamp is missing/invalid/past, clears the local flags and returns false.
- * Reads/writes window.localStorage only.
- */
-export function reconcileScheduledAnnualFlag(nowSec = Math.floor(Date.now() / 1000)): boolean {
-  const flag = window.localStorage.getItem(SCHEDULED_ANNUAL_FLAG) === "true";
-  if (!flag) return false;
-  const raw = window.localStorage.getItem(SCHEDULED_ANNUAL_AT);
-  const at = raw ? Number(raw) : NaN;
-
-  if (!at) {
-    return true;
-  }
-
-  // No timestamp, NaN, or already passed → clear & return false
-  if (!Number.isFinite(at) || at <= nowSec) {
-    clearScheduledAnnualFlags();
-    return false;
-  }
-  return true;
-}
 export const waitForEditor = async (timeoutMs = 5000) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -940,7 +892,40 @@ async function waitForStorageKey<T>(
   timeoutMs = 3000,
   intervalMs = 100
 ): Promise<T | null> {
-  if (key === "openaiId") await waitForAuthToken(10000);
+  // If we're looking for openaiId, ensure auth flow has completed to store it
+  if (key === "openaiId") {
+    // First, do a quick check if it already exists
+    const quickCheck = await new Promise<T | null>((resolve) => {
+      chrome.storage[storageArea].get(key, (res) => {
+        resolve(res[key] || null);
+      });
+    });
+    
+    if (quickCheck) {
+      return quickCheck;
+    }
+    
+    try {
+      const tabs = await getGPTTabs();
+      if (tabs && tabs.length > 0 && tabs[0].id) {
+        // Inject script into page context to dispatch GET_TOKEN event
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: () => {
+            window.dispatchEvent(new Event("GET_TOKEN"));
+          }
+        }).catch(() => {
+          // Ignore errors - tab might not be ready or scripting API not available
+        });
+      }
+    } catch (e) {
+      // Ignore errors - just continue with polling
+    }
+    
+    // Increase timeout for openaiId since we're waiting for auth flow to complete
+    timeoutMs = 10000; // To allow auth flow to complete
+  }
+  
   return new Promise((resolve) => {
     const start = Date.now();
 
@@ -960,14 +945,6 @@ async function waitForStorageKey<T>(
 
 export const handleCheckUserSubscription = async () => {
   try {
-    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
-
-    if (!openaiId) {
-      console.warn("No OpenAI ID found");
-      chrome.storage.local.set({ hasSubscription: true, isTrial: false, trialEndsAt: null });
-      return true;
-    }
-
     // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
     const cached = await chrome.storage.local.get(["hasSubscription", "checkSubscriptionLastFetchedTime", "currentPeriodEnd"]);
     const now = Date.now();
@@ -986,6 +963,13 @@ export const handleCheckUserSubscription = async () => {
       if ((now - cached.checkSubscriptionLastFetchedTime) < cacheDurationMs) {
         return !!cached.hasSubscription;
       }
+    }
+
+    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
+    if (!openaiId) {
+      console.warn("No OpenAI ID found");
+      chrome.storage.local.set({ hasSubscription: true, isTrial: false, trialEndsAt: null });
+      return true;
     }
 
     const data: {
@@ -1069,12 +1053,12 @@ export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
   }
 };
 
-export const cancelSubscription = async (subscriptionId: string) => {
+export const cancelSubscription = async (subscriptionId: string, cancel?: boolean) => {
   try {
-    const res = await secureFetch(
-      `${BACKEND_URI}/gpt-reader/cancel-subscription?subscriptionId=${subscriptionId}`,
-      { method: "DELETE" }
-    );
+    const url = cancel !== undefined 
+      ? `${BACKEND_URI}/gpt-reader/cancel-subscription?subscriptionId=${subscriptionId}&cancel=${cancel}`
+      : `${BACKEND_URI}/gpt-reader/cancel-subscription?subscriptionId=${subscriptionId}`;
+    const res = await secureFetch(url, { method: "DELETE" });
     return res;
   } catch (error) {
     console.log("Error canceling subscription:", error);
@@ -1086,11 +1070,9 @@ export const getSubscriptionDetails = async (): Promise<{
   subscriptionId: string | null;
   currentPriceId: string | null;
   currentPeriodEnd: number | null;
+  isLifetime: boolean;
 } | null> => {
   try {
-    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
-    if (!openaiId) return null;
-    
     // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
     const cached = await chrome.storage.local.get(["subscriptionDetails", "subscriptionDetailsLastFetchedTime"]);
     const now = Date.now();
@@ -1110,6 +1092,9 @@ export const getSubscriptionDetails = async (): Promise<{
         return cached.subscriptionDetails;
       }
     }
+
+    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
+    if (!openaiId) return null;
     
     const data = await secureFetch(
       `${BACKEND_URI}/gpt-reader/subscription-details?openaiId=${openaiId}`,
@@ -1138,6 +1123,18 @@ export const switchSubscriptionToPrice = async (
   currentPriceId: string | null;
   currentPeriodEnd: number | null;
 }> => {
+  // Clear subscription caches when subscription is switched
+  // Wrap in Promise to ensure it completes before redirect
+  await new Promise<void>((resolve) => {
+    chrome.storage.local.remove(
+      [
+        "checkSubscriptionLastFetchedTime",
+        "subscriptionDetailsLastFetchedTime",
+        "subscriptionDetails",
+      ],
+      () => resolve()
+    );
+  });
   const data = await secureFetch(
     `${BACKEND_URI}/gpt-reader/switch-subscription-price`,
     { method: "POST", body: JSON.stringify({ subscriptionId, priceId }) }

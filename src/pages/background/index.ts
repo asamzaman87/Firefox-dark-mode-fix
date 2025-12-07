@@ -211,8 +211,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     case "CANCEL_SUBSCRIPTION": {
       const subscriptionId = request?.payload?.subscriptionId;
+      const cancel = request?.payload?.cancel;
       (async () => {
-        const res = await cancelSubscription(subscriptionId);
+        const res = cancel !== undefined 
+          ? await cancelSubscription(subscriptionId, cancel)
+          : await cancelSubscription(subscriptionId);
         sendResponse(res);
       })();
       return true;
