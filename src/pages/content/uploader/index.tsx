@@ -1169,29 +1169,25 @@ function Uploader() {
               onPrimary={handlePrimaryWebReader}
             />
           )}
-          {!showWebReaderPerm && (
-            <>
-              {!confirmed && <AlertPopup setConfirmed={handleConfirm} />}
-              {confirmed && (
-                <Content
-                  isCancelDownloadConfirmation={isCancelDownloadConfirmation}
-                  setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation}
-                  onOverlayOpenChange={onOpenChange}
-                  setPrompts={setPrompts}
-                  prompts={prompts}
-                  onOpenStartFrom={({ sections, source, fullText, lastSessionOffset, onConfirm }) => {
-                    setStartFromSections(sections);
-                    setStartFromSource(source);
-                    setStartFromFullText(fullText);
-                    startFromConfirmOffsetRef.current = onConfirm;
-                    setStartFromLastSessionOffset(lastSessionOffset);
-                    setStartFromOpen(true);
-                  }}
-                />
-              )}
-            </>
+          {!showWebReaderPerm && !confirmed && <AlertPopup setConfirmed={handleConfirm} />}
+          {!showWebReaderPerm && confirmed && (
+            <Content
+              isCancelDownloadConfirmation={isCancelDownloadConfirmation}
+              setIsCancelDownloadConfirmation={setIsCancelDownloadConfirmation}
+              onOverlayOpenChange={onOpenChange}
+              setPrompts={setPrompts}
+              prompts={prompts}
+              onOpenStartFrom={({ sections, source, fullText, lastSessionOffset, onConfirm }) => {
+                setStartFromSections(sections);
+                setStartFromSource(source);
+                setStartFromFullText(fullText);
+                startFromConfirmOffsetRef.current = onConfirm;
+                setStartFromLastSessionOffset(lastSessionOffset);
+                setStartFromOpen(true);
+              }}
+            />
           )}
-          {confirmed && (() => {
+          {confirmed && !showWebReaderPerm && !showPinTutorial && (() => {
             // Robust dark-mode detector (same as update popup)
             const textColor = getIsDarkMode() ? "#ffffff" : "#000000";
 
@@ -1226,7 +1222,7 @@ function Uploader() {
             );
           })()}
 
-          { confirmed && showPinTutorial && (
+          { confirmed && !showWebReaderPerm && showPinTutorial && (
             <PinTutorialPopUp
               open={showPinTutorial}
               onClose={(open) => {
@@ -1248,7 +1244,7 @@ function Uploader() {
               }}
             />
           )}
-          { confirmed && (
+          { confirmed && !showWebReaderPerm && !showPinTutorial && (
             <TrialGiftPopUp
               open={showTrialGift}
               trialEndsAt={trialEndsAt}
@@ -1258,7 +1254,7 @@ function Uploader() {
               }}
             />
           )}
-          {confirmed && (
+          {confirmed && !showWebReaderPerm && !showPinTutorial && !showTrialGift && (
             <BillingIssuePopup
               open={showBillingIssue}
               onClose={setShowBillingIssue}
@@ -1269,14 +1265,14 @@ function Uploader() {
               }}
             />
           )}
-          { confirmed && (
+          { confirmed && !showWebReaderPerm && !showPinTutorial && !showTrialGift && (
             <PremiumModal
               open={showDiscountPremium}
               onOpenChange={setShowDiscountPremium}
               forceDiscount
             />
           )}
-          {confirmed && (() => {
+          {confirmed && !showWebReaderPerm && !showPinTutorial && !showTrialGift && (() => {
             const textColor = getIsDarkMode() ? "#ffffff" : "#000000";
 
             return (
@@ -1321,7 +1317,7 @@ function Uploader() {
             );
           })()}
           {/* NEW: Annual Upsell for subscribed users */}
-          {confirmed && (
+          {confirmed && !showWebReaderPerm && !showPinTutorial && !showTrialGift && (
             <AnnualUpsellPopup
               open={showAnnualUpsell}
               onOpenChange={setShowAnnualUpsell}

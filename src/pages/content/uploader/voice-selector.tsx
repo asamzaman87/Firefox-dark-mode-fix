@@ -6,10 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumModal } from "@/context/premium-modal";
 import { LISTENERS, PRO_VOICES, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, detectBrowser } from "@/lib/utils";
-import { ArrowDown, Check, ChevronDown, Crown, FileAudio, Info, PlayCircle, StopCircle, UserCircle2Icon } from "lucide-react";
+import { ArrowDown, Check, ChevronDown, Crown, FileAudio, Info, PlayCircle, Settings, StopCircle, UserCircle2Icon } from "lucide-react";
 import { FC, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "../../../hooks/use-toast";
 import useFormat from "@/hooks/use-format";
+import SettingsPopup from "./settings-popup";
 
 const FILE_TYPES = ["MP3", "OPUS", "AAC"] as const;
 
@@ -30,6 +31,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     const { selected, voices } = voice;
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
+    const [openSettingsPopup, setOpenSettingsPopup] = useState<boolean>(false);
     const hasInitializedFreeVoice = useRef(false);
     const { setIsTriggered, isSubscribed, setReason } = usePremiumModal();
     const {toast} = useToast();
@@ -252,9 +254,9 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
             onClick={onClick}
             className={cn(
                 "gpt:w-max gpt:inline-flex gpt:items-center gpt:justify-evenly gpt:gap-2 gpt:py-1 gpt:px-2 gpt:text-sm gpt:font-medium",
-                "gpt:rounded-full gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-500 gpt:dark:border-gray-700 gpt:shadow-sm",
+                "gpt:rounded-full gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-500 gpt:dark:border-white gpt:shadow-sm",
                 "gpt:transition-transform gpt:hover:scale-105 gpt:active:scale-95 gpt:hover:cursor-pointer",
-                "gpt:aria-disabled:cursor-not-allowed"
+                "gpt:aria-disabled:cursor-not-allowed gpt:flex-shrink-0 gpt:whitespace-nowrap"
             )}
         >
             {children}
@@ -300,7 +302,7 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
         );
 
     return (
-        <div className="gpt:p-1.5 gpt:mx-auto gpt:flex gpt:items-center gpt:justify-center gpt:gap-2 gpt:border gpt:border-gray-500 gpt:dark:border-gray-700 gpt:rounded-full">
+        <div className="gpt:p-1.5 gpt:mx-auto gpt:flex gpt:items-center gpt:justify-center gpt:gap-2 gpt:border gpt:border-gray-500 gpt:dark:border-white gpt:rounded-full gpt:flex-wrap gpt:max-w-full">
             <Trigger onClick={() => isPlaying ? stop() : preview()}>
                 {!isPlaying && <PlayCircle className={"gpt:size-4"} onClick={preview} />}
                 {isPlaying && <StopCircle className="gpt:size-4" onClick={stop} />}
@@ -377,12 +379,19 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
+            <Trigger onClick={() => setOpenSettingsPopup(true)}>
+                <Settings className="gpt:size-4" /> Text Settings
+            </Trigger>
             <Popover>
                 <PopoverTrigger><Info className="gpt:cursor-pointer gpt:size-5 gpt:text-gray-600 gpt:dark:text-gray-100" /></PopoverTrigger>
                 <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
                     <p className="gpt:text-wrap gpt:text-left gpt:font-medium gpt:text-sm">{chrome.i18n.getMessage('voice_selector_description')}</p>
                 </PopoverContent>
             </Popover>
+            <SettingsPopup
+                open={openSettingsPopup}
+                onClose={() => setOpenSettingsPopup(false)}
+            />
         </div>
     )
 

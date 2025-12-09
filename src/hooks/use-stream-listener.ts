@@ -225,7 +225,10 @@ const useStreamListener = (
             setBlobs(prev => {
                 const next = prev.filter(e => e.chunkNumber !== chunkNumber);
                 if (!isSubscribed && isDownload && chunkNumber > FREE_DOWNLOAD_CHUNKS) {
-                    return next;
+                    const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
+                    if (firstTimeFreeDownloadHappened) {
+                        return next;
+                    }
                 }
                 next.push({ chunkNumber, blob });
                 next.sort((a, b) => a.chunkNumber - b.chunkNumber);

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHUNK_SIZE, CHUNK_TO_PAUSE_ON, FRAME_MS, HELPER_PROMPTS, LISTENERS, MIN_SILENCE_MS, LOCAL_LOGS, PROMPT_INPUT_ID, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, FREE_DOWNLOAD_CHUNKS } from "@/lib/constants";
-import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, maybeDeleteChat, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForAuthToken, waitForEditor } from "@/lib/utils";
+import { addChatToDeleteLS, choosePreferredModel, Chunk, cleanAudioBuffer, collectChatsAboveTopChat, computeNoiseFloor, detectBrowser, encodeWav, findNextSilence, handleError, maybeDeleteChat, normalizeAlphaNumeric, splitIntoChunksV2, transcribeWithFallback, waitForAuthToken, waitForEditor, filterTextForTTS } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useFileReader, { makeHtmlProgressSlicer } from "./use-file-reader";
 import useStreamListener from "./use-stream-listener";
@@ -35,6 +35,11 @@ const useAudioUrl = (isDownload: boolean) => {
     // NEW: progressive rich HTML (mirrors downloadPreviewText length)
     const [downloadPreviewHtml, setDownloadPreviewHtml] = useState<string>("");
     const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
+    // Store character mapping from filtered text to original text
+    // mapping[filteredIndex] = originalIndex
+    const charMappingRef = useRef<number[]>([]);
+    // Store original unfiltered text for preview
+    const originalTextRef = useRef<string>("");
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
     const retryCountRef = useRef<number>(0);
@@ -60,6 +65,7 @@ const useAudioUrl = (isDownload: boolean) => {
     const chunkNumList = useRef<Set<number>>(new Set());    
     const { isSubscribed, setOpen, setReason } = usePremiumModal();
     const showCompletionToast = useRef<boolean>(false);
+    const [showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup] = useState<boolean>(false);
     // read the user’s chosen format (mp3, aac, or opus)
     const { format } = useFormat();
     const storedFormat = format.toLowerCase();
@@ -428,12 +434,23 @@ const useAudioUrl = (isDownload: boolean) => {
     const splitAndSendPrompt = async (text: string) => {
         setText(text);
         const textWithoutTags = text.replace(/<img[^>]*src\s*=\s*["']\s*data:image\/[a-zA-Z]+;base64,[^"']*["'][^>]*>/gi, ''); //removes image tag if it exist in the prompt
-        const chunks: Chunk[] = await splitIntoChunksV2(textWithoutTags, CHUNK_SIZE);
-        if (chunks.length > 0) {
+        // Store original text for preview
+        originalTextRef.current = textWithoutTags;
+        // Filter text for TTS based on user settings (brackets, URLs, etc.)
+        const { filteredText, charMapping } = filterTextForTTS(textWithoutTags);
+        // Store character mapping for preview calculation
+        // Safety check: ensure mapping length matches filtered text length
+        if (charMapping.length !== filteredText.length) {
+            console.warn(`[use-audio-url] Character mapping length (${charMapping.length}) doesn't match filtered text length (${filteredText.length}). This may cause preview issues.`);
+        }
+        charMappingRef.current = charMapping;
+        // Create chunks from filtered text (for TTS)
+        const filteredChunks: Chunk[] = await splitIntoChunksV2(filteredText, CHUNK_SIZE);
+        if (filteredChunks.length > 0) {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
-            setChunks(chunks);
-            chunkRef.current = chunks;
-            injectPrompt(chunks[0].text, chunks[0].id, 0);
+            setChunks(filteredChunks);
+            chunkRef.current = filteredChunks;
+            injectPrompt(filteredChunks[0].text, filteredChunks[0].id, 0);
             // monitorStopButton();
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
@@ -480,18 +497,41 @@ const useAudioUrl = (isDownload: boolean) => {
         setProgress(totalChars > 0 ? (charsSoFar / totalChars) * 100 : 0);
 
         // Build download preview ONLY from the sequential prefix (0..k)
-        if (k >= 0) {
-            const preview = chunks
-                .slice(0, k + 1)
-                .map(c => (c.text ?? "").replaceAll("\n", " "))
-                .join("");
-            setDownloadPreviewText(preview);
-            // mirror as rich HTML (when we have a DOCX HTML source)
-            if (htmlSlicerRef.current) {
-                const next = htmlSlicerRef.current(preview);
-                setDownloadPreviewHtml(prev =>
-                    next && next.length >= (prev?.length ?? 0) ? next : (prev ?? "")
-                );
+        // Map filtered character positions back to original text using charMapping
+        if (k >= 0 && charMappingRef.current.length > 0 && originalTextRef.current) {
+            // Calculate how many filtered characters we've processed (from chunks 0..k)
+            const filteredCharsProcessed = charsSoFar;
+            
+            // Map the last filtered character position to original text position
+            // Safety: clamp to valid range to prevent index out of bounds
+            const safeFilteredIndex = Math.min(filteredCharsProcessed - 1, charMappingRef.current.length - 1);
+            
+            if (filteredCharsProcessed > 0 && safeFilteredIndex >= 0) {
+                const lastOriginalIndex = charMappingRef.current[safeFilteredIndex];
+                
+                // Additional safety: ensure original index is valid
+                if (lastOriginalIndex !== undefined && lastOriginalIndex >= 0 && lastOriginalIndex < originalTextRef.current.length) {
+                    // Slice original text up to the mapped position
+                    const preview = originalTextRef.current
+                        .slice(0, lastOriginalIndex + 1)
+                        .replaceAll("\n", " ");
+                    setDownloadPreviewText(preview);
+                    
+                    // mirror as rich HTML (when we have a DOCX HTML source)
+                    if (htmlSlicerRef.current) {
+                        const next = htmlSlicerRef.current(preview);
+                        setDownloadPreviewHtml(prev =>
+                            next && next.length >= (prev?.length ?? 0) ? next : (prev ?? "")
+                        );
+                    }
+                } else {
+                    // Fallback: if mapping is invalid, show nothing
+                    setDownloadPreviewText(undefined);
+                    setDownloadPreviewHtml("");
+                }
+            } else {
+                setDownloadPreviewText(undefined);
+                setDownloadPreviewHtml("");
             }
         } else {
             setDownloadPreviewText(undefined);
@@ -505,15 +545,24 @@ const useAudioUrl = (isDownload: boolean) => {
             k >= FREE_DOWNLOAD_CHUNKS &&
             chunks.length - 1 !== FREE_DOWNLOAD_CHUNKS
         ) {
-            setTimeout(() => {
-                handleError(
-                    "Free users can only download around 2500 characters at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
-                );
-                setReason(
-                    "Free users can only download around 2500 characters at a time. You will need to upgrade to download without limits, but you can still download what has been processed so far!"
-                );
-                setOpen(true);
-            }, 3000);
+            const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
+            if (firstTimeFreeDownloadHappened) {
+                setTimeout(() => {
+                    handleError(
+                        "Free users can only download around 5 minutes of audio at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
+                    );
+                    setReason(
+                        "Free users can only download around 5 minutes of audio at a time. You will need to upgrade to download without limits, but you can still download what has been processed so far!"
+                    );
+                    setOpen(true);
+                }, 3000);
+            } else {
+                if (!localStorage.getItem("gptr/firstTimeFreeDownloadInProgress")) {
+                    // Show the popup for "First time's on us"
+                    setShowFirstTimeFreeDownloadPopup(true);
+                    localStorage.setItem("gptr/firstTimeFreeDownloadInProgress", "true");
+                }
+            }
         }
         if (blobs.length === chunks.length && blobs.length > 0) {
             if (!isDownload && !showCompletionToast.current) {
@@ -593,10 +642,13 @@ const useAudioUrl = (isDownload: boolean) => {
         // clear progressive HTML slicer/preview
         htmlSlicerRef.current = null;
         setDownloadPreviewHtml("");
+        charMappingRef.current = [];
+        originalTextRef.current = "";
         if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
           audioCtxRef.current.close();
           audioCtxRef.current = null; // allow reinit later
         }
+        setShowFirstTimeFreeDownloadPopup(false);
     }
 
     const reStartChunkProcess = (click: boolean = false) => {
@@ -701,7 +753,10 @@ const useAudioUrl = (isDownload: boolean) => {
         }
 
         if (!isSubscribed && isDownload && currentStreamChunkNdxRef.current === FREE_DOWNLOAD_CHUNKS && currentStreamChunkNdxRef.current !== chunks.length - 1) {
-            return;
+            const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
+            if (firstTimeFreeDownloadHappened) {
+                return;
+            }  
         } else {
             if (LOCAL_LOGS) console.log("[useAudioUrl] User is not a free download user");
         }
@@ -774,7 +829,9 @@ const useAudioUrl = (isDownload: boolean) => {
         setIsPromptingPaused,
         transcribeChunks,
         cancelTranscription,
-        setText
+        setText,
+        showFirstTimeFreeDownloadPopup,
+        setShowFirstTimeFreeDownloadPopup
     }
 }
 

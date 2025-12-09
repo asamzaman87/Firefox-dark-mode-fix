@@ -116,6 +116,221 @@ export const waitForPrepareChat = (): Promise<{ event: string; data: any }[]> =>
   });
 
 //split text to small chunks
+/**
+ * Helper function to remove balanced brackets recursively
+ */
+function removeBalancedBrackets(text: string, openChar: string, closeChar: string): string {
+  let result = '';
+  let depth = 0;
+  let i = 0;
+
+  while (i < text.length) {
+    const char = text[i];
+    
+    if (char === openChar) {
+      depth++;
+      i++;
+      // Skip everything until we find the matching closing bracket
+      while (i < text.length && depth > 0) {
+        if (text[i] === openChar) {
+          depth++;
+        } else if (text[i] === closeChar) {
+          depth--;
+        }
+        i++;
+      }
+    } else if (char === closeChar) {
+      // Unmatched closing bracket, keep it
+      result += char;
+      i++;
+    } else {
+      result += char;
+      i++;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Filters text for TTS conversion based on user settings.
+ * Removes text in brackets and URLs if the corresponding settings are enabled.
+ * The original text remains visible in the UI, but filtered text is used for TTS.
+ * Returns both filtered text and a character mapping array where mapping[filteredIndex] = originalIndex
+ */
+export function filterTextForTTS(text: string): { filteredText: string; charMapping: number[] } {
+  // Build character mapping by processing character-by-character
+  const charMapping: number[] = [];
+  let filtered = '';
+  let originalIndex = 0;
+  
+  // Track which ranges to skip (brackets, URLs)
+  const skipRanges: Array<{ start: number; end: number }> = [];
+  
+  // Check settings from localStorage (default to false if not set)
+  const skipRoundBrackets = localStorage.getItem("gptr/skipRoundBrackets") === "true";
+  const skipSquareBrackets = localStorage.getItem("gptr/skipSquareBrackets") === "true";
+  const skipCurlyBrackets = localStorage.getItem("gptr/skipCurlyBrackets") === "true";
+  const skipUrls = localStorage.getItem("gptr/skipUrls") === "true";
+
+  // Find bracket ranges to skip
+  if (skipRoundBrackets) {
+    findBracketRanges(text, '(', ')', skipRanges);
+  }
+  if (skipSquareBrackets) {
+    findBracketRanges(text, '[', ']', skipRanges);
+  }
+  if (skipCurlyBrackets) {
+    findBracketRanges(text, '{', '}', skipRanges);
+  }
+
+  // Find URL ranges to skip
+  if (skipUrls) {
+    const commonTLDs = [
+      'com', 'org', 'net', 'edu', 'gov', 'mil', 'int',
+      'io', 'co', 'uk', 'ca', 'au', 'de', 'fr', 'jp', 'cn', 'in', 'br', 'ru', 'es', 'it', 'nl', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'ie', 'nz', 'sg', 'hk', 'tw', 'kr', 'mx', 'ar', 'za', 'tr', 'id', 'th', 'vn', 'ph', 'my', 'ae', 'sa', 'il', 'gr', 'pt', 'be', 'ch', 'at', 'ro', 'hu', 'bg', 'hr', 'sk', 'si', 'ee', 'lv', 'lt', 'is', 'lu', 'mt', 'cy',
+      'app', 'dev', 'tech', 'online', 'site', 'website', 'info', 'biz', 'name', 'pro', 'xyz', 'me', 'tv', 'cc', 'ws', 'mobi', 'asia', 'jobs', 'travel', 'store', 'shop', 'blog', 'news', 'media', 'email', 'cloud', 'ai', 'io'
+    ].join('|');
+    
+    const urlRegex = new RegExp(
+      `(https?:\\/\\/[^\\s]+|ftp:\\/\\/[^\\s]+|www\\.[^\\s]+|[a-zA-Z0-9-]+\\.(?:${commonTLDs})(?:[^\\s]*)?)`,
+      'gi'
+    );
+    
+    let match;
+    while ((match = urlRegex.exec(text)) !== null) {
+      skipRanges.push({ start: match.index, end: match.index + match[0].length });
+    }
+  }
+
+  // Sort skip ranges by start position
+  skipRanges.sort((a, b) => a.start - b.start);
+
+  // Merge overlapping ranges
+  const mergedRanges: Array<{ start: number; end: number }> = [];
+  for (const range of skipRanges) {
+    if (mergedRanges.length === 0 || mergedRanges[mergedRanges.length - 1].end < range.start) {
+      mergedRanges.push({ ...range });
+    } else {
+      mergedRanges[mergedRanges.length - 1].end = Math.max(
+        mergedRanges[mergedRanges.length - 1].end,
+        range.end
+      );
+    }
+  }
+
+  // Process text character by character, building filtered text and mapping
+  let rangeIndex = 0;
+  for (let i = 0; i < text.length; i++) {
+    // Check if we're in a skip range
+    while (rangeIndex < mergedRanges.length && mergedRanges[rangeIndex].end <= i) {
+      rangeIndex++;
+    }
+    
+    const inSkipRange = rangeIndex < mergedRanges.length && 
+                        i >= mergedRanges[rangeIndex].start && 
+                        i < mergedRanges[rangeIndex].end;
+    
+    if (!inSkipRange) {
+      filtered += text[i];
+      charMapping.push(i);
+    }
+  }
+
+  // Clean up multiple spaces
+  const beforeCleanup = filtered;
+  filtered = filtered.replace(/\s+/g, ' ').trim();
+  
+  // Rebuild mapping after space cleanup
+  if (filtered !== beforeCleanup) {
+    rebuildMappingAfterSpaceCleanup(charMapping, beforeCleanup, filtered);
+  }
+
+  return { filteredText: filtered, charMapping };
+}
+
+/**
+ * Finds all bracket ranges in text
+ */
+function findBracketRanges(
+  text: string,
+  openChar: string,
+  closeChar: string,
+  ranges: Array<{ start: number; end: number }>
+): void {
+  let depth = 0;
+  let bracketStart = -1;
+  
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === openChar) {
+      if (depth === 0) bracketStart = i;
+      depth++;
+    } else if (text[i] === closeChar) {
+      depth--;
+      if (depth === 0 && bracketStart >= 0) {
+        ranges.push({ start: bracketStart, end: i + 1 });
+        bracketStart = -1;
+      }
+    }
+  }
+}
+
+/**
+ * Rebuilds character mapping after space cleanup
+ */
+function rebuildMappingAfterSpaceCleanup(
+  charMapping: number[],
+  beforeText: string,
+  afterText: string
+): void {
+  const newMapping: number[] = [];
+  let beforeIdx = 0;
+  let afterIdx = 0;
+  let inWhitespace = false;
+  
+  while (beforeIdx < beforeText.length && afterIdx < afterText.length) {
+    const beforeChar = beforeText[beforeIdx];
+    const afterChar = afterText[afterIdx];
+    const isWhitespace = /\s/.test(beforeChar);
+    
+    if (isWhitespace) {
+      if (!inWhitespace && afterChar === ' ') {
+        // First whitespace becomes a single space
+        if (beforeIdx < charMapping.length) {
+          newMapping.push(charMapping[beforeIdx]);
+        }
+        afterIdx++;
+        inWhitespace = true;
+      }
+      beforeIdx++;
+    } else {
+      if (beforeChar === afterChar) {
+        if (beforeIdx < charMapping.length) {
+          newMapping.push(charMapping[beforeIdx]);
+        }
+        beforeIdx++;
+        afterIdx++;
+        inWhitespace = false;
+      } else {
+        beforeIdx++;
+      }
+    }
+  }
+  
+  // Handle trim - map remaining characters
+  while (newMapping.length < afterText.length && charMapping.length > newMapping.length) {
+    const remainingIdx = newMapping.length;
+    if (remainingIdx < charMapping.length) {
+      newMapping.push(charMapping[remainingIdx]);
+    } else {
+      break;
+    }
+  }
+  
+  charMapping.length = 0;
+  charMapping.push(...newMapping);
+}
+
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
   // 1) Sentence segmentation with multilingual support
   // Prefer Intl.Segmenter if present; else fall back to a Unicode-aware regex.
@@ -945,26 +1160,6 @@ async function waitForStorageKey<T>(
 
 export const handleCheckUserSubscription = async () => {
   try {
-    // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
-    const cached = await chrome.storage.local.get(["hasSubscription", "checkSubscriptionLastFetchedTime", "currentPeriodEnd"]);
-    const now = Date.now();
-    const OneHoursMs = 1 * 60 * 60 * 1000;
-    
-    if (cached.hasSubscription !== undefined && cached.checkSubscriptionLastFetchedTime) {
-      // Determine cache duration: use currentPeriodEnd if it's less than 1 hour away, otherwise 1 hour
-      let cacheDurationMs = OneHoursMs;
-      if (cached.currentPeriodEnd && typeof cached.currentPeriodEnd === 'number') {
-        const timeUntilPeriodEnd = cached.currentPeriodEnd - now;
-        if (timeUntilPeriodEnd > 0 && timeUntilPeriodEnd < OneHoursMs) {
-          cacheDurationMs = timeUntilPeriodEnd;
-        }
-      }
-      
-      if ((now - cached.checkSubscriptionLastFetchedTime) < cacheDurationMs) {
-        return !!cached.hasSubscription;
-      }
-    }
-
     const openaiId = await waitForStorageKey<string>("openaiId", "sync");
     if (!openaiId) {
       console.warn("No OpenAI ID found");
@@ -990,7 +1185,6 @@ export const handleCheckUserSubscription = async () => {
       currentPeriodEnd: data.currentPeriodEnd ?? null,
       isTrial: !!data?.isTrial,
       trialEndsAt: data?.trialEndsAt ?? null,
-      checkSubscriptionLastFetchedTime: now,
     });
 
     return effectiveHasSub;
@@ -1028,7 +1222,6 @@ export const createCheckoutSession = async (payload: CheckoutPayloadType) => {
     await new Promise<void>((resolve) => {
       chrome.storage.local.remove(
         [
-          "checkSubscriptionLastFetchedTime",
           "subscriptionDetailsLastFetchedTime",
           "subscriptionDetails",
         ],
@@ -1128,7 +1321,6 @@ export const switchSubscriptionToPrice = async (
   await new Promise<void>((resolve) => {
     chrome.storage.local.remove(
       [
-        "checkSubscriptionLastFetchedTime",
         "subscriptionDetailsLastFetchedTime",
         "subscriptionDetails",
       ],

@@ -180,7 +180,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           key: "download_limit",
           label:
             chrome.i18n.getMessage("download_limit") ||
-            "Text to speech downloads limited to 2500 characters",
+            "Text to speech downloads limited to around 5 minutes of audio",
         }
       ],
     },
@@ -217,6 +217,12 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           label:
             chrome.i18n.getMessage("download_transcript") ||
             "Download transcribed text in txt or pdf format",
+        },
+        {
+          key: "locate_audio",
+          label:
+            chrome.i18n.getMessage("locate_audio") ||
+            "Locate audio to track what's being read at any time",
         },
         {
           key: "more_coming",

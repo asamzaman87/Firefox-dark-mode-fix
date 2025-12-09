@@ -12,7 +12,7 @@ import { isPremium } from "@/lib/utils";
 
 const useAudioPlayer = (isDownload: boolean) => {
     const { toast, dismiss } = useToast();
-    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource } = useAudioUrl(isDownload);
+    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioUrl(isDownload);
     const {isTextToSpeech} = useSpeechMode();
     const { isAuthenticated } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -1320,6 +1320,8 @@ const useAudioPlayer = (isDownload: boolean) => {
         getChunkAtTime,
         getChunkStartTime,
         getChunkStartOffset,
+        showFirstTimeFreeDownloadPopup,
+        setShowFirstTimeFreeDownloadPopup,
     };
 
 

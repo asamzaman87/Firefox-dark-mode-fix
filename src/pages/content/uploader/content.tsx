@@ -31,6 +31,7 @@ import { Switch } from "../../../components/ui/switch";
 import useHybridTranscription from "@/hooks/useHybridTranscription";
 import MicTranscribeForm from "./input-popup/micTranscribeForm";
 import VoiceSelectPopup from "./voice-select-popup";
+import ChunkLimitPopup from "./chunk-limit-popup";
 import useFileReader, { StructuredText, SectionIndex } from "@/hooks/use-file-reader";
 
 interface ContentProps {
@@ -70,7 +71,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [showMicOnlyView, setShowMicOnlyView] = useState(false);
     const [isViewingText, setIsViewingText] = useState(false);
     
-    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, getChunkAtTime, getChunkStartTime, getChunkStartOffset } = useAudioPlayer(isDownload);
+    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, getChunkAtTime, getChunkStartTime, getChunkStartOffset, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioPlayer(isDownload);
     const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
@@ -221,6 +222,15 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     ]);
 
     const onLocateClick = useCallback(() => {
+      // Check if user is subscribed, if not show premium modal
+      if (!isSubscribed) {
+        setReason(
+          "Locate Audio is a premium feature that allows you to track what the text-to-speech is reading at any time. Upgrade to access this feature."
+        );
+        setUpgradeModalOpen(true);
+        return;
+      }
+
       // Always perform the locate highlight
       locateNow();
 
@@ -239,7 +249,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         // Close popover only if search hasn't been opened
         setLocateOpen((prev) => (locateSearchMode ? true : false));
       }, 4000); // keep in sync with your highlight lifetime
-    }, [locateNow, locateSearchMode]);
+    }, [locateNow, locateSearchMode, isSubscribed, setReason, setUpgradeModalOpen]);
 
 
 
@@ -742,6 +752,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       if (value === "DOWNLOAD") {
         setIsDownload(true);
         localStorage.setItem("gptr/download", "true");
+        // Check if this is a first-time free download and mark it as happened
+        const firstTimeFreeDownloadInProgress = localStorage.getItem("gptr/firstTimeFreeDownloadInProgress");
+        if (firstTimeFreeDownloadInProgress) {
+          localStorage.removeItem("gptr/firstTimeFreeDownloadInProgress");
+          localStorage.setItem("gptr/firstTimeFreeDownloadHappened", "true");
+        }
       } else {
         setIsDownload(false);
         localStorage.setItem("gptr/download", "false");
@@ -1409,6 +1425,11 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                         setPendingSelectedText("");
                     }
                 }} />}
+                
+                <ChunkLimitPopup
+                  open={showFirstTimeFreeDownloadPopup}
+                  onClose={() => setShowFirstTimeFreeDownloadPopup(false)}
+                />
         </div>
       </>
     );
