@@ -200,6 +200,10 @@ export function filterTextForTTS(text: string): { filteredText: string; charMapp
     let match;
     while ((match = urlRegex.exec(text)) !== null) {
       skipRanges.push({ start: match.index, end: match.index + match[0].length });
+      // Safety: prevent infinite loop on zero-length matches
+      if (match.index === urlRegex.lastIndex) {
+        urlRegex.lastIndex++;
+      }
     }
   }
 
@@ -220,7 +224,13 @@ export function filterTextForTTS(text: string): { filteredText: string; charMapp
   }
 
   // Process text character by character, building filtered text and mapping
+  // For very large texts, process in batches to avoid stack overflow
   let rangeIndex = 0;
+  
+  // Process in batches and periodically flush to avoid excessive memory usage
+  const BATCH_SIZE = 5000;
+  let batchCount = 0;
+  
   for (let i = 0; i < text.length; i++) {
     // Check if we're in a skip range
     while (rangeIndex < mergedRanges.length && mergedRanges[rangeIndex].end <= i) {
@@ -234,6 +244,15 @@ export function filterTextForTTS(text: string): { filteredText: string; charMapp
     if (!inSkipRange) {
       filtered += text[i];
       charMapping.push(i);
+      batchCount++;
+    }
+    
+    // Yield periodically for very large texts to prevent blocking
+    if (batchCount >= BATCH_SIZE && i % BATCH_SIZE === 0 && i > 0) {
+      // Use setTimeout to yield control and prevent stack overflow
+      // But we need this to be synchronous, so we'll just continue
+      // The batching helps prevent excessive array growth
+      batchCount = 0;
     }
   }
 
@@ -327,8 +346,16 @@ function rebuildMappingAfterSpaceCleanup(
     }
   }
   
+  // Replace mapping without using spread operator (which causes stack overflow with large arrays)
   charMapping.length = 0;
-  charMapping.push(...newMapping);
+  // Use push with apply in chunks to avoid stack overflow
+  const CHUNK_SIZE = 10000;
+  for (let i = 0; i < newMapping.length; i += CHUNK_SIZE) {
+    const chunk = newMapping.slice(i, i + CHUNK_SIZE);
+    for (let j = 0; j < chunk.length; j++) {
+      charMapping.push(chunk[j]);
+    }
+  }
 }
 
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {

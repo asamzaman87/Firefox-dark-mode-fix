@@ -9,9 +9,20 @@ import useFormat from "./use-format";
 import { usePremiumModal } from "@/context/premium-modal";
 import useAuthToken from "./use-auth-token";
 
-const useAudioUrl = (isDownload: boolean) => {
+const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: number, endText?: string) => void) => {
     const isCancelledRef = useRef<boolean>(false);
     const audioCtxRef = useRef<AudioContext | null>(null);
+    const sessionBaseOffsetRef = useRef<number>(0);
+    const fullOriginalTextLengthRef = useRef<number>(0);
+    const lastSavedDownloadPositionRef = useRef<number>(-1);
+    const calculatedDownloadPositionRef = useRef<number>(-1);
+    const lastSavedEndTextRef = useRef<string | undefined>(undefined);
+    const onSaveDownloadPositionRef = useRef<((offset: number, endText?: string) => void) | undefined>(onSaveDownloadPosition);
+    
+    // Keep ref updated when callback changes
+    useEffect(() => {
+        onSaveDownloadPositionRef.current = onSaveDownloadPosition;
+    }, [onSaveDownloadPosition]);
 
     function getAudioCtx(): AudioContext {
       if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
@@ -35,11 +46,13 @@ const useAudioUrl = (isDownload: boolean) => {
     // NEW: progressive rich HTML (mirrors downloadPreviewText length)
     const [downloadPreviewHtml, setDownloadPreviewHtml] = useState<string>("");
     const htmlSlicerRef = useRef<null | ((ref: string) => string)>(null);
-    // Store character mapping from filtered text to original text
-    // mapping[filteredIndex] = originalIndex
-    const charMappingRef = useRef<number[]>([]);
     // Store original unfiltered text for preview
     const originalTextRef = useRef<string>("");
+    // Store original (unfiltered) chunks - these will be filtered on-demand in injectPrompt
+    const originalChunksRef = useRef<Chunk[]>([]);
+    // Track cumulative original character positions at the start of each chunk
+    // chunkStartPositions[i] = cumulative original characters up to (but not including) chunk i
+    const chunkStartPositionsRef = useRef<number[]>([]);
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
     const retryCountRef = useRef<number>(0);
@@ -253,10 +266,34 @@ const useAudioUrl = (isDownload: boolean) => {
       }
     }
 
-    const injectPrompt = useCallback(async (text: string, id: string, ndx: number = 0) => {
+    // Helper function to filter a chunk on-demand
+    const filterChunkOnDemand = useCallback((chunk: Chunk, chunkIndex: number): string => {
+        try {
+            const result = filterTextForTTS(chunk.text);
+            return result.filteredText;
+        } catch (error) {
+            console.error(`[use-audio-url] Error filtering chunk ${chunkIndex}:`, error);
+            // Fallback: use chunk as-is without filtering
+            return chunk.text;
+        }
+    }, []);
+
+    const injectPrompt = useCallback(async (chunkIndex: number, ndx: number = 0) => {
         if (localStorage.getItem("gptr/active") !== "true") {
             return;
         }
+        
+        // Get the original chunk
+        const originalChunk = originalChunksRef.current[chunkIndex];
+        if (!originalChunk) {
+            console.error(`[injectPrompt] Chunk ${chunkIndex} not found`);
+            return;
+        }
+        
+        // Filter the chunk on-demand
+        const filteredText = filterChunkOnDemand(originalChunk, chunkIndex);
+        const id = originalChunk.id;
+        
         const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
         if (stopButton) {
             stopButton.click();
@@ -279,18 +316,18 @@ const useAudioUrl = (isDownload: boolean) => {
             });
         }
         await waitForEditor();
-        if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id);
+        if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id, "chunkIndex:", chunkIndex);
         // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
             ndx = ndx % HELPER_PROMPTS.length;
         }
         const hp = HELPER_PROMPTS[ndx];
         // Build the raw text that will go into the editor
-        const raw = `[${id}] ${hp}${text}`;
+        const raw = `[${id}] ${hp}${filteredText}`;
 
         // the textContent that ends up in the editor
         const wrapper = document.createElement("div");
-        wrapper.innerHTML = `<p>${text}</p>`;
+        wrapper.innerHTML = `<p>${filteredText}</p>`;
         const chunkTextForComparison = normalizeAlphaNumeric(wrapper.innerText || "");
 
         // Dispatch chunk info for audio sync
@@ -337,7 +374,7 @@ const useAudioUrl = (isDownload: boolean) => {
             localStorage.setItem("gptr/is-first-audio-loading", String(id === "0"));
             // Send the prompt from the input content
             setTimeout(() => {
-                sendPrompt({ text, id, ndx });
+                sendPrompt({ text: filteredText, id, ndx });
             }, 50);
             if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
         } else {
@@ -419,7 +456,13 @@ const useAudioUrl = (isDownload: boolean) => {
                                 }
                                 resolve();
                             });
-                            injectPrompt(payload.text, payload.id, payload.ndx);
+                            // Find chunk index from id (id is string representation of chunk index)
+                            const chunkIndex = parseInt(payload.id, 10);
+                            if (!isNaN(chunkIndex) && chunkIndex >= 0 && chunkIndex < originalChunksRef.current.length) {
+                                injectPrompt(chunkIndex, payload.ndx);
+                            } else {
+                                console.error("[startSendWatchdog] Could not find chunk index for id:", payload.id);
+                            }
                         }
                     }
                 } catch {
@@ -431,27 +474,41 @@ const useAudioUrl = (isDownload: boolean) => {
     [injectPrompt]
     );
 
-    const splitAndSendPrompt = async (text: string) => {
+    const splitAndSendPrompt = async (text: string, fullTextLength?: number, startOffset: number = 0) => {
         setText(text);
         const textWithoutTags = text.replace(/<img[^>]*src\s*=\s*["']\s*data:image\/[a-zA-Z]+;base64,[^"']*["'][^>]*>/gi, ''); //removes image tag if it exist in the prompt
+        
         // Store original text for preview
         originalTextRef.current = textWithoutTags;
-        // Filter text for TTS based on user settings (brackets, URLs, etc.)
-        const { filteredText, charMapping } = filterTextForTTS(textWithoutTags);
-        // Store character mapping for preview calculation
-        // Safety check: ensure mapping length matches filtered text length
-        if (charMapping.length !== filteredText.length) {
-            console.warn(`[use-audio-url] Character mapping length (${charMapping.length}) doesn't match filtered text length (${filteredText.length}). This may cause preview issues.`);
+        // Track session base offset for position calculation
+        sessionBaseOffsetRef.current = startOffset;
+        // Track full original text length if provided (for accurate position calculation)
+        if (fullTextLength !== undefined) {
+            fullOriginalTextLengthRef.current = fullTextLength;
         }
-        charMappingRef.current = charMapping;
-        // Create chunks from filtered text (for TTS)
-        const filteredChunks: Chunk[] = await splitIntoChunksV2(filteredText, CHUNK_SIZE);
-        if (filteredChunks.length > 0) {
+        
+        // Reset tracking
+        chunkStartPositionsRef.current = [0]; // First chunk starts at position 0
+        
+        // Split original (unfiltered) text into chunks - we'll filter on-demand in injectPrompt
+        const originalChunks: Chunk[] = await splitIntoChunksV2(textWithoutTags, CHUNK_SIZE);
+        originalChunksRef.current = originalChunks;
+        
+        // Calculate start positions for each chunk
+        let cumulativePos = 0;
+        for (let i = 0; i < originalChunks.length; i++) {
+            chunkStartPositionsRef.current[i] = cumulativePos;
+            cumulativePos += originalChunks[i].text.length;
+        }
+        
+        if (originalChunks.length > 0) {
             setCurrentChunkBeingPromptedIndex(currentChunkBeingPromptedIndex);
-            setChunks(filteredChunks);
-            chunkRef.current = filteredChunks;
-            injectPrompt(filteredChunks[0].text, filteredChunks[0].id, 0);
-            // monitorStopButton();
+            // Store original chunks - we'll filter on-demand when injecting
+            setChunks(originalChunks);
+            chunkRef.current = originalChunks;
+            
+            // Inject the first chunk (will be filtered inside injectPrompt)
+            injectPrompt(0, 0);
             nextChunkRef.current += 1;
             chunkNumList.current.add(0);
         }
@@ -469,7 +526,10 @@ const useAudioUrl = (isDownload: boolean) => {
           return;
         }
         
-        const totalChars = chunks.reduce((sum, chunk) => sum + chunk.text.length, 0);
+        // Calculate total filtered chars
+        // For totalChars: use original chunk lengths (estimate, since we don't know filtered lengths of unprocessed chunks yet)
+        // This ensures progress denominator is based on all chunks, not just processed ones
+        const totalChars = originalChunksRef.current.reduce((sum, chunk) => sum + chunk.text.length, 0);
 
         // build a set of available indices
         const have = new Set<number>();
@@ -479,14 +539,16 @@ const useAudioUrl = (isDownload: boolean) => {
         let k = -1;
         while (have.has(k + 1)) k += 1;
 
+        // Calculate chars processed based on original chunk lengths (consistent with totalChars)
         const charsSoFar = k >= 0
-        ? chunks.slice(0, k + 1).reduce((sum, chunk) => sum + chunk.text.length, 0)
-        : 0;
+            ? originalChunksRef.current.slice(0, k + 1).reduce((sum, chunk) => sum + chunk.text.length, 0)
+            : 0;
+        
 
         if (LOCAL_LOGS) {
             // 🔎 log missing chunk numbers
             const missing: number[] = [];
-            for (let i = 0; i < chunks.length; i++) {
+            for (let i = 0; i < originalChunksRef.current.length; i++) {
                 if (!have.has(i)) {
                     missing.push(i);
                 }
@@ -497,41 +559,56 @@ const useAudioUrl = (isDownload: boolean) => {
         setProgress(totalChars > 0 ? (charsSoFar / totalChars) * 100 : 0);
 
         // Build download preview ONLY from the sequential prefix (0..k)
-        // Map filtered character positions back to original text using charMapping
-        if (k >= 0 && charMappingRef.current.length > 0 && originalTextRef.current) {
-            // Calculate how many filtered characters we've processed (from chunks 0..k)
-            const filteredCharsProcessed = charsSoFar;
+        // Simply join the text from chunks 0 to k - these are the completed chunks
+        if (k >= 0 && originalChunksRef.current.length > 0) {
+            // Join text from chunks 0 to k
+            const preview = originalChunksRef.current
+                .slice(0, k + 1)
+                .map(chunk => chunk.text)
+                .join('')
+                .replaceAll("\n", " ");
+            setDownloadPreviewText(preview);
             
-            // Map the last filtered character position to original text position
-            // Safety: clamp to valid range to prevent index out of bounds
-            const safeFilteredIndex = Math.min(filteredCharsProcessed - 1, charMappingRef.current.length - 1);
-            
-            if (filteredCharsProcessed > 0 && safeFilteredIndex >= 0) {
-                const lastOriginalIndex = charMappingRef.current[safeFilteredIndex];
-                
-                // Additional safety: ensure original index is valid
-                if (lastOriginalIndex !== undefined && lastOriginalIndex >= 0 && lastOriginalIndex < originalTextRef.current.length) {
-                    // Slice original text up to the mapped position
-                    const preview = originalTextRef.current
-                        .slice(0, lastOriginalIndex + 1)
-                        .replaceAll("\n", " ");
-                    setDownloadPreviewText(preview);
-                    
-                    // mirror as rich HTML (when we have a DOCX HTML source)
-                    if (htmlSlicerRef.current) {
-                        const next = htmlSlicerRef.current(preview);
-                        setDownloadPreviewHtml(prev =>
-                            next && next.length >= (prev?.length ?? 0) ? next : (prev ?? "")
-                        );
-                    }
+            // mirror as rich HTML (when we have a DOCX HTML source)
+            if (htmlSlicerRef.current) {
+                const next = htmlSlicerRef.current(preview);
+                setDownloadPreviewHtml(prev =>
+                    next && next.length >= (prev?.length ?? 0) ? next : (prev ?? "")
+                );
+            }
+
+            // Calculate and store download position for "continue from last session"
+            // We need chunkStartPositionsRef to calculate the absolute offset in the full original text
+            if (isDownload && onSaveDownloadPosition && chunkStartPositionsRef.current.length > 0) {
+                // Calculate the position: start of chunk k+1 (where we should resume from)
+                // If we've completed chunks 0..k, we should resume from the start of chunk k+1
+                let lastOriginalIndex: number;
+                if (k + 1 < chunkStartPositionsRef.current.length) {
+                    // Position is at the start of the next unprocessed chunk (k+1)
+                    lastOriginalIndex = chunkStartPositionsRef.current[k + 1];
                 } else {
-                    // Fallback: if mapping is invalid, show nothing
-                    setDownloadPreviewText(undefined);
-                    setDownloadPreviewHtml("");
+                    // We've completed all chunks, position is at the end of text (no more to process)
+                    lastOriginalIndex = originalChunksRef.current.reduce((sum, chunk) => sum + chunk.text.length, 0);
                 }
-            } else {
-                setDownloadPreviewText(undefined);
-                setDownloadPreviewHtml("");
+                
+                const absoluteOffset = sessionBaseOffsetRef.current + lastOriginalIndex;
+                
+                // Calculate endText: last ~100 characters of the last completed chunk (chunk k)
+                // This helps us find the exact resume point when re-chunking
+                let endText: string | undefined;
+                if (k >= 0 && k < originalChunksRef.current.length) {
+                    const lastCompletedChunk = originalChunksRef.current[k];
+                    if (lastCompletedChunk && lastCompletedChunk.text) {
+                        // Take last 100 characters (or less if chunk is shorter)
+                        const endLength = Math.min(100, lastCompletedChunk.text.length);
+                        endText = lastCompletedChunk.text.slice(-endLength);
+                    }
+                }
+                
+                calculatedDownloadPositionRef.current = absoluteOffset;
+                
+                // Store endText along with position (will be saved in useEffect)
+                lastSavedEndTextRef.current = endText;
             }
         } else {
             setDownloadPreviewText(undefined);
@@ -543,7 +620,7 @@ const useAudioUrl = (isDownload: boolean) => {
             !isSubscribed &&
             isDownload &&
             k >= FREE_DOWNLOAD_CHUNKS &&
-            chunks.length - 1 !== FREE_DOWNLOAD_CHUNKS
+            originalChunksRef.current.length - 1 !== FREE_DOWNLOAD_CHUNKS
         ) {
             const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
             if (firstTimeFreeDownloadHappened) {
@@ -561,10 +638,14 @@ const useAudioUrl = (isDownload: boolean) => {
                     // Show the popup for "First time's on us"
                     setShowFirstTimeFreeDownloadPopup(true);
                     localStorage.setItem("gptr/firstTimeFreeDownloadInProgress", "true");
+                    // Also set in chrome.storage.local
+                    void chrome.storage.local.set({ "gptr/firstTimeFreeDownloadInProgress": "true" }).catch(() => {
+                        // Ignore errors
+                    });
                 }
             }
         }
-        if (blobs.length === chunks.length && blobs.length > 0) {
+        if (blobs.length === originalChunksRef.current.length && blobs.length > 0) {
             if (!isDownload && !showCompletionToast.current) {
                 showCompletionToast.current = true;
                 toast({ description: `GPT Reader has finished processing your audio, click on the cloud button above to download it!`, style: TOAST_STYLE_CONFIG_INFO });
@@ -586,6 +667,46 @@ const useAudioUrl = (isDownload: boolean) => {
             })();
         }
     }, [chunks, blobs, isDownload]);
+
+    // Save download position separately to avoid infinite loops
+    // This runs after the useMemo calculates the position
+    useEffect(() => {
+        if (!isDownload || !onSaveDownloadPositionRef.current) return;
+        
+        const currentPosition = calculatedDownloadPositionRef.current;
+        const currentEndText = lastSavedEndTextRef.current;
+        
+        // Only save if position has actually changed and is valid
+        if (currentPosition >= 0 && currentPosition !== lastSavedDownloadPositionRef.current) {
+            lastSavedDownloadPositionRef.current = currentPosition;
+            try {
+                onSaveDownloadPositionRef.current(currentPosition, currentEndText);
+            } catch (error) {
+                console.error("[use-audio-url] Error saving download position:", error);
+            }
+        }
+    }, [chunks, blobs, isDownload]);
+    
+    // Also save position periodically during download (every 2 seconds) to ensure we don't lose progress
+    useEffect(() => {
+        if (!isDownload || !onSaveDownloadPositionRef.current) return;
+        
+        const interval = setInterval(() => {
+            if (!onSaveDownloadPositionRef.current) return;
+            const currentPosition = calculatedDownloadPositionRef.current;
+            const currentEndText = lastSavedEndTextRef.current;
+            if (currentPosition >= 0 && currentPosition !== lastSavedDownloadPositionRef.current) {
+                lastSavedDownloadPositionRef.current = currentPosition;
+                try {
+                    onSaveDownloadPositionRef.current(currentPosition, currentEndText);
+                } catch (error) {
+                    console.error("[use-audio-url] Error in periodic position save:", error);
+                }
+            }
+        }, 2000); // Save every 2 seconds during download
+        
+        return () => clearInterval(interval);
+    }, [isDownload]);
     
     const extractText = async (file: File) => {
         switch (file.type) {
@@ -642,8 +763,14 @@ const useAudioUrl = (isDownload: boolean) => {
         // clear progressive HTML slicer/preview
         htmlSlicerRef.current = null;
         setDownloadPreviewHtml("");
-        charMappingRef.current = [];
         originalTextRef.current = "";
+        originalChunksRef.current = [];
+        chunkStartPositionsRef.current = [];
+        sessionBaseOffsetRef.current = 0;
+        fullOriginalTextLengthRef.current = 0;
+        lastSavedDownloadPositionRef.current = -1;
+        calculatedDownloadPositionRef.current = -1;
+        lastSavedEndTextRef.current = undefined;
         if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
           audioCtxRef.current.close();
           audioCtxRef.current = null; // allow reinit later
@@ -652,31 +779,31 @@ const useAudioUrl = (isDownload: boolean) => {
     }
 
     const reStartChunkProcess = (click: boolean = false) => {
-        if (!click && nextChunkRef.current && nextChunkRef.current > 0 && nextChunkRef.current < chunks.length && (nextChunkRef.current) % CHUNK_TO_PAUSE_ON === 0) {
+        if (!click && nextChunkRef.current && nextChunkRef.current > 0 && nextChunkRef.current < originalChunksRef.current.length && (nextChunkRef.current) % CHUNK_TO_PAUSE_ON === 0) {
             return;
         }
         if (LOCAL_LOGS) console.log("Attempting to reStartChunkProcess");
         if (currentStreamChunkNdxRef.current != (nextChunkRef.current - 1)) {
             if (chunkNumList.current.has(nextChunkRef.current-1)) return;
-            const chunk = chunks[nextChunkRef.current-1];
-            if (chunk) {
+            const chunkIndex = nextChunkRef.current-1;
+            if (originalChunksRef.current[chunkIndex]) {
                 if (LOCAL_LOGS) console.log("[ReStartChunkProcess] incorrect order detected");
-                chunkNumList.current.add(nextChunkRef.current-1);
+                chunkNumList.current.add(chunkIndex);
                 setIsPromptingPaused(false);
-                setCurrentChunkBeingPromptedIndex(
-                    nextChunkRef.current-1
-                );
-                injectPrompt(chunk.text, chunk.id, promptNdx.current);
+                setCurrentChunkBeingPromptedIndex(chunkIndex);
+                // injectPrompt will filter on-demand
+                injectPrompt(chunkIndex, promptNdx.current);
             }
             return;
         }
-        const nextChunk = chunks[nextChunkRef.current];
-        if (nextChunk && !chunkNumList.current.has(nextChunkRef.current)) {
-            if (LOCAL_LOGS) console.log("[ReStartChunkProcess] injecting chunk", nextChunk.id);
-            chunkNumList.current.add(nextChunkRef.current);
+        const chunkIndex = nextChunkRef.current;
+        if (originalChunksRef.current[chunkIndex] && !chunkNumList.current.has(chunkIndex)) {
+            if (LOCAL_LOGS) console.log("[ReStartChunkProcess] injecting chunk", originalChunksRef.current[chunkIndex].id);
+            chunkNumList.current.add(chunkIndex);
             setIsPromptingPaused(false);
-            setCurrentChunkBeingPromptedIndex(nextChunkRef.current);
-            injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
+            setCurrentChunkBeingPromptedIndex(chunkIndex);
+            // injectPrompt will filter on-demand
+            injectPrompt(chunkIndex, promptNdx.current);
             nextChunkRef.current += 1;
         }
     };
@@ -735,24 +862,23 @@ const useAudioUrl = (isDownload: boolean) => {
         currentStreamChunkNdxRef.current = currentCompletedStream?.chunkNdx;
 
         if (currentCompletedStream?.chunkNdx != (nextChunkRef.current - 1)) {
-            if (chunkNumList.current.has(nextChunkRef.current-1)) {
-                if (LOCAL_LOGS) console.log("[useAudioUrl] chunkNumList already has chunk", nextChunkRef.current-1);
+            const chunkIndex = nextChunkRef.current - 1;
+            if (chunkNumList.current.has(chunkIndex)) {
+                if (LOCAL_LOGS) console.log("[useAudioUrl] chunkNumList already has chunk", chunkIndex);
                 return;
             }
-            const chunk = chunks[nextChunkRef.current-1];
-            if (chunk) {
-                chunkNumList.current.add(nextChunkRef.current-1);
-                setCurrentChunkBeingPromptedIndex(
-                    nextChunkRef.current-1
-                );
-                injectPrompt(chunk.text, chunk.id, promptNdx.current);
+            if (originalChunksRef.current[chunkIndex]) {
+                chunkNumList.current.add(chunkIndex);
+                setCurrentChunkBeingPromptedIndex(chunkIndex);
+                // injectPrompt will filter on-demand
+                injectPrompt(chunkIndex, promptNdx.current);
             }
             return;
         } else {
             if (LOCAL_LOGS) console.log("[useAudioUrl] Chunk is in the correct order");
         }
 
-        if (!isSubscribed && isDownload && currentStreamChunkNdxRef.current === FREE_DOWNLOAD_CHUNKS && currentStreamChunkNdxRef.current !== chunks.length - 1) {
+        if (!isSubscribed && isDownload && currentStreamChunkNdxRef.current === FREE_DOWNLOAD_CHUNKS && currentStreamChunkNdxRef.current !== originalChunksRef.current.length - 1) {
             const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
             if (firstTimeFreeDownloadHappened) {
                 return;
@@ -773,28 +899,26 @@ const useAudioUrl = (isDownload: boolean) => {
        
         if (
             currentCompletedStream?.chunkNdx != null &&
-            +currentCompletedStream.chunkNdx !== chunks.length - 1
+            +currentCompletedStream.chunkNdx !== originalChunksRef.current.length - 1
         ) {
             if (LOCAL_LOGS) console.log("[useAudioUrl] Attempting to prompt next chunk");
-            const nextChunk = chunks[+currentCompletedStream.chunkNdx + 1];
-            const chunkNumber = currentCompletedStream?.chunkNdx + 1;
-            if (!isDownload && chunkNumber && +chunkNumber > 0 && +chunkNumber < chunks.length - 1 && (((+chunkNumber) % CHUNK_TO_PAUSE_ON) === 0)) {
+            const chunkIndex = +currentCompletedStream.chunkNdx + 1;
+            if (!isDownload && chunkIndex > 0 && chunkIndex < originalChunksRef.current.length - 1 && ((chunkIndex % CHUNK_TO_PAUSE_ON) === 0)) {
                 setIsPromptingPaused(true);
                 setWasPromptStopped("PAUSED");
                 return;
             }
-            if (nextChunk && !chunkNumList.current.has(+currentCompletedStream.chunkNdx + 1)) {
-                chunkNumList.current.add(+currentCompletedStream.chunkNdx + 1);
-                setCurrentChunkBeingPromptedIndex(
-                    +currentCompletedStream.chunkNdx + 1
-                );
-                injectPrompt(nextChunk.text, nextChunk.id, promptNdx.current);
+            if (originalChunksRef.current[chunkIndex] && !chunkNumList.current.has(chunkIndex)) {
+                chunkNumList.current.add(chunkIndex);
+                setCurrentChunkBeingPromptedIndex(chunkIndex);
+                // injectPrompt will filter on-demand
+                injectPrompt(chunkIndex, promptNdx.current);
                 nextChunkRef.current += 1;
             } else {
                 if (LOCAL_LOGS) console.log("[useAudioUrl] No next chunk to prompt");
             }
         } else {
-            if (LOCAL_LOGS) console.log("[useAudioUrl] No next chunk to prompt:", currentCompletedStream?.chunkNdx, chunks.length - 1);
+            if (LOCAL_LOGS) console.log("[useAudioUrl] No next chunk to prompt:", currentCompletedStream?.chunkNdx, originalChunksRef.current.length - 1);
         }
     }, [currentCompletedStream, isPromptingPaused])
 
@@ -818,7 +942,7 @@ const useAudioUrl = (isDownload: boolean) => {
         setAudioUrls,
         extractText,
         splitAndSendPrompt,
-        ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === chunks.length - 1,
+        ended: currentCompletedStream?.chunkNdx != null && +currentCompletedStream?.chunkNdx === originalChunksRef.current.length - 1,
         isLoading,
         setIsLoading,
         reset,

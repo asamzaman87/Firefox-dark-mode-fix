@@ -12,7 +12,7 @@ const useStreamListener = (
     setIsLoading: (state: boolean) => void,
     nextChunkRef: React.MutableRefObject<number>,                      
     chunkRef: React.MutableRefObject<Chunk[]>,                            
-    injectPrompt: (text: string, id: string, ndx: number) => void, 
+    injectPrompt: (chunkIndex: number, ndx: number) => void, 
     isDownload: boolean,           
   ) => {
     const { format } = useFormat();
@@ -112,15 +112,14 @@ const useStreamListener = (
                 resolve();
             });
 
-            // re-inject SAME chunk text in the new chat
-            const { text, id } = chunkRef.current[failedChunkNdx];
+            // re-inject SAME chunk (injectPrompt will filter on-demand)
             promptNdx.current += 1;
             toast({
                 description: `GPT Reader is configuring ChatGPT, please wait a few seconds for the next audio chunk...`,
                 style: TOAST_STYLE_CONFIG_INFO,
                 duration: 10000
             });
-            injectPrompt(text, id, promptNdx.current);
+            injectPrompt(failedChunkNdx, promptNdx.current);
         },
         [chunkRef, injectPrompt, toast]
     );
@@ -257,12 +256,8 @@ const useStreamListener = (
 
                 console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
 
-                // Inject using the first element
-                injectPrompt(
-                    chunkRef.current[first].text,
-                    chunkRef.current[first].id,
-                    promptNdx.current
-                );
+                // Inject using the first element (injectPrompt will filter on-demand)
+                injectPrompt(first, promptNdx.current);
 
                 audioIssueInjections.current.delete(first);
                 stopFlow.current = true;
@@ -333,12 +328,8 @@ const useStreamListener = (
 
             console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
 
-            // Inject using the first element
-            injectPrompt(
-                chunkRef.current[first].text,
-                chunkRef.current[first].id,
-                promptNdx.current
-            );
+            // Inject using the first element (injectPrompt will filter on-demand)
+            injectPrompt(first, promptNdx.current);
 
             // Remove it from the set
             audioIssueInjections.current.delete(first);
@@ -522,12 +513,8 @@ const useStreamListener = (
 
                 console.warn(`[audioIssueInjections] Injecting audio for chunk ${first}`);
 
-                // Inject using the first element
-                injectPrompt(
-                    chunkRef.current[first].text,
-                    chunkRef.current[first].id,
-                    promptNdx.current
-                );
+                // Inject using the first element (injectPrompt will filter on-demand)
+                injectPrompt(first, promptNdx.current);
 
                 // Remove it from the set
                 audioIssueInjections.current.delete(first);

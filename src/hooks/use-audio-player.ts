@@ -10,9 +10,9 @@ import { useSpeechMode } from "../context/speech-mode";
 import { usePremiumModal } from "@/context/premium-modal";
 import { isPremium } from "@/lib/utils";
 
-const useAudioPlayer = (isDownload: boolean) => {
+const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: number, endText?: string) => void) => {
     const { toast, dismiss } = useToast();
-    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioUrl(isDownload);
+    const { chunks, blobs, downloadPreviewText, downloadCombinedFile, progress, setProgress, isFetching, wasPromptStopped, setWasPromptStopped, setIsPromptingPaused, isPromptingPaused, audioUrls, ended, extractText, splitAndSendPrompt, text, reset: resetAudioUrl, voices, setVoices, isVoiceLoading, is9ThChunk, reStartChunkProcess, setIs9thChunk, isLoading, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioUrl(isDownload, onSaveDownloadPosition);
     const {isTextToSpeech} = useSpeechMode();
     const { isAuthenticated } = useAuthToken();
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -47,7 +47,6 @@ const useAudioPlayer = (isDownload: boolean) => {
     );
     const [isStreamLoading, setIsStreamLoading] = useState<boolean>(false);
     const [audioUrlsBeforeStop, setAudioUrlsBeforeStop] = useState<number>(audioUrls.length);
-    const memoryWarnedRef = useRef(false);
     const seenRef = useRef<Set<number>>(new Set());
     const isPromptingPausedRef = useRef(isPromptingPaused);
     useEffect(() => { isPromptingPausedRef.current = isPromptingPaused }, [isPromptingPaused]);
@@ -856,7 +855,6 @@ const useAudioPlayer = (isDownload: boolean) => {
         triggeredThresholdsRef.current.clear();
         pendingRef.current = [];
         setCurrentPlayTime(0);
-        memoryWarnedRef.current = false;
         evictedSoFarRef.current = 0;
         bufferNum.current = 0;
         bufferNumList.current.clear();
@@ -1211,27 +1209,6 @@ const useAudioPlayer = (isDownload: boolean) => {
             if (toast15SecRef.current) dismiss(toast15SecRef.current);
         }
     }, [text.trim().length, isDownload]);
-
-    useEffect(() => {
-        // only works in Chrome‐based browsers
-        if (!(performance && (performance as any).memory)) return;
-      
-        const checkMemory = () => {
-          const used = (performance as any).memory.usedJSHeapSize;
-          const threshold = 500 * 1024 * 1024; // 500 MB
-          if (!memoryWarnedRef.current && used > threshold) {
-            toast({
-              description: "Memory usage has exceeded 500 MB. If the speed is too slow, GPT Reader recommends closing and re-opening the extension.",
-              style: TOAST_STYLE_CONFIG_INFO,
-            });
-            memoryWarnedRef.current = true;
-          }
-        };
-      
-        // check every 15 seconds
-        const id = setInterval(checkMemory, 15_000);
-        return () => clearInterval(id);
-      }, [toast]);
 
     const showInfoToast = (
         duration: number = 70000,

@@ -70,8 +70,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     // Transcriber-specific state
     const [showMicOnlyView, setShowMicOnlyView] = useState(false);
     const [isViewingText, setIsViewingText] = useState(false);
-    
-    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, getChunkAtTime, getChunkStartTime, getChunkStartOffset, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioPlayer(isDownload);
     const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
@@ -130,6 +128,81 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       };
     }, []);
 
+    // Helper function to manage position storage with 10-document limit
+    const savePositionWithLimit = useCallback((documentId: string, offset: number, endText?: string) => {
+      const MAX_TRACKED_DOCUMENTS = 10;
+      const POSITION_PREFIX = "gptr/lastPosition/";
+      const storageKey = `${POSITION_PREFIX}${documentId}`;
+      
+      try {
+        // Check if this document already has a saved position
+        const existingSaved = localStorage.getItem(storageKey);
+        const isExistingDocument = existingSaved !== null;
+
+        // Get all position keys from localStorage
+        const allKeys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(POSITION_PREFIX)) {
+            allKeys.push(key);
+          }
+        }
+
+        // Only enforce limit if we're adding a NEW document (not updating existing)
+        if (!isExistingDocument && allKeys.length >= MAX_TRACKED_DOCUMENTS) {
+          // Get all positions with their timestamps
+          const positionsWithTimestamps: Array<{ key: string; timestamp: number }> = [];
+          for (const key of allKeys) {
+            try {
+              const saved = localStorage.getItem(key);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && typeof parsed.timestamp === 'number') {
+                  positionsWithTimestamps.push({ key, timestamp: parsed.timestamp });
+                }
+              }
+            } catch (e) {
+              // Skip invalid entries
+            }
+          }
+
+          // Sort by timestamp (oldest first)
+          positionsWithTimestamps.sort((a, b) => a.timestamp - b.timestamp);
+
+          // Remove the oldest entry to make room for the new one
+          if (positionsWithTimestamps.length > 0) {
+            localStorage.removeItem(positionsWithTimestamps[0].key);
+          }
+        }
+
+        // Save/update the position (with optional endText for more accurate resume)
+        const savedData: { offset: number; timestamp: number; endText?: string } = {
+          offset,
+          timestamp: Date.now(),
+        };
+        if (endText) {
+          savedData.endText = endText;
+        }
+        localStorage.setItem(storageKey, JSON.stringify(savedData));
+      } catch (e) {
+        // Ignore storage errors (e.g., quota exceeded)
+      }
+    }, []);
+
+    // Create callback to save download position
+    const handleSaveDownloadPosition = useCallback((offset: number, endText?: string) => {
+      if (documentIdRef.current) {
+        try {
+          savePositionWithLimit(documentIdRef.current, offset, endText);
+        } catch (error) {
+          console.error("[content.tsx] Error in handleSaveDownloadPosition:", error);
+        }
+      } else {
+        console.warn("[content.tsx] handleSaveDownloadPosition called but documentIdRef.current is null");
+      }
+    }, [savePositionWithLimit]);
+
+    const { blobs, isTypeAACSupported, replay, partialChunkCompletedPlaying, showInfoToast, playTimeDuration, currentPlayTime, onScrub, handleVolumeChange, volume, onForward, onRewind, downloadPreviewText, progress, setProgress, downloadCombinedFile, isFetching, isPresenceModalOpen, setIsPresenceModalOpen, isBackPressed, setIsBackPressed, pause, play, extractText, splitAndSendPrompt, text, isPlaying, isLoading, reset, isPaused, playRate, handlePlayRateChange, voices, setVoices, hasCompletePlaying, setHasCompletePlaying, isVoiceLoading, reStartChunkProcess, chunks, transcribeChunks, cancelTranscription, setText, downloadPreviewHtml, setPreviewHtmlSource, getChunkAtTime, getChunkStartTime, getChunkStartOffset, showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup } = useAudioPlayer(isDownload, handleSaveDownloadPosition);
 
     // Plain full text source we highlight against (same logic used elsewhere)
     const sourcePlain = structured?.fullText ?? fileExtractedText ?? pastedText ?? text ?? "";
@@ -251,8 +324,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       }, 4000); // keep in sync with your highlight lifetime
     }, [locateNow, locateSearchMode, isSubscribed, setReason, setUpgradeModalOpen]);
 
-
-
     // Recompute matches whenever query or text changes (only when popover is open)
     useEffect(() => {
       if (!locateOpen) return;
@@ -282,62 +353,38 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       }
     }, [searchQuery, sourcePlain, locateOpen]);
 
-    // Helper function to manage position storage with 10-document limit
-    const savePositionWithLimit = useCallback((documentId: string, offset: number) => {
-      const MAX_TRACKED_DOCUMENTS = 10;
-      const POSITION_PREFIX = "gptr/lastPosition/";
-      const storageKey = `${POSITION_PREFIX}${documentId}`;
-      
-      try {
-        // Check if this document already has a saved position
-        const existingSaved = localStorage.getItem(storageKey);
-        const isExistingDocument = existingSaved !== null;
+    const jumpToMatch = useCallback(
+      (nextIdx: number) => {
+        if (!searchMatches.length) return;
+        const L = searchMatches.length;
+        const norm = ((nextIdx % L) + L) % L;
+        const at = searchMatches[norm];
+        const len = Math.max(1, searchQuery.trim().length);
+        applyHighlightAt(at, len);
+        setSearchSel(norm);
+      },
+      [searchMatches, searchQuery, applyHighlightAt]
+    );
 
-        // Get all position keys from localStorage
-        const allKeys: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith(POSITION_PREFIX)) {
-            allKeys.push(key);
-          }
-        }
+    const nextMatch = useCallback(() => jumpToMatch(searchSel + 1), [jumpToMatch, searchSel]);
+    const prevMatch = useCallback(() => jumpToMatch(searchSel - 1), [jumpToMatch, searchSel]);
 
-        // Only enforce limit if we're adding a NEW document (not updating existing)
-        if (!isExistingDocument && allKeys.length >= MAX_TRACKED_DOCUMENTS) {
-          // Get all positions with their timestamps
-          const positionsWithTimestamps: Array<{ key: string; timestamp: number }> = [];
-          for (const key of allKeys) {
-            try {
-              const saved = localStorage.getItem(key);
-              if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed && typeof parsed.timestamp === 'number') {
-                  positionsWithTimestamps.push({ key, timestamp: parsed.timestamp });
-                }
-              }
-            } catch (e) {
-              // Skip invalid entries
-            }
-          }
+    // helper: length = first sentence OR max 120 chars
+    const lenOneSentenceOr120 = (s: string): number => {
+      const takeOne = s.match(/^[\s\S]*?[.!?]["')\]]?(?:\s|$)/);
+      const len = takeOne ? takeOne[0].length : Math.min(120, s.length);
+      return Math.min(len, 120);
+    };
 
-          // Sort by timestamp (oldest first)
-          positionsWithTimestamps.sort((a, b) => a.timestamp - b.timestamp);
-
-          // Remove the oldest entry to make room for the new one
-          if (positionsWithTimestamps.length > 0) {
-            localStorage.removeItem(positionsWithTimestamps[0].key);
-          }
-        }
-
-        // Save/update the position
-        localStorage.setItem(storageKey, JSON.stringify({
-          offset,
-          timestamp: Date.now(),
-        }));
-      } catch (e) {
-        // Ignore storage errors (e.g., quota exceeded)
+    const countAlnumUpTo = (plain: string, endExclusive: number) => {
+      const lim = Math.max(0, Math.min(endExclusive, plain.length));
+      let k = 0;
+      for (let i = 0; i < lim; i++) {
+        const ch = plain[i];
+        if (/\p{L}|\p{N}/u.test(ch)) k++;
       }
-    }, []);
+      return k;
+    };
 
     // Track position every 5 seconds while playing and save to localStorage
     // Separate effect for interval (only depends on isPlaying state, not currentPlayTime)
@@ -389,39 +436,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         clearTimeout(pauseTimeoutId);
       };
     }, [isTextToSpeech, isDownload, isPlaying, chunks.length, currentPlayTime, calculateCurrentPosition, savePositionWithLimit]);
-
-    const jumpToMatch = useCallback(
-      (nextIdx: number) => {
-        if (!searchMatches.length) return;
-        const L = searchMatches.length;
-        const norm = ((nextIdx % L) + L) % L;
-        const at = searchMatches[norm];
-        const len = Math.max(1, searchQuery.trim().length);
-        applyHighlightAt(at, len);
-        setSearchSel(norm);
-      },
-      [searchMatches, searchQuery, applyHighlightAt]
-    );
-
-    const nextMatch = useCallback(() => jumpToMatch(searchSel + 1), [jumpToMatch, searchSel]);
-    const prevMatch = useCallback(() => jumpToMatch(searchSel - 1), [jumpToMatch, searchSel]);
-
-    // helper: length = first sentence OR max 120 chars
-    const lenOneSentenceOr120 = (s: string): number => {
-      const takeOne = s.match(/^[\s\S]*?[.!?]["')\]]?(?:\s|$)/);
-      const len = takeOne ? takeOne[0].length : Math.min(120, s.length);
-      return Math.min(len, 120);
-    };
-
-    const countAlnumUpTo = (plain: string, endExclusive: number) => {
-      const lim = Math.max(0, Math.min(endExclusive, plain.length));
-      let k = 0;
-      for (let i = 0; i < lim; i++) {
-        const ch = plain[i];
-        if (/\p{L}|\p{N}/u.test(ch)) k++;
-      }
-      return k;
-    };
 
     // Auto-highlight at chunk start — PDF uses offset/length; DOCX/TXT use needle (alphanum)
     useEffect(() => {
@@ -727,14 +741,39 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       documentIdRef.current = `pasted_${t}_${raw.length}`;
     };
 
-    const listenOrDownloadAudioFrom = useCallback(async (startAt: number) => {
+    const listenOrDownloadAudioFrom = useCallback(async (startAt: number, endText?: string) => {
       sessionBaseOffsetRef.current = Math.max(0, startAt);
       const payload = (fileExtractedText ?? pastedText ?? ""); // keep as-is to preserve indices
       if (!payload) return;
-      const sliced = startAt > 0 ? payload.slice(startAt) : payload;
+      
+      let actualStartAt = startAt;
+      let sliced = startAt > 0 ? payload.slice(startAt) : payload;
+      
+      // For downloads, if endText is provided, search for it to find the exact resume point
+      // This handles the case where re-chunking might not align perfectly with original chunk boundaries
+      // We search in a window before startAt since endText comes from the last completed chunk (k),
+      // which is before the offset which points to the start of the next chunk (k+1)
+      if (isDownload && endText && endText.length > 0 && startAt > 0) {
+        // Search in a window around startAt: look back up to 500 chars and forward up to 200 chars
+        // This allows us to find endText that might be just before or right at the slice point
+        const searchWindowStart = Math.max(0, startAt - 500);
+        const searchWindowEnd = Math.min(payload.length, startAt + 200);
+        const searchWindow = payload.slice(searchWindowStart, searchWindowEnd);
+        
+        const endTextIndex = searchWindow.indexOf(endText);
+        if (endTextIndex !== -1) {
+          // Found endText! Calculate the absolute position in the original payload
+          const foundPosition = searchWindowStart + endTextIndex;
+          // Adjust the start position to be right after endText
+          actualStartAt = foundPosition + endText.length;
+          sliced = payload.slice(actualStartAt);
+        }
+      }
+      
+      const fullTextLength = payload.length;
 
       if (structured?.source === "pdf") {
-        setScrollToOffset(startAt);
+        setScrollToOffset(actualStartAt);
       } else {
         setScrollToOffset(null);
       }
@@ -743,10 +782,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       setPreviewHtmlSource(structured?.fullHtml ?? undefined);
 
       usingGPTReader.current = true;
-      return splitAndSendPrompt(sliced).finally(() => {
+      return splitAndSendPrompt(sliced, fullTextLength, actualStartAt).finally(() => {
         setShowDownloadOrListen(false);
       });
-    }, [fileExtractedText, pastedText, splitAndSendPrompt, setShowDownloadOrListen]);
+    }, [fileExtractedText, pastedText, splitAndSendPrompt, setShowDownloadOrListen, isDownload, structured?.source]);
 
     const onDownloadOrListenSubmit = useCallback(async (value: "DOWNLOAD" | "LISTEN") => {
       if (value === "DOWNLOAD") {
@@ -754,8 +793,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         localStorage.setItem("gptr/download", "true");
         // Check if this is a first-time free download and mark it as happened
         const firstTimeFreeDownloadInProgress = localStorage.getItem("gptr/firstTimeFreeDownloadInProgress");
-        if (firstTimeFreeDownloadInProgress) {
-          localStorage.removeItem("gptr/firstTimeFreeDownloadInProgress");
+        let chromeInProgress = false;
+        try {
+          const chromeValue = await chrome.storage.local.get("gptr/firstTimeFreeDownloadInProgress");
+          chromeInProgress = chromeValue["gptr/firstTimeFreeDownloadInProgress"] === "true" || chromeValue["gptr/firstTimeFreeDownloadInProgress"] === true;
+        } catch {
+          // Ignore errors
+        }
+        if (firstTimeFreeDownloadInProgress || chromeInProgress) {
           localStorage.setItem("gptr/firstTimeFreeDownloadHappened", "true");
         }
       } else {
@@ -768,6 +813,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       if (lastInputWasFile && structured && structured.sections.length > 0) {
         // Get last session position from localStorage
         let lastSessionOffset: number | undefined;
+        let lastSessionEndText: string | undefined;
         if (documentIdRef.current) {
           try {
             const storageKey = `gptr/lastPosition/${documentIdRef.current}`;
@@ -776,6 +822,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               const parsed = JSON.parse(saved);
               if (parsed && typeof parsed.offset === 'number' && parsed.offset >= 0 && parsed.offset < structured.fullText.length) {
                 lastSessionOffset = parsed.offset;
+                // Also get endText if available (for more accurate resume)
+                if (typeof parsed.endText === 'string' && parsed.endText.length > 0) {
+                  lastSessionEndText = parsed.endText;
+                }
               }
             }
           } catch (e) {
@@ -790,25 +840,34 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           fullText: structured.fullText,
           lastSessionOffset,
           onConfirm: ({ startAt, matchLength }) => {
-            const shouldFlash =
-              lastActionRef.current === "LISTEN" &&
-              (startAt > 0 || (matchLength ?? 0) > 0);
+            try {
+              const shouldFlash =
+                lastActionRef.current === "LISTEN" &&
+                (startAt > 0 || (matchLength ?? 0) > 0);
 
-            if (structured.source === "pdf") {
-              // PDF uses absolute selection path
-              setHighlightActive(shouldFlash);
-              setHighlightLen(Math.max(0, matchLength ?? 0));
-              // scroll handled inside listenOrDownloadAudioFrom for PDFs
-            } else {
-              // DOCX/TXT/EPUB → use robust needle mode (alnum-based)
-              const bodyTail = structured.fullText.slice(startAt) || "";
-              const needleLen = Math.max(1, matchLength ?? lenOneSentenceOr120(bodyTail));
-              // Use the existing helper that sets needle + alphaBefore for non-PDF sources
-              applyHighlightAt(startAt, needleLen);
+              if (structured.source === "pdf") {
+                // PDF uses absolute selection path
+                setHighlightActive(shouldFlash);
+                setHighlightLen(Math.max(0, matchLength ?? 0));
+                // scroll handled inside listenOrDownloadAudioFrom for PDFs
+              } else {
+                // DOCX/TXT/EPUB → use robust needle mode (alnum-based)
+                const bodyTail = structured.fullText.slice(startAt) || "";
+                const needleLen = Math.max(1, matchLength ?? lenOneSentenceOr120(bodyTail));
+                // Use the existing helper that sets needle + alphaBefore for non-PDF sources
+                applyHighlightAt(startAt, needleLen);
+              }
+
+              // For downloads, pass endText if available (for more accurate resume)
+              // For listening, don't pass endText (listening uses playback time, not text slicing)
+              const shouldUseEndText = isDownload && startAt === lastSessionOffset && lastSessionEndText;
+              
+              listenOrDownloadAudioFrom(startAt, shouldUseEndText ? lastSessionEndText : undefined);
+              sessionFirstChunkRef.current = null; // unknown until we actually see a chunk
+            } catch (error) {
+              console.error("[content.tsx] Error in onConfirm:", error);
+              toast({ description: "Error starting download. Please try again.", style: TOAST_STYLE_CONFIG });
             }
-
-            listenOrDownloadAudioFrom(startAt);
-            sessionFirstChunkRef.current = null; // unknown until we actually see a chunk
             hasLeftSessionFirstChunkRef.current = false;
           },
         });
