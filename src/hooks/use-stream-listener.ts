@@ -357,27 +357,13 @@ const useStreamListener = (
         const actual = assistant ? assistant : target;
         const comparisonActual = normalizeAlphaNumeric(actual);
         const comparisonExpected = target;
-        // console.log('This is the actual message: ', comparisonActual);
+        //console.log('This is the actual message: ', comparisonActual);
         // console.log('This is the expected message: ', comparisonExpected);
-        
-
-        // ——— copyright/inappropriateness detection ———
-        if (
-            actual.length < 110 &&
-            (actual.includes("I cannot") || actual.includes("I can't") || actual.includes("sorry") || actual.includes("assist") || actual.includes("Sorry"))
-        ) {
-            if ((retryCounts.current[chunkNdx] ?? 0) < MAX_RETRIES) {
-                console.warn("[handleConvStream] Text is being deemed as inappropriate by ChatGPT due to copyright or language issues.");
-                await retryFlow(chunkNdx);
-                return;
-            }
-            handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
-            return;
-        }
         
         if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
             console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
             if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
+                console.warn("[handleConvSteam] Too many mismatches detected, going to be lenient.");
                 localStorage.setItem("gptr/equalIssue", "true");
             } else {
                 await retryFlow(chunkNdx);
@@ -498,6 +484,20 @@ const useStreamListener = (
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
         if (stopButton) {
             stopButton.click();
+        }
+
+        // ——— copyright/inappropriateness detection check ———
+        const targetEl = document.querySelector<HTMLElement>(`[data-message-id='${domMessageId}']`);
+        if (targetEl && localStorage.getItem("gptr/equalIssue") === "true") {
+            const domText = targetEl.textContent;
+            if (
+                domText.length < 110 &&
+                (domText.includes("I cannot") || domText.includes("I can't") || domText.includes("sorry") || domText.includes("assist") || domText.includes("Sorry"))
+            ) {
+                localStorage.removeItem("gptr/equalIssue");
+                handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
+                return;
+            }
         }
 
         localStorage.setItem("gptr/abortCount", "1");

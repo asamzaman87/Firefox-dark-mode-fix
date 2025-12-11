@@ -121,8 +121,26 @@ function isLikelyDrm(zip: Record<string, Uint8Array>): boolean {
 
 /** Parse EPUB to StructuredText (treated as "docx" source to reuse needle path) */
 const epubToStructured = async (file: File): Promise<StructuredText> => {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const zip = unzipSync(bytes); // filename (case-sensitive) -> Uint8Array
+  let bytes: Uint8Array;
+  let zip: Record<string, Uint8Array>;
+  
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    bytes = new Uint8Array(arrayBuffer);
+    // Wrap unzipSync in try-catch to handle Firefox CSP issues with constructor access
+    try {
+      zip = unzipSync(bytes); // filename (case-sensitive) -> Uint8Array
+    } catch (unzipError: any) {
+      console.error("[epubToStructured] Error unzipping EPUB:", unzipError);
+      // If unzipSync fails due to CSP/constructor issues, try with a fresh Uint8Array copy
+      const bytesCopy = new Uint8Array(bytes.length);
+      bytesCopy.set(bytes);
+      zip = unzipSync(bytesCopy);
+    }
+  } catch (error: any) {
+    console.error("[epubToStructured] Error reading EPUB file:", error);
+    throw new Error(error?.message || "There was an error reading the EPUB file. Please ensure it's a valid EPUB file.");
+  }
 
   // Normalize key lookup (case-insensitive) via a resolver
   const keyList = Object.keys(zip);
@@ -610,23 +628,51 @@ const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getParagraphs(content: any) {
-  const result = await mammoth.convertToHtml({ arrayBuffer: content });
-  return result.value;
+async function getParagraphs(content: ArrayBuffer) {
+  try {
+    // For Firefox CSP compliance, use structured cloning to create a fresh ArrayBuffer
+    // This avoids constructor property access issues that trigger CSP violations
+    let freshBuffer: ArrayBuffer;
+    try {
+      // Try structured cloning first (best for Firefox)
+      freshBuffer = structuredClone(content);
+    } catch (cloneError) {
+      // Fallback: manually copy bytes if structured clone fails
+      const sourceView = new Uint8Array(content);
+      freshBuffer = new ArrayBuffer(sourceView.length);
+      const freshView = new Uint8Array(freshBuffer);
+      freshView.set(sourceView);
+    }
+    
+    const result = await mammoth.convertToHtml({ arrayBuffer: freshBuffer });
+    return result.value;
+  } catch (error: any) {
+    console.error("[getParagraphs] Error converting DOCX:", error);
+    // If it's a constructor permission error, provide a helpful message
+    if (error?.message?.includes('constructor') || error?.message?.includes('Permission denied')) {
+      throw new Error("DOCX parsing encountered a browser security restriction. Please try converting the file to a text file or use Chrome browser.");
+    }
+    throw new Error(error?.message || "There was an error parsing the DOCX file! It might be corrupted or use unsupported features.");
+  }
 }
 
-const docxToText = async <T = string>(file: File): Promise<T | string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e: ProgressEvent<FileReader>) => {
-      const content = e.target?.result as ArrayBuffer;
-      const text = await getParagraphs(content);
-      if (text.trim().length > 0) return resolve(text as T);
-      reject(new Error("There was an error parsing the file! It might not have valid text content."));
-    };
-    reader.onerror = (err) => reject(err);
-    reader.readAsArrayBuffer(file);
-  });
+const docxToText = async <T = string>(file: File): Promise<T | string> => {
+  try {
+    // Use file.arrayBuffer() directly for better compatibility, especially in Firefox
+    const arrayBuffer = await file.arrayBuffer();
+    
+    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+      throw new Error("The file appears to be empty or could not be read.");
+    }
+    
+    const text = await getParagraphs(arrayBuffer);
+    if (text.trim().length > 0) return text as T;
+    throw new Error("There was an error parsing the file! It might not have valid text content.");
+  } catch (error: any) {
+    console.error("[docxToText] Error reading DOCX:", error);
+    throw error instanceof Error ? error : new Error("Failed to read the file. Please ensure it's a valid DOCX file.");
+  }
+};
 
 const textPlainToText = async (file: File): Promise<string> =>
   new Promise((resolve, reject) => {

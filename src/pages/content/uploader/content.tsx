@@ -7,9 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
-import { SAFEST_MODEL, MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { SAFEST_MODEL, MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, InfoIcon, Crown, Mic, Volume2, LocateFixed, Search } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -110,6 +110,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     // whether we've visited any chunk other than the session's first
     const hasLeftSessionFirstChunkRef = useRef(false);
     const [pendingSelectedText, setPendingSelectedText] = useState<string>(""); // local buffer
+    const [hasError, setHasError] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>("");
+    const [isErrorExpanded, setIsErrorExpanded] = useState<boolean>(true);
 
     // --- Locate audio + search state ---
     const [locateCtaOpen, setLocateCtaOpen] = useState<boolean>(false);    // shows "Search for text"
@@ -437,6 +440,28 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       };
     }, [isTextToSpeech, isDownload, isPlaying, chunks.length, currentPlayTime, calculateCurrentPosition, savePositionWithLimit]);
 
+    // Error handling for listening view
+    useEffect(() => {
+      // Only listen for errors when NOT in download view (download view handles its own errors)
+      if (isDownload) {
+        return;
+      }
+
+      const handleError = (e: CustomEvent<{ message: string }>) => {
+        setHasError(true);
+        setErrorMessage(e.detail.message || chrome.i18n.getMessage("error_stopped_midway"));
+        setIsErrorExpanded(true); // Show error by default when it first appears
+      };
+
+      window.addEventListener(LISTENERS.ERROR, handleError as EventListener);
+      return () => {
+        setHasError(false);
+        setErrorMessage("");
+        setIsErrorExpanded(true);
+        window.removeEventListener(LISTENERS.ERROR, handleError as EventListener);
+      };
+    }, [isDownload]);
+
     // Auto-highlight at chunk start — PDF uses offset/length; DOCX/TXT use needle (alphanum)
     useEffect(() => {
       // Only in Text-to-Speech listening view; not during download preview
@@ -543,6 +568,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setScrollToOffset(null);
         setHighlightActive(false);
         setHighlightLen(0);
+        setHasError(false);
+        setErrorMessage("");
+        setIsErrorExpanded(true);
         resetDownloader();
         if (!isTextToSpeech) {
           setText("");
@@ -1068,83 +1096,178 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               </div>
             )}
             {title ? (
-              <div className="gpt:inline-flex gpt:justify-center gpt:w-full gpt:items-center gpt:gap-3">
-                <p className="gpt:truncate gpt:max-w-[20dvw]">{title}</p>
-                <Popover
-                  onOpenChange={setIsDownloadConfirmationOpen}
-                  open={isDownloadConfirmationOpen}
-                  modal
-                >
-                  {isTextToSpeech && (
-                    <PopoverTrigger asChild>
-                      <div
-                        onClick={(e) => triggerPremium(e)}
-                        className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer"
+              <>
+                {!hasError || isDownload ? (
+                  <div className="gpt:inline-flex gpt:justify-center gpt:w-full gpt:items-center gpt:gap-3">
+                    <p className="gpt:truncate gpt:max-w-[20dvw]">{title}</p>
+                    <Popover
+                      onOpenChange={setIsDownloadConfirmationOpen}
+                      open={isDownloadConfirmationOpen}
+                      modal
+                    >
+                      {isTextToSpeech && (
+                        <PopoverTrigger asChild>
+                          <div
+                            onClick={(e) => triggerPremium(e)}
+                            className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer"
+                          >
+                            <Button
+                              disabled={!isPaused && !isPlaying}
+                              variant="ghost"
+                              size={"icon"}
+                              className="gpt:absolute gpt:top-1/2 gpt:start-1/2 gpt:transform gpt:-translate-y-1/2 gpt:-translate-x-1/2 gpt:rounded-full gpt:[&_svg]:size-6"
+                            >
+                              <DownloadCloud />
+                            </Button>
+                            <svg
+                              className="gpt:size-full gpt:-rotate-90"
+                              viewBox="0 0 36 36"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="16"
+                                fill="none"
+                                className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 gpt:dark:text-gray-100"
+                                strokeWidth="2"
+                              ></circle>
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="16"
+                                fill="none"
+                                className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 gpt:dark:text-gray-700"
+                                strokeWidth="2"
+                                strokeDasharray="100"
+                                strokeDashoffset={progress}
+                                strokeLinecap="square"
+                              ></circle>
+                            </svg>
+                          </div>
+                        </PopoverTrigger>
+                      )}
+                      <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
+                        <div className="gpt:flex gpt:flex-col gpt:gap-2">
+                          <p className="gpt:text-wrap">
+                            {chrome.i18n.getMessage("download_confirm")}
+                          </p>
+                          <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
+                            <Button
+                              variant="ghost"
+                              className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                              onClick={() => {
+                                handleDownload();
+                                setIsDownloadConfirmationOpen(false);
+                              }}
+                            >
+                              {chrome.i18n.getMessage("yes")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                              onClick={() => setIsDownloadConfirmationOpen(false)}
+                            >
+                              {chrome.i18n.getMessage("no")}
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                ) : (
+                  <div className="gpt:flex gpt:flex-col gpt:justify-center gpt:w-full gpt:items-center gpt:gap-3">
+                    <Popover
+                      onOpenChange={setIsDownloadConfirmationOpen}
+                      open={isDownloadConfirmationOpen}
+                      modal
+                    >
+                      {isTextToSpeech && (
+                        <PopoverTrigger asChild>
+                          <div
+                            onClick={(e) => triggerPremium(e)}
+                            className="gpt:relative gpt:size-10 gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:cursor-pointer"
+                          >
+                            <Button
+                              disabled={!isPaused && !isPlaying}
+                              variant="ghost"
+                              size={"icon"}
+                              className="gpt:absolute gpt:top-1/2 gpt:start-1/2 gpt:transform gpt:-translate-y-1/2 gpt:-translate-x-1/2 gpt:rounded-full gpt:[&_svg]:size-6"
+                            >
+                              <DownloadCloud />
+                            </Button>
+                            <svg
+                              className="gpt:size-full gpt:-rotate-90"
+                              viewBox="0 0 36 36"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="16"
+                                fill="none"
+                                className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 gpt:dark:text-gray-100"
+                                strokeWidth="2"
+                              ></circle>
+                              <circle
+                                cx="18"
+                                cy="18"
+                                r="16"
+                                fill="none"
+                                className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 gpt:dark:text-gray-700"
+                                strokeWidth="2"
+                                strokeDasharray="100"
+                                strokeDashoffset={progress}
+                                strokeLinecap="square"
+                              ></circle>
+                            </svg>
+                          </div>
+                        </PopoverTrigger>
+                      )}
+                      <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
+                        <div className="gpt:flex gpt:flex-col gpt:gap-2">
+                          <p className="gpt:text-wrap">
+                            {chrome.i18n.getMessage("download_confirm")}
+                          </p>
+                          <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
+                            <Button
+                              variant="ghost"
+                              className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                              onClick={() => {
+                                handleDownload();
+                                setIsDownloadConfirmationOpen(false);
+                              }}
+                            >
+                              {chrome.i18n.getMessage("yes")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                              onClick={() => setIsDownloadConfirmationOpen(false)}
+                            >
+                              {chrome.i18n.getMessage("no")}
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <div className="gpt:flex gpt:flex-col gpt:items-center gpt:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsErrorExpanded(!isErrorExpanded)}
+                        className="gpt:text-red-500 gpt:hover:text-red-600 gpt:dark:hover:text-red-400 gpt:flex gpt:items-center gpt:gap-2"
                       >
-                        <Button
-                          disabled={!isPaused && !isPlaying}
-                          variant="ghost"
-                          size={"icon"}
-                          className="gpt:absolute gpt:top-1/2 gpt:start-1/2 gpt:transform gpt:-translate-y-1/2 gpt:-translate-x-1/2 gpt:rounded-full gpt:[&_svg]:size-6"
-                        >
-                          <DownloadCloud />
-                        </Button>
-                        <svg
-                          className="gpt:size-full gpt:-rotate-90"
-                          viewBox="0 0 36 36"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="16"
-                            fill="none"
-                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-800 gpt:dark:text-gray-100"
-                            strokeWidth="2"
-                          ></circle>
-                          <circle
-                            cx="18"
-                            cy="18"
-                            r="16"
-                            fill="none"
-                            className="gpt:transition-all gpt:ease-in-out gpt:stroke-current gpt:text-gray-100 gpt:dark:text-gray-700"
-                            strokeWidth="2"
-                            strokeDasharray="100"
-                            strokeDashoffset={progress}
-                            strokeLinecap="square"
-                          ></circle>
-                        </svg>
-                      </div>
-                    </PopoverTrigger>
-                  )}
-                  <PopoverContent className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700">
-                    <div className="gpt:flex gpt:flex-col gpt:gap-2">
-                      <p className="gpt:text-wrap">
-                        {chrome.i18n.getMessage("download_confirm")}
-                      </p>
-                      <div className="gpt:flex gpt:gap-4 gpt:w-full gpt:justify-center gpt:flex-wrap">
-                        <Button
-                          variant="ghost"
-                          className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
-                          onClick={() => {
-                            handleDownload();
-                            setIsDownloadConfirmationOpen(false);
-                          }}
-                        >
-                          {chrome.i18n.getMessage("yes")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="gpt:flex-auto gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
-                          onClick={() => setIsDownloadConfirmationOpen(false)}
-                        >
-                          {chrome.i18n.getMessage("no")}
-                        </Button>
-                      </div>
+                        {isErrorExpanded ? <ChevronUp className="gpt:size-4" /> : <ChevronDown className="gpt:size-4" />}
+                        <span>{isErrorExpanded ? "Hide Error" : "Show Error"}</span>
+                      </Button>
+                      {isErrorExpanded && (
+                        <p className="gpt:text-red-500 gpt:text-wrap gpt:max-w-lg gpt:text-center">{errorMessage}</p>
+                      )}
                     </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                  </div>
+                )}
+              </>
             ) : (
               <>
                 {!prompts.length && (
@@ -1364,7 +1487,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                     variant="ghost"
                     onPointerDown={(e) => e.preventDefault()} // stops Radix from toggling
                     onClick={onLocateClick}
-                    className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
+                    className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
                     title="Locate Audio"
                   >
                     <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
@@ -1450,12 +1573,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   )}
                 </PopoverContent>
               </Popover>
-
-              {/* Info (to the right) */}
-              <InfoIcon
-                onClick={() => showInfoToast(5000)}
-                className="gpt:hover:cursor-pointer gpt:rounded-full gpt:hover:scale-115 gpt:active:scale-105 gpt:transition-all gpt:size-6"
-              />
             </div>
           )}
 

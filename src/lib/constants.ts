@@ -11,7 +11,10 @@ export const ACCEPTED_FILE_TYPES: Accept = {
 };
 
 export const ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
-  "text/plain": [".txt"],
+  "application/msword": [],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [],
+  "text/plain": [],
+  "application/epub+zip": [".epub"],
 };
 
 export const TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX: Accept = {

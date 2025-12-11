@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
 import AlertPopup from "./alert-popup";
 import Content from "./content";
 import PinTutorialPopUp from "./pin-tutorial-popup";
@@ -50,6 +51,7 @@ function Uploader() {
   const isOpening = useRef<boolean>(false);
   const LOGO = chrome.runtime.getURL('logo-128.png');
   const autoOpen = useRef<boolean>(false);
+  const onOpenChangeRef = useRef<((open: boolean) => void) | null>(null);
 
   const [showTrialGift, setShowTrialGift] = useState<boolean>(false);
   const [trialEndsAt, setTrialEndsAt] = useState<number | null>(null);
@@ -79,6 +81,27 @@ function Uploader() {
   // 3-2-1 countdown state for the “X”
   const [importantCloseCountdown, setImportantCloseCountdown] = useState<number>(0);
   const [importantCanClose, setImportantCanClose] = useState<boolean>(false);
+
+  // Activation button dismiss state (clears on page refresh)
+  const [isActivationButtonDismissed, setIsActivationButtonDismissed] = useState<boolean>(() => {
+    try {
+      // Get current page load ID
+      const currentPageLoadId = performance.timeOrigin.toString();
+      const storedPageLoadId = sessionStorage.getItem("gptr/pageLoadId");
+      const wasDismissed = sessionStorage.getItem("gptr/activationButtonDismissed") === "true";
+      
+      // If this is a new page load (refresh), clear dismissed state
+      if (storedPageLoadId !== currentPageLoadId) {
+        sessionStorage.setItem("gptr/pageLoadId", currentPageLoadId);
+        sessionStorage.removeItem("gptr/activationButtonDismissed");
+        return false;
+      }
+      
+      return wasDismissed;
+    } catch {
+      return false;
+    }
+  });
 
   const handleBillingIssueUpgrade = async () => {
     try {
@@ -536,7 +559,19 @@ function Uploader() {
           (async () => {
             const active = window.localStorage.getItem("gptr/active");
             if (active && active !== "true") {
-              activateButton.current?.click();
+              // If button is dismissed, open overlay directly using onOpenChange
+              try {
+                const isDismissed = sessionStorage.getItem("gptr/activationButtonDismissed") === "true";
+                if (isDismissed && onOpenChangeRef.current) {
+                  // Use onOpenChange to properly trigger all setup logic
+                  onOpenChangeRef.current(true);
+                } else {
+                  activateButton.current?.click();
+                }
+              } catch (error) {
+                // Fallback to clicking button if sessionStorage check fails
+                activateButton.current?.click();
+              }
             }
             while (window.localStorage.getItem("gptr/active") !== "true") {
               await new Promise(r => setTimeout(r, 100));
@@ -703,7 +738,9 @@ function Uploader() {
         return;
       }
       
-      if (isOpeningInProgress.current) return;
+      if (isOpeningInProgress.current) {
+        return;
+      }
       isOpeningInProgress.current = true;
       try {
         {
@@ -888,6 +925,11 @@ function Uploader() {
     [isAuthenticated, isSubscribed, showPinTutorial, pendingTrialAfterPin, showTrialGift]
   );
   
+  // Store onOpenChange in ref for use in message listener
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
+
   useEffect(() => {
     // Allow opening on success redirect even without waiting for auth
     const params = new URLSearchParams(window.location.search);
@@ -1117,6 +1159,26 @@ function Uploader() {
     }
   }
 
+  // Handle activation button dismiss
+  const handleDismissActivationButton = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the dialog
+    setIsActivationButtonDismissed(true);
+    try {
+      sessionStorage.setItem("gptr/activationButtonDismissed", "true");
+    } catch (e) {
+      console.error("Failed to save dismiss state:", e);
+    }
+  }
+
+  // Prevent button expansion when hovering over X button
+  const handleXMouseEnter = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  }
+
+  const handleXMouseLeave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  }
+
   useEffect(() => {
     // audioPlayer.addEventListener(LISTENERS.AUDIO_ENDED, handleAudioEnd);
     window.addEventListener('online', updateConnectionStatus);
@@ -1131,33 +1193,63 @@ function Uploader() {
   return (
     <>
       <Dialog open={isActive} onOpenChange={onOpenChange}>
-        <DialogTrigger asChild>
-          <Button
-            disabled={isOffline}
-            ref={activateButton}
-            variant="outline"
-            size="lg"
-            onMouseOver={() => setMinimised(false)}
-            onMouseOut={() => setMinimised(true)}
-            className={cn("gpt:shadow-md gpt:absolute gpt:flex gpt:justify-center gpt:items-center z-[101] gpt:top-60 gpt:right-0 gpt:rounded-l-full! gpt:dark:border-gray-700 gpt:dark:bg-gray-900 gpt:bg-gray-100 gpt:border-gray-200  gpt:p-2 gpt:border gpt:border-r-0  gpt:transition-all",
-              {
-                "gpt:!z-[50]": isActive || isOverlayFallback,
-              })
-            }
-          >
-            <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />{!minimised && (
-              <> {(() => {
-                const loginBtn = document.querySelector("[data-testid='login-button']");
-                // Show "Activate" if we have token OR no login button exists
-                // Only show "Login" if no token AND login button exists
-                if (!isAuthenticated && loginBtn) {
-                  return chrome.i18n.getMessage("login_to_use");
+        {!isActivationButtonDismissed && (
+          <DialogTrigger asChild>
+            <Button
+              disabled={isOffline}
+              ref={activateButton}
+              variant="outline"
+              size="lg"
+              onMouseOver={(e) => {
+                // Don't expand if hovering over X button
+                const target = e.target as HTMLElement;
+                if (target.closest('button[aria-label="Dismiss"]')) {
+                  return;
                 }
-                return chrome.i18n.getMessage("activate");
-              })()} GPT Reader & Transcriber</>
-            )}
-          </Button>
-        </DialogTrigger>
+                setMinimised(false);
+              }}
+              onMouseOut={(e) => {
+                // Don't minimize if mouse is moving to X button
+                const relatedTarget = e.relatedTarget as HTMLElement;
+                if (relatedTarget?.closest('button[aria-label="Dismiss"]')) {
+                  return;
+                }
+                setMinimised(true);
+              }}
+              className={cn("gpt:shadow-md gpt:absolute gpt:flex gpt:justify-center gpt:items-center z-[101] gpt:top-60 gpt:right-0 gpt:rounded-l-full! gpt:dark:border-gray-700 gpt:dark:bg-gray-900 gpt:bg-gray-100 gpt:border-gray-200  gpt:p-2 gpt:border gpt:border-r-0  gpt:transition-all",
+                {
+                  "gpt:!z-[50]": isActive || isOverlayFallback,
+                })
+              }
+            >
+              <div className="gpt:relative gpt:flex gpt:items-center gpt:gap-2 gpt:w-full">
+                <img src={LOGO} alt="GPT Reader Logo" className="gpt:size-6" />
+                {!minimised && (
+                  <span> {(() => {
+                    const loginBtn = document.querySelector("[data-testid='login-button']");
+                    // Show "Activate" if we have token OR no login button exists
+                    // Only show "Login" if no token AND login button exists
+                    if (!isAuthenticated && loginBtn) {
+                      return chrome.i18n.getMessage("login_to_use");
+                    }
+                    return chrome.i18n.getMessage("activate");
+                  })()} GPT Reader & Transcriber</span>
+                )}
+              </div>
+              <button
+                onClick={handleDismissActivationButton}
+                onMouseEnter={handleXMouseEnter}
+                onMouseLeave={handleXMouseLeave}
+                className="gpt:absolute gpt:hover:bg-gray-200 gpt:dark:hover:bg-gray-700 gpt:rounded-full gpt:transition-colors gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:z-10 gpt:flex gpt:items-center gpt:justify-center"
+                aria-label="Dismiss"
+                title="Dismiss"
+                style={{ width: '19px', height: '19px', minWidth: '19px', minHeight: '19px', top: '-4px', left: '-4px' }}
+              >
+                <X size={12} style={{ width: '12px', height: '12px', minWidth: '12px', minHeight: '12px' }} />
+              </button>
+            </Button>
+          </DialogTrigger>
+        )}
         <DialogContent
           onInteractOutside={(e: Event) => {
             e.preventDefault(); //prevents mask click close

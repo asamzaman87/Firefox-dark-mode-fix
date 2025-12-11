@@ -1970,11 +1970,14 @@ export const handleDownload = (
 
 export const getFileAccept = (isReader: boolean) => {
   const browser = detectBrowser();
-  return browser === "firefox"
-    ? isReader
+  // Firefox supports DOCX, EPUB, and TXT (PDF not supported due to browser restrictions)
+  if (browser === "firefox") {
+    return isReader
       ? ACCEPTED_FILE_TYPES_FIREFOX
-      : TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX
-    : isReader
+      : TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX;
+  }
+  // Chrome and other browsers
+  return isReader
     ? ACCEPTED_FILE_TYPES
     : TRANSCRIBER_ACCEPTED_FILE_TYPES;
 };

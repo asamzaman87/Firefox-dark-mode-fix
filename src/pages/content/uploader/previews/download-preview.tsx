@@ -159,9 +159,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         )}
         {hasError && (
           <p className="gpt:text-red-500 gpt:text-wrap gpt:max-w-lg gpt:text-center">
-            {progress === 0
-              ? chrome.i18n.getMessage("error_no_start")
-              : errorMessage}
+            {errorMessage}
           </p>
         )}
       </div>
