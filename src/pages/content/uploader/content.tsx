@@ -115,14 +115,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [isErrorExpanded, setIsErrorExpanded] = useState<boolean>(true);
 
     // --- Locate audio + search state ---
-    const [locateCtaOpen, setLocateCtaOpen] = useState<boolean>(false);    // shows "Search for text"
     const [locateSearchMode, setLocateSearchMode] = useState<boolean>(false); // shows full search UI
-    const [locateOpen, setLocateOpen] = useState<boolean>(false); // internal (popover open when CTA or search is visible)
+    const [locateOpen, setLocateOpen] = useState<boolean>(false); // internal (popover open when search is visible)
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchMatches, setSearchMatches] = useState<number[]>([]);
     const [searchSel, setSearchSel] = useState<number>(0);
     const lastLocateOffsetRef = useRef<number | null>(null);
     const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [audioControlsExpanded, setAudioControlsExpanded] = useState<boolean>(true);
 
     // Clean up tooltip timer on unmount
     useEffect(() => {
@@ -307,25 +307,9 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         return;
       }
 
-      // Always perform the locate highlight
+      // Always perform the locate highlight (no popover UI)
       locateNow();
-
-      // If user is already in search mode, keep that open and do nothing else
-      if (locateSearchMode) {
-        setLocateOpen(true);
-        return;
-      }
-
-      // Show CTA ("Search for text") and keep it for the same window the highlight is visible
-      setLocateCtaOpen(true);
-      setLocateOpen(true);
-      if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
-      ctaTimerRef.current = setTimeout(() => {
-        setLocateCtaOpen(false);
-        // Close popover only if search hasn't been opened
-        setLocateOpen((prev) => (locateSearchMode ? true : false));
-      }, 4000); // keep in sync with your highlight lifetime
-    }, [locateNow, locateSearchMode, isSubscribed, setReason, setUpgradeModalOpen]);
+    }, [isSubscribed, locateNow, setReason, setUpgradeModalOpen]);
 
     // Recompute matches whenever query or text changes (only when popover is open)
     useEffect(() => {
@@ -1466,113 +1450,111 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
           {prompts.length > 0 && !isDownload && (
             <div className="gpt:z-[51] gpt:absolute gpt:bottom-4 gpt:right-4 gpt:flex gpt:items-center gpt:gap-3">
-              {/* Locate (left of Info) */}
-              <Popover
-                modal={locateSearchMode}
-                open={locateOpen}
-                onOpenChange={(o) => {
-                  if (!o) {
-                    setLocateOpen(false);
-                    setLocateCtaOpen(false);
-                    setLocateSearchMode(false);
-                    if (ctaTimerRef.current) {
-                      clearTimeout(ctaTimerRef.current);
-                      ctaTimerRef.current = null;
-                    }
-                  }
-                }}
-              >
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    onPointerDown={(e) => e.preventDefault()} // stops Radix from toggling
-                    onClick={onLocateClick}
-                    className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
-                    title="Locate Audio"
-                  >
-                    <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
-                    Locate Audio
-                  </Button>
-                </PopoverTrigger>
-
-                <PopoverContent
-                  align="end"
-                  className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:w-auto gpt:min-w-0 gpt:px-2 gpt:py-2"
-                  onInteractOutside={() => {           
-                    setLocateOpen(false);
-                    setLocateCtaOpen(false);
-                    setLocateSearchMode(false);
-                    if (ctaTimerRef.current) {
-                      clearTimeout(ctaTimerRef.current);
-                      ctaTimerRef.current = null;
-                    }
-                  }}
+              {/* Locate Audio, Search Text, and Collapse/Expand Controls */}
+              <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:items-end">
+                {/* Collapse/Expand Button */}
+                <Button
+                  variant="ghost"
+                  onClick={() => setAudioControlsExpanded(!audioControlsExpanded)}
+                  className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:h-8 gpt:w-8 gpt:p-0 gpt:flex gpt:items-center gpt:justify-center gpt:transition-all"
+                  title={audioControlsExpanded ? "Hide controls" : "Show controls"}
                 >
-                  {/* CTA (when not in search mode) */}
-                  {!locateSearchMode && locateCtaOpen ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        // Enter full search ONLY via this CTA
-                        setLocateSearchMode(true);
-                        setLocateCtaOpen(false);
-                        if (ctaTimerRef.current) {
-                          clearTimeout(ctaTimerRef.current);
-                          ctaTimerRef.current = null;
+                  {audioControlsExpanded ? <ChevronUp className="gpt:h-4 gpt:w-4" /> : <ChevronDown className="gpt:h-4 gpt:w-4" />}
+                </Button>
+
+                {/* Search Text and Locate Audio Buttons */}
+                {audioControlsExpanded && (
+                  <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:items-end">
+                    {/* Search Text Button */}
+                    <Popover
+                      open={locateOpen && locateSearchMode}
+                      onOpenChange={(o) => {
+                        if (!o) {
+                          setLocateOpen(false);
+                          setLocateSearchMode(false);
+                          if (ctaTimerRef.current) {
+                            clearTimeout(ctaTimerRef.current);
+                            ctaTimerRef.current = null;
+                          }
                         }
                       }}
-                      className="gpt:h-7 gpt:px-1.5 gpt:py-0.5 gpt:text-[11px] gpt:leading-none gpt:gap-1 gpt:whitespace-nowrap gpt:rounded"
                     >
-                      <Search className="gpt:w-4 gpt:h-4" />
-                      Search for text
-                    </Button>
-                  ) : (
-                    <div className="gpt:flex gpt:flex-col gpt:gap-3">
-                      <div className="gpt:flex gpt:items-center gpt:gap-2">
-                        <input
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              nextMatch();
-                            } else if (e.key === "Enter" && e.shiftKey) {
-                              e.preventDefault();
-                              prevMatch();
-                            } else if (e.key === "Escape") {
-                              setLocateOpen(false);
-                              setLocateSearchMode(false);
-                            }
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setLocateSearchMode(true);
+                            setLocateOpen(true);
                           }}
-                          placeholder="Search text…"
-                          className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
-                        />
-                        <Button variant="ghost" onClick={prevMatch} className="gpt:px-3">Prev</Button>
-                        <Button variant="ghost" onClick={nextMatch} className="gpt:px-3">Next</Button>
-                      </div>
+                          className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
+                          title="Search Text"
+                        >
+                          <Search className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
+                          Search Text
+                        </Button>
+                      </PopoverTrigger>
 
-                      <div className="gpt:flex gpt:items-center gpt:justify-between gpt:text-xs gpt:text-gray-600 gpt:dark:text-gray-300">
-                        <span>
-                          {searchMatches.length ? `${searchSel + 1} / ${searchMatches.length}` : "0 / 0"}
-                        </span>
-                        <div className="gpt:flex gpt:gap-2">
-                          <Button
-                            variant="ghost"
-                            className="gpt:px-2"
-                            onClick={() => { locateNow(); }}
-                          >
-                            Go to Audio
-                          </Button>
-                          <Button variant="ghost" className="gpt:px-2" onClick={() => { setLocateOpen(false); setLocateSearchMode(false); }}>
-                            Close
-                          </Button>
+                      <PopoverContent
+                        align="end"
+                        className="gpt:bg-gray-100 gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:w-auto gpt:min-w-0 gpt:px-2 gpt:py-2"
+                        onInteractOutside={() => {
+                          setLocateOpen(false);
+                          setLocateSearchMode(false);
+                          if (ctaTimerRef.current) {
+                            clearTimeout(ctaTimerRef.current);
+                            ctaTimerRef.current = null;
+                          }
+                        }}
+                      >
+                        <div className="gpt:flex gpt:flex-col gpt:gap-3">
+                          <div className="gpt:flex gpt:items-center gpt:gap-2">
+                            <input
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  nextMatch();
+                                } else if (e.key === "Enter" && e.shiftKey) {
+                                  e.preventDefault();
+                                  prevMatch();
+                                } else if (e.key === "Escape") {
+                                  setLocateOpen(false);
+                                  setLocateSearchMode(false);
+                                }
+                              }}
+                              placeholder="Search text…"
+                              className="gpt:flex-1 gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-900 gpt:px-3 gpt:py-2 gpt:text-sm gpt:outline-none focus:gpt:ring-2 focus:gpt:ring-blue-500"
+                            />
+                            <Button variant="ghost" onClick={prevMatch} className="gpt:px-3">Prev</Button>
+                            <Button variant="ghost" onClick={nextMatch} className="gpt:px-3">Next</Button>
+                          </div>
+
+                          <div className="gpt:flex gpt:items-center gpt:justify-between gpt:text-xs gpt:text-gray-600 gpt:dark:text-gray-300">
+                            <span>
+                              {searchMatches.length ? `${searchSel + 1} / ${searchMatches.length}` : "0 / 0"}
+                            </span>
+                            <Button variant="ghost" className="gpt:px-2" onClick={() => { setLocateOpen(false); setLocateSearchMode(false); }}>
+                              Close
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                      </PopoverContent>
+                    </Popover>
+
+                    {/* Locate Audio Button */}
+                    <Button
+                      variant="ghost"
+                      onClick={onLocateClick}
+                      className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
+                      title="Locate Audio"
+                    >
+                      <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
+                      Locate Audio
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
