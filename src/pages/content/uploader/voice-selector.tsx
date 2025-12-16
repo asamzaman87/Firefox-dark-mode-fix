@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumModal } from "@/context/premium-modal";
 import { LISTENERS, PRO_VOICES, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
 import { cn, detectBrowser } from "@/lib/utils";
@@ -295,9 +294,9 @@ const VoiceSelector: FC<VoiceSelectorProps> = ({ voice, setVoices, disabled, loa
     if (loading || (open && voice.voices.length === 0))
         return (
             <div className="gpt:flex gpt:items-center gpt:justify-center gpt:gap-2">
-                <Skeleton className="gpt:rounded-full gpt:w-32 gpt:h-8" />
-                <Skeleton className="gpt:rounded-full gpt:w-32 gpt:h-8" />
-                <Skeleton className="gpt:rounded-full gpt:w-32 gpt:h-8" />
+                <span className="gpt:text-base gpt:font-medium gpt:text-black gpt:dark:text-white">
+                    {chrome.i18n.getMessage('loading_voices')}
+                </span>
             </div>
         );
 
