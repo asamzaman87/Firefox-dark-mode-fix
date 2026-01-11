@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isOverlayVisibleInDOM, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import AlertPopup from "./alert-popup";
@@ -412,11 +412,15 @@ function Uploader() {
       }
 
       // 3) Refresh once if anything was deleted, preserving your existing rules
+      // Don't refresh if overlay is opening or already open (check both refs and DOM)
+      const overlayIsOpenOrOpening = isOpening.current || 
+                                     localStorage.getItem("gptr/active") === "true" ||
+                                     isOverlayVisibleInDOM();
+      
       if (
         shouldRefresh &&
         window.location.href.startsWith("https://chatgpt.com") &&
-        !isOpening.current &&
-        localStorage.getItem("gptr/active") !== "true"
+        !overlayIsOpenOrOpening
       ) {
         await new Promise(r => setTimeout(r, 1500));
         window.location.href = window.location.href;
@@ -558,25 +562,42 @@ function Uploader() {
         if (message.payload === "ORIGIN_VERIFIED") {
           (async () => {
             const active = window.localStorage.getItem("gptr/active");
-            if (active && active !== "true") {
-              // If button is dismissed, open overlay directly using onOpenChange
+            const aoc = window.localStorage.getItem("gptr/aoc");
+            const isActuallyOpen = isOverlayVisibleInDOM();
+            
+            // Only clear stale localStorage state if overlay is NOT actually open in DOM
+            if (active === "true" && !isActuallyOpen) {
+              window.localStorage.setItem("gptr/active", "false");
+            }
+            if (aoc && +aoc > 0 && !isActuallyOpen) {
+              window.localStorage.setItem("gptr/aoc", "0");
+            }
+            
+            // Only try to open if overlay is not already open
+            if (!isActuallyOpen) {
               try {
-                const isDismissed = sessionStorage.getItem("gptr/activationButtonDismissed") === "true";
-                if (isDismissed && onOpenChangeRef.current) {
-                  // Use onOpenChange to properly trigger all setup logic
+                if (onOpenChangeRef.current) {
                   onOpenChangeRef.current(true);
-                } else {
-                  activateButton.current?.click();
+                } else if (activateButton.current) {
+                  activateButton.current.click();
                 }
               } catch (error) {
-                // Fallback to clicking button if sessionStorage check fails
-                activateButton.current?.click();
+                // Fallback to clicking button if available
+                if (activateButton.current) {
+                  activateButton.current.click();
+                }
               }
             }
-            while (window.localStorage.getItem("gptr/active") !== "true") {
+            
+            let waitCount = 0;
+            const maxWait = 100; // 10 seconds max wait
+            while (window.localStorage.getItem("gptr/active") !== "true" && waitCount < maxWait) {
               await new Promise(r => setTimeout(r, 100));
+              waitCount++;
             }
-            chrome.runtime.sendMessage({ type: "TAB_ACTIVATED" });
+            if (waitCount < maxWait) {
+              chrome.runtime.sendMessage({ type: "TAB_ACTIVATED" });
+            }
           })();
         }
       }

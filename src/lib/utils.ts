@@ -46,6 +46,27 @@ export const addChatToDeleteLS = (chatId?: string) => {
       writeChatsToDelete([...list, chatId]);
     }
 };
+
+/**
+ * Check if the overlay is actually visible in the DOM
+ * @returns true if overlay is open/visible, false otherwise
+ */
+export const isOverlayVisibleInDOM = (): boolean => {
+  // Check for Radix Dialog with data-state="open"
+  const dialogContent = document.querySelector('[role="dialog"][data-state="open"]');
+  if (dialogContent) return true;
+  
+  // Also check for the shadow root container and dialog overlay/content
+  const shadowRoot = document.querySelector('#__gpt-reader-shadow');
+  if (shadowRoot) {
+    const overlay = shadowRoot.querySelector('[data-radix-dialog-overlay]');
+    const content = shadowRoot.querySelector('[data-radix-dialog-content]');
+    if (overlay || content) return true;
+  }
+  
+  return false;
+};
+
 export const removeChatFromDeleteLS = (chatId: string) => {
   writeChatsToDelete(readChatsToDelete().filter(id => id !== chatId));
 };
@@ -711,17 +732,20 @@ export const getGPTTabs = async () => {
 
 //switch to active gpt tab if exists otherwise create a new tab and make it active
 export const switchToActiveTab = async () => {
-  const activeTab = await getGPTTabs();
-  if (!activeTab?.length || !activeTab[0].id) {
-    const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
-    if (tab.id) {
-      await chrome.tabs.update(tab.id, { active: true });
-      return tab.id + "::new_tab";
-    }
-    return
+  // First, check for ChatGPT tabs in the current active window
+  const currentWindowTabs = await chrome.tabs.query({ url: MATCH_URLS, currentWindow: true });
+  if (currentWindowTabs.length > 0 && currentWindowTabs[0].id) {
+    await chrome.tabs.update(currentWindowTabs[0].id, { active: true });
+    return currentWindowTabs[0].id;
   }
-  await chrome.tabs.update(activeTab[0].id, { active: true });
-  return activeTab[0].id;
+
+  // If no ChatGPT tab in current window, create a new one in the active window
+  const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+  if (tab.id) {
+    await chrome.tabs.update(tab.id, { active: true });
+    return tab.id + "::new_tab";
+  }
+  return
 }
 
 const THRESHOLD = 150 * 1000; // 150 seconds in ms

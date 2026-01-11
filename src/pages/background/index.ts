@@ -463,7 +463,7 @@ chrome.action.onClicked.addListener(async () => {
   if (typeof tabId === "string") {
     const numericId = +tabId.split("::")[0];
 
-    // wait until the tab’s status === "complete", then send the popup message
+    // wait until the tab's status === "complete", then send the popup message
     const listener = (
       updatedTabId: number,
       info: chrome.tabs.TabChangeInfo
