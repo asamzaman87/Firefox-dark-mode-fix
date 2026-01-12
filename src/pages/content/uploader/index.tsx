@@ -343,9 +343,8 @@ function Uploader() {
           // ignore
         }
         if (list.length) {
-          console.log('B refresh');
           await new Promise(r => setTimeout(r, 1500));
-          // window.location.href = window.location.href;
+          window.location.href = window.location.href;
         }
       })();
     }
@@ -423,9 +422,8 @@ function Uploader() {
         window.location.href.startsWith("https://chatgpt.com") &&
         !overlayIsOpenOrOpening
       ) {
-        console.log('A refresh');
         await new Promise(r => setTimeout(r, 1500));
-        // window.location.href = window.location.href;
+        window.location.href = window.location.href;
       }
     })();
   }, [isAuthenticated]);
