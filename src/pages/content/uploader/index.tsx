@@ -343,8 +343,9 @@ function Uploader() {
           // ignore
         }
         if (list.length) {
+          console.log('B refresh');
           await new Promise(r => setTimeout(r, 1500));
-          window.location.href = window.location.href;
+          // window.location.href = window.location.href;
         }
       })();
     }
@@ -422,8 +423,9 @@ function Uploader() {
         window.location.href.startsWith("https://chatgpt.com") &&
         !overlayIsOpenOrOpening
       ) {
+        console.log('A refresh');
         await new Promise(r => setTimeout(r, 1500));
-        window.location.href = window.location.href;
+        // window.location.href = window.location.href;
       }
     })();
   }, [isAuthenticated]);
@@ -562,30 +564,24 @@ function Uploader() {
         if (message.payload === "ORIGIN_VERIFIED") {
           (async () => {
             const active = window.localStorage.getItem("gptr/active");
-            const aoc = window.localStorage.getItem("gptr/aoc");
             const isActuallyOpen = isOverlayVisibleInDOM();
             
             // Only clear stale localStorage state if overlay is NOT actually open in DOM
             if (active === "true" && !isActuallyOpen) {
               window.localStorage.setItem("gptr/active", "false");
             }
-            if (aoc && +aoc > 0 && !isActuallyOpen) {
-              window.localStorage.setItem("gptr/aoc", "0");
-            }
             
-            // Only try to open if overlay is not already open
-            if (!isActuallyOpen) {
-              try {
-                if (onOpenChangeRef.current) {
-                  onOpenChangeRef.current(true);
-                } else if (activateButton.current) {
-                  activateButton.current.click();
-                }
-              } catch (error) {
-                // Fallback to clicking button if available
-                if (activateButton.current) {
-                  activateButton.current.click();
-                }
+            // Attempt to open overlay
+            try {
+              if (onOpenChangeRef.current) {
+                onOpenChangeRef.current(true);
+              } else if (activateButton.current) {
+                activateButton.current.click();
+              }
+            } catch (error) {
+              // Fallback to clicking button if available
+              if (activateButton.current) {
+                activateButton.current.click();
               }
             }
             
@@ -768,12 +764,6 @@ function Uploader() {
           localStorage.setItem("gptr/download", "false");
         }
         isOpening.current = true;
-        const aoc = window.localStorage.getItem("gptr/aoc");
-        //return if overlay is already active.
-        if (open && aoc && +aoc > 0) {
-          setIsOverlayFallback(true);
-          return;
-        }
         // Allow overlay to open even without auth token for faster opening
         // But redirect to login if login button exists and user is not authenticated
         const loginBtn: HTMLButtonElement | null = document.querySelector(
@@ -1158,16 +1148,8 @@ function Uploader() {
         root.classList.add(theme_color)
         root.style["colorScheme"] = theme_color
       }
-      //set active overlay count
-      const aoc = window.localStorage.getItem("gptr/aoc");
-      const count = aoc ? +aoc : 0;
-      window.localStorage.setItem("gptr/aoc", String(count + 1));
-
       //clear the origins (onClick and onInstall once overlay is opened)
       chrome.runtime.sendMessage({ type: "CLEAR_ORIGIN" });
-    } else {
-      //reset active overlay count
-      window.localStorage.setItem("gptr/aoc", "0");
     }
   }, [isActive])
 
