@@ -500,7 +500,7 @@ const useStreamListener = (
             }
         }
 
-        localStorage.setItem("gptr/abortCount", "1");
+        // Note: abortCount is not reset on success - it persists across sessions to track error history
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine

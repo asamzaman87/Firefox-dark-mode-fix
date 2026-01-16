@@ -412,9 +412,9 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                     const flag = localStorage.getItem("gptr/sended");
 
                     // If flag is gone, the send succeeded and someone cleared it → stop.
+                    // Note: retryCountRef is not reset on success - it persists to track error history
                     if (!flag) {
                         sendWatchdogStopRef.current();
-                        retryCountRef.current = 0;
                         return;
                     }
 
@@ -429,40 +429,30 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                         if (stopButton) {
                             stopButton.click();
                         }
-                        if (thresholdMs >= 10_000) {
-                            toast({
-                                description:
-                                    "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",
-                                style: TOAST_STYLE_CONFIG,
-                                duration: 30000,
-                            });
-                            return;
-                        } else {
-                            // increment retry count for next attempt
-                            retryCountRef.current += 1;
-                            await new Promise<void>(async (resolve) => {
-                                const newChatBtn = document.querySelector<HTMLButtonElement>(
-                                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                                );
-                                if (newChatBtn) {
-                                    await collectChatsAboveTopChat(false);
-                                    newChatBtn.click();
-                                    // wait briefly for the new chat URL
-                                    for (let i = 0; i < 10; i++) {
-                                        await new Promise((r) => setTimeout(r, 200));
-                                        const urlChat = window.location.href;
-                                        if (urlChat === "https://chatgpt.com/") break;
-                                    }
+                        // increment retry count for next attempt
+                        retryCountRef.current += 1;
+                        await new Promise<void>(async (resolve) => {
+                            const newChatBtn = document.querySelector<HTMLButtonElement>(
+                                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                            );
+                            if (newChatBtn) {
+                                await collectChatsAboveTopChat(false);
+                                newChatBtn.click();
+                                // wait briefly for the new chat URL
+                                for (let i = 0; i < 10; i++) {
+                                    await new Promise((r) => setTimeout(r, 200));
+                                    const urlChat = window.location.href;
+                                    if (urlChat === "https://chatgpt.com/") break;
                                 }
-                                resolve();
-                            });
-                            // Find chunk index from id (id is string representation of chunk index)
-                            const chunkIndex = parseInt(payload.id, 10);
-                            if (!isNaN(chunkIndex) && chunkIndex >= 0 && chunkIndex < originalChunksRef.current.length) {
-                                injectPrompt(chunkIndex, payload.ndx);
-                            } else {
-                                console.error("[startSendWatchdog] Could not find chunk index for id:", payload.id);
                             }
+                            resolve();
+                        });
+                        // Find chunk index from id (id is string representation of chunk index)
+                        const chunkIndex = parseInt(payload.id, 10);
+                        if (!isNaN(chunkIndex) && chunkIndex >= 0 && chunkIndex < originalChunksRef.current.length) {
+                            injectPrompt(chunkIndex, payload.ndx);
+                        } else {
+                            console.error("[startSendWatchdog] Could not find chunk index for id:", payload.id);
                         }
                     }
                 } catch {
