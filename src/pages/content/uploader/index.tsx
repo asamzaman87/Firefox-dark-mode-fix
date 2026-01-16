@@ -729,6 +729,7 @@ function Uploader() {
     setIsActive(true);
     // remove in case it was set
     localStorage.removeItem("gptr/equalIssue");
+    localStorage.removeItem("gptr/abortCount");
   }, [
     waitForElement,
     clickStopButtonIfPresent,

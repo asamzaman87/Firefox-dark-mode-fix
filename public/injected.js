@@ -84,7 +84,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
   
         const threshold = chunkLength;
         let lastProgress = Date.now();
-        let prevVal = '';
+        let prevValLength = 0;
   
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -92,10 +92,10 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             done = readResult.done;
             const value = readResult.value;
             // if we haven’t received any new assistant text in 5 s, trigger abort
-            const abortCount = Number(localStorage.getItem("gptr/abortCount")) || 1;
+            const abortCount = Number(localStorage.getItem("gptr/abortCount")) || 0;
             const abortTimeout = 5_000 + (abortCount * 3_000);
             if (Date.now() - lastProgress >= abortTimeout && !done) {
-                console.log("No stream progress for", abortTimeout,"s—aborting...");
+                console.warn("No stream progress for", abortTimeout,"s—aborting...");
                 shouldAbortStream = true;
             }
   
@@ -105,6 +105,11 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 if ((normalizeAlphaNumeric(assistant).length === threshold && threshold) && normalizeAlphaNumeric(assistant) === target.substring(0, normalizeAlphaNumeric(assistant).length)) {
                   stopConvo = false;
                   if (LOCAL_LOGS) console.log("[Injected.js] Aborting with a match on the target");
+                } else {
+                  localStorage.setItem(
+                    "gptr/abortCount",
+                    String((Number(localStorage.getItem("gptr/abortCount")) || 0) + 1)
+                  );
                 }
                 localStorage.setItem('gptr/abort', 'false');
                 shouldAbortStream = false;
@@ -161,8 +166,11 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 }
               }
             
-            if (value !== prevVal) {
+            // Update lastProgress when we receive new data (detected by length change)
+            const currentValLength = value?.length ?? 0;
+            if (currentValLength !== prevValLength) {
                 lastProgress = Date.now();
+                prevValLength = currentValLength;
             }
   
             const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
@@ -188,7 +196,6 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 const messageIdEvent = new CustomEvent("RECEIVED_MESSAGE_ID", { detail: { messageId, createTime, text: prompt } });
                 window.dispatchEvent(messageIdEvent);
             }
-            prevVal = value;
             // → once we’ve passed the threshold, notify the hook
             if (((normalizeAlphaNumeric(assistant).length > threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
                 // immediately tell the server to stop sending more SSE

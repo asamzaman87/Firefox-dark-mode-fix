@@ -55,7 +55,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     const chunkStartPositionsRef = useRef<number[]>([]);
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
-    const retryCountRef = useRef<number>(0);
+    const retryCountRef = useRef<number>(1);
 
 
     const setPreviewHtmlSource = useCallback((html?: string | null) => {
@@ -103,8 +103,12 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         try { sendWaitCancelRef.current?.(); } catch {}
         sendWaitCancelRef.current = null;
 
-        const clickAndWatch = (btn: HTMLButtonElement) => {
+        const clickAndWatch = async (btn: HTMLButtonElement) => {
             try { localStorage.setItem("gptr/sended", "true"); } catch {}
+            // wait here until doing a local storage get returns a value for it
+            while (!localStorage.getItem("gptr/sended")) {
+                await new Promise((r) => setTimeout(r, 100));
+            }
             btn.click();
             // success path: no more waiting → clear any cancel hook just in case
             sendWaitCancelRef.current?.();
@@ -422,37 +426,47 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                     const elapsed = Date.now() - start;
                     const thresholdMs = 3_500 + retryCountRef.current * 1_500;
                     if (elapsed >= thresholdMs) {
-                        console.log("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
+                        console.warn("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
                         localStorage.removeItem("gptr/sended");
                         sendWatchdogStopRef.current();
                         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
                         if (stopButton) {
                             stopButton.click();
                         }
-                        // increment retry count for next attempt
-                        retryCountRef.current += 1;
-                        await new Promise<void>(async (resolve) => {
-                            const newChatBtn = document.querySelector<HTMLButtonElement>(
-                                "[data-testid='create-new-chat-button'], [aria-label='New chat']"
-                            );
-                            if (newChatBtn) {
-                                await collectChatsAboveTopChat(false);
-                                newChatBtn.click();
-                                // wait briefly for the new chat URL
-                                for (let i = 0; i < 10; i++) {
-                                    await new Promise((r) => setTimeout(r, 200));
-                                    const urlChat = window.location.href;
-                                    if (urlChat === "https://chatgpt.com/") break;
-                                }
-                            }
-                            resolve();
-                        });
-                        // Find chunk index from id (id is string representation of chunk index)
-                        const chunkIndex = parseInt(payload.id, 10);
-                        if (!isNaN(chunkIndex) && chunkIndex >= 0 && chunkIndex < originalChunksRef.current.length) {
-                            injectPrompt(chunkIndex, payload.ndx);
+                        if (thresholdMs >= 12_000) {
+                            toast({
+                                description:
+                                    "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",
+                                style: TOAST_STYLE_CONFIG,
+                                duration: 30000,
+                            });
+                            return;
                         } else {
-                            console.error("[startSendWatchdog] Could not find chunk index for id:", payload.id);
+                            // increment retry count for next attempt
+                            retryCountRef.current += 1;
+                            await new Promise<void>(async (resolve) => {
+                                const newChatBtn = document.querySelector<HTMLButtonElement>(
+                                    "[data-testid='create-new-chat-button'], [aria-label='New chat']"
+                                );
+                                if (newChatBtn) {
+                                    await collectChatsAboveTopChat(false);
+                                    newChatBtn.click();
+                                    // wait briefly for the new chat URL
+                                    for (let i = 0; i < 10; i++) {
+                                        await new Promise((r) => setTimeout(r, 200));
+                                        const urlChat = window.location.href;
+                                        if (urlChat === "https://chatgpt.com/") break;
+                                    }
+                                }
+                                resolve();
+                            });
+                            // Find chunk index from id (id is string representation of chunk index)
+                            const chunkIndex = parseInt(payload.id, 10);
+                            if (!isNaN(chunkIndex) && chunkIndex >= 0 && chunkIndex < originalChunksRef.current.length) {
+                                injectPrompt(chunkIndex, payload.ndx);
+                            } else {
+                                console.error("[startSendWatchdog] Could not find chunk index for id:", payload.id);
+                            }
                         }
                     }
                 } catch {
@@ -722,7 +736,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     };
 
     const reset = () => {
-        retryCountRef.current = 0;
+        retryCountRef.current = 1;
         sendWaitCancelRef.current = null;
         showCompletionToast.current = false;
         setAudioUrls([]);

@@ -479,7 +479,7 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
       if (isEveryNthChunk) {
         targetSize = initialChunkSize;
       } else {
-        targetSize = Math.min(Math.floor(targetSize * 1.5), maxChunkSize);
+        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
       }
     } else {
       currentChunk = potentialChunk;

@@ -185,8 +185,8 @@ const useStreamListener = (
 
             if (response.status === 404) {
                 const start = Date.now();
-                while (Date.now() - start < 5000) {
-                    await new Promise((r) => setTimeout(r, 500));
+                while (Date.now() - start < 10000) {
+                    await new Promise((r) => setTimeout(r, 1000));
                     response = await fetch(url, { headers: { "authorization": `Bearer ${authToken}` } });
                     if (response.status === 200) break;
                 }
@@ -344,11 +344,7 @@ const useStreamListener = (
             return;
         }
         if (stopConvo) {
-            console.warn ('[handleConvStream] stopConvo detected');
-            localStorage.setItem(
-                "gptr/abortCount",
-                String((Number(localStorage.getItem("gptr/abortCount")) || 1) + 1)
-            );
+            console.warn("[handleConvStream] stopConvo detected, retrying:", chunkNdx);
             await retryFlow(chunkNdx);
             return;
         }
@@ -499,8 +495,6 @@ const useStreamListener = (
                 return;
             }
         }
-
-        // Note: abortCount is not reset on success - it persists across sessions to track error history
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine
