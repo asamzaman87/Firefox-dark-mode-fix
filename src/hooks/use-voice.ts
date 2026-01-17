@@ -27,6 +27,9 @@ const useVoice = () => {
         const storedVoice = window.localStorage.getItem("gptr/voice");
         if (storedVoice) {
             detail.selected = storedVoice;
+        } else {
+            // If no stored voice, default to "cove" instead of whatever the API returns
+            detail.selected = VOICE;
         }
         setVoices(addGenderToVoice(detail));
         setIsLoading(false); // Always clear loading when voices are received

@@ -48,7 +48,6 @@ function Uploader() {
   const { toast } = useToast();
   const { isAuthenticated } = useAuthToken();
   const wasActive = useRef<boolean>(false);
-  const isOpening = useRef<boolean>(false);
   const LOGO = chrome.runtime.getURL('logo-128.png');
   const autoOpen = useRef<boolean>(false);
   const onOpenChangeRef = useRef<((open: boolean) => void) | null>(null);
@@ -234,6 +233,137 @@ function Uploader() {
     return;
   }, [isActive]);
 
+  // Handle subscription-related logic in background (runs when overlay opens)
+  useEffect(() => {
+    if (!isActive) return;
+    
+    const handleSubscriptionLogic = async () => {
+      try {
+        // Parallelize independent API calls for better performance
+        const prev = await chrome.storage.local.get("hasSubscription");
+        const prevHasSub = prev?.hasSubscription ?? false;
+        
+        const [_, effectiveIsSubscribed] = await Promise.all([
+          fetchAndStoreTopChat(), // ChatGPT API call
+          // Subscription check - can run in parallel
+          detectBrowser() === "firefox"
+            ? new Promise<boolean>((resolve) => {
+                chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
+                  resolve(response);
+                });
+              })
+            : handleCheckUserSubscription()
+        ]);
+
+        if (prevHasSub === true && effectiveIsSubscribed === false) {
+          setShowBillingIssue(true);
+          setShowDiscountPremium(false);
+        }
+
+        if (prevHasSub === false && effectiveIsSubscribed === true) {
+          toast({description: "Welcome! Thank you for being a paying member. 🥳", style: TOAST_STYLE_CONFIG_INFO, duration: 10000});
+        }
+
+        setIsSubscribed(effectiveIsSubscribed);
+
+        try {
+          const { isTrial, trialEndsAt } = await chrome.storage.local.get([
+            "isTrial",
+            "trialEndsAt",
+          ]);
+          const alreadyShown = window.localStorage.getItem("gptr/trialGiftShown") === "true";
+          if (isTrial && !alreadyShown) {
+            if (showPinTutorial) {
+              // Pin tutorial is visible; defer the trial popup
+              setPendingTrialAfterPin(true);
+            } else {
+              // Show trial now
+              setTrialEndsAt(typeof trialEndsAt === "number" ? trialEndsAt : null);
+              setShowTrialGift(true);
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        // After subscription/trial/pin gating:
+        // A) Free users: track opens and maybe show discount premium
+        // B) Subscribed users: every Nth open, nudge annual
+        try {
+          // A) Free users
+          if (!effectiveIsSubscribed) {
+            localStorage.removeItem("gptr/annualPlan");
+            const { openCount = 0 } = await chrome.storage.local.get(["openCount"]);
+            const newCount = (typeof openCount === "number" ? openCount : 0) + 1;
+            await chrome.storage.local.set({ openCount: newCount });
+
+            // Show every Nth open; skip if Pin Tutorial is still visible or Trial gift is queued
+            const isEveryN = newCount % DISCOUNT_FREQUENCY === 0 && newCount > 0;
+            const pinVisible = showPinTutorial;
+            const trialWillShow = pendingTrialAfterPin || showTrialGift;
+
+            if (isEveryN && !pinVisible && !trialWillShow) {
+              setShowDiscountPremium(true);
+            }
+          } else {
+            // B) Subscribed users (exclude trial or cancelled)
+            const { isTrial: trialFlag = false, isSubscriptionCancelled = false } =
+              await chrome.storage.local.get(["isTrial", "isSubscriptionCancelled"]);
+            if (!trialFlag && !isSubscriptionCancelled) {
+              try {
+                // Determine current plan
+                let details;
+                if (detectBrowser() === "firefox") {
+                  details = await new Promise<any>((resolve) => {
+                    chrome.runtime.sendMessage({ type: "GET_SUBSCRIPTION_DETAILS" }, (response) =>
+                      resolve(response)
+                    );
+                  });
+                } else {
+                  details = await getSubscriptionDetails();
+                }
+                const currentId = details?.currentPriceId ?? null;
+                if (isAnnualPriceId(currentId)) {
+                  localStorage.setItem("gptr/annualPlan", "true");
+                } else {
+                  localStorage.removeItem("gptr/annualPlan");
+                }
+
+                // Count/nudge for MONTHLY plans (show annual + lifetime) or ANNUAL plans (show only lifetime)
+                // Exclude lifetime users from seeing any upsell popups
+                const isLifetime = details?.isLifetime === true;
+                // Count for both monthly and annual users (but not lifetime)
+                // We check details exists and isLifetime is false (or undefined, which means not lifetime)
+                if (details && !isLifetime) {
+                  const { premiumOpenCount = 0 } = await chrome.storage.local.get([
+                    "premiumOpenCount",
+                  ]);
+                  const nextCount =
+                    (typeof premiumOpenCount === "number" ? premiumOpenCount : 0) + 1;
+                  await chrome.storage.local.set({ premiumOpenCount: nextCount });
+
+                  const shouldNudge =
+                    nextCount % SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY === 0 && nextCount > 0;
+                  if (shouldNudge) {
+                    setShowAnnualUpsell(true);
+                  }
+                }
+              } catch {
+                /* silent: if details fail, do nothing (no count, no nudge) */
+              }
+            }
+          }
+        } catch {
+          // ignore counting errors
+        }
+      } catch (error) {
+        console.error("[handleSubscriptionLogic] Error:", error);
+      } 
+    };
+
+    void handleSubscriptionLogic();
+  }, [isActive, showPinTutorial, pendingTrialAfterPin, showTrialGift, toast]);
+
   const handlePrimaryWebReader = useCallback(async () => {
     localStorage.setItem("webReaderFxAck", "true");
     setShowWebReaderPerm(false);
@@ -332,18 +462,27 @@ function Uploader() {
       }
       (async () => {
         await collectChatsAboveTopChat();
-        const list = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+        const listBefore = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
         try {
-          if (Array.isArray(list) && list.length) {
-            for (const id of list) {
+          if (Array.isArray(listBefore) && listBefore.length) {
+            for (const id of listBefore) {
               await maybeDeleteChat(id);
             }
           }
         } catch {
           // ignore
         }
-        if (list.length) {
+        // Check if any chats were actually deleted by comparing list before and after
+        const listAfter = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+        const anyChatDeleted = listBefore.length > listAfter.length;
+        
+        // Only refresh if chats were actually deleted and overlay is definitely closed and not opening
+        if (anyChatDeleted) {
           await new Promise(r => setTimeout(r, 1500));
+        }
+        // Double-check overlay is still closed before refreshing (state, opening flag, and DOM visibility)
+        const overlayStillVisible = isOverlayVisibleInDOM();
+        if (!isActive && !isOpeningInProgress.current && !overlayStillVisible) {
           window.location.href = window.location.href;
         }
       })();
@@ -379,26 +518,22 @@ function Uploader() {
   }, [isActive, isAuthenticated]);
 
   // On load: delete the pending current chat (if any) and drain the bulk list in one go.
-  // Refresh at most once after any successful delete, matching your existing refresh rules.
+  // Refresh after deletion if overlay is not open (to avoid disrupting overlay opening).
   useEffect(() => {
     if (!isAuthenticated) return;
     localStorage.removeItem("gptr/top-chat");
 
     (async () => {
-      let shouldRefresh = false;
-
       // 2) Drain the bulk list of chats to delete
       try {
         const raw = localStorage.getItem("gptr/chatsToDelete") || "[]";
-        const list = JSON.parse(raw) as string[];
-        if (Array.isArray(list) && list.length) {
+        const listBefore = JSON.parse(raw) as string[];
+        if (Array.isArray(listBefore) && listBefore.length) {
           const remaining: string[] = [];
-          for (const id of list) {
+          for (const id of listBefore) {
             try {
               const res = await deleteChatAndCreateNew(false, id);
-              if (res?.ok) {
-                shouldRefresh = true;
-              } else if (res?.status !== 404) {
+              if (res?.status !== 404 && !res?.ok) {
                 remaining.push(id);
               }
             } catch {
@@ -406,27 +541,27 @@ function Uploader() {
             }
           }
           localStorage.setItem("gptr/chatsToDelete", JSON.stringify(remaining));
+          
+          // Check if any chats were actually deleted
+          const listAfter = JSON.parse(localStorage.getItem("gptr/chatsToDelete") || "[]") as string[];
+          const anyChatDeleted = listBefore.length > listAfter.length;
+          
+          // Only refresh if chats were deleted and overlay is not open (check state, opening flag, and DOM visibility)
+          const overlayVisibleInDOM = isOverlayVisibleInDOM();
+          if (anyChatDeleted && !isActive && !isOpeningInProgress.current && !overlayVisibleInDOM) {
+            await new Promise(r => setTimeout(r, 1500));
+            // Double-check overlay is still not open before refreshing
+            const overlayStillVisible = isOverlayVisibleInDOM();
+            if (!isActive && !isOpeningInProgress.current && !overlayStillVisible) {
+              window.location.href = window.location.href;
+            }
+          }
         }
       } catch {
         // ignore parse errors
       }
-
-      // 3) Refresh once if anything was deleted, preserving your existing rules
-      // Don't refresh if overlay is opening or already open (check both refs and DOM)
-      const overlayIsOpenOrOpening = isOpening.current || 
-                                     localStorage.getItem("gptr/active") === "true" ||
-                                     isOverlayVisibleInDOM();
-      
-      if (
-        shouldRefresh &&
-        window.location.href.startsWith("https://chatgpt.com") &&
-        !overlayIsOpenOrOpening
-      ) {
-        await new Promise(r => setTimeout(r, 1500));
-        window.location.href = window.location.href;
-      }
     })();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isActive]);
   
   // 2a) Inject the helper script ONCE
   useEffect(() => {
@@ -621,6 +756,99 @@ function Uploader() {
   }, [showImportantAnnouncement]);
 
 
+  // Auto-dismiss ChatGPT "Would you use ChatGPT again?" popup when overlay is active
+  useEffect(() => {
+    if (!isActive) return;
+
+    const dismissChatGPTPopup = () => {
+      // Look for the popup by multiple methods
+      // Method 1: Find by close button data-testid
+      const closeButton = document.querySelector<HTMLButtonElement>(
+        'button[data-testid="close-button"][aria-label="Close survey"]'
+      );
+      
+      // Method 2: Find by the question text
+      const popupText = Array.from(document.querySelectorAll('*')).find(
+        (el) => el.textContent?.includes('Would you use ChatGPT again for similar tasks?')
+      );
+      
+      // Method 3: Find by button text (Yes, Maybe, No)
+      const yesButton = Array.from(document.querySelectorAll('button')).find(
+        (btn) => btn.textContent?.trim() === 'Yes' && 
+        btn.closest('.bg-blue-500') !== null
+      );
+
+      if (closeButton) {
+        // Try clicking the close button
+        closeButton.click();
+        // Check if popup disappeared after a short delay
+        setTimeout(() => {
+          const stillExists = document.querySelector('button[data-testid="close-button"][aria-label="Close survey"]');
+          if (stillExists) {
+            // Click didn't work, remove from DOM
+            const popupContainer = closeButton.closest('.bg-blue-500, .rounded-lg');
+            if (popupContainer) {
+              popupContainer.remove();
+            }
+          }
+        }, 300);
+        return;
+      }
+
+      if (popupText) {
+        const popupContainer = popupText.closest('.bg-blue-500, .rounded-lg');
+        if (popupContainer) {
+          // Try clicking any button in the popup first
+          const anyButton = popupContainer.querySelector('button');
+          if (anyButton) {
+            anyButton.click();
+            setTimeout(() => {
+              if (document.body.contains(popupContainer)) {
+                popupContainer.remove();
+              }
+            }, 300);
+          } else {
+            popupContainer.remove();
+          }
+        }
+        return;
+      }
+
+      if (yesButton) {
+        const popupContainer = yesButton.closest('.bg-blue-500, .rounded-lg');
+        if (popupContainer) {
+          yesButton.click();
+          setTimeout(() => {
+            if (document.body.contains(popupContainer)) {
+              popupContainer.remove();
+            }
+          }, 300);
+        }
+      }
+    };
+
+    // Check immediately in case popup is already there
+    dismissChatGPTPopup();
+
+    // Watch for popup appearing
+    const observer = new MutationObserver(() => {
+      dismissChatGPTPopup();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    // Also check periodically as a fallback
+    const interval = setInterval(dismissChatGPTPopup, 1000);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, [isActive]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const active = window.localStorage.getItem("gptr/active");
@@ -693,7 +921,7 @@ function Uploader() {
     });
 
     try {
-      await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 5000);
+      await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 8000);
     } catch {
       toast({
         description:
@@ -711,7 +939,7 @@ function Uploader() {
 
     if (!isSendButtonPresentOnDom()) {
       try {
-        await waitForElement("[data-testid='send-button']", 5000);
+        await waitForElement("[data-testid='send-button']", 8000);
       } catch {
         setIsActive(false);
         toast({
@@ -762,7 +990,6 @@ function Uploader() {
         {
           localStorage.setItem("gptr/download", "false");
         }
-        isOpening.current = true;
         // Allow overlay to open even without auth token for faster opening
         // But redirect to login if login button exists and user is not authenticated
         const loginBtn: HTMLButtonElement | null = document.querySelector(
@@ -794,23 +1021,9 @@ function Uploader() {
           void maybeProceedSelectedText();
         }, 100);
         
-        // Parallelize independent API calls for better performance
-        const prev = await chrome.storage.local.get("hasSubscription");
-        const prevHasSub = prev?.hasSubscription ?? false;
+        // Move subscription-related logic to useEffect to avoid blocking popup
+        // isOpeningInProgress.current will be set to false in the subscription useEffect
         
-        const [_, effectiveIsSubscribed] = await Promise.all([
-          fetchAndStoreTopChat(), // ChatGPT API call
-          // Subscription check - can run in parallel
-          detectBrowser() === "firefox"
-            ? new Promise<boolean>((resolve) => {
-                chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
-                  resolve(response);
-                });
-              })
-            : handleCheckUserSubscription()
-        ]);
-        
-        isOpeningInProgress.current = false;
         window.localStorage.removeItem("gptr/reloadDone");
 
         const introButton = document.querySelector("[data-testid='getting-started-button']") as HTMLDivElement | null;
@@ -823,108 +1036,6 @@ function Uploader() {
           chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
         } else {
           autoOpen.current = false;
-        }
-
-        if (prevHasSub === true && effectiveIsSubscribed === false) {
-          setShowBillingIssue(true);
-          setShowDiscountPremium(false);
-        }
-
-        if (prevHasSub === false && effectiveIsSubscribed === true) {
-          toast({description: "Welcome! Thank you for being a paying member. 🥳", style: TOAST_STYLE_CONFIG_INFO, duration: 10000});
-        }
-
-        setIsSubscribed(effectiveIsSubscribed);
-
-        try {
-          const { isTrial, trialEndsAt } = await chrome.storage.local.get([
-            "isTrial",
-            "trialEndsAt",
-          ]);
-          const alreadyShown = window.localStorage.getItem("gptr/trialGiftShown") === "true";
-          if (isTrial && !alreadyShown) {
-            if (showPinTutorial) {
-              // Pin tutorial is visible; defer the trial popup
-              setPendingTrialAfterPin(true);
-            } else {
-              // Show trial now
-              setTrialEndsAt(typeof trialEndsAt === "number" ? trialEndsAt : null);
-              setShowTrialGift(true);
-            }
-          }
-        } catch {
-          // ignore
-        }
-
-        // After subscription/trial/pin gating:
-        // A) Free users: track opens and maybe show discount premium
-        // B) Subscribed users: every Nth open, nudge annual
-        try {
-          // A) Free users
-          if (!effectiveIsSubscribed) {
-            localStorage.removeItem("gptr/annualPlan");
-            const { openCount = 0 } = await chrome.storage.local.get(["openCount"]);
-            const newCount = (typeof openCount === "number" ? openCount : 0) + 1;
-            await chrome.storage.local.set({ openCount: newCount });
-
-            // Show every Nth open; skip if Pin Tutorial is still visible or Trial gift is queued
-            const isEveryN = newCount % DISCOUNT_FREQUENCY === 0 && newCount > 0;
-            const pinVisible = showPinTutorial;
-            const trialWillShow = pendingTrialAfterPin || showTrialGift;
-
-            if (isEveryN && !pinVisible && !trialWillShow) {
-              setShowDiscountPremium(true);
-            }
-          } else {
-            // B) Subscribed users (exclude trial or cancelled)
-            const { isTrial: trialFlag = false, isSubscriptionCancelled = false } =
-              await chrome.storage.local.get(["isTrial", "isSubscriptionCancelled"]);
-            if (!trialFlag && !isSubscriptionCancelled) {
-              try {
-                // Determine current plan
-                let details;
-                if (detectBrowser() === "firefox") {
-                  details = await new Promise<any>((resolve) => {
-                    chrome.runtime.sendMessage({ type: "GET_SUBSCRIPTION_DETAILS" }, (response) =>
-                      resolve(response)
-                    );
-                  });
-                } else {
-                  details = await getSubscriptionDetails();
-                }
-                const currentId = details?.currentPriceId ?? null;
-                if (isAnnualPriceId(currentId)) {
-                  localStorage.setItem("gptr/annualPlan", "true");
-                } else {
-                  localStorage.removeItem("gptr/annualPlan");
-                }
-
-                // Count/nudge for MONTHLY plans (show annual + lifetime) or ANNUAL plans (show only lifetime)
-                // Exclude lifetime users from seeing any upsell popups
-                const isLifetime = details?.isLifetime === true;
-                // Count for both monthly and annual users (but not lifetime)
-                // We check details exists and isLifetime is false (or undefined, which means not lifetime)
-                if (details && !isLifetime) {
-                  const { premiumOpenCount = 0 } = await chrome.storage.local.get([
-                    "premiumOpenCount",
-                  ]);
-                  const nextCount =
-                    (typeof premiumOpenCount === "number" ? premiumOpenCount : 0) + 1;
-                  await chrome.storage.local.set({ premiumOpenCount: nextCount });
-
-                  const shouldNudge =
-                    nextCount % SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY === 0 && nextCount > 0;
-                  if (shouldNudge) {
-                    setShowAnnualUpsell(true);
-                  }
-                }
-              } catch {
-                /* silent: if details fail, do nothing (no count, no nudge) */
-              }
-            }
-          }
-        } catch {
-          // ignore counting errors
         }
       } catch (error) {
         console.error("onOpenChange error:", error);
@@ -1003,109 +1114,6 @@ function Uploader() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (!isActive) return; // do nothing when overlay is closed
-
-    let hasFired = false; // ensure we only show once
-
-    const minutesUntilNextUtcHour = () => {
-      const now = new Date();
-      const nextHourUtc = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        now.getUTCHours() + 1,
-        0, 0, 0
-      ));
-      return Math.ceil((nextHourUtc.getTime() - now.getTime()) / 60_000);
-    };
-
-    const findLimitBannerMinutes = (): number | null => {
-      const candidates = Array.from(document.querySelectorAll<HTMLElement>('h3,div,p,span'));
-
-      // Find the header saying "You've reached your message limit"
-      const header = candidates.find(el =>
-        (el.textContent || '').toLowerCase().includes("you've reached your message limit")
-      );
-
-      if (!header) return null;
-
-      // Collect surrounding DOM content
-      const scope = new Set<HTMLElement>();
-      scope.add(header);
-
-      if (header.parentElement) scope.add(header.parentElement);
-
-      header.parentElement?.childNodes.forEach(n => {
-        if (n instanceof HTMLElement) scope.add(n);
-      });
-
-      const aside = header.closest('aside,section,div');
-      if (aside) scope.add(aside as HTMLElement);
-
-      const combinedText = Array.from(scope)
-        .map(el => el.textContent || '')
-        .join(' ')
-        .toLowerCase();
-
-      // Match all known minute formats
-      const patterns = [
-        /try again in\s+(\d+)\s+minutes?/,
-        /try again in\s+(\d+)\s+mins?/,
-        /in\s+(\d+)\s+minutes?/,
-        /in\s+(\d+)\s+mins?/,
-        /retry in\s+(\d+)\s+mins?/
-      ];
-
-      for (const re of patterns) {
-        const match = combinedText.match(re);
-        if (match && match[1]) {
-          const mins = parseInt(match[1], 10);
-          if (!Number.isNaN(mins)) return mins;
-        }
-      }
-
-      return null;
-    };
-
-    const checkRateLimit = () => {
-      if (hasFired) return; // prevent repeats
-
-      // Detector #1: Retry / Regenerate button exists
-      const retryBtn = document.querySelector<HTMLButtonElement>(
-        '[data-testid*="retry"], [data-testid*="regenerate"]'
-      );
-
-      // Detector #2: New UI banner detection
-      const bannerMinutes = findLimitBannerMinutes();
-
-      if (retryBtn || bannerMinutes !== null) {
-        const minutesLeft =
-          bannerMinutes !== null ? bannerMinutes : minutesUntilNextUtcHour();
-
-        hasFired = true; // lock future triggers
-
-        toast({
-          description: `ChatGPT rate limit reached. GPT Reader recommends waiting ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''} before trying again.`,
-          style: TOAST_STYLE_CONFIG,
-          duration: 60000 // 60 seconds
-        });
-
-        // Clear chat state like before if retry button exists
-        if (retryBtn) retryBtn.click();
-
-        clearInterval(intervalId); // stop polling permanently
-      }
-    };
-
-    // Run immediately, then every 10s
-    checkRateLimit();
-    const intervalId = setInterval(checkRateLimit, 10_000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [isActive]);
 
 
   // Hide ChatGPT's fetch/limit toasts

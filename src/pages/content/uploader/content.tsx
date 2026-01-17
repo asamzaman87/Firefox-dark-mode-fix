@@ -15,6 +15,7 @@ import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
 import DownloadOrListen from "./download-or-listen-popup";
 import FeedbackPopup from "./feedback-popup";
+import FirstChunkRatingPopup from "./first-chunk-rating-popup";
 import { InputFormProps } from "./input-popup/input-form";
 import InputPopup from "./input-popup/popup";
 import PlayerBackup from "./player";
@@ -123,6 +124,12 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const lastLocateOffsetRef = useRef<number | null>(null);
     const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [audioControlsExpanded, setAudioControlsExpanded] = useState<boolean>(true);
+    
+    // First chunk rating popup state
+    const [showFirstChunkRatingPopup, setShowFirstChunkRatingPopup] = useState<boolean>(false);
+    const [hasShownFirstChunkRating, setHasShownFirstChunkRating] = useState<boolean>(false);
+    const [hasUserInteractedWithRating, setHasUserInteractedWithRating] = useState<boolean>(false);
+    const hasShownRatingRef = useRef<boolean>(false);
 
     // Clean up tooltip timer on unmount
     useEffect(() => {
@@ -537,6 +544,67 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         localStorage.removeItem("gptr/download");
     }
 
+    // Detect first chunk loading/completion for rating popup - show immediately when entering view
+    useEffect(() => {
+        // Check if user has already clicked "Review in Store" - if so, never show popup again
+        const hasRated = localStorage.getItem("gptr/firstChunkRated") === "true";
+        if (hasRated) {
+            if (showFirstChunkRatingPopup) {
+                setShowFirstChunkRatingPopup(false);
+            }
+            hasShownRatingRef.current = true;
+            return;
+        }
+
+        // For download: show immediately when isDownload is true, hide when first chunk completes (if user hasn't interacted)
+        if (isDownload) {
+            // Always show when entering download view (don't wait for chunks/blobs)
+            // But don't show if user has already submitted a rating (hasShownRatingRef prevents re-showing)
+            if (!showFirstChunkRatingPopup && !hasShownRatingRef.current) {
+                setShowFirstChunkRatingPopup(true);
+            }
+            
+            // Check if first chunk completed - only close if user hasn't interacted (same logic as listening view)
+            const hasFirstChunk = blobs.some(b => b.chunkNumber === 0);
+            if (hasFirstChunk) {
+                // First chunk completed - only close if user hasn't interacted (hasn't clicked "Rate Now")
+                if (showFirstChunkRatingPopup && !hasUserInteractedWithRating) {
+                    setShowFirstChunkRatingPopup(false);
+                    hasShownRatingRef.current = true;
+                }
+            }
+        } else if (chunks.length > 0) {
+            // For listening: show if no blobs yet
+            if (blobs.length === 0) {
+                // Show popup - no blobs yet (first chunk loading)
+                // But don't show if user has already submitted a rating (hasShownRatingRef prevents re-showing)
+                if (!showFirstChunkRatingPopup && !hasShownRatingRef.current) {
+                    setShowFirstChunkRatingPopup(true);
+                }
+            } else {
+                // First chunk completed - only close if user hasn't interacted (hasn't clicked "Rate Now")
+                if (showFirstChunkRatingPopup && !hasUserInteractedWithRating) {
+                    setShowFirstChunkRatingPopup(false);
+                    hasShownRatingRef.current = true;
+                }
+            }
+        } else {
+            // Reset when not in download or listening view
+            if (showFirstChunkRatingPopup) {
+                setShowFirstChunkRatingPopup(false);
+            }
+        }
+    }, [blobs, chunks.length, isDownload, showFirstChunkRatingPopup, hasUserInteractedWithRating]);
+
+        // Reset rating popup state when starting new session
+        useEffect(() => {
+            if (chunks.length === 0 && !isLoading && !isFetching) {
+                hasShownRatingRef.current = false;
+                setHasShownFirstChunkRating(false);
+                setHasUserInteractedWithRating(false);
+            }
+        }, [chunks.length, isLoading, isFetching]);
+
     const resetter = (isBackPressed: boolean = false) => {
         reset(true, undefined, isBackPressed);
         try { fileReader.revokeStructuredObjectURLs(structured!); } catch {}
@@ -556,6 +624,11 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setErrorMessage("");
         setIsErrorExpanded(true);
         resetDownloader();
+        // Reset rating popup state
+        setShowFirstChunkRatingPopup(false);
+        hasShownRatingRef.current = false;
+        setHasShownFirstChunkRating(false);
+        setHasUserInteractedWithRating(false);
         if (!isTextToSpeech) {
           setText("");
           cancelTranscription();
@@ -1351,6 +1424,33 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           )}
           <div className="gpt:flex gpt:size-full gpt:flex-col gpt:flex-1 gpt:gap-6 gpt:overflow-hidden">
             {isViewingText || prompts.length > 0 || isDownload ? (
+              <>
+                {!isDownload && showFirstChunkRatingPopup && (
+                  <div className="gpt:absolute gpt:inset-0 gpt:z-50 gpt:flex gpt:items-center gpt:justify-center gpt:pointer-events-none">
+                    <div className="gpt:w-full gpt:max-w-2xl gpt:mx-auto gpt:p-6 gpt:pointer-events-auto">
+                      <FirstChunkRatingPopup
+                        isInline={true}
+                        open={true}
+                        onClose={() => {
+                          setShowFirstChunkRatingPopup(false);
+                          hasShownRatingRef.current = true;
+                        }}
+                        onRatingSubmit={(rating) => {
+                          // For 1-4 stars, close popup and prevent it from showing again (set localStorage flag)
+                          if (rating < 5) {
+                            setShowFirstChunkRatingPopup(false);
+                            hasShownRatingRef.current = true;
+                            localStorage.setItem("gptr/firstChunkRated", "true");
+                          }
+                          // Optional: track rating in backend
+                        }}
+                        onInteractionStart={() => {
+                          setHasUserInteractedWithRating(true);
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               <Previews
                 setDownloadCancelConfirmation={onContinueDownload}
                 downloadCancelConfirmation={showDownloadCancelConfirmation}
@@ -1370,7 +1470,24 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 highlightCharacters={highlightChars ?? undefined}
                 highlightAlphaBefore={highlightAlphaBefore ?? undefined}
                 highlightPulse={highlightPulse}
+                showFirstChunkRatingPopup={isDownload ? showFirstChunkRatingPopup : false}
+                onFirstChunkRatingClose={() => {
+                  setShowFirstChunkRatingPopup(false);
+                  hasShownRatingRef.current = true;
+                }}
+                onFirstChunkRatingSubmit={(rating) => {
+                  // For 1-4 stars, close popup and prevent it from showing again (set localStorage flag)
+                  if (rating < 5) {
+                    setShowFirstChunkRatingPopup(false);
+                    hasShownRatingRef.current = true;
+                    localStorage.setItem("gptr/firstChunkRated", "true");
+                  }
+                }}
+                onFirstChunkRatingInteractionStart={() => {
+                  setHasUserInteractedWithRating(true);
+                }}
               />
+              </>
             ) : (
               !showMicOnlyView && (
                 <div className="gpt:flex gpt:flex-1">

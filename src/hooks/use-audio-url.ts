@@ -55,7 +55,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     const chunkStartPositionsRef = useRef<number[]>([]);
     const sendWatchdogIntervalRef = useRef<number | null>(null);
     const sendWatchdogStopRef = useRef<() => void>(() => {});
-    const retryCountRef = useRef<number>(1);
+    const retryCountRef = useRef<number>(0);
 
 
     const setPreviewHtmlSource = useCallback((html?: string | null) => {
@@ -424,7 +424,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
 
                     // If threshold elapsed and flag still present → clear + retry inject once.
                     const elapsed = Date.now() - start;
-                    const thresholdMs = 3_500 + retryCountRef.current * 1_500;
+                    const thresholdMs = 5_000 + retryCountRef.current * 1_500;
                     if (elapsed >= thresholdMs) {
                         console.warn("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
                         localStorage.removeItem("gptr/sended");
@@ -443,7 +443,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                             return;
                         } else {
                             // increment retry count for next attempt
-                            retryCountRef.current += 1;
+                            retryCountRef.current += 1.5;
                             await new Promise<void>(async (resolve) => {
                                 const newChatBtn = document.querySelector<HTMLButtonElement>(
                                     "[data-testid='create-new-chat-button'], [aria-label='New chat']"
@@ -736,7 +736,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     };
 
     const reset = () => {
-        retryCountRef.current = 1;
+        retryCountRef.current = 0;
         sendWaitCancelRef.current = null;
         showCompletionToast.current = false;
         setAudioUrls([]);

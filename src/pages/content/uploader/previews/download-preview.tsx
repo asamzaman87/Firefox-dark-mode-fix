@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { DownloadCloud, Loader2, X } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FirstChunkRatingPopup from "../first-chunk-rating-popup";
 
 // Remove <img> (and obvious wrappers) from progressive HTML
 const stripImages = (raw: string) => {
@@ -79,6 +80,10 @@ interface DownloadPreviewProps {
 
   downloadCancelConfirmation: boolean;
   setDownloadCancelConfirmation: (state: boolean) => void;
+  showFirstChunkRatingPopup?: boolean;
+  onFirstChunkRatingClose?: () => void;
+  onFirstChunkRatingSubmit?: (rating: number) => void;
+  onFirstChunkRatingInteractionStart?: () => void;
 }
 
 const DownloadPreview: FC<DownloadPreviewProps> = ({
@@ -89,6 +94,10 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
   html,
   downloadCancelConfirmation,
   setDownloadCancelConfirmation,
+  showFirstChunkRatingPopup,
+  onFirstChunkRatingClose,
+  onFirstChunkRatingSubmit,
+  onFirstChunkRatingInteractionStart,
 }) => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -174,14 +183,45 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
         >
           <Loader2 className="gpt:animate-spin" /> {chrome.i18n.getMessage("loading_preview")}
         </span>
-        <span
-          className={cn(
-            "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:text-center gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white gpt:dark:text-black gpt:bg-gray-800 gpt:dark:bg-gray-100 gpt:absolute gpt:top-1/2 gpt:right-1/2 gpt:translate-x-1/2 gpt:-translate-y-12 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
-            { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": hasContent }
-          )}
-        >
-          {chrome.i18n.getMessage("gpt4_download_note")}
-        </span>
+        {/* Model note and rating popup container - centered on screen */}
+        {showFirstChunkRatingPopup && hasContent ? (
+          // When popup is visible and content exists, center popup directly
+          <div className="gpt:absolute gpt:top-1/2 gpt:left-1/2 gpt:-translate-x-1/2 gpt:-translate-y-1/2 gpt:z-[2] gpt:flex gpt:items-center gpt:justify-center gpt:w-full gpt:max-w-lg">
+            <FirstChunkRatingPopup
+              isInline={true}
+              open={true}
+              onClose={onFirstChunkRatingClose || (() => {})}
+              onRatingSubmit={onFirstChunkRatingSubmit}
+              onInteractionStart={onFirstChunkRatingInteractionStart}
+            />
+          </div>
+        ) : (
+          // When model note is visible or popup is first showing, show both
+          <div className="gpt:absolute gpt:top-1/2 gpt:left-1/2 gpt:-translate-x-1/2 gpt:-translate-y-1/2 gpt:z-[2] gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-4 gpt:w-full gpt:max-w-lg">
+            {/* Model note - fades out when content appears */}
+            <span
+              className={cn(
+                "gpt:max-w-lg gpt:rounded-md gpt:z-[1] gpt:text-wrap gpt:text-center gpt:text-sm gpt:font-medium gpt:p-4 gpt:text-white gpt:dark:text-black gpt:bg-gray-800 gpt:dark:bg-gray-100 gpt:size-max gpt:inline-flex gpt:justify-center gpt:items-center gpt:gap-2",
+                { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": hasContent }
+              )}
+            >
+              {chrome.i18n.getMessage("gpt4_download_note")}
+            </span>
+            
+            {/* First chunk rating popup - inline below model note */}
+            {showFirstChunkRatingPopup && (
+              <div className="gpt:w-full gpt:flex gpt:justify-center gpt:items-center">
+                <FirstChunkRatingPopup
+                  isInline={true}
+                  open={true}
+                  onClose={onFirstChunkRatingClose || (() => {})}
+                  onRatingSubmit={onFirstChunkRatingSubmit}
+                  onInteractionStart={onFirstChunkRatingInteractionStart}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* EXACTLY like the old preview: plain string -> <br/> */}
         <DocumentPreview html={html} text={text} />
@@ -257,9 +297,18 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
 
 export default memo(
   DownloadPreview,
-  (p, n) =>
-    p.downloadCancelConfirmation === n.downloadCancelConfirmation &&
-    p.progress === n.progress &&
-    p.text === n.text &&
-    p.html === n.html  
+  (prevProps, nextProps) => {
+    // Custom comparison: always re-render if showFirstChunkRatingPopup changes
+    if (prevProps.showFirstChunkRatingPopup !== nextProps.showFirstChunkRatingPopup) {
+      return false; // false means props are different, so re-render
+    }
+    // For other props, use default shallow comparison
+    return (
+      prevProps.progress === nextProps.progress &&
+      prevProps.text === nextProps.text &&
+      prevProps.html === nextProps.html &&
+      prevProps.downloadCancelConfirmation === nextProps.downloadCancelConfirmation &&
+      prevProps.fileName === nextProps.fileName
+    );
+  }
 );

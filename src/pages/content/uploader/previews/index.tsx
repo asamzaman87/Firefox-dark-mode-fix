@@ -45,6 +45,11 @@ interface PreviewsProps {
   highlightAlphaBefore?: number;
 
   highlightPulse?: number
+
+  showFirstChunkRatingPopup?: boolean;
+  onFirstChunkRatingClose?: () => void;
+  onFirstChunkRatingSubmit?: (rating: number) => void;
+  onFirstChunkRatingInteractionStart?: () => void;
 }
 
 const Previews: FC<PreviewsProps> = ({
@@ -65,7 +70,11 @@ const Previews: FC<PreviewsProps> = ({
   downloadPreviewHtml,
   highlightCharacters,
   highlightAlphaBefore,
-  highlightPulse
+  highlightPulse,
+  showFirstChunkRatingPopup,
+  onFirstChunkRatingClose,
+  onFirstChunkRatingSubmit,
+  onFirstChunkRatingInteractionStart
 }) => {
   const { isTextToSpeech } = useSpeechMode();
 
@@ -81,6 +90,10 @@ const Previews: FC<PreviewsProps> = ({
         onCancel={onDownloadCancel}
         setDownloadCancelConfirmation={setDownloadCancelConfirmation}
         downloadCancelConfirmation={downloadCancelConfirmation}
+        showFirstChunkRatingPopup={showFirstChunkRatingPopup}
+        onFirstChunkRatingClose={onFirstChunkRatingClose}
+        onFirstChunkRatingSubmit={onFirstChunkRatingSubmit}
+        onFirstChunkRatingInteractionStart={onFirstChunkRatingInteractionStart}
       />
     ) : (
       <TranscriberDownloadPreview

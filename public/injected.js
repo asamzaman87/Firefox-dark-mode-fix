@@ -108,7 +108,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 } else {
                   localStorage.setItem(
                     "gptr/abortCount",
-                    String((Number(localStorage.getItem("gptr/abortCount")) || 0) + 1)
+                    String((Number(localStorage.getItem("gptr/abortCount")) || 0) + 1.5)
                   );
                 }
                 localStorage.setItem('gptr/abort', 'false');
