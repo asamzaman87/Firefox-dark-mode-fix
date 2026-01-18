@@ -32,6 +32,7 @@ const useStreamListener = (
     const retryCounts = useRef<Record<number, number>>({});
     const lastRegularRetryChunk = useRef<Set<number>>(new Set());
     const promptNdx = useRef<number>(0);
+    const lastTurnPollRetryRef = useRef<number>(0);
     const { isSubscribed } = usePremiumModal();
 
     // —— CHAT / FETCH TRACKING & LS BRIDGE ——
@@ -393,14 +394,18 @@ const useStreamListener = (
 
         let lastTurnEl = getLastTurn();
 
-        // If the last turn is not an assistant turn, poll up to 3s for a new last assistant turn to appear
+        // If the last turn is not an assistant turn, poll for a new last assistant turn to appear
+        // Use dynamic timeout: starts at 5s, increases by 1.5s per retry (same formula as thresholdMs)
         if (!lastTurnEl || lastTurnEl.getAttribute("data-turn") !== "assistant") {
+            const pollTimeoutMs = 5_000 + lastTurnPollRetryRef.current * 1_500;
             lastTurnEl = await poll<HTMLElement>(() => {
                 const el = getLastTurn();
                 return el && el.getAttribute("data-turn") === "assistant" ? el : null;
-            }, 5000, 100);
+            }, pollTimeoutMs, 100);
             if (!lastTurnEl) {
-                console.warn("[handleConvStream] No assistant turn appeared within 5s; retrying…");
+                // Increment retry count on failure (don't reset on success)
+                lastTurnPollRetryRef.current += 1;
+                console.warn(`[handleConvStream] No assistant turn appeared within ${pollTimeoutMs}ms; retrying…`);
                 await retryFlow(chunkNdx);
                 return;
             }

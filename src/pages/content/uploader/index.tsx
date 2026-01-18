@@ -915,18 +915,29 @@ function Uploader() {
   // Wait for page to be fully loaded and stable (no pending navigation)
   // This function will await until the page is ready, or timeout
   const isPageFullyLoaded = useCallback(async (): Promise<boolean> => {
-    const maxWaitTime = 10000; // Maximum 10 seconds to wait
+    const maxWaitTime = 5000; // Maximum 5 seconds to wait
     const checkInterval = 100; // Check every 100ms
     const startTime = Date.now();
     
     // Helper to check if page appears ready
     const checkPageReady = (): boolean => {
-      // 1. Check document ready state (universal support in Chrome, Firefox, Edge)
+      // 1. Check that we're on chatgpt.com origin
+      try {
+        const origin = window.location.origin;
+        if (!origin.includes('chatgpt.com')) {
+          return false;
+        }
+      } catch (e) {
+        // If we can't access location, page isn't ready
+        return false;
+      }
+
+      // 2. Check document ready state (universal support in Chrome, Firefox, Edge)
       if (document.readyState !== 'complete') {
         return false;
       }
 
-      // 2. Check if navigation timing indicates page load is complete
+      // 3. Check if navigation timing indicates page load is complete
       // Use both legacy PerformanceTiming and newer PerformanceNavigationTiming APIs
       // This ensures compatibility across Chrome, Firefox, and Edge
       if (window.performance) {
@@ -961,47 +972,62 @@ function Uploader() {
       return true;
     };
 
-    // 1. Wait for document ready state and performance timing to be complete
-    while (!checkPageReady()) {
+    // Main loop: can restart Phase 1 if Phase 3 detects navigation
+    while (true) {
       if (Date.now() - startTime >= maxWaitTime) {
         console.log("[isPageFullyLoaded] Timeout waiting for page to be ready");
         return false;
       }
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
-    }
 
-    // 2. Wait and verify stability - check multiple times to ensure no navigation is happening
-    // This helps catch cases where we're about to navigate or in the middle of navigation
-    const stabilityChecks = 3;
-    const initialUrl = window.location.href;
-    let consecutiveReadyChecks = 0;
-    
-    // Keep checking until we have stable consecutive checks or timeout
-    while (consecutiveReadyChecks < stabilityChecks) {
-      if (Date.now() - startTime >= maxWaitTime) {
-        console.log("[isPageFullyLoaded] Timeout during stability checks");
-        return false;
+      // Phase 1: Wait for document ready state, origin, and performance timing to be complete
+      while (!checkPageReady()) {
+        if (Date.now() - startTime >= maxWaitTime) {
+          console.log("[isPageFullyLoaded] Timeout waiting for page to be ready");
+          return false;
+        }
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+      }
+
+      // Phase 2: Wait and verify stability - check multiple times to ensure no navigation is happening
+      // This helps catch cases where we're about to navigate or in the middle of navigation
+      const stabilityChecks = 3;
+      const initialUrl = window.location.href;
+      let consecutiveReadyChecks = 0;
+      
+      // Keep checking until we have stable consecutive checks or timeout
+      while (consecutiveReadyChecks < stabilityChecks) {
+        if (Date.now() - startTime >= maxWaitTime) {
+          console.log("[isPageFullyLoaded] Timeout during stability checks");
+          return false;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        
+        // Verify URL hasn't changed (indicates no navigation occurred)
+        if (window.location.href !== initialUrl) {
+          // Navigation happened, restart from Phase 1 instead of aborting
+          console.log("[isPageFullyLoaded] URL changed during stability check, restarting from Phase 1");
+          break; // Break out of Phase 2 loop, will restart Phase 1
+        }
+        
+        // Verify readyState is still complete and performance timing is still valid
+        if (document.readyState === 'complete' && checkPageReady()) {
+          consecutiveReadyChecks++;
+        } else {
+          // Page regressed, reset counter and wait for it to become ready again
+          consecutiveReadyChecks = 0;
+          // Continue waiting in the outer while loop if still within timeout
+        }
       }
       
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
-      
-      // Verify URL hasn't changed (indicates no navigation occurred)
-      if (window.location.href !== initialUrl) {
-        // Navigation happened, abort
-        return false;
+      // If we completed all stability checks successfully, return true
+      if (consecutiveReadyChecks >= stabilityChecks) {
+        return true;
       }
       
-      // Verify readyState is still complete and performance timing is still valid
-      if (document.readyState === 'complete' && checkPageReady()) {
-        consecutiveReadyChecks++;
-      } else {
-        // Page regressed, reset counter and wait for it to become ready again
-        consecutiveReadyChecks = 0;
-        // Continue waiting in the outer while loop if still within timeout
-      }
+      // Otherwise, URL changed during Phase 2, so restart Phase 1
+      // (the outer while loop will continue)
     }
-    
-    return true;
   }, []);
 
   // ─── extract the entire sequence into one reusable function ───
@@ -1013,7 +1039,7 @@ function Uploader() {
     });
 
     try {
-      await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 8000);
+      await waitForElement([PROMPT_INPUT_ID, "textarea.text-token-text-primary"], 5000);
     } catch {
       toast({
         description:
@@ -1031,7 +1057,7 @@ function Uploader() {
 
     if (!isSendButtonPresentOnDom()) {
       try {
-        await waitForElement("[data-testid='send-button']", 8000);
+        await waitForElement("[data-testid='send-button']", 5000);
       } catch {
         setIsActive(false);
         toast({
@@ -1080,14 +1106,12 @@ function Uploader() {
       
       // Ensure page is fully loaded before proceeding
       // This prevents issues when opening during navigation/redirects
+      // Worst case: wait up to 5 seconds, but always proceed (never abort)
       const pageIsReady = await isPageFullyLoaded();
       if (!pageIsReady) {
-        // Page is not ready yet, abort opening
-        isOpeningInProgress.current = false;
-        // Optionally, retry after a delay or show a message
-        // For now, we'll just abort to prevent refresh loops
-        console.log("[onOpenChange] Page not fully loaded, aborting overlay open");
-        return;
+        // Page wasn't ready after 5 seconds, but proceed anyway
+        // This ensures overlay always opens, even if page load check times out
+        console.log("[onOpenChange] Page not fully loaded after timeout, proceeding anyway");
       }
       
       isOpeningInProgress.current = true;
