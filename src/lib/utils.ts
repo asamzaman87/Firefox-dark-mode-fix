@@ -740,7 +740,7 @@ export const switchToActiveTab = async () => {
   }
 
   // If no ChatGPT tab in current window, create a new one in the active window
-  const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+  const tab = await chrome.tabs.create({ url: `https://chatgpt.com/` });
   if (tab.id) {
     await chrome.tabs.update(tab.id, { active: true });
     return tab.id + "::new_tab";

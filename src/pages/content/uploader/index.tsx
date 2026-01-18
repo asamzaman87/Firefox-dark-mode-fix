@@ -912,6 +912,98 @@ function Uploader() {
     }
   }
 
+  // Wait for page to be fully loaded and stable (no pending navigation)
+  // This function will await until the page is ready, or timeout
+  const isPageFullyLoaded = useCallback(async (): Promise<boolean> => {
+    const maxWaitTime = 10000; // Maximum 10 seconds to wait
+    const checkInterval = 100; // Check every 100ms
+    const startTime = Date.now();
+    
+    // Helper to check if page appears ready
+    const checkPageReady = (): boolean => {
+      // 1. Check document ready state (universal support in Chrome, Firefox, Edge)
+      if (document.readyState !== 'complete') {
+        return false;
+      }
+
+      // 2. Check if navigation timing indicates page load is complete
+      // Use both legacy PerformanceTiming and newer PerformanceNavigationTiming APIs
+      // This ensures compatibility across Chrome, Firefox, and Edge
+      if (window.performance) {
+        // Legacy API check (supported in all modern browsers)
+        if (window.performance.timing) {
+          const timing = window.performance.timing;
+          // If loadEventEnd is 0, navigation hasn't finished loading yet
+          if (timing.loadEventEnd === 0) {
+            return false;
+          }
+        }
+        
+        // Newer API check (PerformanceNavigationTiming - supported in Chrome 57+, Firefox 58+, Edge 79+)
+        // Wrap in try-catch for maximum compatibility
+        try {
+          if (typeof window.performance.getEntriesByType === 'function') {
+            const navEntries = window.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+            if (navEntries.length > 0) {
+              const navEntry = navEntries[0];
+              // Check if load event hasn't completed yet
+              if (navEntry.loadEventEnd === 0 || navEntry.loadEventEnd < navEntry.loadEventStart) {
+                return false;
+              }
+            }
+          }
+        } catch (e) {
+          // If newer API is not available or throws an error, fall back to legacy API check
+          // This is safe because we've already checked performance.timing above
+        }
+      }
+      
+      return true;
+    };
+
+    // 1. Wait for document ready state and performance timing to be complete
+    while (!checkPageReady()) {
+      if (Date.now() - startTime >= maxWaitTime) {
+        console.log("[isPageFullyLoaded] Timeout waiting for page to be ready");
+        return false;
+      }
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+
+    // 2. Wait and verify stability - check multiple times to ensure no navigation is happening
+    // This helps catch cases where we're about to navigate or in the middle of navigation
+    const stabilityChecks = 3;
+    const initialUrl = window.location.href;
+    let consecutiveReadyChecks = 0;
+    
+    // Keep checking until we have stable consecutive checks or timeout
+    while (consecutiveReadyChecks < stabilityChecks) {
+      if (Date.now() - startTime >= maxWaitTime) {
+        console.log("[isPageFullyLoaded] Timeout during stability checks");
+        return false;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      
+      // Verify URL hasn't changed (indicates no navigation occurred)
+      if (window.location.href !== initialUrl) {
+        // Navigation happened, abort
+        return false;
+      }
+      
+      // Verify readyState is still complete and performance timing is still valid
+      if (document.readyState === 'complete' && checkPageReady()) {
+        consecutiveReadyChecks++;
+      } else {
+        // Page regressed, reset counter and wait for it to become ready again
+        consecutiveReadyChecks = 0;
+        // Continue waiting in the outer while loop if still within timeout
+      }
+    }
+    
+    return true;
+  }, []);
+
   // ─── extract the entire sequence into one reusable function ───
   const triggerPromptFlow = useCallback(async () => {
     await waitForElement(["[data-testid='create-new-chat-button']", "[aria-label='New chat']"], 5000)
@@ -985,6 +1077,19 @@ function Uploader() {
       if (isOpeningInProgress.current) {
         return;
       }
+      
+      // Ensure page is fully loaded before proceeding
+      // This prevents issues when opening during navigation/redirects
+      const pageIsReady = await isPageFullyLoaded();
+      if (!pageIsReady) {
+        // Page is not ready yet, abort opening
+        isOpeningInProgress.current = false;
+        // Optionally, retry after a delay or show a message
+        // For now, we'll just abort to prevent refresh loops
+        console.log("[onOpenChange] Page not fully loaded, aborting overlay open");
+        return;
+      }
+      
       isOpeningInProgress.current = true;
       try {
         {
@@ -1043,7 +1148,7 @@ function Uploader() {
         isOpeningInProgress.current = false;
       }
     },
-    [isAuthenticated, isSubscribed, showPinTutorial, pendingTrialAfterPin, showTrialGift]
+    [isAuthenticated, isSubscribed, showPinTutorial, pendingTrialAfterPin, showTrialGift, isPageFullyLoaded]
   );
   
   // Store onOpenChange in ref for use in message listener

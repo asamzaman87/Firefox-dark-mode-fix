@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
-import { SAFEST_MODEL, MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
+import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -651,7 +651,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             toast({ description: 'GPT Reader Alert: Clicking on the back button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
             localStorage.setItem("gptr/reloadDone", "true");
             await new Promise(resolve => setTimeout(resolve, 400));
-            window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+            window.location.href = window.location.href;
         } else {
             // Transcriber mode back button logic
             cancelTranscription();
@@ -693,13 +693,13 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
         if (persisted !== "text-to-speech") {
           setMode("text-to-speech");
-          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+          window.location.href = window.location.href;
           return;
         }
 
         if (usingGPTReader.current) {
           usingGPTReader.current = false;
-          window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+          window.location.href = window.location.href;
           return;
         }
 
@@ -1022,10 +1022,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 toast({ description: 'GPT Reader Alert: Clicking on the cancel button will trigger a refresh and the extension will be opened automatically afterwards. Make sure to confirm the above browser pop-up!', style: TOAST_STYLE_CONFIG_INFO });
                 await new Promise(resolve => setTimeout(resolve, 400));
                 localStorage.setItem("gptr/reloadDone", "true");
-                window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+                window.location.href = window.location.href;
             } else {
                 localStorage.setItem("gptr/reloadDone", "false");
-                window.location.href = `${window.location.origin}/?model=${SAFEST_MODEL}`;
+                window.location.href = window.location.href;
             }
         } else {
             // Transcriber mode cancel

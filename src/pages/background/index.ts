@@ -3,7 +3,6 @@ import {
   DOMAINS,
   FEEDBACK_GOOGLE_FORM,
   LISTENERS,
-  SAFEST_MODEL,
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
@@ -369,7 +368,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     // If still no tab, try creating one directly as last resort
     if (!tabId) {
       try {
-        const tab = await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+        const tab = await chrome.tabs.create({ url: `https://chatgpt.com/` });
         if (tab.id) {
           await chrome.tabs.update(tab.id, { active: true });
           tabId = tab.id + "::new_tab";
@@ -441,7 +440,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     console.error("Error in onInstalled handler:", error);
     // Last resort: try to open ChatGPT directly
     try {
-      await chrome.tabs.create({ url: `https://chatgpt.com/?model=${SAFEST_MODEL}` });
+      await chrome.tabs.create({ url: `https://chatgpt.com/` });
     } catch (createError) {
       console.error("Failed to create ChatGPT tab as fallback:", createError);
       await showNotificationFallback("install");
