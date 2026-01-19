@@ -181,6 +181,12 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           label:
             chrome.i18n.getMessage("download_limit") ||
             "Text to speech downloads limited to around 5 minutes of audio",
+        },
+        {
+          key: "locate_audio",
+          label:
+            chrome.i18n.getMessage("locate_audio_free") ||
+            "Locate audio location upto three times",
         }
       ],
     },

@@ -304,19 +304,40 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       toast,
     ]);
 
-    const onLocateClick = useCallback(() => {
-      // Check if user is subscribed, if not show premium modal
-      if (!isSubscribed) {
+    const onLocateClick = useCallback(async () => {
+      // If subscribed, allow unlimited use
+      if (isSubscribed) {
+        locateNow();
+        return;
+      }
+
+      // For free users, check remaining tries
+      const { locateAudioTriesRemaining } = await chrome.storage.local.get(["locateAudioTriesRemaining"]);
+      const triesRemaining = typeof locateAudioTriesRemaining === "number" ? locateAudioTriesRemaining : 3;
+
+      if (triesRemaining <= 0) {
+        // All tries exhausted, show premium modal
         setReason(
-          "Locate Audio is a premium feature that allows you to track what the text-to-speech is reading at any time. Upgrade to access this feature."
+          "You've used up all your Locate Audio attempts as a free user. Please upgrade for more usage."
         );
         setUpgradeModalOpen(true);
         return;
       }
 
-      // Always perform the locate highlight (no popover UI)
+      // Decrement tries and save
+      const newTriesRemaining = triesRemaining - 1;
+      await chrome.storage.local.set({ locateAudioTriesRemaining: newTriesRemaining });
+
+      // Show informational toast with remaining tries
+      toast({
+        description: `You have ${newTriesRemaining} locate audio attempt${newTriesRemaining === 1 ? '' : 's'} left as a free user.`,
+        style: TOAST_STYLE_CONFIG_INFO,
+        duration: 5000,
+      });
+
+      // Perform the locate highlight
       locateNow();
-    }, [isSubscribed, locateNow, setReason, setUpgradeModalOpen]);
+    }, [isSubscribed, locateNow, setReason, setUpgradeModalOpen, toast]);
 
     // Recompute matches whenever query or text changes (only when popover is open)
     useEffect(() => {
