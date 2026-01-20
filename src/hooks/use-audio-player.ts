@@ -533,6 +533,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
         if (isFirefox) {
           const chunkPlaying = getChunkAtTime(currentTimeRef.current);
           const targetLength = blobsLength.current;
+          
           // Logic for the are you still here pop-up for firefox
           // console.log(chunkPlaying % CHUNK_TO_PAUSE_ON === 0, isPromptingPaused, targetLength !== chunks.length, !isBackPressed, !isPresenceModalOpen, !pauseChunksRef.current.has(chunkPlaying), chunkPlaying > 0);
           if (chunkPlaying % CHUNK_TO_PAUSE_ON === 0 && isPromptingPausedRef.current && targetLength !== chunks.length && !isBackPressed && !isPresenceModalOpen && !pauseChunksRef.current.has(chunkPlaying) && chunkPlaying > 0) {
@@ -1212,11 +1213,21 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
 
     const showInfoToast = (
         duration: number = 70000,
-        description: string = "GPT Reader Note: Do not choose the 'thinking' based GPT models since they have a slow output speed!"
+        description?: string
     ) => {
-        if (!isPremium()) return;
+        // Base message for all users
+        let message = "Do not open new ChatGPT tabs while this process is happening.";
+        
+        // Add thinking model warning for premium users
+        if (isPremium()) {
+            message += " Also, avoid choosing the 'thinking' based GPT models as they are slow!";
+        }
+        
+        // Use custom description if provided, otherwise use the constructed message
+        const finalMessage = description || message;
+        
         const { id } = toast({
-            description,
+            description: finalMessage,
             style: { ...TOAST_STYLE_CONFIG_INFO, fontWeight: "600" },
             duration,
         });

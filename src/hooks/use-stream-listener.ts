@@ -344,21 +344,35 @@ const useStreamListener = (
             await retryFlow(nextChunkRef.current - 1);
             return;
         }
-        if (stopConvo) {
-            console.warn("[handleConvStream] stopConvo detected, retrying:", chunkNdx);
-            await retryFlow(chunkNdx);
-            return;
-        }
 
         // define needed consts
-        const actual = assistant ? assistant : target;
-        const comparisonActual = normalizeAlphaNumeric(actual);
+        const gptResponse = assistant;
+        
+        // ——— copyright/inappropriateness detection check ———
+        if (gptResponse) {
+            if (
+                gptResponse.length < 110 &&
+                (gptResponse.includes("I cannot") || gptResponse.includes("I can't") || gptResponse.includes("sorry") || gptResponse.includes("assist") || gptResponse.includes("Sorry"))
+            ) {
+                if (((retryCounts.current[chunkNdx] ?? 0) + 1) > MAX_RETRIES) {
+                    handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
+                    return;
+                } else {
+                    console.warn("[handleConvStream] Inappropriate response detected, retrying...");
+                    await retryFlow(chunkNdx);
+                    return;
+                }
+            }
+        }
+        
+        
+        const comparisonActual = normalizeAlphaNumeric(gptResponse);
         const comparisonExpected = target;
-        //console.log('This is the actual message: ', comparisonActual);
+        //console.log('This is the gptResponse message: ', comparisonActual);
         // console.log('This is the expected message: ', comparisonExpected);
         
         if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
-            console.warn("[handleConvStream] Message mismatch detected between actual and expected. Retrying…");
+            console.warn("[handleConvStream] Message mismatch detected between gptResponse and expected. Retrying…");
             if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
                 console.warn("[handleConvSteam] Too many mismatches detected, going to be lenient.");
                 localStorage.setItem("gptr/equalIssue", "true");
@@ -368,138 +382,11 @@ const useStreamListener = (
             }
         }
 
-        // Compute the last conversation turn element and ensure it's an assistant turn.
-        // Then, within that assistant turn, get the FIRST data-message-id (poll up to 3s in both steps).
-        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-        let domMessageId: string | null | undefined = null;
-
-        // helper: poll for up to `ms` until fn() returns a truthy value
-        const poll = async <T>(fn: () => T | null | undefined, ms = 3000, interval = 100): Promise<T | null> => {
-            const end = Date.now() + ms;
-            while (Date.now() < end) {
-                const val = fn();
-                if (val) return val;
-                await new Promise(r => setTimeout(r, interval));
-            }
-            return null;
-        };
-
-        // 1) Get the last node whose test id starts with conversation-turn-
-        const getLastTurn = (): HTMLElement | null => {
-            const nodes = document.querySelectorAll<HTMLElement>('[data-testid^="conversation-turn-"]');
-            if (!nodes.length) return null;
-            return nodes[nodes.length - 1]!;
-        };
-
-        let lastTurnEl = getLastTurn();
-
-        // If the last turn is not an assistant turn, poll for a new last assistant turn to appear
-        // Use dynamic timeout: starts at 5s, increases by 1.5s per retry (same formula as thresholdMs)
-        if (!lastTurnEl || lastTurnEl.getAttribute("data-turn") !== "assistant") {
-            const pollTimeoutMs = 5_000 + lastTurnPollRetryRef.current * 1_500;
-            lastTurnEl = await poll<HTMLElement>(() => {
-                const el = getLastTurn();
-                return el && el.getAttribute("data-turn") === "assistant" ? el : null;
-            }, pollTimeoutMs, 100);
-            if (!lastTurnEl) {
-                // Increment retry count on failure (don't reset on success)
-                lastTurnPollRetryRef.current += 1;
-                console.warn(`[handleConvStream] No assistant turn appeared within ${pollTimeoutMs}ms; retrying…`);
-                await retryFlow(chunkNdx);
-                return;
-            }
-        }
-
-        // 2) Within the assistant turn, get the FIRST data-message-id (poll up to 3s)
-        const findFirstMessageId = (): string | null => {
-            // Be permissive: grab the first element carrying data-message-id inside this turn.
-            const elWithMsg = lastTurnEl!.querySelector<HTMLElement>("[data-message-id]");
-            return elWithMsg?.getAttribute("data-message-id") ?? null;
-        };
-
-        domMessageId = findFirstMessageId();
-        if (!domMessageId) {
-            domMessageId = await poll<string>(() => findFirstMessageId(), 3000, 100);
-            if (!domMessageId) {
-                console.warn("[handleConvStream] No message id found within 3s; retrying…");
-                await retryFlow(chunkNdx);
-                return;
-            }
-        }
-
-        // If we got a valid domMessageId different from the streamed one, prefer DOM
-        if (domMessageId && domMessageId !== messageId && uuidRe.test(domMessageId)) {
-            console.warn("Using DOM message id instead of streamed id:", messageId, "→", domMessageId);
-            messageId = domMessageId;
-        }
-
-        // // make sure we have the right conversation id
-        // let convMatch = window.location.href.match(/\/c\/([A-Za-z0-9\-_]+)/);
-        // let urlConvId = convMatch?.[1] ?? "";
-        // if (!urlConvId) {
-        //     console.warn("Couldn't find conversation id in url");
-        // }
-        // if (urlConvId && urlConvId !== conversationId && uuidRe.test(urlConvId)) {
-        //     console.warn("Got the wrong conversation id. Falling back to id in url");
-        //     conversationId = urlConvId;
-        // }
-
-        let waitTime = 5000;
-        // —— Wait together for send/composer/suffix using the resolved domMessageId ——
-        try {
-            const comparisonSuffix = normalizeAlphaNumeric(comparisonExpected).slice(-10);
-            const targetSelector = `[data-message-id='${domMessageId}']`;
-
-            // Promise that resolves when suffix appears in the specific assistant message
-            const suffixPromise = new Promise<void>((resolve) => {
-                const check = async () => {
-                    const end = Date.now() + waitTime;
-                    while (Date.now() < end) {
-                        const el = document.querySelector<HTMLElement>(targetSelector);
-                        if (el) {
-                            const text = normalizeAlphaNumeric(el.textContent || "");
-                            if (text.includes(comparisonSuffix)) {
-                                if (LOCAL_LOGS)console.log('SUFFIX WON THE RACE');
-                                resolve();
-                                return;
-                            }
-                        }
-                        await new Promise(r => setTimeout(r, 100));
-                    }
-                };
-                check();
-            });
-
-            // Promise for the composer button
-            const composerPromise = waitForElement("[data-testid='composer-speech-button']", waitTime);
-            // Promise for the send button
-            const sendPromise = waitForElement("[data-testid='send-button']", waitTime);
-
-            // Race all three at once
-            await Promise.race([composerPromise, sendPromise, suffixPromise]);
-        } catch {
-            console.warn("No trigger (button or suffix) appeared within", waitTime);
-        }
-
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
         if (stopButton) {
             stopButton.click();
         }
 
-        // ——— copyright/inappropriateness detection check ———
-        const targetEl = document.querySelector<HTMLElement>(`[data-message-id='${domMessageId}']`);
-        if (targetEl && localStorage.getItem("gptr/equalIssue") === "true") {
-            const domText = targetEl.textContent;
-            if (
-                domText.length < 110 &&
-                (domText.includes("I cannot") || domText.includes("I can't") || domText.includes("sorry") || domText.includes("assist") || domText.includes("Sorry"))
-            ) {
-                localStorage.removeItem("gptr/equalIssue");
-                handleErrorWithNoFetch("Your text is being deemed as inappropriate by ChatGPT due to copyright or language issues, please adjust and re-upload your text.");
-                return;
-            }
-        }
 
         if (chunkNdx !== null && chunkNdx >= 0 && chunkNdx < chunkRef.current.length) {
             // Prefetch audio in the background; out-of-order is fine

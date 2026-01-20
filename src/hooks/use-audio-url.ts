@@ -424,7 +424,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
 
                     // If threshold elapsed and flag still present → clear + retry inject once.
                     const elapsed = Date.now() - start;
-                    const thresholdMs = 5_000 + retryCountRef.current * 1_500;
+                    const thresholdMs = 20_000 + retryCountRef.current * 1_500;
                     if (elapsed >= thresholdMs) {
                         console.warn("[startSendWatchdog] Flag still present after", thresholdMs,"ms retrying...");
                         localStorage.removeItem("gptr/sended");
@@ -433,7 +433,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                         if (stopButton) {
                             stopButton.click();
                         }
-                        if (thresholdMs >= 12_000) {
+                        if (thresholdMs >= 30_000) {
                             toast({
                                 description:
                                     "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",
@@ -802,7 +802,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         }
         const chunkIndex = nextChunkRef.current;
         if (originalChunksRef.current[chunkIndex] && !chunkNumList.current.has(chunkIndex)) {
-            if (LOCAL_LOGS) console.log("[ReStartChunkProcess] injecting chunk", originalChunksRef.current[chunkIndex].id);
+            if (LOCAL_LOGS) console.log("[ReStartChunkProcess] injecting chunk", chunkIndex);
             chunkNumList.current.add(chunkIndex);
             setIsPromptingPaused(false);
             setCurrentChunkBeingPromptedIndex(chunkIndex);

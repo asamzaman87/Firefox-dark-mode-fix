@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { LISTENERS } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, isPremium } from "@/lib/utils";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { DownloadCloud, Loader2, X } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -205,7 +205,23 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
                 { "gpt:opacity-0 gpt:ease-in-out gpt:transition-all": hasContent }
               )}
             >
-              {chrome.i18n.getMessage("gpt4_download_note")}
+              {(() => {
+                // Check if locale is non-English
+                const uiLanguage = chrome.i18n.getUILanguage();
+                const isNonEnglish = !uiLanguage.startsWith("en");
+                
+                // For non-English, show the translated gpt4_download_note
+                if (isNonEnglish) {
+                  return chrome.i18n.getMessage("gpt4_download_note");
+                }
+                
+                // For English, use the same logic as showInfoToast
+                let message = "Do not open new ChatGPT tabs while this process is happening.";
+                if (isPremium()) {
+                  message += " Also, avoid choosing the 'thinking' based GPT models as they are slow!";
+                }
+                return message;
+              })()}
             </span>
             
             {/* First chunk rating popup - inline below model note */}

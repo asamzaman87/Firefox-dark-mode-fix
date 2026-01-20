@@ -228,6 +228,70 @@ export function filterTextForTTS(text: string): { filteredText: string; charMapp
     }
   }
 
+  // Find copyright phrases to skip (case-insensitive)
+  const copyrightPhrases = [
+    '©',
+    '℗',
+    '®',
+    '™',
+    '℠',
+    'Pat.',
+    '№',
+    '(c)',
+    'Copyright',
+    'All rights reserved',
+    'Some rights reserved',
+    'No rights reserved',
+    'No part of this work may be reproduced',
+    'No part of this publication may be reproduced',
+    'May not be reproduced',
+    'Reproduction prohibited',
+    'Unauthorized reproduction prohibited',
+    'Do not copy',
+    'Copying prohibited',
+    'No copying',
+    'No reproduction',
+    'No redistribution',
+    'Redistribution prohibited',
+    'No republication',
+    'Republication prohibited',
+    'Not for distribution',
+    'For personal use only',
+    'Noncommercial use only',
+    'Commercial use prohibited',
+    'Permission required',
+    'Permission granted',
+    'Used with permission',
+    'Reprinted with permission',
+    'Reproduced with permission',
+    'Licensed content',
+    'Licensed material',
+    'Rights reserved',
+    'Protected by copyright',
+    'Protected by copyright law',
+    'This material is protected by copyright',
+    'DMCA',
+    'Digital Millennium Copyright Act',
+    'Takedown notice'
+  ];
+
+  // Create regex pattern that matches phrases (case-insensitive)
+  // Match phrases even when they're part of larger text (no word boundaries)
+  for (const phrase of copyrightPhrases) {
+    // Escape special regex characters
+    const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Match the phrase directly without word boundaries so it can be removed even when attached to other text
+    const regex = new RegExp(escapedPhrase, 'gi');
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      skipRanges.push({ start: match.index, end: match.index + match[0].length });
+      // Safety: prevent infinite loop on zero-length matches
+      if (match.index === regex.lastIndex) {
+        regex.lastIndex++;
+      }
+    }
+  }
+
   // Sort skip ranges by start position
   skipRanges.sort((a, b) => a.start - b.start);
 
@@ -855,12 +919,21 @@ export const formatSeconds = (s: number): string => {
 };
 
 export const isPremium = () => {
-  const plusDiv = document.querySelector('div.truncate[dir="auto"]');
-  if (!plusDiv || plusDiv.textContent.trim() !== "Plus") {
-    return false;
-  } else {
+  // Check for span with only "Plus" text
+  const plusSpan = Array.from(document.querySelectorAll('span')).find(
+    (span) => span.textContent?.trim() === "Plus"
+  );
+  if (plusSpan) {
     return true;
   }
+  
+  // Fallback to original method for backwards compatibility
+  const plusDiv = document.querySelector('div.truncate[dir="auto"]');
+  if (plusDiv && plusDiv.textContent.trim() === "Plus") {
+    return true;
+  }
+  
+  return false;
 }
 
 export async function getToken(): Promise<string> {

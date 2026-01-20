@@ -91,9 +91,9 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const readResult = await reader.read();
             done = readResult.done;
             const value = readResult.value;
-            // if we haven’t received any new assistant text in 5 s, trigger abort
+            // if we haven’t received any new assistant text in 20 s, trigger abort
             const abortCount = Number(localStorage.getItem("gptr/abortCount")) || 0;
-            const abortTimeout = 5_000 + (abortCount * 3_000);
+            const abortTimeout = 20_000 + (abortCount * 3_000);
             if (Date.now() - lastProgress >= abortTimeout && !done) {
                 console.warn("No stream progress for", abortTimeout,"s—aborting...");
                 shouldAbortStream = true;
@@ -101,9 +101,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
   
             if (shouldAbortStream || localStorage.getItem("gptr/abort") === "true") {
                 if (LOCAL_LOGS) console.log("[Injected.js] Aborting stream loop");
-                if (localStorage.getItem("gptr/abort") !== "true") stopConvo = true;
                 if ((normalizeAlphaNumeric(assistant).length === threshold && threshold) && normalizeAlphaNumeric(assistant) === target.substring(0, normalizeAlphaNumeric(assistant).length)) {
-                  stopConvo = false;
                   if (LOCAL_LOGS) console.log("[Injected.js] Aborting with a match on the target");
                 } else {
                   localStorage.setItem(
