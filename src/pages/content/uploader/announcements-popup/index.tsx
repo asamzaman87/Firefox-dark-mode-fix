@@ -14,8 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { BACKEND_URI, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, detectBrowser, secureFetch } from "@/lib/utils";
 import { AccordionTrigger } from "@radix-ui/react-accordion";
 import { ChevronDownCircleIcon, Megaphone, RefreshCwIcon } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
@@ -81,8 +81,29 @@ const Announcements = () => {
   };
   
   const getAnnouncements = async () => {
+    const isFirefox = detectBrowser() === "firefox";
+    
     try {
-      await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
+      if (isFirefox) {
+        await chrome.runtime.sendMessage({ type: "GET_ANNOUNCEMENTS" });
+      } else {
+        const banner = await secureFetch(`${BACKEND_URI}/gpt-reader/v2/banner`);
+        const { data } = banner;
+        if (data && Array.isArray(data) && data.length > 0) {
+          setSelectedAcc(data.map((item: Announcement) => item.id));
+          setAnnouncements(data);
+        } else {
+          await loadKnownFallbackIds();
+          const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
+            (a) => !knownFallbackIdsRef.current.has(a.id)
+          );
+          newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
+          await saveKnownFallbackIds();
+          setCount(newFallbacks.length);
+          setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
+          setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch announcements from API", error);
       // Fallback mechanism
@@ -117,47 +138,81 @@ const Announcements = () => {
   }, [count]);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleListener = async(message: {
-      type: string;
-      payload: Announcement[] | number;
-    }) => {
-      switch (message.type) {
-        case "GET_BANNER": {
-          const newAnnouncements = message.payload as Announcement[];
-          if (newAnnouncements && newAnnouncements.length) {
-            setSelectedAcc(newAnnouncements.map((item) => item.id));
-            setAnnouncements(newAnnouncements);
-          } else {
-            // Fallback only if API response is empty
-            await loadKnownFallbackIds();
-            const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
-              (a) => !knownFallbackIdsRef.current.has(a.id)
-            );
-            newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
-            await saveKnownFallbackIds();
-            setCount(newFallbacks.length);
-            setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
-            setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+    const isFirefox = detectBrowser() === "firefox";
+    
+    // Only register listener for Firefox (Chrome calls API directly)
+    if (isFirefox) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handleListener = async(message: {
+        type: string;
+        payload: Announcement[] | number;
+      }) => {
+        switch (message.type) {
+          case "GET_BANNER": {
+            const newAnnouncements = message.payload as Announcement[];
+            if (newAnnouncements && newAnnouncements.length) {
+              setSelectedAcc(newAnnouncements.map((item) => item.id));
+              setAnnouncements(newAnnouncements);
+            } else {
+              // Fallback only if API response is empty
+              await loadKnownFallbackIds();
+              const newFallbacks = FALLBACK_ANNOUNCEMENTS.filter(
+                (a) => !knownFallbackIdsRef.current.has(a.id)
+              );
+              newFallbacks.forEach((a) => knownFallbackIdsRef.current.add(a.id));
+              await saveKnownFallbackIds();
+              setCount(newFallbacks.length);
+              setSelectedAcc(FALLBACK_ANNOUNCEMENTS.map((item) => item.id));
+              setAnnouncements(FALLBACK_ANNOUNCEMENTS);
+            }
+            return;
           }
-          return;
+          case "GET_BANNER_COUNT": {
+            setCount(message.payload as number);
+            return;
+          }
+          default:
+            break;
         }
-        case "GET_BANNER_COUNT": {
-          setCount(message.payload as number);
-          return;
-        }
-        default:
-          break;
-      }
-    };
-    chrome.runtime.onMessage.addListener(handleListener);
-    setTimeout(() => getAnnouncements(), 500);
+      };
+      chrome.runtime.onMessage.addListener(handleListener);
+      setTimeout(() => getAnnouncements(), 500);
 
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleListener);
-      setAnnouncements([]);
-      setCount(0);
-    };
+      return () => {
+        chrome.runtime.onMessage.removeListener(handleListener);
+        setAnnouncements([]);
+        setCount(0);
+      };
+    } else {
+      // Chrome: fetch count directly on mount and listen for GET_BANNER_COUNT messages
+      const handleListener = (message: { type: string; payload: number }) => {
+        if (message.type === "GET_BANNER_COUNT") {
+          setCount(message.payload);
+        }
+      };
+      chrome.runtime.onMessage.addListener(handleListener);
+      
+      const fetchCount = async () => {
+        try {
+          const date = await chrome.storage.sync.get("countLastViewedOn");
+          const banner = await secureFetch(
+            `${BACKEND_URI}/gpt-reader/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
+          );
+          setCount(banner.count);
+        } catch (error) {
+          console.log('Error while getting announcements count:', error);
+        }
+      };
+      
+      setTimeout(() => {
+        getAnnouncements();
+        fetchCount();
+      }, 500);
+      
+      return () => {
+        chrome.runtime.onMessage.removeListener(handleListener);
+      };
+    }
   }, []);
 
   return (

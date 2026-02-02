@@ -166,6 +166,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       handleGetBannerCount();
       break;
     }
+    case "GET_BANNER_COUNT": {
+      // Relay count message from content script to all content scripts (Chrome direct API calls)
+      (async () => {
+        const activeTab = await getGPTTabs();
+        if (activeTab?.length && activeTab[0].id) {
+          chrome.tabs.sendMessage(activeTab[0].id, { type: "GET_BANNER_COUNT", payload: request.payload }).catch(() => {
+            // Silently ignore connection errors
+          });
+        }
+      })();
+      break;
+    }
     case "ANNOUNCEMENTS_OPENED": {
       const count = request.count;
       handleBannerCountView(count);

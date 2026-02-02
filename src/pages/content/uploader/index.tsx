@@ -8,8 +8,8 @@ import {
 import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
-import { DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isOverlayVisibleInDOM, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, waitForElement } from "@/lib/utils";
+import { BACKEND_URI, DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
+import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isOverlayVisibleInDOM, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, secureFetch, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import AlertPopup from "./alert-popup";
@@ -1161,8 +1161,23 @@ function Uploader() {
         }
 
         if (!autoOpen.current) {
-          // * Call banner count API event to the background script
-          chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
+          // * Call banner count API event to the background script (Firefox) or directly (Chrome)
+          if (detectBrowser() === "firefox") {
+            chrome.runtime.sendMessage({ type: "BANNER_COUNT_API_EVENT" });
+          } else {
+            (async () => {
+              try {
+                const date = await chrome.storage.sync.get("countLastViewedOn");
+                const banner = await secureFetch(
+                  `${BACKEND_URI}/gpt-reader/v2/banner/count${date && date.countLastViewedOn ? `?startDate=${date.countLastViewedOn}` : ""}`
+                );
+                // Send via background to content scripts (Chrome)
+                chrome.runtime.sendMessage({ type: "GET_BANNER_COUNT", payload: banner.count });
+              } catch (error) {
+                console.log('Error while getting announcements count:', error);
+              }
+            })();
+          }
         } else {
           autoOpen.current = false;
         }
