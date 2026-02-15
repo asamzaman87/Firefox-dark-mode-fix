@@ -443,121 +443,56 @@ function rebuildMappingAfterSpaceCleanup(
   }
 }
 
+/**
+ * Break characters: any whitespace or Unicode terminal punctuation.
+ * Uses \p{Terminal_Punctuation} so it works across scripts (Latin, CJK, Arabic, Devanagari, Thai, Khmer, etc.).
+ * Includes comma, period, colon, semicolon, and script-specific equivalents.
+ */
+const BREAK_AT_SPACE_OR_TERMINAL_PUNCT = /[\s\p{Terminal_Punctuation}]/u;
+
+/** Find the first break (space or terminal punctuation) at or after index `from`. */
+function findNextBreak(text: string, from: number): number {
+  for (let i = from; i < text.length; i++) {
+    if (BREAK_AT_SPACE_OR_TERMINAL_PUNCT.test(text[i])) return i;
+  }
+  return text.length;
+}
+
+const MAX_CHUNK_SIZE = 4000;
+
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
-  // 1) Sentence segmentation with multilingual support
-  // Prefer Intl.Segmenter if present; else fall back to a Unicode-aware regex.
-  let rawSegments: string[];
-  try {
-    const segCtor = (typeof Intl !== "undefined" && (Intl as any).Segmenter) as (new (...args:any[]) => any) | null;
-    const seg = segCtor ? new segCtor(undefined, { granularity: "sentence" }) : null;
-    if (seg) {
-      // Spread iterator of segments into array of strings
-      // .segment(text) yields { segment, index, isWordLike } objects
-      rawSegments = Array.from((seg as any).segment(text), (s: any) => String(s.segment));
-    } else {
-      // Fallback: split on a wider set of end-of-sentence marks (incl. CJK),
-      // and also treat hard line breaks as boundaries.
-      const rx =
-        /(?:[^\.\!\?。！？።։…•\n\r]+[\.\!\?。！？።։…•]+[\])'"`’”]*|[^\.\!\?。！？።։…•\n\r]+|\n+)/g;
-      rawSegments = text.match(rx) || [];
-    }
-  } catch {
-    const rx =
-      /(?:[^\.\!\?。！？።։…•\n\r]+[\.\!\?。！？።։…•]+[\])'"`’”]*|[^\.\!\?。！？።։…•\n\r]+|\n+)/g;
-    rawSegments = text.match(rx) || [];
-  }
-
-  // Normalize segments: trim and drop empty/newline-only pieces,
-  // but keep paragraph boundaries as spaces between segments.
-  const preSegments = rawSegments
-    .map(s => s.replace(/\s+/g, " ").trim())
-    .filter(s => s.length > 0);
-
-  // 2) Guard against single segments that are too large:
-  // split any over-long segment into sub-segments at whitespace so none exceed maxChunkSize.
-  const maxChunkSize = 4000; // unchanged
-  const sentences: string[] = [];
-  for (const seg of preSegments) {
-    if (seg.length <= maxChunkSize) {
-      sentences.push(seg);
-      continue;
-    }
-    // Split a single gigantic segment into word-based parts ≤ maxChunkSize.
-    // Works for languages with spaces; for CJK (no spaces), we fall back to hard slicing.
-    const parts = seg.split(/\s+/);
-    if (parts.length > 1) {
-      let buf = "";
-      for (const p of parts) {
-        const candidate = buf ? `${buf} ${p}` : p;
-        if (candidate.length <= maxChunkSize) {
-          buf = candidate;
-        } else {
-          if (buf) sentences.push(buf);
-          // p itself may be longer than max (e.g., a massive token). Hard slice if needed.
-          if (p.length <= maxChunkSize) {
-            buf = p;
-          } else {
-            // Hard slice long token into chunks of maxChunkSize
-            for (let i = 0; i < p.length; i += maxChunkSize) {
-              const slice = p.slice(i, i + maxChunkSize);
-              if (slice.length === maxChunkSize) sentences.push(slice);
-              else buf = slice; // keep remainder in buffer
-            }
-          }
-        }
-      }
-      if (buf) sentences.push(buf);
-    } else {
-      // No spaces: hard slice into max-sized pieces
-      for (let i = 0; i < seg.length; i += maxChunkSize) {
-        sentences.push(seg.slice(i, i + maxChunkSize));
-      }
-    }
-  }
-
-  let currentChunk = "";
+  const initialChunkSize = Math.max(1, Math.floor(chunkSize));
+  let targetSize = initialChunkSize;
+  const chunks: Chunk[] = [];
+  let start = 0;
   let chunkId = 0;
 
-  const initialChunkSize = chunkSize; // keep your pacing inputs
-  let targetSize = initialChunkSize;
+  while (start < text.length) {
+    const end = start + targetSize;
 
-  const chunks = sentences.reduce((acc, sentence, i, arr) => {
-    const s = sentence.trim();
-    const potentialChunk = currentChunk ? `${currentChunk} ${s}` : s;
-    const potentialSize = potentialChunk.length;
-
-    const isAtOrOverTarget = potentialSize >= targetSize;
-    const isEnd = i === arr.length - 1;
-
-    if (isAtOrOverTarget) {
-      // ✅ Key change: finalize the *potential* chunk (includes this sentence),
-      // so we don't emit an underfilled chunk followed by a tiny sentence.
-      const finalized = potentialChunk.trim();
-      if (finalized.length > 0) {
-        acc.push({ id: `${chunkId++}`, text: finalized, completed: false });
+    if (end >= text.length) {
+      const slice = text.slice(start).trim();
+      if (slice.length > 0) {
+        chunks.push({ id: `${chunkId++}`, text: slice, completed: false });
       }
-      currentChunk = ""; // start fresh
+      break;
+    }
 
-      // Keep your existing pacing logic (unchanged)
+    // Landed at or past targetSize; might be mid-word. Find next safe break (space or terminal punctuation).
+    const breakIndex = findNextBreak(text, end);
+    const chunkText = text.slice(start, breakIndex + 1).trim();
+    if (chunkText.length > 0) {
+      chunks.push({ id: `${chunkId++}`, text: chunkText, completed: false });
+      // Pacing: every CHUNK_TO_PAUSE_ON chunks reset targetSize; otherwise grow by 1.25x up to max.
       const isEveryNthChunk = (chunkId % CHUNK_TO_PAUSE_ON) === 0;
       if (isEveryNthChunk) {
         targetSize = initialChunkSize;
       } else {
-        targetSize = Math.min(Math.floor(targetSize * 1.25), maxChunkSize);
-      }
-    } else {
-      currentChunk = potentialChunk;
-    }
-
-    if (isEnd) {
-      const tail = currentChunk.trim();
-      if (tail.length > 0) {
-        acc.push({ id: `${chunkId}`, text: tail, completed: false });
+        targetSize = Math.min(Math.floor(targetSize * 1.25), MAX_CHUNK_SIZE);
       }
     }
-
-    return acc;
-  }, [] as Chunk[]);
+    start = breakIndex + 1;
+  }
 
   return chunks;
 }

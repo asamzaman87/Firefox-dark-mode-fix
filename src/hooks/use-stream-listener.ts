@@ -1,4 +1,4 @@
-import { FREE_DOWNLOAD_CHUNKS, LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
+import { CHUNK_TO_PAUSE_ON, FREE_DOWNLOAD_CHUNKS, LISTENERS, LOCAL_LOGS, SYNTHESIZE_ENDPOINT, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, VOICE } from "@/lib/constants";
 import { waitForAuthToken } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useAuthToken from "./use-auth-token";
@@ -248,7 +248,8 @@ const useStreamListener = (
             if (LOCAL_LOGS) console.warn("[fetchAndDecodeAudio] top-level error:", err);
             audioIssueInjections.current.add(chunkNumber);
             const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
-            if (nextChunkRef.current === chunkRef.current.length && !stopButton) {
+            // If there is no stop button, then no processing is happening, so we can inject the chunk
+            if (!stopButton) {
                 // Convert to array and sort ascending
                 const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
 
@@ -317,7 +318,23 @@ const useStreamListener = (
             console.warn("[handleConvStream] chunkNdx is null");
             return;
         }
-        if (stopFlow.current) audioIssueStop.current = false;
+        if (stopFlow.current) {
+            if (audioIssueInjections.current.size > 0) {
+                // Convert to array and sort ascending
+                const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+
+                // Take the first (lowest) element
+                const first = sorted[0];
+
+                if (first >= chunkNdx) {
+                    audioIssueStop.current = false;
+                } else {
+                    audioIssueStop.current = true;
+                }
+            } else {
+                audioIssueStop.current = false;
+            }
+        }
         if (audioIssueStop.current) {
             // Since we stopped the current chunkNdx, it will need to be re-injected
             audioIssueInjections.current.add(chunkNdx);

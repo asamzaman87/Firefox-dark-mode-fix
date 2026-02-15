@@ -9,7 +9,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -77,7 +77,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [timerLeft, setTimerLeft] = useState<number>(0);
     // const [downloadDelay, setDownloadDelay] = useState<number>(0);
     const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const [showJobHelpNote, setShowJobHelpNote] = useState<boolean>(true);
     const {isTextToSpeech, setMode} = useSpeechMode();
     const activatingWebReader = useRef(false);
 
@@ -1374,30 +1373,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             <FeedbackPopup />
             <Announcements />
           </div>
-          {/* Creator's note */}
-          {showJobHelpNote && (
-            <div
-              className={cn(
-                "gpt:absolute gpt:top-20 gpt:left-4 gpt:max-w-xs gpt:px-3 gpt:py-2.5 gpt:bg-blue-50 gpt:dark:bg-blue-950/30 gpt:border gpt:border-blue-200 gpt:dark:border-blue-800/50 gpt:rounded-lg gpt:text-xs gpt:text-gray-700 gpt:dark:text-gray-300 gpt:leading-relaxed gpt:transition-opacity gpt:z-10",
-                {
-                  "gpt:opacity-0 gpt:pointer-events-none":
-                    prompts.length > 0 || isDownload || showMicOnlyView,
-                }
-              )}
-            >
-              <button
-                onClick={() => {
-                  setShowJobHelpNote(false);
-                }}
-                className="gpt:absolute gpt:top-1 gpt:right-1 gpt:p-1 gpt:rounded gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white/80 gpt:dark:bg-gray-800/80 gpt:hover:bg-blue-100 gpt:dark:hover:bg-blue-900/50 gpt:transition-colors gpt:cursor-pointer gpt:z-20 gpt:shadow-sm"
-                aria-label="Close"
-              >
-                <X className="gpt:w-3 gpt:h-3 gpt:text-gray-600 gpt:dark:text-gray-400" />
-              </button>
-              <h3 className="gpt:text-sm gpt:font-semibold gpt:text-center gpt:mb-2 gpt:text-gray-800 gpt:dark:text-gray-200">I Need Job Help</h3>
-              <p className="gpt:mb-1">Looking to transition to a new software engineering role. If you can help, email me at <a href="mailto:democraticdeveloper@gmail.com" className="gpt:text-blue-600 gpt:dark:text-blue-400 gpt:underline gpt:hover:text-blue-700 gpt:dark:hover:text-blue-300">democraticdeveloper@gmail.com</a>. I'll reward you with free annual to lifetime access.</p>
-            </div>
-          )}
           <div
             className={cn("gpt:absolute gpt:top-4 gpt:right-16 gpt:size-max")}
           >
