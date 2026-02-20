@@ -444,21 +444,49 @@ function rebuildMappingAfterSpaceCleanup(
 }
 
 /**
- * Break characters: any whitespace or Unicode terminal punctuation.
+ * Terminal punctuation: Unicode characters that mark end of sentences/clauses.
  * Uses \p{Terminal_Punctuation} so it works across scripts (Latin, CJK, Arabic, Devanagari, Thai, Khmer, etc.).
  * Includes comma, period, colon, semicolon, and script-specific equivalents.
  */
-const BREAK_AT_SPACE_OR_TERMINAL_PUNCT = /[\s\p{Terminal_Punctuation}]/u;
+const BREAK_AT_TERMINAL_PUNCT = /\p{Terminal_Punctuation}/u;
 
-/** Find the first break (space or terminal punctuation) at or after index `from`. */
-function findNextBreak(text: string, from: number): number {
-  for (let i = from; i < text.length; i++) {
-    if (BREAK_AT_SPACE_OR_TERMINAL_PUNCT.test(text[i])) return i;
+/**
+ * Whitespace characters for fallback splitting.
+ */
+const BREAK_AT_SPACE = /\s/u;
+
+const LOOKAHEAD_MIN = 100;
+const LOOKAHEAD_MAX = 500;
+
+/**
+ * Find the next break point, preferring terminal punctuation.
+ * - First looks for terminal punctuation within the next 25% of targetSize characters (min 100, max 500)
+ * - If none found, falls back to the closest space within LOOKAHEAD_MIN (100) chars
+ * - If no space in that window, breaks at 100 chars (mid-word) as a safety
+ * - Returns text.length if no break found
+ */
+function findNextBreak(text: string, from: number, targetSize: number): number {
+  const lookAheadAmount = Math.max(
+    LOOKAHEAD_MIN,
+    Math.min(LOOKAHEAD_MAX, Math.floor(targetSize * 0.25))
+  );
+  const lookAheadLimit = from + lookAheadAmount;
+  const searchEnd = Math.min(lookAheadLimit, text.length);
+  
+  // First, look for terminal punctuation within the lookahead window
+  for (let i = from; i < searchEnd; i++) {
+    if (BREAK_AT_TERMINAL_PUNCT.test(text[i])) return i;
   }
-  return text.length;
+  
+  // Fall back to space, but only within LOOKAHEAD_MIN chars; otherwise break mid-word
+  const spaceSearchEnd = Math.min(from + LOOKAHEAD_MIN, text.length);
+  for (let i = from; i < spaceSearchEnd; i++) {
+    if (BREAK_AT_SPACE.test(text[i])) return i;
+  }
+  return spaceSearchEnd;
 }
 
-const MAX_CHUNK_SIZE = 4000;
+const MAX_CHUNK_SIZE = 3500;
 
 export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE): Chunk[] {
   const initialChunkSize = Math.max(1, Math.floor(chunkSize));
@@ -478,8 +506,9 @@ export function splitIntoChunksV2(text: string, chunkSize: number = CHUNK_SIZE):
       break;
     }
 
-    // Landed at or past targetSize; might be mid-word. Find next safe break (space or terminal punctuation).
-    const breakIndex = findNextBreak(text, end);
+    // Landed at or past targetSize; might be mid-word. Find next safe break:
+    // Prefers terminal punctuation within next 25% of targetSize, falls back to space if none found.
+    const breakIndex = findNextBreak(text, end, targetSize);
     const chunkText = text.slice(start, breakIndex + 1).trim();
     if (chunkText.length > 0) {
       chunks.push({ id: `${chunkId++}`, text: chunkText, completed: false });

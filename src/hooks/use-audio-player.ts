@@ -1216,7 +1216,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
         description?: string
     ) => {
         // Base message for all users
-        let message = "Do not open new ChatGPT tabs while this process is happening.";
+        let message = "Do not open new ChatGPT tabs while using this extension.";
         
         // Add thinking model warning for premium users
         if (isPremium()) {

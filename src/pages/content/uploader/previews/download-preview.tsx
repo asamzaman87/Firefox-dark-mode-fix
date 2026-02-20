@@ -216,7 +216,7 @@ const DownloadPreview: FC<DownloadPreviewProps> = ({
                 }
                 
                 // For English, use the same logic as showInfoToast
-                let message = "Do not open new ChatGPT tabs while this process is happening.";
+                let message = "Do not open new ChatGPT tabs while using this extension.";
                 if (isPremium()) {
                   message += " Also, avoid choosing the 'thinking' based GPT models as they are slow!";
                 }
