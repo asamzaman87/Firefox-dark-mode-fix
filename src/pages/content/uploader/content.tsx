@@ -318,7 +318,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       if (triesRemaining <= 0) {
         // All tries exhausted, show premium modal
         setReason(
-          "You've used up all your Locate Audio attempts as a free user. Please upgrade for more usage."
+          "You've used up all your Highlight Text attempts as a free user. Please upgrade for more usage."
         );
         setUpgradeModalOpen(true);
         return;
@@ -330,7 +330,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
       // Show informational toast with remaining tries
       toast({
-        description: `You have ${newTriesRemaining} locate audio attempt${newTriesRemaining === 1 ? '' : 's'} left as a free user.`,
+        description: `You have ${newTriesRemaining} Highlight Text attempt${newTriesRemaining === 1 ? '' : 's'} left as a free user.`,
         style: TOAST_STYLE_CONFIG_INFO,
         duration: 5000,
       });
@@ -1588,7 +1588,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
           {prompts.length > 0 && !isDownload && (
             <div className="gpt:z-[51] gpt:absolute gpt:bottom-4 gpt:right-4 gpt:flex gpt:items-center gpt:gap-3">
-              {/* Locate Audio, Search Text, and Collapse/Expand Controls */}
+              {/* Highlight Text, Search Text, and Collapse/Expand Controls */}
               <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:items-end">
                 {/* Collapse/Expand Button */}
                 <Button
@@ -1600,7 +1600,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   {audioControlsExpanded ? <ChevronUp className="gpt:h-4 gpt:w-4" /> : <ChevronDown className="gpt:h-4 gpt:w-4" />}
                 </Button>
 
-                {/* Search Text and Locate Audio Buttons */}
+                {/* Search Text and Highlight Text Buttons */}
                 {audioControlsExpanded && (
                   <div className="gpt:flex gpt:flex-col gpt:gap-2 gpt:items-end">
                     {/* Search Text Button */}
@@ -1680,15 +1680,15 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                       </PopoverContent>
                     </Popover>
 
-                    {/* Locate Audio Button */}
+                    {/* Highlight Text Button */}
                     <Button
                       variant="ghost"
                       onClick={onLocateClick}
                       className="gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all"
-                      title="Locate Audio"
+                      title="Highlight Text"
                     >
                       <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
-                      Locate Audio
+                      Highlight Text
                     </Button>
                   </div>
                 )}

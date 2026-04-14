@@ -186,7 +186,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           key: "locate_audio",
           label:
             chrome.i18n.getMessage("locate_audio_free") ||
-            "Locate audio location upto three times",
+            "Highlight text location up to three times",
         }
       ],
     },
@@ -228,7 +228,7 @@ const PremiumModal: FC<PremiumModalProps> = ({ open, onOpenChange, forceDiscount
           key: "locate_audio",
           label:
             chrome.i18n.getMessage("locate_audio") ||
-            "Locate audio to track what's being read at any time",
+            "Highlight text to track what is being read at any time",
         },
         {
           key: "more_coming",

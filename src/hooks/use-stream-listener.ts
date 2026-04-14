@@ -388,15 +388,10 @@ const useStreamListener = (
         //console.log('This is the gptResponse message: ', comparisonActual);
         // console.log('This is the expected message: ', comparisonExpected);
         
-        if (comparisonActual !== comparisonExpected && !localStorage.getItem("gptr/equalIssue")) {
+        if (comparisonActual !== comparisonExpected) {
             console.warn("[handleConvStream] Message mismatch detected between gptResponse and expected. Retrying…");
-            if ((retryCounts.current[chunkNdx] ?? 0) >= (MAX_RETRIES - 1)) {
-                console.warn("[handleConvSteam] Too many mismatches detected, going to be lenient.");
-                localStorage.setItem("gptr/equalIssue", "true");
-            } else {
-                await retryFlow(chunkNdx);
-                return;
-            }
+            await retryFlow(chunkNdx);
+            return;
         }
 
         const stopButton: HTMLButtonElement | null = document.querySelector("[data-testid='stop-button']");
