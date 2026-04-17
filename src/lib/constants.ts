@@ -111,9 +111,9 @@ export const TOAST_STYLE_CONFIG_INFO = { backgroundColor: "darkblue", color: "#f
 export const PLAY_RATE_STEP = 0.25;
 export const DOMAINS = ["chatgpt.com"];
 export const MATCH_URLS = ["https://chatgpt.com/*"];
-export const FEEDBACK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdarz80UfaTlU_dZVsN5a_0LBq9FT_wcwNXJ5HtaP9052cEdw/viewform?usp=sharing";
-export const UNINSTALL_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScai09qOvmPcD1ryfK9lG7NY1aTvWEMRVACxHkcM_JKdZkwQg/viewform?usp=header";
-export const YOUTUBE_FAQ_VIDEO = "https://youtu.be/VDnaUIIjsIg";
+export const FEEDBACK_GOOGLE_FORM = "https://www.gpt-reader.com/feedback";
+export const UNINSTALL_GOOGLE_FORM = "https://www.gpt-reader.com/uninstall-feedback";
+export const YOUTUBE_FAQ_VIDEO = "https://www.gpt-reader.com/help";
 export const MAX_SLIDER_VALUE = 4;
 export const MIN_SLIDER_VALUE = 0.5;
 export const STEP_SLIDER_VALUE = 0.1;

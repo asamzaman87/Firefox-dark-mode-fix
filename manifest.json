@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "version": "2.3.1",
+  "version": "2.3.2",
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
@@ -62,11 +62,18 @@
         "upload-docs-chrome.png",
         "upload-docs-firefox.png"
       ],
-      "matches": ["https://chatgpt.com/*"]
+      "matches": [
+        "https://chatgpt.com/*"
+      ]
     },
     {
-      "resources": ["logo-128.png", "t-logo-128.png"],
-      "matches": ["https://auth.openai.com/*"]
+      "resources": [
+        "logo-128.png",
+        "t-logo-128.png"
+      ],
+      "matches": [
+        "https://auth.openai.com/*"
+      ]
     }
   ]
 }
