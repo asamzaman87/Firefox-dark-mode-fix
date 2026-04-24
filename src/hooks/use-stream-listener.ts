@@ -13,7 +13,9 @@ const useStreamListener = (
     nextChunkRef: React.MutableRefObject<number>,                      
     chunkRef: React.MutableRefObject<Chunk[]>,                            
     injectPrompt: (chunkIndex: number, ndx: number) => void, 
-    isDownload: boolean,           
+    isDownload: boolean,
+    isPromptingPausedRef: React.MutableRefObject<boolean>,
+    lastInjectedChunkNdxRef: React.MutableRefObject<number>,
   ) => {
     const { format } = useFormat();
     const { toast } = useToast();
@@ -91,7 +93,9 @@ const useStreamListener = (
             retryCounts.current[failedChunkNdx] = (retryCounts.current[failedChunkNdx] ?? 0) + 1;
 
             if (retryCounts.current[failedChunkNdx] > MAX_RETRIES) {
-                handleErrorWithNoFetch('GPT Reader seems to be having issues. Please contact me at democraticdeveloper@gmail.com if you continue to see this error.');
+                handleErrorWithNoFetch(
+                    "ChatGPT seems to be rejecting this text because some topics are handled strictly. Try again or tweak the wording. Email democraticdeveloper@gmail.com if it keeps failing."
+                );
                 return;
             }
 
@@ -245,11 +249,11 @@ const useStreamListener = (
                 return;
             }
         } catch (err) {
-            if (LOCAL_LOGS) console.warn("[fetchAndDecodeAudio] top-level error:", err);
             audioIssueInjections.current.add(chunkNumber);
             const stopButton = document.querySelector<HTMLButtonElement>("[data-testid='stop-button']");
             // If there is no stop button, then no processing is happening, so we can inject the chunk
-            if (!stopButton) {
+            const totalChunks = chunkRef.current.length;
+            if (!stopButton && (isPromptingPausedRef.current || nextChunkRef.current >= totalChunks)) {
                 // Convert to array and sort ascending
                 const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
 
@@ -263,9 +267,8 @@ const useStreamListener = (
 
                 audioIssueInjections.current.delete(first);
                 stopFlow.current = true;
-            } else if (!stopFlow.current) {
+            } else if (lastInjectedChunkNdxRef.current > chunkNumber) {
                 localStorage.setItem('gptr/abort', 'true');
-                audioIssueStop.current = true;
                 console.log('gptr/abort SET FOR CHUNK NUMBER:', chunkNumber);
             }
             return;
@@ -318,22 +321,20 @@ const useStreamListener = (
             console.warn("[handleConvStream] chunkNdx is null");
             return;
         }
-        if (stopFlow.current) {
-            if (audioIssueInjections.current.size > 0) {
-                // Convert to array and sort ascending
-                const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
+        if (audioIssueInjections.current.size > 0) {
+            // Convert to array and sort ascending
+            const sorted = Array.from(audioIssueInjections.current).sort((a, b) => a - b);
 
-                // Take the first (lowest) element
-                const first = sorted[0];
+            // Take the first (lowest) element
+            const first = sorted[0];
 
-                if (first >= chunkNdx) {
-                    audioIssueStop.current = false;
-                } else {
-                    audioIssueStop.current = true;
-                }
-            } else {
+            if (first >= chunkNdx) {
                 audioIssueStop.current = false;
+            } else {
+                audioIssueStop.current = true;
             }
+        } else {
+            audioIssueStop.current = false;
         }
         if (audioIssueStop.current) {
             // Since we stopped the current chunkNdx, it will need to be re-injected
@@ -416,9 +417,10 @@ const useStreamListener = (
 
                 // Remove it from the set
                 audioIssueInjections.current.delete(first);
-                stopFlow.current = true;
+                // Stop flow should reflect whether there are still pending audio-issue chunks.
+                stopFlow.current = audioIssueInjections.current.size > 0;
             } else {
-                if (LOCAL_LOGS) console.log(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
+                if (LOCAL_LOGS) console.warn(`[Audio Fetch] Setting current completed stream for ${chunkNdx}`);
                 // The hope is that the biggest chunkNdx in audioIssueInjections is from the mainline
                 setCurrentCompletedStream({ messageId, conversationId, createTime, text, chunkNdx });
                 stopFlow.current = false;

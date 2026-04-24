@@ -7,13 +7,12 @@ import { PremiumModalProvider } from "@/context/premium-modal";
 import { SpeechModeProvider } from "../../context/speech-mode";
 
 const render = (state: boolean) => {
-  if (state) return; //return if shadow root is already present
+  if (state) return; // observer saw shadow host — nothing to do
+  if (document.querySelector('#__gpt-reader-shadow')) return; // avoid second root if render(false) races
 
   const div = document.createElement('div');
   div.id = '__gpt-reader-shadow';
-  document.body.appendChild(div);
-
-  //resolve over flow issue on firefox/chrome
+  // resolve overflow issue on firefox/chrome
   const bodyClassName = document.body.className;
   document.body.className = `overflow-hidden ${bodyClassName}`;
   document.body.appendChild(div);

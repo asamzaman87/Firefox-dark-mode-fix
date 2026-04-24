@@ -39,6 +39,12 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     const [currentChunkBeingPromptedIndex, setCurrentChunkBeingPromptedIndex] = useState<number>(0);
     const [is9ThChunk, setIs9thChunk] = useState<boolean>(false);
     const [isPromptingPaused, setIsPromptingPaused] = useState<boolean>(false);
+    const isPromptingPausedRef = useRef(false);
+    useEffect(() => {
+        isPromptingPausedRef.current = isPromptingPaused;
+    }, [isPromptingPaused]);
+    /** Last chunk index whose send button we actually clicked (for fetch-failure vs abort gating). */
+    const lastInjectedChunkNdxRef = useRef<number>(-1);
     const [wasPromptStopped, setWasPromptStopped] = useState<"LOADING" | "PAUSED" | "INIT">("INIT");
     const { pdfToText, docxToText, textPlainToText } = useFileReader();
     const [progress, setProgress] = useState<number>(0);
@@ -96,19 +102,33 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     const { token } = useAuthToken();
     
     const sendWaitCancelRef = useRef<null | (() => void)>(null);
-    const sendPrompt = (payload: { text: string; id: string; ndx: number }) => {
+    const latestPromptFlowIdRef = useRef<number>(0);
+    const cancelActiveSendArtifacts = () => {
+        try { sendWaitCancelRef.current?.(); } catch {}
+        sendWaitCancelRef.current = null;
+        try { sendWatchdogStopRef.current?.(); } catch {}
+        if (activeSendObserver) {
+            activeSendObserver.disconnect();
+            activeSendObserver = null;
+        }
+    };
+    const sendPrompt = (payload: { text: string; id: string; ndx: number; flowId: number; chunkIndex: number }) => {
+        if (payload.flowId !== latestPromptFlowIdRef.current) return;
         setIsLoading(true);
-
         // 🔹 CANCEL any previous waiter (observer + timeout) before starting a new one
         try { sendWaitCancelRef.current?.(); } catch {}
         sendWaitCancelRef.current = null;
 
         const clickAndWatch = async (btn: HTMLButtonElement) => {
+            if (payload.flowId !== latestPromptFlowIdRef.current) return;
             try { localStorage.setItem("gptr/sended", "true"); } catch {}
             // wait here until doing a local storage get returns a value for it
             while (!localStorage.getItem("gptr/sended")) {
+                if (payload.flowId !== latestPromptFlowIdRef.current) return;
                 await new Promise((r) => setTimeout(r, 100));
             }
+            if (payload.flowId !== latestPromptFlowIdRef.current) return;
+            lastInjectedChunkNdxRef.current = payload.chunkIndex;
             btn.click();
             // success path: no more waiting → clear any cancel hook just in case
             sendWaitCancelRef.current?.();
@@ -129,6 +149,10 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         }
 
         const observer = new MutationObserver((mutations, obs) => {
+            if (payload.flowId !== latestPromptFlowIdRef.current) {
+                obs.disconnect();
+                return;
+            }
             const btn = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
             if (btn && !btn.disabled) {
                 clickAndWatch(btn);
@@ -143,17 +167,18 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         activeSendObserver = observer;
 
         const timeout = setTimeout(() => {
+            if (payload.flowId !== latestPromptFlowIdRef.current) return;
             observer.disconnect();
             activeSendObserver = null;
             sendWaitCancelRef.current = null; // 🔹 clear cancel hook
-            console.error("[sendPrompt] Send button not found after 8 seconds.");
+            console.error("[sendPrompt] Send button not found after 20 seconds.");
             // TODO: Consider reverting this back to an error toast and fix the wording too
             toast({
                 description: `GPT Reader may be having trouble, you may have reached ChatGPT's hourly limit. If you notice issues, try refreshing and opening the extension again.`,
                 style: TOAST_STYLE_CONFIG_INFO,
                 duration: 30000
             })
-        }, 8000);
+        }, 20000);
 
         // 🔹 register a cancel function for THIS waiter
         sendWaitCancelRef.current = () => {
@@ -286,6 +311,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         if (localStorage.getItem("gptr/active") !== "true") {
             return;
         }
+        const flowId = ++latestPromptFlowIdRef.current;
         
         // Get the original chunk
         const originalChunk = originalChunksRef.current[chunkIndex];
@@ -300,6 +326,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         
         const stopButton = document.querySelector("[data-testid='stop-button']") as HTMLDivElement | null;
         if (stopButton) {
+            cancelActiveSendArtifacts();
             stopButton.click();
             console.log('[injectPrompt] stopButton found in injectPrompt, opening new chat...');
             await new Promise<void>(async (resolve) => {
@@ -319,7 +346,9 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                 resolve();
             });
         }
+        if (flowId !== latestPromptFlowIdRef.current) return;
         await waitForEditor();
+        if (flowId !== latestPromptFlowIdRef.current) return;
         if (LOCAL_LOGS) console.log("[injectPrompt] Injecting chunk number:", id, "chunkIndex:", chunkIndex);
         // Cycle through helper prompts
         if (ndx >= HELPER_PROMPTS.length) {
@@ -378,9 +407,9 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
             localStorage.setItem("gptr/is-first-audio-loading", String(id === "0"));
             // Send the prompt from the input content
             setTimeout(() => {
-                sendPrompt({ text: filteredText, id, ndx });
+                sendPrompt({ text: filteredText, id, ndx, flowId, chunkIndex });
             }, 50);
-            if (LOCAL_LOGS) console.log("[injectPrompt] Send button clicked for chunk number:", id);
+            if (LOCAL_LOGS) console.log("[injectPrompt] Send button scheduled for chunk number:", id);
         } else {
             const errorMessage = `ChatGPT is showing a popup underneath this extension that is causing it to not work. Please close it and try again.`;
             console.error('In injectPrompt else:', errorMessage);
@@ -393,7 +422,8 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     }, []);
 
     const startSendWatchdog = useCallback(
-        (payload: { text: string; id: string; ndx: number }) => {
+        (payload: { text: string; id: string; ndx: number; flowId: number; chunkIndex: number }) => {
+            if (payload.flowId !== latestPromptFlowIdRef.current) return;
             // prevent parallel watchdogs
             if (sendWatchdogIntervalRef.current) {
                 clearInterval(sendWatchdogIntervalRef.current);
@@ -413,6 +443,10 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
             // poll every 250ms for up to 5s
             sendWatchdogIntervalRef.current = window.setInterval(async () => {
                 try {
+                    if (payload.flowId !== latestPromptFlowIdRef.current) {
+                        sendWatchdogStopRef.current();
+                        return;
+                    }
                     const flag = localStorage.getItem("gptr/sended");
 
                     // If flag is gone, the send succeeded and someone cleared it → stop.
@@ -436,7 +470,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                         if (thresholdMs >= 30_000) {
                             toast({
                                 description:
-                                    "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com.",
+                                    "GPT Reader seems to be having issues. Please try again. If you see this message again, email me at democraticdeveloper@gmail.com and mention a `Watchdog Timeout` error.",
                                 style: TOAST_STYLE_CONFIG,
                                 duration: 30000,
                             });
@@ -519,7 +553,7 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         return
     };
 
-    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt, isDownload); 
+    const { blobs, isFetching, completedStreams, currentCompletedStream, reset: resetStreamListener, setVoices, voices, isVoiceLoading, promptNdx } = useStreamListener(setIsLoading, nextChunkRef, chunkRef, injectPrompt, isDownload, isPromptingPausedRef, lastInjectedChunkNdxRef); 
     const currentStreamChunkNdxRef = useRef(currentCompletedStream?.chunkNdx);
 
   
@@ -736,7 +770,9 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     };
 
     const reset = () => {
+        latestPromptFlowIdRef.current += 1;
         retryCountRef.current = 0;
+        cancelActiveSendArtifacts();
         sendWaitCancelRef.current = null;
         showCompletionToast.current = false;
         setAudioUrls([]);

@@ -47,6 +47,7 @@ const addChatToDeleteLS = (chatId) => {
   
 const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let messageId = "";
+    let assistantMessageIdFromSse = "";
     let conversationId = "";
     let createTime = ""
     let text = "";
@@ -125,6 +126,12 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                     // Ignore non-delta “info” payloads early
                     if (data?.type) continue; // e.g., server_ste_metadata, title_generation, message_stream_complete
 
+                    const maybeAssistantMessage = data?.v?.message || data?.message;
+                    if (maybeAssistantMessage?.author?.role === "assistant" && typeof maybeAssistantMessage?.id === "string") {
+                      // Keep assistant IDs even if format changes, so synth fetch can still proceed.
+                      assistantMessageIdFromSse = maybeAssistantMessage.id;
+                    }
+
                     // 1) Single-op append/replace directly at the root
                     if (data.p === "/message/content/parts/0" && (data.o === "append" || data.o === "replace")) {
                       if (typeof data.v === "string") assistant += data.v;
@@ -171,17 +178,13 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 prevValLength = currentValLength;
             }
   
-            const messageIdMatch = textDecoded.match(/"id":\s*"([^"]+)"/g); // Extract the id using regex  
             const createTimeMatch = textDecoded.match(/"create_time":\s*([^,}\s]+)/); // Extract the id using regex
             const conversationIdMatch = textDecoded.match(/"conversation_id":\s*"([^"]+)"/); // Extract the id using regex 
             const normAssistant = normalizeAlphaNumeric(assistant);
 
             //extracting the message id from the response 
-            if (messageIdMatch?.length) {
-                //if there are multiple message ids, take the last one 
-                //if there are 3 messaged id's  i.e. 1. id with role system 2. id with role user 3. id with role assistant we pick the last one(role assitant)
-                const rawMesssageId = messageIdMatch.length > 1 ? messageIdMatch[messageIdMatch.length - 1] : messageIdMatch[0];
-                messageId = rawMesssageId.replace(/"/g, "").replace(/id: /g, "");
+            if (assistantMessageIdFromSse) {
+                messageId = assistantMessageIdFromSse;
             }
             if (conversationIdMatch) {
               conversationId = conversationIdMatch[1];

@@ -1133,7 +1133,7 @@ function Uploader() {
           loginBtn?.click();
           toast({
             description:
-              "Continue logging in to use the ChatGPT Reader & Transcriber extension.",
+              "Continue logging in to use the GPT Reader & Transcriber extension.",
             style: TOAST_STYLE_CONFIG_INFO,
             duration: 20000,
           })
