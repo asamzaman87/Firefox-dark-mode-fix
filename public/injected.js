@@ -45,7 +45,7 @@ const addChatToDeleteLS = (chatId) => {
     }
 };
   
-const loopThroughReaderToExtractMessageId = async (reader, args) => {
+const loopThroughReaderToExtractMessageId = async (reader, args, isResume = false) => {
     let messageId = "";
     let assistantMessageIdFromSse = "";
     let conversationId = "";
@@ -56,6 +56,10 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
     let stopConvo = false;
     let target = null;
     let chunkLength = null;
+    // —— resume/handoff support (async "thinking" models) ——
+    let sawHandoff = false;
+    let resumeToken = "";
+    let currentChannel = null;
     try {
         const jsonArgs = JSON.parse(args[1]?.body || "{}");
         const prompt = jsonArgs?.messages?.[0]?.content?.parts[0]; //extracting the prompt from the request
@@ -94,7 +98,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             const value = readResult.value;
             // if we haven’t received any new assistant text in 20 s, trigger abort
             const abortCount = Number(localStorage.getItem("gptr/abortCount")) || 0;
-            const abortTimeout = 20_000 + (abortCount * 3_000);
+            const abortTimeout = (isResume ? 60_000 : 20_000) + (abortCount * 3_000);
             if (Date.now() - lastProgress >= abortTimeout && !done) {
                 console.warn("No stream progress for", abortTimeout,"s—aborting...");
                 shouldAbortStream = true;
@@ -112,7 +116,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 }
                 localStorage.setItem('gptr/abort', 'false');
                 shouldAbortStream = false;
-                return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target, sawHandoff, resumeToken };
             }
             
             const decoder = new TextDecoder("utf-8");
@@ -123,18 +127,37 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                 if (line.startsWith("data: ")) {
                   try {
                     const data = JSON.parse(line.slice(6));
+                    // Capture handoff/resume signals (async "thinking" models) before skipping typed events.
+                    if (data?.type === "resume_conversation_token") {
+                      if (typeof data.token === "string") resumeToken = data.token;
+                      if (data.conversation_id) conversationId = data.conversation_id;
+                    }
+                    if (data?.type === "stream_handoff") {
+                      sawHandoff = true;
+                      if (data.conversation_id) conversationId = data.conversation_id;
+                    }
                     // Ignore non-delta “info” payloads early
                     if (data?.type) continue; // e.g., server_ste_metadata, title_generation, message_stream_complete
 
                     const maybeAssistantMessage = data?.v?.message || data?.message;
+                    // Track the most-recently added message's channel. On resume streams this lets us keep
+                    // only the final answer and ignore reasoning ("thoughts"/"reasoning_recap") messages.
+                    if (maybeAssistantMessage && typeof maybeAssistantMessage.channel !== "undefined") {
+                      currentChannel = maybeAssistantMessage.channel;
+                    }
+                    // On resume streams, only accumulate the final-channel message.
+                    const keepText = !isResume || currentChannel === "final";
                     if (maybeAssistantMessage?.author?.role === "assistant" && typeof maybeAssistantMessage?.id === "string") {
                       // Keep assistant IDs even if format changes, so synth fetch can still proceed.
-                      assistantMessageIdFromSse = maybeAssistantMessage.id;
+                      // On resume streams prefer the final-channel message id (skip reasoning messages).
+                      if (!isResume || maybeAssistantMessage.channel === "final") {
+                        assistantMessageIdFromSse = maybeAssistantMessage.id;
+                      }
                     }
 
                     // 1) Single-op append/replace directly at the root
                     if (data.p === "/message/content/parts/0" && (data.o === "append" || data.o === "replace")) {
-                      if (typeof data.v === "string") assistant += data.v;
+                      if (typeof data.v === "string" && keepText) assistant += data.v;
                       continue;
                     }
 
@@ -143,7 +166,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                       const ops = Array.isArray(data.v) ? data.v : [];
                       for (const op of ops) {
                         if (op?.p === "/message/content/parts/0" && (op.o === "append" || op.o === "replace")) {
-                          if (typeof op.v === "string") assistant += op.v;
+                          if (typeof op.v === "string" && keepText) assistant += op.v;
                         }
                       }
                       continue;
@@ -153,7 +176,8 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                     if (
                       typeof data.v === "string" &&
                       data.p !== "/message/status" &&
-                      data.p !== "/message/metadata/message_locale"
+                      data.p !== "/message/metadata/message_locale" &&
+                      keepText
                     ) {
                       assistant += data.v;
                       continue;
@@ -163,7 +187,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
                     if (data.v?.message?.content?.parts && data.v?.message?.author?.role === "assistant") {
                       // join in case future models send multiple parts
                       const parts = data.v.message.content.parts;
-                      if (Array.isArray(parts)) assistant = parts.join("");
+                      if (Array.isArray(parts) && (!isResume || data.v.message.channel === "final")) assistant = parts.join("");
                     }
                   } catch {
                     /* ignore non-JSON or other events */
@@ -201,7 +225,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             if (((normalizeAlphaNumeric(assistant).length > threshold && threshold) || normAssistant !== target.substring(0, normAssistant.length))) {
                 // immediately tell the server to stop sending more SSE
                 if (LOCAL_LOGS) console.log("[loopThroughReaderToExtractMessageId] Sending stop_conversation SSE for messageId:", messageId);
-                return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target, sawHandoff, resumeToken };
                 // if (conversationId) {
                 //     // reuse the original auth header if there was one in the request args
                 //     const authHeader = args[1]?.headers?.Authorization;
@@ -220,7 +244,7 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
             // or if the stream is done
             if (done) {
                 if (LOCAL_LOGS) console.log("[loopThroughReaderToExtractMessageId] Stream is done for messageId:", messageId);
-                return { messageId, conversationId, createTime, text, assistant, stopConvo, target }; // Exit loop when reading is complete
+                return { messageId, conversationId, createTime, text, assistant, stopConvo, target, sawHandoff, resumeToken }; // Exit loop when reading is complete
             }
         }
     } catch (error) {
@@ -229,14 +253,49 @@ const loopThroughReaderToExtractMessageId = async (reader, args) => {
         }
     }
     // eslint-disable-next-line no-undef
-    return { messageId, conversationId, createTime, text, assistant, stopConvo, target };
+    return { messageId, conversationId, createTime, text, assistant, stopConvo, target, sawHandoff, resumeToken };
 };
 
 const CONVERSATION_ENDPOINT = "backend-api/conversation";
 const CONVERSATION_F_ENDPOINT = "backend-api/f/conversation";
 const SYNTHESIS_ENDPOINT = "backend-api/synthesize";
 const VOICES_ENDPOINT = "backend-api/settings/voices"; 
+const RESUME_ENDPOINT = "https://chatgpt.com/backend-api/f/conversation/resume";
 const { fetch: origFetch } = window;
+
+// Async "thinking" models don't stream inline; the POST /conversation response is only a
+// `stream_handoff` and the turn is delivered over a websocket topic we can't read from here.
+// Instead we pull the same turn ourselves over the resume SSE endpoint and parse it with the
+// existing delta reader. Only invoked for handoff responses, so inline models are unaffected.
+const resumeViaSse = async (conversationId, resumeToken, args) => {
+    try {
+        const src = args?.[1]?.headers;
+        const headers = {};
+        if (src instanceof Headers) src.forEach((v, k) => { headers[k] = v; });
+        else if (src) Object.assign(headers, src);
+        // The resume turn is authenticated/routed by the conduit token from the handoff.
+        headers["x-conduit-token"] = resumeToken;
+        headers["accept"] = "text/event-stream";
+        headers["content-type"] = "application/json";
+        delete headers["content-length"];
+        delete headers["Content-Length"];
+        if ("x-openai-target-path" in headers) headers["x-openai-target-path"] = "/backend-api/f/conversation/resume";
+        if ("x-openai-target-route" in headers) headers["x-openai-target-route"] = "/backend-api/f/conversation/resume";
+        const resp = await origFetch(RESUME_ENDPOINT, {
+            method: "POST",
+            headers,
+            credentials: "include",
+            body: JSON.stringify({ conversation_id: conversationId, offset: 0 }),
+        });
+        if (resp && resp.status === 200 && resp.body) {
+            return await loopThroughReaderToExtractMessageId(resp.body.getReader(), args, true);
+        }
+        if (LOCAL_LOGS) console.warn("[injected.js] Resume request failed with status:", resp && resp.status);
+    } catch (err) {
+        console.error("[injected.js] resumeViaSse error:", err);
+    }
+    return null;
+};
 
 // Fetches the necessary information from specific endpoints for text to speech purposes
 window.fetch = async (...args) => {
@@ -344,7 +403,14 @@ window.fetch = async (...args) => {
         if (stream && clonedResponse.status === 200 && isEventStream) {
             const reader = stream.getReader();
             loopThroughReaderToExtractMessageId(reader, args)
-            .then(detail => {
+            .then(async detail => {
+                // Async "thinking" models only return a handoff here (no inline text). Pull the same
+                // turn over the resume SSE endpoint and reuse its parsed result.
+                if (detail?.sawHandoff && !detail.assistant && detail.resumeToken && detail.conversationId) {
+                    if (LOCAL_LOGS) console.log("[injected.js] Handoff detected, resuming via SSE for chunk number:", sentChunkNumber);
+                    const resumed = await resumeViaSse(detail.conversationId, detail.resumeToken, args);
+                    if (resumed) detail = resumed;
+                }
                 if (LOCAL_LOGS) console.log("[injected.js] End of stream event dispatched for chunk number:", sentChunkNumber);
                 window.dispatchEvent(new CustomEvent("END_OF_STREAM", { detail: {...detail, chunkNdx: sentChunkNumber} }));
             })
