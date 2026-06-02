@@ -172,12 +172,8 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
             activeSendObserver = null;
             sendWaitCancelRef.current = null; // 🔹 clear cancel hook
             console.error("[sendPrompt] Send button not found after 20 seconds.");
-            // TODO: Consider reverting this back to an error toast and fix the wording too
-            toast({
-                description: `GPT Reader may be having trouble, you may have reached ChatGPT's hourly limit. If you notice issues, try refreshing and opening the extension again.`,
-                style: TOAST_STYLE_CONFIG_INFO,
-                duration: 30000
-            })
+            setIsLoading(false);
+            handleError("GPT Reader couldn't reach ChatGPT's send button. You may have hit ChatGPT's hourly limit, or the page needs a refresh. Please refresh the page and open the extension again.");
         }, 20000);
 
         // 🔹 register a cancel function for THIS waiter
