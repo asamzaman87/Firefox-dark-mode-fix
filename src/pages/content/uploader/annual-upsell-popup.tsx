@@ -14,7 +14,7 @@ import {
   switchSubscriptionToPrice,
   toAnnualPriceId,
   isAnnualPriceId,
-  getStoredValue,
+  ensureSubscriptionId,
   detectBrowser,
   fetchStripeProducts,
 } from "@/lib/utils";
@@ -125,7 +125,7 @@ const AnnualUpsellPopup: FC<Props> = ({ open, onOpenChange, showConfirmationDire
     }
     setLoading(true);
     try {
-      const subscriptionId = await getStoredValue<string>("subscriptionId", "local");
+      const subscriptionId = await ensureSubscriptionId();
       if (!subscriptionId) throw new Error("Missing subscription id");
 
       let resp: any;
@@ -294,7 +294,10 @@ const AnnualUpsellPopup: FC<Props> = ({ open, onOpenChange, showConfirmationDire
             </LoadingButton>
             <Button
               variant="ghost"
-              onClick={() => setShowAnnualConfirmation(false)}
+              onClick={() => {
+                setShowAnnualConfirmation(false);
+                onOpenChange(false);
+              }}
               className="gpt:w-full gpt:font-medium gpt:py-2 gpt:px-4 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700"
             >
               Cancel

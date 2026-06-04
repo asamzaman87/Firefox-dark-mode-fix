@@ -1396,6 +1396,36 @@ export const getSubscriptionDetails = async (): Promise<{
   }
 };
 
+/**
+ * Resolve the user's Stripe subscriptionId, preferring the cached value in
+ * chrome.storage.local. If it's missing (e.g. after extension reinstall, cache
+ * eviction, or a fresh sign-in), fall back to fetching subscription-details
+ * from the backend and persist the result. Returns null only if the user has
+ * no active subscription. Use this everywhere instead of reading
+ * `subscriptionId` directly so cancel/switch endpoints never fire with
+ * `subscriptionId=undefined`.
+ */
+export async function ensureSubscriptionId(): Promise<string | null> {
+  const stored = await getStoredValue<string>("subscriptionId", "local");
+  if (stored) return stored;
+
+  let details: { subscriptionId: string | null } | null = null;
+  if (detectBrowser() === "firefox") {
+    details = await new Promise((resolve) =>
+      chrome.runtime.sendMessage(
+        { type: "GET_SUBSCRIPTION_DETAILS" },
+        (r) => resolve(r ?? null)
+      )
+    );
+  } else {
+    details = await getSubscriptionDetails();
+  }
+
+  const id = details?.subscriptionId ?? null;
+  if (id) await chrome.storage.local.set({ subscriptionId: id });
+  return id;
+}
+
 export const switchSubscriptionToPrice = async (
   subscriptionId: string,
   priceId: string

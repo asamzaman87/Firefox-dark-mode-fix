@@ -31,8 +31,8 @@ import {
   cancelSubscription,
   createCheckoutSession,
   detectBrowser,
+  ensureSubscriptionId,
   fetchStripeProducts,
-  getStoredValue,
   getSubscriptionDetails,
   isAnnualPriceId,
   switchSubscriptionToPrice,
@@ -221,10 +221,15 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const handleCancelSubscription = async () => {
     setLoading(true);
     try {
-      const subscriptionId = await getStoredValue<string>(
-        "subscriptionId",
-        "local"
-      );
+      const subscriptionId = await ensureSubscriptionId();
+      if (!subscriptionId) {
+        toast({
+          description: "Couldn't find your subscription. Please reopen the extension and try again.",
+          style: TOAST_STYLE_CONFIG,
+          duration: 4000,
+        });
+        return;
+      }
 
       let res: any;
       if (detectBrowser() === "firefox") {
@@ -334,6 +339,13 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
           const current = details?.currentPriceId ?? null;
           setCurrentPriceId(current);
           setIsLifetime(details?.isLifetime === true);
+
+          // Reconcile the optimistic annual flag with the backend's source of
+          // truth. If the user isn't actually on an annual price, clear the
+          // stale flag so the "Switch to Annual" option reappears.
+          if (current && !isAnnualPriceId(current)) {
+            localStorage.removeItem("gptr/annualPlan");
+          }
         }
       } catch {
         // Silent fail - don't break the UI
@@ -385,6 +397,9 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
       const current = details?.currentPriceId ?? null;
       setCurrentPriceId(current);
       setIsLifetime(details?.isLifetime === true);
+      if (current && !isAnnualPriceId(current)) {
+        localStorage.removeItem("gptr/annualPlan");
+      }
 
       // If backend returned the period end, update local view so the popups can reflect it
       if (typeof details?.currentPeriodEnd === "number") {
@@ -430,7 +445,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const handleAccept199 = async () => {
     setOfferLoading(true);
     try {
-      const subscriptionId = await getStoredValue<string>("subscriptionId", "local");
+      const subscriptionId = await ensureSubscriptionId();
       if (!subscriptionId) throw new Error("Missing subscriptionId");
 
       let resp;
@@ -523,7 +538,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                     onClick={async () => {
                       setUndoCancellation(true);
                       try {
-                        const subscriptionId = await getStoredValue<string>("subscriptionId", "local");
+                        const subscriptionId = await ensureSubscriptionId();
                         if (!subscriptionId) throw new Error("Missing subscriptionId");
 
                         let res;
