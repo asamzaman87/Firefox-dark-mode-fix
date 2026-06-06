@@ -1,9 +1,86 @@
 import mammoth from "mammoth";
-import { pdfjs } from "react-pdf";
 import { unzipSync, strFromU8 } from "fflate";
+import { extractPdfPages } from "@/lib/pdf-core";
 
-// Path to the pdf.worker.js file
-pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.js");
+const isFirefox =
+  typeof navigator !== "undefined" && /Firefox/.test(navigator.userAgent);
+
+// Robustly read a File/Blob into an ArrayBuffer.
+//
+// Some OS/file combinations throw `NotReadableError` from `file.arrayBuffer()`
+// ("The requested file could not be read…") when the underlying file handle has
+// gone stale after the drop. We retry once and fall back to FileReader, which
+// can succeed where `arrayBuffer()` fails.
+const readArrayBuffer = async (file: File | Blob): Promise<ArrayBuffer> => {
+  const viaFileReader = (blob: Blob) =>
+    new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (result instanceof ArrayBuffer && result.byteLength > 0) {
+          resolve(result);
+        } else {
+          reject(new Error("The file could not be read. Please try re-selecting it."));
+        }
+      };
+      reader.onerror = () =>
+        reject(reader.error || new Error("The file could not be read. Please try re-selecting it."));
+      reader.readAsArrayBuffer(blob);
+    });
+
+  // Try several strategies: arrayBuffer(), a fresh slice (re-acquires the OS
+  // handle, which often clears NotReadableError), and FileReader on both. Some
+  // files throw "could not be read" on one path but succeed on another.
+  const sliced = typeof file.slice === "function" ? file.slice(0, file.size) : file;
+  const attempts: Array<() => Promise<ArrayBuffer>> = [
+    () => file.arrayBuffer(),
+    () => sliced.arrayBuffer(),
+    () => viaFileReader(file),
+    () => viaFileReader(sliced),
+  ];
+
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      const buffer = await attempts[i]();
+      if (buffer && buffer.byteLength > 0) return buffer;
+    } catch {
+      // try the next strategy
+    }
+    await new Promise((res) => setTimeout(res, 100));
+  }
+
+  throw new Error(
+    "The file could not be read. It may have moved or its permissions changed — please re-select it."
+  );
+};
+
+// Get per-page PDF text. On Chrome we parse in-place (the pdf.js worker is
+// allowed from a chrome-extension URL). On Firefox the host page CSP blocks
+// both the worker and the blob fetch in the content script, so we hand the raw
+// bytes to the background page (same-origin worker, no page CSP) to parse.
+const getPdfPages = async (file: File | Blob): Promise<string[]> => {
+  const buffer = await readArrayBuffer(file);
+  if (!buffer || buffer.byteLength === 0) {
+    throw new Error("There was an error parsing the file! It might not have valid text content.");
+  }
+
+  if (isFirefox) {
+    const bytes = new Uint8Array(buffer);
+    const res = await chrome.runtime.sendMessage({
+      type: "PARSE_PDF",
+      payload: { bytes },
+    });
+    if (!res || res.error || !Array.isArray(res.pages)) {
+      throw new Error(
+        res?.error ||
+          "There was an error parsing the file! It might not have valid text content."
+      );
+    }
+    return res.pages as string[];
+  }
+
+  return extractPdfPages(buffer);
+};
 
 // ── Types ────────────────────────────────────────────────────────────
 export type SectionIndex = {
@@ -125,7 +202,7 @@ const epubToStructured = async (file: File): Promise<StructuredText> => {
   let zip: Record<string, Uint8Array>;
   
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await readArrayBuffer(file);
     bytes = new Uint8Array(arrayBuffer);
     // Wrap unzipSync in try-catch to handle Firefox CSP issues with constructor access
     try {
@@ -593,38 +670,13 @@ export function makeHtmlProgressSlicer(
 
 
 // ── Existing functions (kept) ────────────────────────────────────────
-const pdfToText = async (file: File | Blob | MediaSource): Promise<string> => {
-  const blobUrl = URL.createObjectURL(file);
-  const loadingTask = pdfjs.getDocument(blobUrl);
-
-  let extractedText = "";
-  let hadParsingError = false;
-  try {
-    const pdf = await loadingTask.promise;
-    const numPages = pdf.numPages;
-
-    for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
-      const page = await pdf.getPage(pageNumber);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ");
-      extractedText += pageText;
-    }
-  } catch {
-    hadParsingError = true;
+const pdfToText = async (file: File | Blob): Promise<string> => {
+  const pages = await getPdfPages(file);
+  const extractedText = pages.join(" ");
+  if (extractedText.trim().length === 0) {
+    throw new Error("There was an error parsing the file! It might not have valid text content.");
   }
-
-  URL.revokeObjectURL(blobUrl);
-  loadingTask.destroy();
-
-  if (!hadParsingError) {
-    if (extractedText.trim().length === 0) {
-      throw new Error("There was an error parsing the file! It might not have valid text content.");
-    }
-    return extractedText;
-  }
-  throw new Error("There was an error parsing the file! It might not have valid text content.");
+  return extractedText;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -658,9 +710,9 @@ async function getParagraphs(content: ArrayBuffer) {
 
 const docxToText = async <T = string>(file: File): Promise<T | string> => {
   try {
-    // Use file.arrayBuffer() directly for better compatibility, especially in Firefox
-    const arrayBuffer = await file.arrayBuffer();
-    
+    // Robust read with a FileReader fallback for NotReadableError cases.
+    const arrayBuffer = await readArrayBuffer(file);
+
     if (!arrayBuffer || arrayBuffer.byteLength === 0) {
       throw new Error("The file appears to be empty or could not be read.");
     }
@@ -691,27 +743,7 @@ const textPlainToText = async (file: File): Promise<string> =>
   });
 
 const pdfToStructured = async (file: File): Promise<StructuredText> => {
-  const blobUrl = URL.createObjectURL(file);
-  const loadingTask = pdfjs.getDocument(blobUrl);
-
-  const pages: string[] = [];
-  try {
-    const pdf = await loadingTask.promise;
-    const numPages = pdf.numPages;
-
-    for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
-      const page = await pdf.getPage(pageNumber);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ")
-        .trim();
-      pages.push(pageText);
-    }
-  } finally {
-    URL.revokeObjectURL(blobUrl);
-    loadingTask.destroy();
-  }
+  const pages = await getPdfPages(file);
 
   const fullText = pages.join("");
   if (!fullText.trim()) {

@@ -11,6 +11,7 @@ export const ACCEPTED_FILE_TYPES: Accept = {
 };
 
 export const ACCEPTED_FILE_TYPES_FIREFOX: Accept = {
+  "application/pdf": [],
   "application/msword": [],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [],
   "text/plain": [],
@@ -131,9 +132,50 @@ export const FORWARD_REWIND_TIME = 10; //seconds
 export const MALE_VOICES = ["orbit", "breeze", "cove", "ember", "fathom"];
 export const REVIEWS_CHROME = "https://chromewebstore.google.com/detail/gpt-reader-free-ai-text-t/aeggkceabpfajnglgaeadofdmeboimml/reviews";
 export const REVIEWS_FIREFOX = "https://addons.mozilla.org/en-US/firefox/addon/gpt-reader";
-// export const BACKEND_URI = "http://localhost:3000/api" //for local testing
+
+// Cross-promotion: the family of reader extensions shown in the "Similar
+// Extensions" popup. chrome/firefox/edge are the store *listing* URLs (no
+// /reviews suffix). The entry matching CURRENT_EXTENSION_ID is shown first with
+// a "Current" tag and is not clickable.
+export type SimilarExtension = {
+  id: string;
+  name: string;
+  icon: string;
+  chrome: string;
+  firefox: string;
+  edge?: string;
+};
+
+export const CURRENT_EXTENSION_ID = "gpt-reader";
+
+export const SIMILAR_EXTENSIONS: SimilarExtension[] = [
+  {
+    id: "gpt-reader",
+    name: "GPT Reader",
+    icon: "sim-gpt.png",
+    chrome: "https://chromewebstore.google.com/detail/gpt-reader-free-ai-text-t/aeggkceabpfajnglgaeadofdmeboimml",
+    firefox: "https://addons.mozilla.org/en-US/firefox/addon/gpt-reader",
+  },
+  {
+    id: "google-reader",
+    name: "Google Reader",
+    icon: "sim-google.png",
+    chrome: "https://chromewebstore.google.com/detail/google-reader-free-ai-tex/jdmmahggnlemcmcoljocaoejjlkjknld",
+    firefox: "https://addons.mozilla.org/en-US/firefox/addon/google-reader/",
+    edge: "https://microsoftedge.microsoft.com/addons/detail/oalnicbngdjhapmbjnoampbhioncjleo",
+  },
+  {
+    id: "gemini-reader",
+    name: "Gemini Reader",
+    icon: "sim-gemini.png",
+    chrome: "https://chromewebstore.google.com/detail/gemini-reader-free-ai-tex/ipldcpaajpmldoplmnimmabmdmkiidfg",
+    firefox: "https://addons.mozilla.org/en-US/firefox/addon/gemini-reader/",
+    edge: "https://microsoftedge.microsoft.com/addons/detail/okghbabejcehhampoiadpillfmmbnnng",
+  },
+];
+export const BACKEND_URI = "http://localhost:3000/api" //for local testing
 // GPT Reader uses its own backend to get live announcements as well as to store user feedback
-export const BACKEND_URI = "https://www.readeon.com/api"
+// export const BACKEND_URI = "https://www.readeon.com/api"
 export const BANNER_POLLING_TIME_INTERVAL = 20000;
 export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;

@@ -13,6 +13,7 @@ import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFi
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
+import SimilarExtensions from "./similar-extensions-popup";
 import DownloadOrListen from "./download-or-listen-popup";
 import FeedbackPopup from "./feedback-popup";
 import FirstChunkRatingPopup from "./first-chunk-rating-popup";
@@ -1372,6 +1373,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             <ThemeToggle />
             <FeedbackPopup />
             <Announcements />
+            <SimilarExtensions />
           </div>
           <div
             className={cn("gpt:absolute gpt:top-4 gpt:right-16 gpt:size-max")}

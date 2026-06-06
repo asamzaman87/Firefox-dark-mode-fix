@@ -183,6 +183,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       handleBannerCountView(count);
       break;
     }
+    // ─── Firefox PDF parsing proxy ──────────────────────────────────────────
+    // The host page CSP blocks the pdf.js worker + blob fetch inside the Firefox
+    // content script. The background page is same-origin with the worker and has
+    // no page CSP, so we parse the raw bytes here and return the page texts.
+    case "PARSE_PDF": {
+      (async () => {
+        try {
+          const { extractPdfPages } = await import("@/lib/pdf-core");
+          const bytes: Uint8Array = request?.payload?.bytes;
+          const pages = await extractPdfPages(bytes);
+          sendResponse({ pages });
+        } catch (error) {
+          sendResponse({
+            error:
+              (error as Error)?.message ||
+              "There was an error parsing the file! It might not have valid text content.",
+          });
+        }
+      })();
+      return true;
+    }
     case "CHECK_SUBSCRIPTION": {
       (async () => {
         const result = await handleCheckUserSubscription();

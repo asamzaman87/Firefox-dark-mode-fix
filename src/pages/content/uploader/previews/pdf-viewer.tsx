@@ -1,11 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2Icon } from 'lucide-react';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { Document, Page } from 'react-pdf';
+import { Document, Page, pdfjs } from 'react-pdf';
 import type { SectionIndex } from '@/hooks/use-file-reader';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+
+// The canvas preview uses react-pdf's own pdfjs.getDocument, which needs the
+// worker configured. Set it here so the preview works even if the parsing
+// module (pdf-core) hasn't loaded yet.
+pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.js");
 
 interface PdfViewerProps {
   file: File;

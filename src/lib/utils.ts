@@ -2061,7 +2061,7 @@ export const handleDownload = (
 
 export const getFileAccept = (isReader: boolean) => {
   const browser = detectBrowser();
-  // Firefox supports DOCX, EPUB, and TXT (PDF not supported due to browser restrictions)
+  // Firefox supports PDF, DOCX, EPUB, and TXT (PDF parses via a main-thread pdf.js fallback)
   if (browser === "firefox") {
     return isReader
       ? ACCEPTED_FILE_TYPES_FIREFOX

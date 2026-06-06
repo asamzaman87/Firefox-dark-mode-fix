@@ -6,6 +6,12 @@ import { useSpeechMode } from "../../../../context/speech-mode";
 import type { SectionIndex } from "@/hooks/use-file-reader";
 import DownloadPreview from "./download-preview";
 
+// On Firefox the react-pdf canvas preview can't render: its worker is created
+// from a blob/extension URL that the host page CSP (trusted-types) blocks. Fall
+// back to the extracted-text preview there instead of crashing the overlay.
+const isFirefox =
+  typeof navigator !== "undefined" && /Firefox/.test(navigator.userAgent);
+
 interface PreviewsProps {
   file?: File | null;
 
@@ -116,7 +122,7 @@ const Previews: FC<PreviewsProps> = ({
     return i >= 0 ? i + 1 : undefined;
   }, [scrollToOffset, sections]);
 
-  if (isTextToSpeech && file?.type.includes("pdf")) {
+  if (isTextToSpeech && file?.type.includes("pdf") && !isFirefox) {
     return (
       <PdfViewer
         file={file}
