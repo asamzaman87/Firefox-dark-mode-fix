@@ -5,6 +5,12 @@
   "extensionDescription": {
     "message": "Free AI text to speech (tts) & speech to text (stt) with ChatGPT. Listen to natural voices or transcribe audio instantly."
   },
+  "processing_file": {
+    "message": "Processing your file…"
+  },
+  "processing_file_hint": {
+    "message": "This can take a moment for large files."
+  },
   "play_voice": {
     "message": "Play Voice"
   },

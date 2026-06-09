@@ -9,7 +9,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, isWebReaderFresh, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -61,6 +61,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [title, setTitle] = useState<string>();
     const [pastedText, setPastedText] = useState<string>();
     const [showDownloadOrListen, setShowDownloadOrListen] = useState<boolean>(false);
+    // True while a freshly-uploaded file is being parsed/extracted. Large files
+    // (big PDFs/EPUBs) can take a few seconds, so we surface a loading state to
+    // reassure the user the extension isn't stuck.
+    const [isExtractingFile, setIsExtractingFile] = useState<boolean>(false);
     const [inputPopupOpen, setInputPopupOpen] = useState<boolean>(false);
     const [fileExtractedText, setFileExtractedText] = useState<string>(); //ToDo: to find a better way to handle this
     const [showDownloadCancelConfirmation, setShowDownloadCancelConfirmation] = useState<boolean>(false);
@@ -787,6 +791,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             documentIdRef.current = generateDocumentId(f);
           };
 
+          setIsExtractingFile(true);
           (async () => {
             try {
               if (type === "application/pdf" || /\.pdf$/i.test(f.name)) {
@@ -817,6 +822,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             } catch (e: any) {
               toast({ description: e?.message || "Failed to read file", style: TOAST_STYLE_CONFIG });
               resetter();
+            } finally {
+              setIsExtractingFile(false);
             }
           })();
         } else {
@@ -1458,6 +1465,17 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             </Button>
           )}
           <div className="gpt:flex gpt:size-full gpt:flex-col gpt:flex-1 gpt:gap-6 gpt:overflow-hidden">
+            {isExtractingFile && (
+              <div className="gpt:absolute gpt:inset-0 gpt:z-[60] gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-3 gpt:bg-white/80 gpt:dark:bg-gray-900/80 gpt:backdrop-blur-sm gpt:rounded-2xl">
+                <Loader2Icon className="gpt:size-10 gpt:animate-spin gpt:text-gray-800 gpt:dark:text-gray-100" />
+                <p className="gpt:text-sm gpt:font-medium gpt:text-gray-700 gpt:dark:text-gray-200">
+                  {chrome.i18n.getMessage("processing_file") || "Processing your file…"}
+                </p>
+                <p className="gpt:text-xs gpt:text-gray-500 gpt:dark:text-gray-400">
+                  {chrome.i18n.getMessage("processing_file_hint") || "This can take a moment for large files."}
+                </p>
+              </div>
+            )}
             {isViewingText || prompts.length > 0 || isDownload ? (
               <>
                 {!isDownload && showFirstChunkRatingPopup && (

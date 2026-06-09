@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from "react";
+import { FC, memo, useEffect, useMemo, useState } from "react";
 import DocumentViewer from "./document-viewer";
 import TranscriberDownloadPreview from "./transcriber-download-preview";
 import PdfViewer from "./pdf-viewer";
@@ -122,7 +122,15 @@ const Previews: FC<PreviewsProps> = ({
     return i >= 0 ? i + 1 : undefined;
   }, [scrollToOffset, sections]);
 
-  if (isTextToSpeech && file?.type.includes("pdf") && !isFirefox) {
+  // Some PDFs fail to render in react-pdf's canvas (corrupt/odd structure, font
+  // issues, etc.). Rather than leaving a silent blank/forever-spinner, fall back
+  // to the extracted-text viewer so the document still "opens".
+  const [pdfFailed, setPdfFailed] = useState(false);
+  useEffect(() => {
+    setPdfFailed(false);
+  }, [file]);
+
+  if (isTextToSpeech && file?.type.includes("pdf") && !isFirefox && !pdfFailed) {
     return (
       <PdfViewer
         file={file}
@@ -132,6 +140,7 @@ const Previews: FC<PreviewsProps> = ({
         highlightLength={highlightLength}
         highlightEnabled={!!highlightActive}
         highlightPulse={highlightPulse}
+        onLoadError={() => setPdfFailed(true)}
       />
     );
   }

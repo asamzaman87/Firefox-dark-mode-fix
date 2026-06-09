@@ -192,8 +192,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         try {
           const { extractPdfPages } = await import("@/lib/pdf-core");
           const bytes: Uint8Array = request?.payload?.bytes;
-          const pages = await extractPdfPages(bytes);
-          sendResponse({ pages });
+          const { pages, pagesHtml } = await extractPdfPages(bytes);
+          sendResponse({ pages, pagesHtml });
         } catch (error) {
           sendResponse({
             error:

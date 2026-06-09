@@ -34,6 +34,9 @@ interface PdfViewerProps {
   highlightDurationMs?: number;
 
   highlightPulse?: number
+
+  /** Called when react-pdf fails to load/parse the PDF (so the parent can fall back). */
+  onLoadError?: (error: Error) => void;
 }
 
 const PdfViewer: FC<PdfViewerProps> = ({
@@ -44,7 +47,8 @@ const PdfViewer: FC<PdfViewerProps> = ({
   highlightLength = 0,
   highlightEnabled = false,
   highlightDurationMs = 4000,
-  highlightPulse
+  highlightPulse,
+  onLoadError
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
@@ -232,7 +236,12 @@ const PdfViewer: FC<PdfViewerProps> = ({
         <span className="gpt:z-10 gpt:fixed gpt:bottom-2 gpt:left-36 gpt:px-4 gpt:py-2 gpt:text-sm gpt:font-medium gpt:text-muted-foreground gpt:text-center gpt:mx-auto gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:shadow">
           Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
         </span>
-        <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
+        <Document
+          file={file}
+          onLoadSuccess={onDocumentLoadSuccess}
+          onLoadError={(error) => onLoadError?.(error)}
+          onSourceError={(error) => onLoadError?.(error)}
+        >
           <Page
             className={"gpt:mb-32! gpt:mx-0.5! gpt:mt-0.5! gpt:rounded! gpt:drop-shadow! gpt:[&>canvas]:rounded!"}
             pageNumber={pageNumber}

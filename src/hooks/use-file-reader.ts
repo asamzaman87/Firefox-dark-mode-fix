@@ -58,7 +58,9 @@ const readArrayBuffer = async (file: File | Blob): Promise<ArrayBuffer> => {
 // allowed from a chrome-extension URL). On Firefox the host page CSP blocks
 // both the worker and the blob fetch in the content script, so we hand the raw
 // bytes to the background page (same-origin worker, no page CSP) to parse.
-const getPdfPages = async (file: File | Blob): Promise<string[]> => {
+const getPdfPages = async (
+  file: File | Blob
+): Promise<{ pages: string[]; pagesHtml: string[] }> => {
   const buffer = await readArrayBuffer(file);
   if (!buffer || buffer.byteLength === 0) {
     throw new Error("There was an error parsing the file! It might not have valid text content.");
@@ -76,7 +78,10 @@ const getPdfPages = async (file: File | Blob): Promise<string[]> => {
           "There was an error parsing the file! It might not have valid text content."
       );
     }
-    return res.pages as string[];
+    return {
+      pages: res.pages as string[],
+      pagesHtml: Array.isArray(res.pagesHtml) ? (res.pagesHtml as string[]) : [],
+    };
   }
 
   return extractPdfPages(buffer);
@@ -671,7 +676,7 @@ export function makeHtmlProgressSlicer(
 
 // ── Existing functions (kept) ────────────────────────────────────────
 const pdfToText = async (file: File | Blob): Promise<string> => {
-  const pages = await getPdfPages(file);
+  const { pages } = await getPdfPages(file);
   const extractedText = pages.join(" ");
   if (extractedText.trim().length === 0) {
     throw new Error("There was an error parsing the file! It might not have valid text content.");
@@ -742,8 +747,12 @@ const textPlainToText = async (file: File): Promise<string> =>
     reader.readAsText(file);
   });
 
+function escapeHtmlText(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 const pdfToStructured = async (file: File): Promise<StructuredText> => {
-  const pages = await getPdfPages(file);
+  const { pages, pagesHtml } = await getPdfPages(file);
 
   const fullText = pages.join("");
   if (!fullText.trim()) {
@@ -763,7 +772,22 @@ const pdfToStructured = async (file: File): Promise<StructuredText> => {
     offset += p.length;
   });
 
-  return { fullText, sections, source: "pdf" };
+  // Rich HTML for the fallback document view (Firefox, or when the canvas
+  // viewer can't render): preserve paragraphs/line breaks per page so the text
+  // doesn't render as one cluttered blob. Display-only — `fullText` above is
+  // untouched so search/highlight/TTS offsets stay intact.
+  const htmlPages = pagesHtml.length === pages.length ? pagesHtml : [];
+  const fullHtml = htmlPages.length
+    ? `<div class="pdf-doc">${htmlPages
+        .map((h, i) =>
+          `<section class="pdf-page" data-page="${i + 1}">${
+            h || `<p>${escapeHtmlText(pages[i] ?? "")}</p>`
+          }</section>`
+        )
+        .join("")}</div>`
+    : undefined;
+
+  return { fullText, fullHtml, sections, source: "pdf" };
 };
 
 const docxToStructured = async (file: File): Promise<StructuredText> => {
