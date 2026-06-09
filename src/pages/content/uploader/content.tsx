@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, removeAllListeners } from "@/lib/utils";
+import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, isWebReaderFresh, removeAllListeners } from "@/lib/utils";
 import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
@@ -705,6 +705,18 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const handleExistingText = useCallback(async () => {
       const existingText = await getSelectedText();
       if (existingText?.selectedText?.length) {
+        // Only act on a *fresh* web-reader selection (the user just chose "read
+        // with GPT Reader" within the freshness window). A stale selectedText
+        // left in storage must NOT trigger the reload below — that was the
+        // spurious mid-listen refresh that closed the overlay and lost all
+        // processed chunks. A genuine mid-session selection is still fresh, so
+        // the intended "reopen with the new text" reload keeps working.
+        const fresh = await isWebReaderFresh();
+        if (!fresh) {
+          await chrome.storage.local.remove(["selectedText"]);
+          activatingWebReader.current = false;
+          return;
+        }
         const text = String(existingText.selectedText);
 
         const persisted =
@@ -1528,9 +1540,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             {/* Text-to-Speech Player */}
             {isTextToSpeech && (
               <PlayerBackup
-                areSeekControlsAvailable={
-                  isTypeAACSupported || BROWSER === "firefox"
-                }
+                areSeekControlsAvailable={true}
                 replay={replay}
                 partialChunkCompletedPlaying={partialChunkCompletedPlaying}
                 setPlaybackEnded={setHasCompletePlaying}

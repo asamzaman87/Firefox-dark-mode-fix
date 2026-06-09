@@ -148,40 +148,60 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
             activeSendObserver = null;
         }
 
-        const observer = new MutationObserver((mutations, obs) => {
+        // ChatGPT re-enables the send button by toggling its `disabled` /
+        // `aria-disabled` attribute on the SAME node rather than replacing it.
+        // A childList-only observer never sees that, so the wait could time out
+        // and report "send button not found" even though the button was clearly
+        // active (the rate-limit false positive on retry flows). We now also
+        // observe those attribute changes AND keep a lightweight poll as a
+        // belt-and-suspenders fallback against any missed mutation.
+        let poll: ReturnType<typeof setInterval> | null = null;
+
+        const finishWaiting = () => {
+            try { observer.disconnect(); } catch {}
+            try { clearTimeout(timeout); } catch {}
+            if (poll) { clearInterval(poll); poll = null; }
+            activeSendObserver = null;
+            sendWaitCancelRef.current = null;
+        };
+
+        const tryClickWhenReady = (): boolean => {
             if (payload.flowId !== latestPromptFlowIdRef.current) {
-                obs.disconnect();
-                return;
+                finishWaiting();
+                return true;
             }
             const btn = document.querySelector("[data-testid='send-button']") as HTMLButtonElement | null;
-            if (btn && !btn.disabled) {
+            if (btn && !btn.disabled && btn.getAttribute("aria-disabled") !== "true") {
+                finishWaiting();
                 clickAndWatch(btn);
-                obs.disconnect();
-                activeSendObserver = null;
-                clearTimeout(timeout);
-                sendWaitCancelRef.current = null; // 🔹 clear cancel hook
+                return true;
             }
-        });
+            return false;
+        };
 
-        observer.observe(document.body, { childList: true, subtree: true });
+        const observer = new MutationObserver(() => { tryClickWhenReady(); });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["disabled", "aria-disabled"],
+        });
         activeSendObserver = observer;
+
+        poll = setInterval(() => { tryClickWhenReady(); }, 250);
 
         const timeout = setTimeout(() => {
             if (payload.flowId !== latestPromptFlowIdRef.current) return;
-            observer.disconnect();
-            activeSendObserver = null;
-            sendWaitCancelRef.current = null; // 🔹 clear cancel hook
+            // Final attempt right at the deadline before giving up.
+            if (tryClickWhenReady()) return;
+            finishWaiting();
             console.error("[sendPrompt] Send button not found after 20 seconds.");
             setIsLoading(false);
             handleError("GPT Reader couldn't reach ChatGPT's send button. You may have hit ChatGPT's hourly limit, or the page needs a refresh. Please refresh the page and open the extension again.");
         }, 20000);
 
         // 🔹 register a cancel function for THIS waiter
-        sendWaitCancelRef.current = () => {
-            try { observer.disconnect(); } catch {}
-            try { clearTimeout(timeout); } catch {}
-            activeSendObserver = null;
-        };
+        sendWaitCancelRef.current = finishWaiting;
     };
     
     const stopPrompt = async () => {

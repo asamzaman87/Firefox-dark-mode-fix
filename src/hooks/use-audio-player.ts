@@ -102,8 +102,13 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     const gainNodeRef  = useRef<GainNode | null>(null);
 
     const isPlayingRef   = useRef(isPlaying);
-    const isFirefox =
-      typeof navigator !== "undefined" && /firefox/i.test(navigator.userAgent);
+    // Engine selection is purely capability-based (single discriminator, no UA
+    // sniffing): use the MSE primary path whenever the codec is supported,
+    // otherwise the unified Blob fallback. This runs the fallback on ANY
+    // non-MSE browser (Firefox and beyond), replacing the old legacy per-chunk
+    // URL chain. On Chrome/Firefox this is identical to the previous
+    // `/firefox/i` check, since there !isTypeAACSupported === isFirefox.
+    const useFallback = !isTypeAACSupported;
     // FIREFOX-ONLY: staged parts waiting to be committed at the seam
     const incomingEntriesRef = useRef<
       Array<{ chunkNumber: number; buffer: ArrayBuffer; duration: number }>
@@ -408,7 +413,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     }, [chunks, isPresenceModalOpen]);
 
     const playFallback = async (startTime: number) => {
-      if (!isFirefox) setIsPromptingPaused(true);
+      if (!useFallback) setIsPromptingPaused(true);
       
       // 1) wait for any in‐flight MSE updates to finish
       if (sourceBuffer.current) {
@@ -427,8 +432,8 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
       if (seekAudio) seekAudio.pause();
     
       // 4) snapshot how many history buffers we have right now
-      if (!isFirefox) {
-        // Chrome fallback keeps growing mid-play as before
+      if (!useFallback) {
+        // MSE backward-seek assist keeps growing mid-play as before
         originalHistoryLengthRef.current = historyBuffersRef.current.length;
       }
     
@@ -483,7 +488,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
         // If createMediaElementSource fails (e.g. playback state), ignore
       }
     
-      if (isFirefox) {
+      if (useFallback) {
         a.onended = async () => {
           if (historyBuffersRef.current.length !== chunks.length) {
             setAudioLoading(true);
@@ -522,7 +527,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
         if (audioCtxRef.current?.state === 'suspended') {
           audioCtxRef.current.resume().catch(() => {});
         }
-        if (isFirefox && !isPausedRef.current && !isPlayingRef.current) {
+        if (useFallback && !isPausedRef.current && !isPlayingRef.current) {
           setIsPlaying(true);
           setIsPaused(false);
         }
@@ -530,7 +535,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
         setCurrentPlayTime(t);
         currentTimeRef.current = t;
 
-        if (isFirefox) {
+        if (useFallback) {
           const chunkPlaying = getChunkAtTime(currentTimeRef.current);
           const targetLength = blobsLength.current;
           
@@ -543,7 +548,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
           }
         }
     
-        if (!isFirefox) {
+        if (!useFallback) {
           if (!fallbackAudioRef.current) return;
           // check MSE buffer first
           const buf = seekAudio.buffered;
@@ -592,8 +597,9 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     };
 
     useEffect(() => {
-      // Only stage on Firefox when MSE is not supported for your mime and not downloading
-      if (!isFirefox || isTypeAACSupported || isDownload || !blobs.length || isBackPressed) return;
+      // Stage chunks for the Blob fallback whenever MSE is unavailable for the
+      // codec (any non-MSE browser) and not downloading.
+      if (!useFallback || isDownload || !blobs.length || isBackPressed) return;
 
       let alive = true;
       (async () => {
@@ -647,7 +653,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
       })();
 
       return () => { alive = false; };
-    }, [blobs, isFirefox, isTypeAACSupported, isDownload, isBackPressed, commitPending, playFallback]);
+    }, [blobs, useFallback, isTypeAACSupported, isDownload, isBackPressed, commitPending, playFallback]);
 
     // fallback if MediaSource does not support AAC on browsers,
     // but revoke old AAC URLs to free memory in AAC mode
@@ -680,9 +686,10 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     }, []);
     
     
-    //initiating play
+    //initiating play (legacy per-chunk URL chain — unreachable now that the
+    //Blob fallback covers all non-MSE browsers; kept dead for safety)
     useEffect(() => {
-        if (isTypeAACSupported || isFirefox) return;
+        if (isTypeAACSupported || useFallback) return;
 
         if (audioUrls.length === 1 && !isDownload) {
             playNext(0);
@@ -703,7 +710,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     }, [audioUrls]);
 
     useEffect(() => {
-        if (isTypeAACSupported || isFirefox) return;
+        if (isTypeAACSupported || useFallback) return;
         if (isLoading && isStreamLoading) {
             setAudioUrlsBeforeStop(audioUrls.length);
         }
@@ -715,7 +722,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
     }, [isStreamLoading, isLoading, audioUrlsBeforeStop, audioUrls])
 
     seekAudio.onloadedmetadata = () => {
-        if (!isFirefox && !isTypeAACSupported) {
+        if (!useFallback && !isTypeAACSupported) {
             setPlayTimeDuration(seekAudio.duration);
         }
     };
@@ -744,12 +751,12 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
 
     //controls loader state
     useMemo(() => {
-        if (!isTypeAACSupported && !isFirefox) return;
+        if (!isTypeAACSupported && !useFallback) return;
         const hasTimeCompleted = Math.abs(currentPlayTime - playTimeDuration) <= 0.5;
         const isLastChunk = getChunkAtTime(currentPlayTime) === chunks.length;
         setHasCompletePlaying(false);
         setPartialChunkCompletedPlaying(false);
-        if (hasTimeCompleted && isLastChunk && (isFirefox || !fallbackAudioRef.current)) return setHasCompletePlaying(true);
+        if (hasTimeCompleted && isLastChunk && (useFallback || !fallbackAudioRef.current)) return setHasCompletePlaying(true);
         if (hasTimeCompleted && !isLastChunk) return setPartialChunkCompletedPlaying(true);
     }, [currentPlayTime, playTimeDuration])
 
@@ -945,7 +952,7 @@ const useAudioPlayer = (isDownload: boolean, onSaveDownloadPosition?: (offset: n
 
       const replay = useCallback(() => {
         if (!isTypeAACSupported) {
-          if (isFirefox) {
+          if (useFallback) {
             return playFallback(0);
           }
           setCurrentIndex(0);
