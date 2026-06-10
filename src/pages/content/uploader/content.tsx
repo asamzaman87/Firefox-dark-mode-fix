@@ -9,7 +9,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, isWebReaderFresh, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon, Highlighter } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -56,6 +56,7 @@ const BROWSER = detectBrowser();
 const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, isCancelDownloadConfirmation, setIsCancelDownloadConfirmation, onOpenStartFrom }) => {
     const { toast } = useToast();
     const [openVoicePopup, setOpenVoicePopup] = useState<boolean>(false);
+    const [isWebReaderLoading, setIsWebReaderLoading] = useState(false);
     const [isDownload, setIsDownload] = useState<boolean>(false);
     const [files, setFiles] = useState<File[]>([]);
     const [title, setTitle] = useState<string>();
@@ -129,6 +130,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const lastLocateOffsetRef = useRef<number | null>(null);
     const ctaTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [audioControlsExpanded, setAudioControlsExpanded] = useState<boolean>(true);
+    // Auto-highlight toggle (default on). Persisted so the choice survives sessions.
+    const [autoHighlightEnabled, setAutoHighlightEnabled] = useState<boolean>(
+      () => localStorage.getItem("gptr/autoHighlight") !== "false"
+    );
     
     // First chunk rating popup state
     const [showFirstChunkRatingPopup, setShowFirstChunkRatingPopup] = useState<boolean>(false);
@@ -479,10 +484,20 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       };
     }, [isDownload]);
 
+    // When auto-highlight is turned off mid-playback, clear the active auto flash
+    // (the chunk-boundary highlight). Manual "Highlight Text" / search highlighting
+    // happen while paused/from the search popup, so this leaves them intact.
+    useEffect(() => {
+      if (!autoHighlightEnabled && isPlaying) {
+        setHighlightActive(false);
+      }
+    }, [autoHighlightEnabled, isPlaying]);
+
     // Auto-highlight at chunk start — PDF uses offset/length; DOCX/TXT use needle (alphanum)
     useEffect(() => {
       // Only in Text-to-Speech listening view; not during download preview
       if (!isTextToSpeech || isDownload || !chunks.length) { return; }
+      if (!autoHighlightEnabled) { return; }
 
       const now = currentPlayTime;
       const chunk = getChunkAtTime(now);       // 1-based
@@ -552,6 +567,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       getChunkStartTime,
       getChunkStartOffset,
       structured?.source, // make sure effect updates per source type
+      autoHighlightEnabled,
     ]);
    
     useMemo(() => {
@@ -744,8 +760,10 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         setPendingSelectedText(text);
         await chrome.storage.local.remove(["selectedText"]);
         await chrome.storage.local.set({ iswebreader: 0 });
+        setIsWebReaderLoading(false);
         setOpenVoicePopup(true);
       }
+      setIsWebReaderLoading(false);
       activatingWebReader.current = false;
     }, [isTextToSpeech]);
 
@@ -754,6 +772,7 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const onMessage = useCallback((message: any) => {
       if (message.type === "HAS_SELECTED_TEXT" && !activatingWebReader.current) {
         activatingWebReader.current = true;
+        setIsWebReaderLoading(true);
         handleExistingText();
       }
     }, [handleExistingText]); // ok if handleExistingText is stable (useCallback) or use a ref
@@ -1465,6 +1484,14 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
             </Button>
           )}
           <div className="gpt:flex gpt:size-full gpt:flex-col gpt:flex-1 gpt:gap-6 gpt:overflow-hidden">
+            {isWebReaderLoading && !openVoicePopup && (
+              <div className="gpt:absolute gpt:inset-0 gpt:z-[60] gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-3 gpt:bg-white/80 gpt:dark:bg-gray-900/80 gpt:backdrop-blur-sm gpt:rounded-2xl">
+                <Loader2Icon className="gpt:size-10 gpt:animate-spin gpt:text-gray-800 gpt:dark:text-gray-100" />
+                <p className="gpt:text-sm gpt:font-medium gpt:text-gray-700 gpt:dark:text-gray-200">
+                  Loading web content…
+                </p>
+              </div>
+            )}
             {isExtractingFile && (
               <div className="gpt:absolute gpt:inset-0 gpt:z-[60] gpt:flex gpt:flex-col gpt:items-center gpt:justify-center gpt:gap-3 gpt:bg-white/80 gpt:dark:bg-gray-900/80 gpt:backdrop-blur-sm gpt:rounded-2xl">
                 <Loader2Icon className="gpt:size-10 gpt:animate-spin gpt:text-gray-800 gpt:dark:text-gray-100" />
@@ -1719,6 +1746,26 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                     >
                       <LocateFixed className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
                       Highlight Text
+                    </Button>
+
+                    {/* Auto-Highlight Toggle Button */}
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setAutoHighlightEnabled((prev) => {
+                          const next = !prev;
+                          localStorage.setItem("gptr/autoHighlight", String(next));
+                          return next;
+                        });
+                      }}
+                      className={cn(
+                        "gpt:rounded-full gpt:border gpt:border-gray-900 gpt:dark:border-white gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:px-2 gpt:py-2 gpt:text-sm gpt:leading-none gpt:transition-all",
+                        !autoHighlightEnabled && "gpt:opacity-60"
+                      )}
+                      title={autoHighlightEnabled ? "Disable Auto Highlight" : "Enable Auto Highlight"}
+                    >
+                      <Highlighter className="gpt:mr-0.5 gpt:h-7 gpt:w-7" />
+                      {autoHighlightEnabled ? "Disable Auto Highlight" : "Enable Auto Highlight"}
                     </Button>
                   </div>
                 )}
