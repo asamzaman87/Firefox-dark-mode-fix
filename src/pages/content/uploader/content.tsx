@@ -9,7 +9,7 @@ import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
 import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, handleCheckUserSubscription, isWebReaderFresh, removeAllListeners, signOutOtp } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon, Highlighter, Menu, LogIn, LogOut } from "lucide-react";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon, Highlighter, Menu, LogIn, LogOut, Gift } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -35,6 +35,7 @@ import useHybridTranscription from "@/hooks/useHybridTranscription";
 import MicTranscribeForm from "./input-popup/micTranscribeForm";
 import VoiceSelectPopup from "./voice-select-popup";
 import ChunkLimitPopup from "./chunk-limit-popup";
+import PromoCodePopup from "./promo-code-popup";
 import useFileReader, { StructuredText, SectionIndex } from "@/hooks/use-file-reader";
 
 interface ContentProps {
@@ -80,6 +81,11 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     const [isViewingText, setIsViewingText] = useState(false);
     const { setOpen: setUpgradeModalOpen, isSubscribed, isSignedIn, setIsSignedIn, setIsSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
     const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
+    const [isPromoPopupOpen, setIsPromoPopupOpen] = useState<boolean>(false);
+    const [hasRedeemedPromo, setHasRedeemedPromo] = useState<boolean>(false);
+    const [promoEmail, setPromoEmail] = useState<string | null>(null);
+    const [promoOpenaiId, setPromoOpenaiId] = useState<string | null>(null);
+    const [promoSignInPending, setPromoSignInPending] = useState<boolean>(false);
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
     const [timerLeft, setTimerLeft] = useState<number>(0);
@@ -148,6 +154,32 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
       return () => {
         if (ctaTimerRef.current) clearTimeout(ctaTimerRef.current);
       };
+    }, []);
+
+    // Read user identity and promo redemption status on mount. Redemption
+    // status is sourced from the backend (via check-subscription, which writes
+    // `hasRedeemedPromo` to storage). It's keyed by email in the backend, so
+    // redeeming in any one extension hides the button in all three, and it
+    // survives the background's storage.local.clear() because the subscription
+    // check repopulates it on load.
+    useEffect(() => {
+      chrome.storage.local.get(["hasRedeemedPromo"], (localResult) => {
+        setHasRedeemedPromo(!!localResult.hasRedeemedPromo);
+      });
+      chrome.storage.sync.get(["email", "openaiId"], (syncResult) => {
+        if (syncResult.email) setPromoEmail(syncResult.email);
+        if (syncResult.openaiId) setPromoOpenaiId(syncResult.openaiId);
+      });
+      const onChanged = (
+        changes: { [key: string]: chrome.storage.StorageChange },
+        area: string
+      ) => {
+        if (area === "local" && changes.hasRedeemedPromo) {
+          setHasRedeemedPromo(!!changes.hasRedeemedPromo.newValue);
+        }
+      };
+      chrome.storage.onChanged.addListener(onChanged);
+      return () => chrome.storage.onChanged.removeListener(onChanged);
     }, []);
 
     // Helper function to manage position storage with 10-document limit
@@ -1438,6 +1470,22 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                 >
                   <HelpCircleIcon className="gpt:shrink-0" /> Having Issues?
                 </Button>
+                {!hasRedeemedPromo && !isSubscribed && (
+                  <Button
+                    variant="ghost"
+                    className="gpt:w-full gpt:justify-start gpt:gap-2 gpt:px-3 gpt:rounded-md hover:gpt:bg-gray-100 gpt:dark:hover:bg-gray-700 gpt:[&_svg]:size-4"
+                    onClick={() => {
+                      if (!promoEmail) {
+                        setPromoSignInPending(true);
+                        setIsSignInOpen(true);
+                      } else {
+                        setIsPromoPopupOpen(true);
+                      }
+                    }}
+                  >
+                    <Gift className="gpt:shrink-0" /> Enter Promo Code
+                  </Button>
+                )}
               </PopoverContent>
             </Popover>
             <SimilarExtensions />
@@ -1834,11 +1882,43 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
           {/* Sign In Popup */}
           <SignInPopup
             open={isSignInOpen}
-            onOpenChange={setIsSignInOpen}
+            forPromoCode={promoSignInPending}
+            onOpenChange={(o: boolean) => { setIsSignInOpen(o); if (!o) setPromoSignInPending(false); }}
             onSignedIn={async (token: string) => {
               setIsSignedIn(true);
               const subscribed = await handleCheckUserSubscription(token);
               setIsSubscribed(subscribed);
+              chrome.storage.sync.get(["email", "openaiId"], (r) => {
+                if (r.email) setPromoEmail(r.email);
+                if (r.openaiId) setPromoOpenaiId(r.openaiId);
+              });
+              if (promoSignInPending) {
+                setPromoSignInPending(false);
+                if (subscribed) {
+                  toast({
+                    description: "You're already a premium member — no promo code needed!",
+                    style: TOAST_STYLE_CONFIG_INFO,
+                  });
+                } else {
+                  setIsPromoPopupOpen(true);
+                }
+              }
+            }}
+          />
+          <PromoCodePopup
+            open={isPromoPopupOpen}
+            onOpenChange={setIsPromoPopupOpen}
+            email={promoEmail}
+            openaiId={promoOpenaiId}
+            onRedeemed={() => {
+              chrome.storage.local.set({ hasRedeemedPromo: true });
+              setHasRedeemedPromo(true);
+              setIsSubscribed(true);
+            }}
+            onReverted={() => {
+              chrome.storage.local.set({ hasRedeemedPromo: false });
+              setHasRedeemedPromo(false);
+              setIsSubscribed(false);
             }}
           />
                 {openVoicePopup && <VoiceSelectPopup voices={voices} setVoices={setVoices} isVoiceLoading={isVoiceLoading} open={openVoicePopup} onClose={async() => {

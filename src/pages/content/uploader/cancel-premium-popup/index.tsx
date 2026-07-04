@@ -190,6 +190,8 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
   const [showAnnualUpsell, setShowAnnualUpsell] = useState<boolean>(false);
   const [lifetimeLoading, setLifetimeLoading] = useState<boolean>(false);
   const [isLifetime, setIsLifetime] = useState<boolean>(false); 
+  const [isPromo, setIsPromo] = useState<boolean>(false);
+  const [promoEndsAt, setPromoEndsAt] = useState<number | null>(null);
 
   // For display/debug only (don’t rely on these for eligibility decisions)
   const [currentPriceId, setCurrentPriceId] = useState<string | null>(null);
@@ -338,6 +340,12 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
           const current = details?.currentPriceId ?? null;
           setCurrentPriceId(current);
           setIsLifetime(details?.isLifetime === true);
+          setIsPromo(details?.isPromo === true);
+          setPromoEndsAt(
+            details?.isPromo === true && typeof details?.currentPeriodEnd === "number"
+              ? details.currentPeriodEnd
+              : null
+          );
 
           // Reconcile the optimistic annual flag with the backend's source of
           // truth. If the user isn't actually on an annual price, clear the
@@ -377,8 +385,8 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
 
   // Entry point when user clicks "Cancel Subscription"
   const handleOpenCancelClick = async () => {
-    // Don't allow cancellation for lifetime users
-    if (isLifetime) {
+    // Don't allow cancellation for lifetime or promo users (no subscription)
+    if (isLifetime || isPromo) {
       return;
     }
 
@@ -586,6 +594,24 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                     </p>
                   </div>
                 </div>
+              ) : isPromo ? (
+                <div className="flex items-center gap-2">
+                  <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
+                  <div>
+                    <h4 className="gpt:font-semibold gpt:text-sm">Promo Access</h4>
+                    <p className="gpt:text-xs gpt:text-gray-500 gpt:dark:text-gray-400">
+                      {promoEndsAt
+                        ? `Free access until ${new Date(
+                            promoEndsAt * 1000
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}`
+                        : "Free access via promo code"}
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Crown className="gpt:h-5 gpt:w-5 gpt:text-amber-600" />
@@ -595,7 +621,7 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
                 </div>
               )}
 
-              {!isTrial && !cancelInfo?.isSubscriptionCancelled && !isLifetime && (
+              {!isTrial && !cancelInfo?.isSubscriptionCancelled && !isLifetime && !isPromo && (
                 <div className="gpt:space-y-2">
                   {/* NEW: Switch to Annual (Save 20%) — hidden if already scheduled */}
                   {!(isAnnualPriceId(currentPriceId) || localStorage.getItem("gptr/annualPlan") === "true") && (

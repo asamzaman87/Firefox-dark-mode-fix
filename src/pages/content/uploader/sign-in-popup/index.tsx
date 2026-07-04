@@ -19,9 +19,10 @@ interface SignInPopupProps {
   onOpenChange: (open: boolean) => void;
   onSignedIn: (token: string) => void;
   forCheckout?: boolean;
+  forPromoCode?: boolean;
 }
 
-const SignInPopup: FC<SignInPopupProps> = ({ open, onOpenChange, onSignedIn, forCheckout = false }) => {
+const SignInPopup: FC<SignInPopupProps> = ({ open, onOpenChange, onSignedIn, forCheckout = false, forPromoCode = false }) => {
   const { toast } = useToast();
   const [email, setEmail] = useState<string>("");
   const [code, setCode] = useState<string>("");
@@ -111,6 +112,18 @@ const SignInPopup: FC<SignInPopupProps> = ({ open, onOpenChange, onSignedIn, for
               <p className="gpt:text-left">
                 Before you upgrade, we need you to sign in to (or create) an account with your
                 email. Once you verify the code, we'll take you straight to secure checkout.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {forPromoCode && (
+          <div className="gpt:border gpt:border-amber-200 gpt:dark:border-amber-900/50 gpt:bg-amber-50 gpt:dark:bg-amber-950/30 gpt:rounded-lg gpt:p-3 gpt:text-sm gpt:text-gray-700 gpt:dark:text-gray-200">
+            <div className="gpt:flex gpt:items-start gpt:gap-2">
+              <ShieldCheck className="gpt:w-4 gpt:h-4 gpt:mt-0.5 gpt:flex-shrink-0 gpt:text-amber-600 gpt:dark:text-amber-500" />
+              <p className="gpt:text-left">
+                To redeem a promo code, we first need to verify your email. After you sign in,
+                if your account isn't already premium, you'll be able to enter your code.
               </p>
             </div>
           </div>

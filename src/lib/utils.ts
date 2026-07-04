@@ -1387,6 +1387,7 @@ export const handleCheckUserSubscription = async (otpJwtToken?: string) => {
       currentPeriodEnd: number | null;
       isTrial?: boolean;
       trialEndsAt?: number | null;
+      hasRedeemedPromo?: boolean;
     } = effectiveOtpJwt
       ? await (async () => {
           // OTP JWT is always preferred for the Authorization header.
@@ -1414,6 +1415,7 @@ export const handleCheckUserSubscription = async (otpJwtToken?: string) => {
       currentPeriodEnd: data.currentPeriodEnd ?? null,
       isTrial: !!data?.isTrial,
       trialEndsAt: data?.trialEndsAt ?? null,
+      hasRedeemedPromo: !!data?.hasRedeemedPromo,
     });
 
     return effectiveHasSub;
@@ -1493,6 +1495,7 @@ export const getSubscriptionDetails = async (): Promise<{
   currentPriceId: string | null;
   currentPeriodEnd: number | null;
   isLifetime: boolean;
+  isPromo?: boolean;
 } | null> => {
   try {
     // Check cache first (1 hour or until currentPeriodEnd, whichever is shorter)
