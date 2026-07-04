@@ -936,20 +936,31 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
 
     const onDownloadOrListenSubmit = useCallback(async (value: "DOWNLOAD" | "LISTEN") => {
       if (value === "DOWNLOAD") {
-        setIsDownload(true);
-        localStorage.setItem("gptr/download", "true");
-        // Check if this is a first-time free download and mark it as happened
-        const firstTimeFreeDownloadInProgress = localStorage.getItem("gptr/firstTimeFreeDownloadInProgress");
+        // Promote a prior gift download to "happened" BEFORE enabling download
+        // mode, so the popup-trigger can't observe a cleared localStorage during
+        // the async chrome read. Both flags are read from chrome.storage (the
+        // durable source of truth) so this survives localStorage clearing.
+        const lsInProgress = localStorage.getItem("gptr/firstTimeFreeDownloadInProgress");
+        const lsHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
         let chromeInProgress = false;
+        let chromeHappened = false;
         try {
-          const chromeValue = await chrome.storage.local.get("gptr/firstTimeFreeDownloadInProgress");
+          const chromeValue = await chrome.storage.local.get([
+            "gptr/firstTimeFreeDownloadInProgress",
+            "gptr/firstTimeFreeDownloadHappened",
+          ]);
           chromeInProgress = chromeValue["gptr/firstTimeFreeDownloadInProgress"] === "true" || chromeValue["gptr/firstTimeFreeDownloadInProgress"] === true;
+          chromeHappened = chromeValue["gptr/firstTimeFreeDownloadHappened"] === "true" || chromeValue["gptr/firstTimeFreeDownloadHappened"] === true;
         } catch {
           // Ignore errors
         }
-        if (firstTimeFreeDownloadInProgress || chromeInProgress) {
+        // Any durable signal that the gift was already granted/used → promote to Happened.
+        if (lsInProgress || lsHappened || chromeInProgress || chromeHappened) {
           localStorage.setItem("gptr/firstTimeFreeDownloadHappened", "true");
+          void chrome.storage.local.set({ "gptr/firstTimeFreeDownloadHappened": "true" }).catch(() => {});
         }
+        setIsDownload(true);
+        localStorage.setItem("gptr/download", "true");
       } else {
         setIsDownload(false);
         localStorage.setItem("gptr/download", "false");
@@ -1445,6 +1456,15 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   <LogIn /> Sign In
                 </Button>
               )}
+              {isSignedIn && !isSubscribed && (
+                <Button
+                  variant="ghost"
+                  onClick={async () => { await signOutOtp(); setIsSignedIn(false); }}
+                  className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                >
+                  <LogOut /> Sign Out
+                </Button>
+              )}
               {!isSubscribed && (
                 <Button
                   variant="ghost"
@@ -1458,15 +1478,6 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   aria-haspopup="dialog"
                 >
                   <Crown /> Upgrade Membership
-                </Button>
-              )}
-              {isSignedIn && !isSubscribed && (
-                <Button
-                  variant="ghost"
-                  onClick={async () => { await signOutOtp(); setIsSignedIn(false); }}
-                  className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
-                >
-                  <LogOut /> Sign Out
                 </Button>
               )}
 

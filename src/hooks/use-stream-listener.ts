@@ -36,6 +36,15 @@ const useStreamListener = (
     const promptNdx = useRef<number>(0);
     const lastTurnPollRetryRef = useRef<number>(0);
     const { isSubscribed } = usePremiumModal();
+    // Durable chrome-backed mirror of the free-download "Happened" flag so the
+    // synchronous blob-cap survives localStorage clearing (matches use-audio-url).
+    const chromeHappenedRef = useRef<boolean>(false);
+    useEffect(() => {
+        void chrome.storage.local.get("gptr/firstTimeFreeDownloadHappened").then((r) => {
+            chromeHappenedRef.current = r["gptr/firstTimeFreeDownloadHappened"] === "true" || r["gptr/firstTimeFreeDownloadHappened"] === true;
+            if (chromeHappenedRef.current) localStorage.setItem("gptr/firstTimeFreeDownloadHappened", "true");
+        }).catch(() => {});
+    }, []);
 
     // —— CHAT / FETCH TRACKING & LS BRIDGE ——
     // Current chat (never delete it here; the Uploader owns current chat deletion on unload/load)
@@ -229,8 +238,8 @@ const useStreamListener = (
             setBlobs(prev => {
                 const next = prev.filter(e => e.chunkNumber !== chunkNumber);
                 if (!isSubscribed && isDownload && chunkNumber > FREE_DOWNLOAD_CHUNKS) {
-                    const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
-                    if (firstTimeFreeDownloadHappened) {
+                    const happened = !!localStorage.getItem("gptr/firstTimeFreeDownloadHappened") || chromeHappenedRef.current;
+                    if (happened) {
                         return next;
                     }
                 }

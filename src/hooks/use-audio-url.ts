@@ -85,6 +85,25 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
     const { isSubscribed, setOpen, setReason } = usePremiumModal();
     const showCompletionToast = useRef<boolean>(false);
     const [showFirstTimeFreeDownloadPopup, setShowFirstTimeFreeDownloadPopup] = useState<boolean>(false);
+    // chrome.storage.local is the DURABLE source of truth for the free-download
+    // gate — it survives localStorage clearing. The synchronous popup/chunk
+    // guards can't await, so we hydrate the chrome flags into refs on mount and
+    // keep the refs in sync on every write. Guards then check localStorage OR ref.
+    const chromeHappenedRef = useRef<boolean>(false);
+    const chromeInProgressRef = useRef<boolean>(false);
+    useEffect(() => {
+        void chrome.storage.local.get([
+            "gptr/firstTimeFreeDownloadHappened",
+            "gptr/firstTimeFreeDownloadInProgress",
+        ]).then((r) => {
+            chromeHappenedRef.current = r["gptr/firstTimeFreeDownloadHappened"] === "true" || r["gptr/firstTimeFreeDownloadHappened"] === true;
+            chromeInProgressRef.current = r["gptr/firstTimeFreeDownloadInProgress"] === "true" || r["gptr/firstTimeFreeDownloadInProgress"] === true;
+            // Mirror durable chrome flags back into localStorage so the synchronous
+            // guards see them immediately (covers the "user cleared localStorage" case).
+            if (chromeHappenedRef.current) localStorage.setItem("gptr/firstTimeFreeDownloadHappened", "true");
+            if (chromeInProgressRef.current) localStorage.setItem("gptr/firstTimeFreeDownloadInProgress", "true");
+        }).catch(() => {});
+    }, []);
     // read the user’s chosen format (mp3, aac, or opus)
     const { format } = useFormat();
     const storedFormat = format.toLowerCase();
@@ -676,8 +695,11 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
             k >= FREE_DOWNLOAD_CHUNKS &&
             originalChunksRef.current.length - 1 !== FREE_DOWNLOAD_CHUNKS
         ) {
-            const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
-            if (firstTimeFreeDownloadHappened) {
+            // "Happened" and "InProgress" are considered set if EITHER localStorage
+            // or the durable chrome-backed ref says so.
+            const happened = !!localStorage.getItem("gptr/firstTimeFreeDownloadHappened") || chromeHappenedRef.current;
+            const inProgress = !!localStorage.getItem("gptr/firstTimeFreeDownloadInProgress") || chromeInProgressRef.current;
+            if (happened) {
                 setTimeout(() => {
                     handleError(
                         "Free users can only download around 5 minutes of audio at a time. Consider upgrading to download without limits. You can click on the download button below to download what has been processed so far."
@@ -688,11 +710,12 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
                     setOpen(true);
                 }, 3000);
             } else {
-                if (!localStorage.getItem("gptr/firstTimeFreeDownloadInProgress")) {
+                if (!inProgress) {
                     // Show the popup for "First time's on us"
                     setShowFirstTimeFreeDownloadPopup(true);
                     localStorage.setItem("gptr/firstTimeFreeDownloadInProgress", "true");
-                    // Also set in chrome.storage.local
+                    chromeInProgressRef.current = true;
+                    // Persist durably (survives localStorage clearing)
                     void chrome.storage.local.set({ "gptr/firstTimeFreeDownloadInProgress": "true" }).catch(() => {
                         // Ignore errors
                     });
@@ -935,8 +958,8 @@ const useAudioUrl = (isDownload: boolean, onSaveDownloadPosition?: (offset: numb
         }
 
         if (!isSubscribed && isDownload && currentStreamChunkNdxRef.current === FREE_DOWNLOAD_CHUNKS && currentStreamChunkNdxRef.current !== originalChunksRef.current.length - 1) {
-            const firstTimeFreeDownloadHappened = localStorage.getItem("gptr/firstTimeFreeDownloadHappened");
-            if (firstTimeFreeDownloadHappened) {
+            const happened = !!localStorage.getItem("gptr/firstTimeFreeDownloadHappened") || chromeHappenedRef.current;
+            if (happened) {
                 return;
             }  
         } else {
