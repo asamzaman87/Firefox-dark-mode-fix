@@ -6,6 +6,8 @@ type PremiumModalContextType = {
   setOpen: (value: boolean) => void;
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
+  isSignedIn: boolean;
+  setIsSignedIn: (value: boolean) => void;
   isTriggered: boolean;
   setIsTriggered: (value: boolean) => void;
   reason: string;
@@ -19,6 +21,7 @@ const PremiumModalContext = createContext<PremiumModalContextType | null>(null);
 export function PremiumModalProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
   const [isTriggered, setIsTriggered] = useState<boolean>(false);
   const [reason, setReason] = useState<string>("");
 
@@ -29,6 +32,8 @@ export function PremiumModalProvider({ children }: { children: ReactNode }) {
         setOpen,
         isSubscribed,
         setIsSubscribed,
+        isSignedIn,
+        setIsSignedIn,
         isTriggered,
         setIsTriggered,
         reason,

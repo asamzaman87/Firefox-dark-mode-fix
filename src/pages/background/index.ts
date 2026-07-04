@@ -6,7 +6,7 @@ import {
   UNINSTALL_GOOGLE_FORM,
   YOUTUBE_FAQ_VIDEO,
 } from "@/lib/constants";
-import { cancelSubscription, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, getSubscriptionDetails, handleCheckUserSubscription, secureFetch, switchSubscriptionToPrice, switchToActiveTab } from "@/lib/utils";
+import { cancelSubscription, confirmOtp, createCheckoutSession, detectBrowser, fetchStripeProducts, getGPTTabs, getSubscriptionDetails, handleCheckUserSubscription, persistOtpIdentity, requestOtp, secureFetch, signOutOtp, switchSubscriptionToPrice, switchToActiveTab } from "@/lib/utils";
 
 async function waitForReady(tabId: number, tries = 40, delayMs = 150) {
   for (let i = 0; i < tries; i++) {
@@ -206,8 +206,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     case "CHECK_SUBSCRIPTION": {
       (async () => {
-        const result = await handleCheckUserSubscription();
+        const otpJwtToken = request.payload?.otpJwtToken as string | undefined;
+        const result = await handleCheckUserSubscription(otpJwtToken);
         sendResponse(result);
+      })();
+      return true;
+    }
+    case "OTP_START": {
+      (async () => {
+        try {
+          const result = await requestOtp(request.payload.email);
+          sendResponse(result);
+        } catch (error) {
+          sendResponse({ error: (error as Error).message });
+        }
+      })();
+      return true;
+    }
+    case "OTP_VERIFY": {
+      (async () => {
+        try {
+          const data = await confirmOtp(request.payload.email, request.payload.code);
+          await persistOtpIdentity(data);
+          sendResponse(data);
+        } catch (error) {
+          sendResponse({ error: (error as Error).message });
+        }
+      })();
+      return true;
+    }
+    case "SIGN_OUT": {
+      (async () => {
+        await signOutOtp();
+        sendResponse({ ok: true });
       })();
       return true;
     }

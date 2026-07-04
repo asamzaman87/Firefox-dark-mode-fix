@@ -15,7 +15,7 @@ import {
 } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Blocks, ExternalLink, Sparkles } from "lucide-react";
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 
 // Pick the right store listing for the user's current browser.
 const getListingUrl = (ext: SimilarExtension) => {
@@ -27,7 +27,30 @@ const getListingUrl = (ext: SimilarExtension) => {
 
 const SimilarExtensions: FC = () => {
   const [open, setOpen] = useState(false);
+  const [isNew, setIsNew] = useState(false);
   const { isSubscribed } = usePremiumModal();
+
+  const SEEN_KEY = "hasSeenSimilarExtensions";
+
+  useEffect(() => {
+    setIsNew(window.localStorage.getItem(SEEN_KEY) !== "true");
+  }, []);
+
+  // Auto-open on first launch; a short delay lets other startup effects settle.
+  useEffect(() => {
+    if (!isNew) return;
+    const timer = setTimeout(() => setOpen(true), 1000);
+    return () => clearTimeout(timer);
+  }, [isNew]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    // Mark as seen when the user actively closes the dialog.
+    if (!nextOpen && isNew) {
+      window.localStorage.setItem(SEEN_KEY, "true");
+      setIsNew(false);
+    }
+    setOpen(nextOpen);
+  };
 
   // Current extension first (with a "Current" tag), then the others.
   const ordered = useMemo(() => {
@@ -42,13 +65,18 @@ const SimilarExtensions: FC = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:hover:scale-105 gpt:active:scale-95 gpt:transition-all"
+          className="gpt:relative gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-5 gpt:hover:scale-105 gpt:active:scale-95 gpt:transition-all"
         >
           <Blocks /> Similar Extensions
+          {isNew && (
+            <span className="gpt:absolute gpt:-top-2 gpt:-right-2 gpt:bg-amber-500 gpt:text-white gpt:text-[9px] gpt:font-bold gpt:px-1.5 gpt:py-0.5 gpt:rounded-full gpt:leading-none gpt:shadow-sm gpt:border gpt:border-white gpt:dark:border-gray-900 gpt:pointer-events-none">
+              NEW
+            </span>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent

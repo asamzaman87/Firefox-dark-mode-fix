@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LIFETIME_DEAL_ID, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX, MODELS_TO_WARN } from "./constants";
+import { ACCEPTED_FILE_TYPES, ACCEPTED_FILE_TYPES_FIREFOX, BACKEND_URI, CHUNK_SIZE, CHUNK_TO_PAUSE_ON, DISCOUNT_PRICE_ANNUAL_ID, DISCOUNT_PRICE_ID, DOWLOAD_CHUNK_SIZE, SAFEST_MODEL, FIRST_DISCOUNT_PRICE_ANNUAL_ID, FIRST_DISCOUNT_PRICE_ID, FRAME_MS, LIFETIME_DEAL_ID, LISTENERS, LIVE_ANALYSER_WINDOW, LOCAL_LOGS, MATCH_URLS, MAX_SLIDER_VALUE, MESSAGE_TYPES, MIN_SILENCE_MS, MIN_SLIDER_VALUE, ORIGINAL_PRICE_ANNUAL_ID, ORIGINAL_PRICE_ID, OTP_JWT_TTL_MS, OTP_START_PATH, OTP_VERIFY_PATH, PROMPT_INPUT_ID, REFRESH_MARGIN_MS, STEP_SLIDER_VALUE, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, TOKEN_TTL_MS, TRANSCRIBER_ACCEPTED_FILE_TYPES, TRANSCRIBER_ACCEPTED_FILE_TYPES_FIREFOX, MODELS_TO_WARN } from "./constants";
 import { CheckoutPayloadType, FetchUserType, Product } from "@/pages/content/uploader/premium-modal";
 import { toast, TOAST_REMOVE_DELAY } from "@/hooks/use-toast";
 import { generateTranscriptPDF } from "../pages/content/uploader/previews/text-to-pdf";
@@ -1246,14 +1246,139 @@ async function waitForStorageKey<T>(
   });
 }
 
-export const handleCheckUserSubscription = async () => {
+// ─── OTP-based sign-in auth utilities ────────────────────────────────────────
+// These use chrome.storage.sync under the prefix "otpJwt" to avoid conflicts
+// with the existing `jwtToken` in chrome.storage.local (which is the auto-fetched
+// backend session token keyed to openaiId).
+
+const OTP_SYNC_KEYS = ["otpJwtToken", "otpJwtTokenExpiry"] as const;
+
+interface OtpAuthIdentity {
+  otpJwtToken?: string;
+  otpJwtTokenExpiry?: number;
+}
+
+export async function getOtpAuthIdentity(): Promise<OtpAuthIdentity> {
+  return new Promise<OtpAuthIdentity>((resolve) => {
+    chrome.storage.sync.get([...OTP_SYNC_KEYS], (res) => resolve(res as OtpAuthIdentity));
+  });
+}
+
+export async function isOtpSignedIn(): Promise<boolean> {
+  const { otpJwtToken, otpJwtTokenExpiry } = await getOtpAuthIdentity();
+  if (!otpJwtToken) return false;
+  if (otpJwtTokenExpiry && Date.now() >= otpJwtTokenExpiry) return false;
+  return true;
+}
+
+export async function persistOtpIdentity(identity: {
+  token: string;
+  email: string;
+  openaiId?: string;
+}): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    chrome.storage.sync.set(
+      {
+        otpJwtToken: identity.token,
+        otpJwtTokenExpiry: Date.now() + OTP_JWT_TTL_MS,
+      },
+      () => {
+        if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+        resolve();
+      }
+    );
+  });
+}
+
+export async function signOutOtp(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    chrome.storage.sync.remove([...OTP_SYNC_KEYS], () => resolve());
+  });
+}
+
+/* ── Raw OTP network calls ──────────────────────────────────────────────────── */
+
+export async function requestOtp(email: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${BACKEND_URI}${OTP_START_PATH}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-From-Extension": "true" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || data?.message || `Error ${res.status}`);
+  return { ok: true };
+}
+
+export async function confirmOtp(
+  email: string,
+  code: string
+): Promise<{ token: string; email: string; openaiId: string }> {
+  const res = await fetch(`${BACKEND_URI}${OTP_VERIFY_PATH}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-From-Extension": "true" },
+    body: JSON.stringify({ email, code }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || data?.message || `Error ${res.status}`);
+  return data;
+}
+
+/* ── Public OTP wrappers (branch Firefox → background / Chrome → direct) ────── */
+
+export async function startOtp(email: string): Promise<{ ok: boolean }> {
+  if (detectBrowser() === "firefox") {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: MESSAGE_TYPES.OTP_START, payload: { email } },
+        (response) => {
+          if (response?.error) return reject(new Error(response.error));
+          resolve(response ?? { ok: true });
+        }
+      );
+    });
+  }
+  return requestOtp(email);
+}
+
+export async function verifyOtp(
+  email: string,
+  code: string
+): Promise<{ token: string; email: string; openaiId: string }> {
+  if (detectBrowser() === "firefox") {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { type: MESSAGE_TYPES.OTP_VERIFY, payload: { email, code } },
+        (response) => {
+          if (response?.error) return reject(new Error(response.error));
+          resolve(response);
+        }
+      );
+    });
+  }
+  const data = await confirmOtp(email, code);
+  await persistOtpIdentity(data);
+  return data;
+}
+
+export const handleCheckUserSubscription = async (otpJwtToken?: string) => {
   try {
-    const openaiId = await waitForStorageKey<string>("openaiId", "sync");
-    if (!openaiId) {
+    const [openaiId, { otpJwtToken: storedOtpJwt }, hashAccessToken] = await Promise.all([
+      waitForStorageKey<string>("openaiId", "sync"),
+      getOtpAuthIdentity(),
+      getStoredValue<string>("hashAccessToken"),
+    ]);
+
+    // Prefer the explicitly-passed OTP JWT, then the stored one, then fall back to auto-fetch.
+    const effectiveOtpJwt = otpJwtToken || storedOtpJwt;
+
+    if (!openaiId && !effectiveOtpJwt) {
       console.warn("No OpenAI ID found");
       chrome.storage.local.set({ hasSubscription: true, isTrial: false, trialEndsAt: null });
       return true;
     }
+
+    // openaiId is ALWAYS appended as a query param when present.
+    const url = `${BACKEND_URI}/gpt-reader/check-subscription${openaiId ? `?openaiId=${openaiId}` : ""}`;
 
     const data: {
       hasSubscription: boolean;
@@ -1262,7 +1387,23 @@ export const handleCheckUserSubscription = async () => {
       currentPeriodEnd: number | null;
       isTrial?: boolean;
       trialEndsAt?: number | null;
-    } = await secureFetch(`${BACKEND_URI}/gpt-reader/check-subscription?openaiId=${openaiId}`);
+    } = effectiveOtpJwt
+      ? await (async () => {
+          // OTP JWT is always preferred for the Authorization header.
+          // Hat-Token is included when available to match secureFetch behaviour.
+          const res = await fetch(url, {
+            headers: {
+              Authorization: `Bearer ${effectiveOtpJwt}`,
+              ...(hashAccessToken ? { "Hat-Token": hashAccessToken } : {}),
+              "Content-Type": "application/json",
+              "X-From-Extension": "true",
+            },
+          });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(d?.error || `HTTP ${res.status}`);
+          return d;
+        })()
+      : await secureFetch(url);
 
     const effectiveHasSub = !!(data?.hasSubscription || data?.isTrial);
 

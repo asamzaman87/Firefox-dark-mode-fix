@@ -8,8 +8,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import useAudioPlayer from "@/hooks/use-audio-player";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_FILES, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO, LISTENERS } from "@/lib/constants";
-import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, isWebReaderFresh, removeAllListeners } from "@/lib/utils";
-import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon, Highlighter } from "lucide-react";
+import { cn, deleteChatAndCreateNew, detectBrowser, getFileAccept, getSpeechModeKey, handleCheckUserSubscription, isWebReaderFresh, removeAllListeners, signOutOtp } from "@/lib/utils";
+import { ArrowLeft, DownloadCloud, HelpCircleIcon, Crown, Mic, Volume2, LocateFixed, Search, ChevronDown, ChevronUp, Loader2Icon, Highlighter, Menu, LogIn, LogOut } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptProps } from ".";
 import Announcements from "./announcements-popup";
@@ -27,6 +27,7 @@ import { usePremiumModal } from "@/context/premium-modal";
 import CancelPremiumPopup from "./cancel-premium-popup";
 import TimerPopup from "./timer-popup";
 import PremiumModal from "./premium-modal";
+import SignInPopup from "./sign-in-popup";
 import { SpeechMode, useSpeechMode } from "../../../context/speech-mode";
 import { Label } from "../../../components/ui/label";
 import { Switch } from "../../../components/ui/switch";
@@ -77,7 +78,8 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
     // Transcriber-specific state
     const [showMicOnlyView, setShowMicOnlyView] = useState(false);
     const [isViewingText, setIsViewingText] = useState(false);
-    const { setOpen: setUpgradeModalOpen, isSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
+    const { setOpen: setUpgradeModalOpen, isSubscribed, isSignedIn, setIsSignedIn, setIsSubscribed, setReason, open: upgradeModalOpen } = usePremiumModal();
+    const [isSignInOpen, setIsSignInOpen] = useState<boolean>(false);
     const [timerPopupOpen, setTimerPopupOpen] = useState<boolean>(false);
     const [timerComplete, setTimerComplete] = useState<boolean>(false);
     const [timerLeft, setTimerLeft] = useState<number>(0);
@@ -1401,29 +1403,48 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
         <div className="gpt:flex gpt:size-full gpt:flex-col gpt:justify-center gpt:gap-6 gpt:overflow-hidden">
           <div
             className={cn(
-              "gpt:absolute gpt:top-4 gpt:left-4 gpt:size-max gpt:flex gpt:gap-2 gpt:items-center gpt:justify-center",
+              "gpt:absolute gpt:top-4 gpt:left-4 gpt:size-max gpt:flex gpt:gap-2 gpt:items-center",
               {
                 "gpt:translate-x-12 gpt:transition-transform":
                   prompts.length > 0 || isDownload || showMicOnlyView,
               }
             )}
           >
-            <ThemeToggle />
-            <FeedbackPopup />
-            <Announcements />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-5 gpt:transition-all">
+                  <Menu /> Menu
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="gpt:w-52 gpt:p-1 gpt:flex gpt:flex-col gpt:gap-0.5 gpt:bg-white gpt:dark:bg-gray-800 gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:shadow-lg">
+                <ThemeToggle menuMode />
+                <FeedbackPopup menuMode />
+                <Announcements menuMode />
+                <Button
+                  variant="ghost"
+                  className="gpt:w-full gpt:justify-start gpt:gap-2 gpt:px-3 gpt:rounded-md hover:gpt:bg-gray-100 gpt:dark:hover:bg-gray-700 gpt:[&_svg]:size-4"
+                  onClick={havingIssueHandler}
+                >
+                  <HelpCircleIcon className="gpt:shrink-0" /> Having Issues?
+                </Button>
+              </PopoverContent>
+            </Popover>
             <SimilarExtensions />
           </div>
           <div
             className={cn("gpt:absolute gpt:top-4 gpt:right-16 gpt:size-max")}
           >
             <div className="gpt:flex gpt:gap-2 gpt:items-center">
-              <Button
-                variant="ghost"
-                onClick={havingIssueHandler}
-                className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
-              >
-                <HelpCircleIcon /> {chrome.i18n.getMessage("having_issues")}
-              </Button>
+              {!isSignedIn && !isSubscribed && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsSignInOpen(true)}
+                  className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                  aria-haspopup="dialog"
+                >
+                  <LogIn /> Sign In
+                </Button>
+              )}
               {!isSubscribed && (
                 <Button
                   variant="ghost"
@@ -1439,7 +1460,17 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
                   <Crown /> Upgrade Membership
                 </Button>
               )}
-              <CancelPremiumPopup isSubscribed={isSubscribed} />
+              {isSignedIn && !isSubscribed && (
+                <Button
+                  variant="ghost"
+                  onClick={async () => { await signOutOtp(); setIsSignedIn(false); }}
+                  className="gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+                >
+                  <LogOut /> Sign Out
+                </Button>
+              )}
+
+              {isSubscribed && <CancelPremiumPopup isSubscribed={isSubscribed} />}
             </div>
           </div>
 
@@ -1788,6 +1819,17 @@ const Content: FC<ContentProps> = ({ setPrompts, prompts, onOverlayOpenChange, i
               onOpenChange={onClosePremiumModal}
             />
           )}
+
+          {/* Sign In Popup */}
+          <SignInPopup
+            open={isSignInOpen}
+            onOpenChange={setIsSignInOpen}
+            onSignedIn={async (token: string) => {
+              setIsSignedIn(true);
+              const subscribed = await handleCheckUserSubscription(token);
+              setIsSubscribed(subscribed);
+            }}
+          />
                 {openVoicePopup && <VoiceSelectPopup voices={voices} setVoices={setVoices} isVoiceLoading={isVoiceLoading} open={openVoicePopup} onClose={async() => {
                   setOpenVoicePopup(false);
                   setPendingSelectedText("");

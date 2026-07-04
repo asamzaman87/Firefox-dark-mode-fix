@@ -179,6 +179,19 @@ export const BACKEND_URI = "http://localhost:3000/api" //for local testing
 export const BANNER_POLLING_TIME_INTERVAL = 20000;
 export const TOKEN_TTL_MS = 10 * 60 * 1000;
 export const REFRESH_MARGIN_MS = 15_000;
+
+// ─── OTP auth endpoint paths (relative to BACKEND_URI) ───────────────────────
+export const OTP_START_PATH = "/auth/start";
+export const OTP_VERIFY_PATH = "/auth/verify";
+// 30-day expiry for OTP JWTs (stored in chrome.storage.sync)
+export const OTP_JWT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+// ─── Background message types ─────────────────────────────────────────────────
+export const MESSAGE_TYPES = {
+  OTP_START: "OTP_START",
+  OTP_VERIFY: "OTP_VERIFY",
+  SIGN_OUT: "SIGN_OUT",
+} as const;
 export const MAX_PLAYBACK_RATE = 1.5;
 export const PRO_VOICES: string[] = [];
 export const LOCAL_LOGS = false;

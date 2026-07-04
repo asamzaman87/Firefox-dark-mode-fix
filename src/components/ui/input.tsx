@@ -11,7 +11,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "gpt:flex gpt:h-10 gpt:w-full gpt:focus:ring-transparent! gpt:rounded-md gpt:border gpt:border-input gpt:bg-background gpt:px-3 gpt:py-2 gpt:text-base gpt:ring-offset-background gpt:file:border-0 gpt:file:bg-transparent gpt:file:text-sm gpt:file:font-medium gpt:file:text-foreground gpt:placeholder:text-muted-foreground gpt:focus-visible:outline-none gpt:focus-visible:ring-1 gpt:focus-visible:ring-ring gpt:focus-visible:ring-offset-1 gpt:disabled:cursor-not-allowed gpt:disabled:opacity-50 gpt:md:text-sm",
+          "gpt:flex gpt:h-10 gpt:w-full gpt:focus:ring-transparent! gpt:rounded-md gpt:border gpt:border-gray-300 gpt:dark:border-gray-600 gpt:bg-white gpt:dark:bg-gray-700 gpt:text-gray-900 gpt:dark:text-gray-100 gpt:px-3 gpt:py-2 gpt:text-base gpt:ring-offset-background gpt:file:border-0 gpt:file:bg-transparent gpt:file:text-sm gpt:file:font-medium gpt:placeholder:text-gray-400 gpt:dark:placeholder:text-gray-500 gpt:focus-visible:outline-none gpt:focus-visible:ring-1 gpt:focus-visible:ring-ring gpt:focus-visible:ring-offset-1 gpt:disabled:cursor-not-allowed gpt:disabled:opacity-50 gpt:md:text-sm",
           className
         )}
         ref={ref}

@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import useAuthToken from "@/hooks/use-auth-token";
 import { useToast } from "@/hooks/use-toast";
 import { BACKEND_URI, DISCOUNT_FREQUENCY, IMPORTANT_COOLDOWN_MS, LISTENERS, PROMPT_INPUT_ID, SUBSCRIBER_ANNUAL_NUDGE_FREQUENCY, TOAST_STYLE_CONFIG, TOAST_STYLE_CONFIG_INFO } from "@/lib/constants";
-import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isOverlayVisibleInDOM, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, secureFetch, waitForElement } from "@/lib/utils";
+import { cn, collectChatsAboveTopChat, deleteChatAndCreateNew, detectBrowser, fetchAndStoreTopChat, getIsDarkMode, getOtpAuthIdentity, getSubscriptionDetails, handleCheckUserSubscription, isAnnualPriceId, isOtpSignedIn, isOverlayVisibleInDOM, isWebReaderFresh, maybeDeleteChat, restoreRootInfo, secureFetch, waitForElement } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
 import AlertPopup from "./alert-popup";
@@ -42,7 +42,7 @@ function Uploader() {
   const [isOverlayFallback, setIsOverlayFallback] = useState<boolean>(true);
   const [isCancelDownloadConfirmation, setIsCancelDownloadConfirmation] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false)
-  const {setIsSubscribed, isSubscribed, setOpen, setReason} = usePremiumModal();
+  const {setIsSubscribed, isSubscribed, setIsSignedIn, setOpen, setReason} = usePremiumModal();
   const isOpeningInProgress = useRef(false);
 
   const { toast } = useToast();
@@ -243,17 +243,36 @@ function Uploader() {
         const prev = await chrome.storage.local.get("hasSubscription");
         const prevHasSub = prev?.hasSubscription ?? false;
         
-        const [_, effectiveIsSubscribed] = await Promise.all([
-          fetchAndStoreTopChat(), // ChatGPT API call
-          // Subscription check - can run in parallel
+        // Step 1: openaiId check (existing flow)
+        let effectiveIsSubscribed: boolean;
+        const [_, step1Result] = await Promise.all([
+          fetchAndStoreTopChat(),
           detectBrowser() === "firefox"
             ? new Promise<boolean>((resolve) => {
-                chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (response) => {
-                  resolve(response);
-                });
+                chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION" }, (r) => resolve(r));
               })
-            : handleCheckUserSubscription()
+            : handleCheckUserSubscription(),
         ]);
+        effectiveIsSubscribed = step1Result;
+
+        // Step 2: OTP JWT check (only if not subscribed via openaiId)
+        if (!effectiveIsSubscribed) {
+          const otpSignedIn = await isOtpSignedIn();
+          setIsSignedIn(otpSignedIn);
+          if (otpSignedIn) {
+            const { otpJwtToken } = await getOtpAuthIdentity();
+            if (otpJwtToken) {
+              const step2Result = detectBrowser() === "firefox"
+                ? await new Promise<boolean>((resolve) => {
+                    chrome.runtime.sendMessage({ type: "CHECK_SUBSCRIPTION", payload: { otpJwtToken } }, (r) => resolve(r));
+                  })
+                : await handleCheckUserSubscription(otpJwtToken);
+              effectiveIsSubscribed = step2Result;
+            }
+          }
+        } else {
+          setIsSignedIn(false);
+        }
 
         if (prevHasSub === true && effectiveIsSubscribed === false) {
           setShowBillingIssue(true);

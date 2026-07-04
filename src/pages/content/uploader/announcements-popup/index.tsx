@@ -32,7 +32,7 @@ interface Announcement {
   updated_on: Date;
 }
 
-const Announcements = () => {
+const Announcements = ({ menuMode = false }: { menuMode?: boolean }) => {
   const [selectedAcc, setSelectedAcc] = useState<string[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [count, setCount] = useState<number>(0);
@@ -218,19 +218,35 @@ const Announcements = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
-          onClick={handleAnnouncementClick}
-        >
-          <Megaphone className="gpt:-rotate-12" />
-          {count > 0 ? (
-            <Badge className="gpt:text-white gpt:bg-red-600 gpt:dark:bg-red-500 gpt:absolute gpt:-top-1.5 gpt:left-1/2 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center">
-              {count}
-            </Badge>
-          ) : null}
-        </Button>
+        {menuMode ? (
+          <Button
+            variant="ghost"
+            className="gpt:w-full gpt:justify-start gpt:gap-2 gpt:px-3 gpt:rounded-md hover:gpt:bg-gray-100 gpt:dark:hover:bg-gray-700 gpt:[&_svg]:size-4"
+            onClick={handleAnnouncementClick}
+          >
+            <Megaphone className="gpt:-rotate-12" />
+            Announcements
+            {count > 0 && (
+              <Badge className="gpt:ml-auto gpt:text-white gpt:bg-red-600 gpt:dark:bg-red-500 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center gpt:text-[10px] gpt:min-w-[18px] gpt:h-[18px] gpt:px-1">
+                {count}
+              </Badge>
+            )}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="gpt:relative hover:gpt:scale-115 active:gpt:scale-105 gpt:rounded-full gpt:border gpt:border-gray-200 gpt:dark:border-gray-700 gpt:bg-gray-50 gpt:dark:bg-gray-800 gpt:[&_svg]:size-6 gpt:transition-all"
+            onClick={handleAnnouncementClick}
+          >
+            <Megaphone className="gpt:-rotate-12" />
+            {count > 0 ? (
+              <Badge className="gpt:text-white gpt:bg-red-600 gpt:dark:bg-red-500 gpt:absolute gpt:-top-1.5 gpt:left-1/2 gpt:rounded-full gpt:flex gpt:items-center gpt:justify-center">
+                {count}
+              </Badge>
+            ) : null}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent
         onInteractOutside={(e) => {

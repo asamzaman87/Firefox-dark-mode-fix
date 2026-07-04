@@ -3,12 +3,21 @@ import { Moon, Sun } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 
-export function ThemeToggle() {
+export function ThemeToggle({ menuMode = false }: { menuMode?: boolean }) {
     const { theme, setTheme } = useTheme()
 
     const toggleTheme = () => {
         const newTheme = theme === "light" ? "dark" : "light";
         setTheme(newTheme);
+    }
+
+    if (menuMode) {
+        return (
+            <Button variant="ghost" onClick={toggleTheme} className="gpt:w-full gpt:justify-start gpt:gap-2 gpt:px-3 gpt:rounded-md hover:gpt:bg-gray-100 gpt:dark:hover:bg-gray-700 gpt:[&_svg]:size-4">
+                {theme !== "light" ? <Moon /> : <Sun />}
+                {theme !== "light" ? "Light Mode" : "Dark Mode"}
+            </Button>
+        )
     }
 
     return (

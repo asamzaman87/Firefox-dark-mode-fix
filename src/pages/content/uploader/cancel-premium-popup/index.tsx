@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -498,13 +497,8 @@ const CancelPremiumPopup = ({ isSubscribed }: { isSubscribed: boolean }) => {
               variant="ghost"
               className="gpt:relative gpt:h-9 gpt:px-3 gpt:bg-gradient-to-r gpt:from-amber-500/10 gpt:to-orange-500/10 gpt:hover:from-amber-500/20 gpt:hover:to-orange-500/20 gpt:border gpt:border-amber-500/20 gpt:hover:border-amber-500/30 gpt:transition-all gpt:duration-200"
             >
-              <Crown className="gpt:h-4 gpt:w-4 gpt:text-amber-600 gpt:mr-2" />
-              <Badge
-                variant="secondary"
-                className="gpt:bg-gradient-to-r gpt:from-amber-500 gpt:to-orange-500 gpt:text-white gpt:border-0 gpt:text-xs gpt:font-medium gpt:px-2 gpt:py-0.5"
-              >
-                PREMIUM
-              </Badge>
+              <Crown className="gpt:h-4 gpt:w-4 gpt:text-amber-600" />
+              Manage Subscription
             </Button>
           </PopoverTrigger>
           <PopoverContent
